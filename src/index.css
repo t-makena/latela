@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -78,7 +79,7 @@
 }
 
 .stat-card {
-  @apply rounded-xl bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md;
+  @apply rounded-xl bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
@@ -86,7 +87,6 @@
     0 -1px 1px rgba(0, 0, 0, 0.05) inset,
     2px 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  background: linear-gradient(135deg, rgba(13, 71, 161, 0.05) 0%, rgba(245, 124, 0, 0.05) 100%);
 }
 
 .stat-card::after {
@@ -131,7 +131,7 @@
     0 -1px 1px rgba(0, 0, 0, 0.05) inset,
     0 2px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(230, 230, 230, 0.7);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+  background: white;
 }
 
 .card::before {
