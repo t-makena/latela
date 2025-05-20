@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -55,10 +54,10 @@ export default {
 				},
 				// Budget app specific colors
 				budget: {
-					primary: "#1e65ff",
+					primary: "#0EA5E9",
 					secondary: "#41b883",
-					expense: "#ff6b6b",
-					income: "#41b883",
+					expense: "#F97316",
+					income: "#0EA5E9",
 					neutral: "#6c757d",
 					dark: "#2d3748",
 					light: "#f8fafc"
