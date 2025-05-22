@@ -1,4 +1,3 @@
-
 export interface AccountType {
   id: string;
   name: string;
@@ -35,7 +34,7 @@ export const accounts: AccountType[] = [
     name: 'Main Checking',
     type: 'checking',
     balance: 2450.65,
-    currency: 'USD',
+    currency: 'ZAR',
     color: '#1e65ff',
   },
   {
@@ -43,7 +42,7 @@ export const accounts: AccountType[] = [
     name: 'Savings',
     type: 'savings',
     balance: 15680.23,
-    currency: 'USD',
+    currency: 'ZAR',
     color: '#41b883',
   },
   {
@@ -51,7 +50,7 @@ export const accounts: AccountType[] = [
     name: 'Credit Card',
     type: 'credit',
     balance: -450.65,
-    currency: 'USD',
+    currency: 'ZAR',
     color: '#ff6b6b',
   },
   {
@@ -59,7 +58,7 @@ export const accounts: AccountType[] = [
     name: 'Investment Portfolio',
     type: 'investment',
     balance: 42500,
-    currency: 'USD',
+    currency: 'ZAR',
     color: '#8959a8',
   },
 ];
@@ -159,8 +158,8 @@ export const categoryBreakdown = [
   { name: 'Other', value: 150 },
 ];
 
-export const formatCurrency = (amount: number, currency = 'USD'): string => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (amount: number, currency = 'ZAR'): string => {
+  return new Intl.NumberFormat('en-ZA', {
     style: 'currency',
     currency,
   }).format(amount);

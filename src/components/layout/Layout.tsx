@@ -10,7 +10,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="min-h-screen bg-background bg-gradient-to-br from-[#0D47A1]/10 to-[#F57C00]/10">
+    <div className="min-h-screen bg-background bg-gradient-to-br from-[#0EA5E9]/5 to-[#F97316]/5">
       <div className="container mx-auto flex h-screen p-4">
         {!isMobile && (
           <div className="w-64 mr-6">
