@@ -1,3 +1,4 @@
+
 export interface AccountType {
   id: string;
   name: string;
@@ -86,7 +87,7 @@ export const transactions: Transaction[] = [
     id: '3',
     accountId: '1',
     amount: 49.99,
-    category: 'Entertainment',
+    category: 'Personal & Lifestyle',
     date: '2025-05-17',
     description: 'Streaming subscription',
     type: 'expense',
@@ -150,12 +151,11 @@ export const monthlySpending = [
 ];
 
 export const categoryBreakdown = [
-  { name: 'Housing', value: 1200 },
+  { name: 'Housing & Utilities', value: 1380 },
   { name: 'Food', value: 450 },
   { name: 'Transportation', value: 300 },
-  { name: 'Entertainment', value: 200 },
-  { name: 'Utilities', value: 180 },
-  { name: 'Other', value: 150 },
+  { name: 'Personal & Lifestyle', value: 200 },
+  { name: 'Miscellaneous', value: 150 },
 ];
 
 export const formatCurrency = (amount: number, currency = 'ZAR'): string => {
