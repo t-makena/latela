@@ -79,7 +79,7 @@
 }
 
 .stat-card {
-  @apply rounded-xl bg-white p-5 transition-all duration-200 hover:shadow-md;
+  @apply rounded-xl bg-white p-3 sm:p-4 md:p-5 transition-all duration-200 hover:shadow-md;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
@@ -157,4 +157,20 @@
   right: 0;
   height: 2px;
   background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8), transparent);
+}
+
+/* Responsive grid utilities */
+@media (max-width: 640px) {
+  .grid-cols-1-sm {
+    grid-template-columns: 1fr;
+  }
+  
+  .text-sm-center {
+    text-align: center;
+  }
+  
+  .px-sm-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
 }
