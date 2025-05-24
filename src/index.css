@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -74,7 +73,7 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    background: linear-gradient(135deg, #562cff 0%, #ff914d 100%);
+    background: linear-gradient(135deg, #7c4dff 0%, #ff914d 100%);
   }
 }
 

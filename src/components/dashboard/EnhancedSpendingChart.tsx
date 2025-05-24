@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { monthlySpending, dailySpending, futureDailySpending, sixMonthSpending, formatCurrency, getTargetAverageExpense, categoryBreakdown } from "@/lib/data";
+import { monthlySpending, dailySpending, futureDailySpending, sixMonthSpending, formatCurrency, getTargetAverageExpense, categoryBreakdown, getMonthlyIncome, getMonthlySavings } from "@/lib/data";
 import { 
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, Cell
@@ -28,15 +28,28 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
   ];
 
   const getChartTitle = () => {
-    if (selectedPeriod === '1W' || selectedPeriod === '1M') return 'Daily Spending Trend';
-    if (selectedPeriod === '1W>') return 'Daily Spending Trend (Future Week)';
+    if (selectedPeriod === '1W' || selectedPeriod === '1W>') return 'Daily Spending Trend';
+    if (selectedPeriod === '1M') return 'Daily Spending Trend';
     if (selectedPeriod === '6M' || selectedPeriod === '1Y') return 'Monthly Spending Trend';
     return 'Monthly Spending Trend';
   };
 
   const getChartData = () => {
-    if (selectedPeriod === '1W' || selectedPeriod === '1M') {
+    if (selectedPeriod === '1W') {
       return dailySpending;
+    }
+    if (selectedPeriod === '1M') {
+      // Generate 30 days of data with numbers instead of day names
+      return Array.from({ length: 30 }, (_, i) => ({
+        day: (i + 1).toString(),
+        amount: Math.floor(Math.random() * 600) + 100,
+        date: `2025-05-${String(i + 1).padStart(2, '0')}`,
+        categories: [
+          { name: 'Food', value: Math.floor(Math.random() * 200), percentage: 40, color: '#41b883' },
+          { name: 'Transportation', value: Math.floor(Math.random() * 150), percentage: 30, color: '#ffd166' },
+          { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 120), percentage: 30, color: '#8959a8' }
+        ]
+      }));
     }
     if (selectedPeriod === '1W>') {
       return futureDailySpending;
@@ -49,6 +62,19 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
 
   const targetExpense = getTargetAverageExpense();
   const showTargetLine = selectedPeriod === '1W' || selectedPeriod === '1W>';
+
+  // Calculate target average expense for future week
+  const calculateFutureTargetExpense = () => {
+    const monthlyIncome = getMonthlyIncome();
+    const monthlySavings = getMonthlySavings();
+    const today = new Date();
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const daysRemaining = lastDayOfMonth - today.getDate();
+    
+    return (monthlyIncome - monthlySavings) / daysRemaining;
+  };
+
+  const futureTargetExpense = calculateFutureTargetExpense();
 
   const handleBarClick = (data: any) => {
     if (selectedPeriod === '1W' || selectedPeriod === '1M') {
@@ -119,10 +145,20 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
                   shape={<CustomBar />}
                   style={{ cursor: 'pointer' }}
                 />
-                {showTargetLine && (
+                {selectedPeriod === '1W' && (
                   <Line 
                     type="monotone" 
                     dataKey={() => targetExpense} 
+                    stroke="#ffd166" 
+                    strokeWidth={2} 
+                    strokeDasharray="5 5"
+                    name="Target Average Expense"
+                  />
+                )}
+                {selectedPeriod === '1W>' && (
+                  <Line 
+                    type="monotone" 
+                    dataKey={() => futureTargetExpense} 
                     stroke="#ffd166" 
                     strokeWidth={2} 
                     strokeDasharray="5 5"

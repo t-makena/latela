@@ -239,11 +239,11 @@ export const sixMonthSpending = [
 ];
 
 export const savingsBalanceData = [
-  { month: 'Jan', balance: 14500, transfers: 14200 },
-  { month: 'Feb', balance: 15000, transfers: 14800 },
-  { month: 'Mar', balance: 15500, transfers: 15300 },
-  { month: 'Apr', balance: 15180, transfers: 15000 },
-  { month: 'May', balance: 15680, transfers: 15480 },
+  { month: 'Jan', balance: 14500, transfersOut: 200 },
+  { month: 'Feb', balance: 15000, transfersOut: 150 },
+  { month: 'Mar', balance: 15500, transfersOut: 300 },
+  { month: 'Apr', balance: 15180, transfersOut: 250 },
+  { month: 'May', balance: 15680, transfersOut: 200 },
 ];
 
 export const categoryBreakdown = [
