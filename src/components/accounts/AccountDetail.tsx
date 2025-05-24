@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AccountType, formatCurrency, transactions } from "@/lib/data";
+import { AccountType, formatCurrency, transactions, formatDate } from "@/lib/data";
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { SavingsBalanceChart } from "@/components/dashboard/SavingsBalanceChart";
 
@@ -56,7 +56,7 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
                         {transaction.category}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(transaction.date).toLocaleDateString()}
+                        {formatDate(transaction.date)}
                       </span>
                     </div>
                   </div>
@@ -77,12 +77,14 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
             <Button variant="outline" className="mr-2">Edit Account</Button>
             <Button>Add Transaction</Button>
           </div>
+
+          {account.type === 'checking' && (
+            <div className="mt-6">
+              <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {account.type === 'checking' && (
-        <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
-      )}
 
       {account.type === 'savings' && (
         <SavingsBalanceChart />

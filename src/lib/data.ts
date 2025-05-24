@@ -1,7 +1,7 @@
 export interface AccountType {
   id: string;
   name: string;
-  type: 'checking' | 'savings' | 'credit' | 'investment';
+  type: 'checking' | 'savings' | 'credit';
   balance: number;
   currency: string;
   color: string;
@@ -53,14 +53,6 @@ export const accounts: AccountType[] = [
     currency: 'ZAR',
     color: '#ff6b6b',
   },
-  {
-    id: '4',
-    name: 'Investment Portfolio',
-    type: 'investment',
-    balance: 42500,
-    currency: 'ZAR',
-    color: '#8959a8',
-  },
 ];
 
 export const transactions: Transaction[] = [
@@ -98,10 +90,19 @@ export const transactions: Transaction[] = [
     category: 'Transfer',
     date: '2025-05-15',
     description: 'Monthly savings',
-    type: 'expense',
+    type: 'income',
   },
   {
     id: '5',
+    accountId: '2',
+    amount: 200,
+    category: 'Transfer',
+    date: '2025-05-10',
+    description: 'Emergency withdrawal',
+    type: 'expense',
+  },
+  {
+    id: '6',
     accountId: '3',
     amount: 75.25,
     category: 'Dining',
@@ -147,16 +148,102 @@ export const monthlySpending = [
   { month: 'Mar', amount: 2300, savings: 500, netBalance: 1200 },
   { month: 'Apr', amount: 2400, savings: 500, netBalance: 1100 },
   { month: 'May', amount: 2000, savings: 500, netBalance: 1500 },
+  { month: 'Jun', amount: 1800, savings: 500, netBalance: 1700 },
 ];
 
 export const dailySpending = [
-  { day: 'Mon', amount: 120, category: 'Groceries', date: '2025-05-19' },
-  { day: 'Tue', amount: 85, category: 'Dining', date: '2025-05-20' },
-  { day: 'Wed', amount: 200, category: 'Personal & Lifestyle', date: '2025-05-21' },
-  { day: 'Thu', amount: 150, category: 'Transportation', date: '2025-05-22' },
-  { day: 'Fri', amount: 90, category: 'Groceries', date: '2025-05-23' },
-  { day: 'Sat', amount: 300, category: 'Housing & Utilities', date: '2025-05-24' },
-  { day: 'Sun', amount: 50, category: 'Miscellaneous', date: '2025-05-25' },
+  { 
+    day: 'Mon', 
+    amount: 784, 
+    date: '2025-05-19',
+    categories: [
+      { name: 'Food', value: 392, percentage: 50, color: '#41b883' },
+      { name: 'Transportation', value: 196, percentage: 25, color: '#ffd166' },
+      { name: 'Personal & Lifestyle', value: 196, percentage: 25, color: '#8959a8' }
+    ]
+  },
+  { 
+    day: 'Tue', 
+    amount: 320, 
+    date: '2025-05-20',
+    categories: [
+      { name: 'Dining', value: 160, percentage: 50, color: '#ff6b6b' },
+      { name: 'Personal & Lifestyle', value: 160, percentage: 50, color: '#8959a8' }
+    ]
+  },
+  { 
+    day: 'Wed', 
+    amount: 450, 
+    date: '2025-05-21',
+    categories: [
+      { name: 'Housing & Utilities', value: 225, percentage: 50, color: '#1e65ff' },
+      { name: 'Groceries', value: 225, percentage: 50, color: '#41b883' }
+    ]
+  },
+  { 
+    day: 'Thu', 
+    amount: 280, 
+    date: '2025-05-22',
+    categories: [
+      { name: 'Transportation', value: 168, percentage: 60, color: '#ffd166' },
+      { name: 'Food', value: 112, percentage: 40, color: '#41b883' }
+    ]
+  },
+  { 
+    day: 'Fri', 
+    amount: 380, 
+    date: '2025-05-23',
+    categories: [
+      { name: 'Groceries', value: 190, percentage: 50, color: '#41b883' },
+      { name: 'Personal & Lifestyle', value: 114, percentage: 30, color: '#8959a8' },
+      { name: 'Miscellaneous', value: 76, percentage: 20, color: '#6c757d' }
+    ]
+  },
+  { 
+    day: 'Sat', 
+    amount: 620, 
+    date: '2025-05-24',
+    categories: [
+      { name: 'Housing & Utilities', value: 372, percentage: 60, color: '#1e65ff' },
+      { name: 'Dining', value: 248, percentage: 40, color: '#ff6b6b' }
+    ]
+  },
+  { 
+    day: 'Sun', 
+    amount: 150, 
+    date: '2025-05-25',
+    categories: [
+      { name: 'Personal & Lifestyle', value: 90, percentage: 60, color: '#8959a8' },
+      { name: 'Miscellaneous', value: 60, percentage: 40, color: '#6c757d' }
+    ]
+  },
+];
+
+export const futureDailySpending = [
+  { day: 'Mon', amount: 0, date: '2025-05-26', categories: [] },
+  { day: 'Tue', amount: 0, date: '2025-05-27', categories: [] },
+  { day: 'Wed', amount: 0, date: '2025-05-28', categories: [] },
+  { day: 'Thu', amount: 0, date: '2025-05-29', categories: [] },
+  { day: 'Fri', amount: 0, date: '2025-05-30', categories: [] },
+  { day: 'Sat', amount: 0, date: '2025-05-31', categories: [] },
+  { day: 'Sun', amount: 0, date: '2025-06-01', categories: [] },
+];
+
+export const sixMonthSpending = [
+  { month: 'Dec', amount: 1950, savings: 500, netBalance: 1550 },
+  { month: 'Jan', amount: 2100, savings: 500, netBalance: 1600 },
+  { month: 'Feb', amount: 1950, savings: 500, netBalance: 1550 },
+  { month: 'Mar', amount: 2300, savings: 500, netBalance: 1200 },
+  { month: 'Apr', amount: 2400, savings: 500, netBalance: 1100 },
+  { month: 'May', amount: 2000, savings: 500, netBalance: 1500 },
+];
+
+export const savingsBalanceData = [
+  { month: 'Jan', balance: 14500, transfers: 14200 },
+  { month: 'Feb', balance: 15000, transfers: 14800 },
+  { month: 'Mar', balance: 15500, transfers: 15300 },
+  { month: 'Apr', balance: 15180, transfers: 15000 },
+  { month: 'May', balance: 15680, transfers: 15480 },
 ];
 
 export const categoryBreakdown = [

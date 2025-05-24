@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { monthlySpending, dailySpending, formatCurrency, getTargetAverageExpense, categoryBreakdown } from "@/lib/data";
+import { monthlySpending, dailySpending, futureDailySpending, sixMonthSpending, formatCurrency, getTargetAverageExpense, categoryBreakdown } from "@/lib/data";
 import { 
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, Cell
@@ -15,20 +15,22 @@ interface EnhancedSpendingChartProps {
 }
 
 export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: EnhancedSpendingChartProps) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'1W' | '1M' | '3M' | '1Y'>('1M');
+  const [selectedPeriod, setSelectedPeriod] = useState<'1W' | '1M' | '6M' | '1Y' | '1W>'>('1M');
   const [selectedBarData, setSelectedBarData] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   const periods = [
     { key: '1W' as const, label: '1W' },
     { key: '1M' as const, label: '1M' },
-    { key: '3M' as const, label: '3M' },
+    { key: '6M' as const, label: '6M' },
     { key: '1Y' as const, label: '1Y' },
+    { key: '1W>' as const, label: '1W>' },
   ];
 
   const getChartTitle = () => {
     if (selectedPeriod === '1W' || selectedPeriod === '1M') return 'Daily Spending Trend';
-    if (selectedPeriod === '3M') return 'Quarterly Spending Trend';
+    if (selectedPeriod === '1W>') return 'Daily Spending Trend (Future Week)';
+    if (selectedPeriod === '6M' || selectedPeriod === '1Y') return 'Monthly Spending Trend';
     return 'Monthly Spending Trend';
   };
 
@@ -36,10 +38,17 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
     if (selectedPeriod === '1W' || selectedPeriod === '1M') {
       return dailySpending;
     }
+    if (selectedPeriod === '1W>') {
+      return futureDailySpending;
+    }
+    if (selectedPeriod === '6M') {
+      return sixMonthSpending;
+    }
     return monthlySpending;
   };
 
   const targetExpense = getTargetAverageExpense();
+  const showTargetLine = selectedPeriod === '1W' || selectedPeriod === '1W>';
 
   const handleBarClick = (data: any) => {
     if (selectedPeriod === '1W' || selectedPeriod === '1M') {
@@ -48,7 +57,33 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
     }
   };
 
-  const COLORS = ['#1e65ff', '#41b883', '#ff6b6b', '#ffd166', '#8959a8'];
+  const CustomBar = (props: any) => {
+    const { payload, x, y, width, height } = props;
+    if (!payload || !payload.categories) return null;
+
+    let currentY = y;
+    return (
+      <g>
+        {payload.categories.map((category: any, index: number) => {
+          const segmentHeight = (height * category.percentage) / 100;
+          const segment = (
+            <rect
+              key={category.name}
+              x={x}
+              y={currentY}
+              width={width}
+              height={segmentHeight}
+              fill={category.color}
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleBarClick(payload)}
+            />
+          );
+          currentY += segmentHeight;
+          return segment;
+        })}
+      </g>
+    );
+  };
 
   return (
     <>
@@ -71,7 +106,7 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
           </div>
         </CardHeader>
         <CardContent>
-          {selectedPeriod === '1W' || selectedPeriod === '1M' ? (
+          {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1W>' ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={getChartData()}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -81,13 +116,19 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
                 <Legend />
                 <Bar 
                   dataKey="amount" 
-                  onClick={handleBarClick}
+                  shape={<CustomBar />}
                   style={{ cursor: 'pointer' }}
-                >
-                  {getChartData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
+                />
+                {showTargetLine && (
+                  <Line 
+                    type="monotone" 
+                    dataKey={() => targetExpense} 
+                    stroke="#ffd166" 
+                    strokeWidth={2} 
+                    strokeDasharray="5 5"
+                    name="Target Average Expense"
+                  />
+                )}
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -122,14 +163,6 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
                   strokeWidth={2} 
                   name="Net Balance"
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey={() => targetExpense} 
-                  stroke="#ffd166" 
-                  strokeWidth={2} 
-                  strokeDasharray="5 5"
-                  name="Target Average Expense"
-                />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -148,29 +181,26 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
                   Total: {formatCurrency(selectedBarData.amount)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Category: {selectedBarData.category}
+                  Date: {selectedBarData.date}
                 </p>
               </div>
               
               <div>
                 <h4 className="font-medium mb-2">Category Breakdown</h4>
-                {categoryBreakdown.map((category, index) => {
-                  const percentage = ((category.value / selectedBarData.amount) * 100).toFixed(1);
-                  return (
-                    <div key={category.name} className="flex justify-between items-center py-1">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        />
-                        <span className="text-sm">{category.name}</span>
-                      </div>
-                      <span className="text-sm">
-                        {formatCurrency(category.value)} ({percentage}%)
-                      </span>
+                {selectedBarData.categories?.map((category: any, index: number) => (
+                  <div key={category.name} className="flex justify-between items-center py-1">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className="text-sm">{category.name}</span>
                     </div>
-                  );
-                })}
+                    <span className="text-sm">
+                      {formatCurrency(category.value)} ({category.percentage}%)
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
