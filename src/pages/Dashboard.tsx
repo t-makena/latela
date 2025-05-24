@@ -2,6 +2,7 @@
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { AccountsOverview } from "@/components/dashboard/AccountsOverview";
 import { BudgetGoalsList } from "@/components/dashboard/BudgetGoalsList";
+import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { SpendingChart } from "@/components/dashboard/SpendingChart";
 import { AIInsights } from "@/components/dashboard/AIInsights";
 import { formatCurrency, getNetWorth } from "@/lib/data";
@@ -25,12 +26,12 @@ const Dashboard = () => {
         <BudgetGoalsList />
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SpendingChart type="line" />
-        <SpendingChart type="pie" />
-      </div>
+      <EnhancedSpendingChart />
       
-      <AIInsights />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SpendingChart type="pie" />
+        <AIInsights />
+      </div>
     </div>
   );
 };

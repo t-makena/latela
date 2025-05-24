@@ -1,4 +1,3 @@
-
 export interface AccountType {
   id: string;
   name: string;
@@ -143,11 +142,21 @@ export const budgetGoals: BudgetGoal[] = [
 ];
 
 export const monthlySpending = [
-  { month: 'Jan', amount: 2100 },
-  { month: 'Feb', amount: 1950 },
-  { month: 'Mar', amount: 2300 },
-  { month: 'Apr', amount: 2400 },
-  { month: 'May', amount: 2000 },
+  { month: 'Jan', amount: 2100, savings: 500, netBalance: 1600 },
+  { month: 'Feb', amount: 1950, savings: 500, netBalance: 1550 },
+  { month: 'Mar', amount: 2300, savings: 500, netBalance: 1200 },
+  { month: 'Apr', amount: 2400, savings: 500, netBalance: 1100 },
+  { month: 'May', amount: 2000, savings: 500, netBalance: 1500 },
+];
+
+export const dailySpending = [
+  { day: 'Mon', amount: 120, category: 'Groceries', date: '2025-05-19' },
+  { day: 'Tue', amount: 85, category: 'Dining', date: '2025-05-20' },
+  { day: 'Wed', amount: 200, category: 'Personal & Lifestyle', date: '2025-05-21' },
+  { day: 'Thu', amount: 150, category: 'Transportation', date: '2025-05-22' },
+  { day: 'Fri', amount: 90, category: 'Groceries', date: '2025-05-23' },
+  { day: 'Sat', amount: 300, category: 'Housing & Utilities', date: '2025-05-24' },
+  { day: 'Sun', amount: 50, category: 'Miscellaneous', date: '2025-05-25' },
 ];
 
 export const categoryBreakdown = [
@@ -165,6 +174,16 @@ export const formatCurrency = (amount: number, currency = 'ZAR'): string => {
   }).format(amount);
 };
 
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const day = date.getDate();
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = monthNames[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+};
+
 export const getNetWorth = (): number => {
   return accounts.reduce((total, account) => total + account.balance, 0);
 };
@@ -177,6 +196,21 @@ export const getMonthlyIncome = (): number => {
 export const getMonthlyExpenses = (): number => {
   const expenseTransactions = transactions.filter(t => t.type === 'expense');
   return expenseTransactions.reduce((total, t) => total + t.amount, 0);
+};
+
+export const getMonthlySavings = (): number => {
+  const monthlyIncome = getMonthlyIncome();
+  return monthlyIncome * 0.2; // 20% of income
+};
+
+export const getTargetAverageExpense = (): number => {
+  const monthlyIncome = getMonthlyIncome();
+  const savingsGoal = getMonthlySavings();
+  const today = new Date();
+  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const daysRemaining = lastDayOfMonth - today.getDate();
+  
+  return (monthlyIncome - savingsGoal) / daysRemaining;
 };
 
 export const getAIInsights = (): string[] => {

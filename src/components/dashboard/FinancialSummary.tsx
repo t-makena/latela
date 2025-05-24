@@ -1,12 +1,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getNetWorth, getMonthlyIncome, getMonthlyExpenses, formatCurrency } from "@/lib/data";
+import { getNetWorth, getMonthlyIncome, getMonthlyExpenses, getMonthlySavings, formatCurrency } from "@/lib/data";
 
 export const FinancialSummary = () => {
   const netWorth = getNetWorth();
   const monthlyIncome = getMonthlyIncome();
   const monthlyExpenses = getMonthlyExpenses();
-  const monthlySavings = monthlyIncome - monthlyExpenses;
+  const monthlySavings = getMonthlySavings(); // Now 20% of income
   const netBalance = monthlyIncome - monthlyExpenses - monthlySavings;
 
   return (
@@ -62,7 +62,7 @@ export const FinancialSummary = () => {
               {formatCurrency(monthlySavings)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Income minus expenses
+              20% of monthly income
             </p>
           </div>
         </div>
