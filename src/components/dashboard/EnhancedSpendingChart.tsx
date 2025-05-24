@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { monthlySpending, dailySpending, futureDailySpending, sixMonthSpending, formatCurrency, getTargetAverageExpense, categoryBreakdown, getMonthlyIncome, getMonthlySavings } from "@/lib/data";
 import { 
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend, Cell
+  CartesianGrid, Tooltip, Legend, Cell, ComposedChart
 } from "recharts";
 
 interface EnhancedSpendingChartProps {
@@ -134,7 +134,7 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
         <CardContent>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1W>' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={getChartData()}>
+              <ComposedChart data={getChartData()}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="day" />
                 <YAxis />
@@ -165,7 +165,7 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
                     name="Target Average Expense"
                   />
                 )}
-              </BarChart>
+              </ComposedChart>
             </ResponsiveContainer>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
