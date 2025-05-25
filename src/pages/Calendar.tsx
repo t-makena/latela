@@ -85,19 +85,19 @@ const CalendarPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Calendar Section */}
-        <Card>
+        <Card className="h-fit">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5" />
               Event Calendar
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              className="rounded-md border pointer-events-auto"
+              className="w-full border-0 pointer-events-auto"
               modifiers={{
                 hasEvent: eventDates
               }}
@@ -109,7 +109,7 @@ const CalendarPage = () => {
                 }
               }}
             />
-            <div className="mt-4">
+            <div className="p-6 pt-0">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full" disabled={!selectedDate}>
