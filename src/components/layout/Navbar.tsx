@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Wallet, PieChart, Settings, Menu } from "lucide-react";
+import { Home, Wallet, Calendar, Settings, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ import { useLocation } from "react-router-dom";
 const navItems = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Accounts", href: "/accounts", icon: Wallet },
-  { name: "Analytics", href: "/analytics", icon: PieChart },
+  { name: "Calendar", href: "/calendar", icon: Calendar },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
