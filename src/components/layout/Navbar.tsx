@@ -79,7 +79,7 @@ export const Navbar = () => {
       ) : (
         <Card className="h-full p-2">
           <div className="mb-6 p-2">
-            <h2 className="text-xl font-bold text-center">FinanceAI</h2>
+            <h2 className="text-xl font-bold text-center">Budget Buddy</h2>
           </div>
           <NavContent />
         </Card>

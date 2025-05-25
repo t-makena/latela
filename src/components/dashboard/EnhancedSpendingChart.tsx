@@ -29,7 +29,7 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
 
   const getChartTitle = () => {
     if (selectedPeriod === '1W' || selectedPeriod === '1W>') return 'Daily Spending Trend';
-    if (selectedPeriod === '1M') return 'Daily Spending Trend';
+    if (selectedPeriod === '1M') return 'Weekly Spending Trend';
     if (selectedPeriod === '6M' || selectedPeriod === '1Y') return 'Monthly Spending Trend';
     return 'Monthly Spending Trend';
   };
@@ -39,17 +39,53 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
       return dailySpending;
     }
     if (selectedPeriod === '1M') {
-      // Generate 30 days of data with numbers instead of day names
-      return Array.from({ length: 30 }, (_, i) => ({
-        day: (i + 1).toString(),
-        amount: Math.floor(Math.random() * 600) + 100,
-        date: `2025-05-${String(i + 1).padStart(2, '0')}`,
-        categories: [
-          { name: 'Food', value: Math.floor(Math.random() * 200), percentage: 40, color: '#41b883' },
-          { name: 'Transportation', value: Math.floor(Math.random() * 150), percentage: 30, color: '#ffd166' },
-          { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 120), percentage: 30, color: '#8959a8' }
-        ]
-      }));
+      // Generate 4 weeks of data
+      return [
+        {
+          day: 'Week 1',
+          amount: Math.floor(Math.random() * 2000) + 1500,
+          date: '2025-05-01 to 2025-05-07',
+          categories: [
+            { name: 'Food', value: Math.floor(Math.random() * 600) + 400, percentage: 35, color: '#41b883' },
+            { name: 'Transportation', value: Math.floor(Math.random() * 400) + 300, percentage: 25, color: '#ffd166' },
+            { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 500) + 300, percentage: 25, color: '#8959a8' },
+            { name: 'Housing & Utilities', value: Math.floor(Math.random() * 300) + 200, percentage: 15, color: '#1e65ff' }
+          ]
+        },
+        {
+          day: 'Week 2',
+          amount: Math.floor(Math.random() * 2000) + 1500,
+          date: '2025-05-08 to 2025-05-14',
+          categories: [
+            { name: 'Food', value: Math.floor(Math.random() * 600) + 400, percentage: 40, color: '#41b883' },
+            { name: 'Transportation', value: Math.floor(Math.random() * 400) + 300, percentage: 20, color: '#ffd166' },
+            { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 500) + 300, percentage: 25, color: '#8959a8' },
+            { name: 'Housing & Utilities', value: Math.floor(Math.random() * 300) + 200, percentage: 15, color: '#1e65ff' }
+          ]
+        },
+        {
+          day: 'Week 3',
+          amount: Math.floor(Math.random() * 2000) + 1500,
+          date: '2025-05-15 to 2025-05-21',
+          categories: [
+            { name: 'Food', value: Math.floor(Math.random() * 600) + 400, percentage: 30, color: '#41b883' },
+            { name: 'Transportation', value: Math.floor(Math.random() * 400) + 300, percentage: 30, color: '#ffd166' },
+            { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 500) + 300, percentage: 25, color: '#8959a8' },
+            { name: 'Housing & Utilities', value: Math.floor(Math.random() * 300) + 200, percentage: 15, color: '#1e65ff' }
+          ]
+        },
+        {
+          day: 'Week 4',
+          amount: Math.floor(Math.random() * 2000) + 1500,
+          date: '2025-05-22 to 2025-05-28',
+          categories: [
+            { name: 'Food', value: Math.floor(Math.random() * 600) + 400, percentage: 35, color: '#41b883' },
+            { name: 'Transportation', value: Math.floor(Math.random() * 400) + 300, percentage: 25, color: '#ffd166' },
+            { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 500) + 300, percentage: 20, color: '#8959a8' },
+            { name: 'Housing & Utilities', value: Math.floor(Math.random() * 300) + 200, percentage: 20, color: '#1e65ff' }
+          ]
+        }
+      ];
     }
     if (selectedPeriod === '1W>') {
       return futureDailySpending;
