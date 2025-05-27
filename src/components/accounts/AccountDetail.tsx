@@ -14,90 +14,94 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
   const accountTransactions = transactions.filter(t => t.accountId === account.id);
 
   return (
-    <>
-      <Card className="mt-6 shadow-sm">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div 
-                className="h-10 w-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: account.color }}
-              >
-                <span className="text-white font-medium">
-                  {account.name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <CardTitle>{account.name}</CardTitle>
-                <Badge variant="outline" className="mt-1 capitalize">
-                  {account.type}
-                </Badge>
-              </div>
+    <Card className="mt-6 shadow-sm">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div 
+              className="h-10 w-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: account.color }}
+            >
+              <span className="text-white font-medium">
+                {account.name.charAt(0)}
+              </span>
             </div>
-            <div className="flex items-center gap-4">
-              <div className={`text-2xl font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
-                {formatCurrency(account.balance, account.currency)}
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">Edit Account</Button>
-                <Button size="sm">Add Transaction</Button>
-              </div>
+            <div>
+              <CardTitle>{account.name}</CardTitle>
+              <Badge variant="outline" className="mt-1 capitalize">
+                {account.type}
+              </Badge>
             </div>
           </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-8">
-          {/* Recent Transactions Section */}
-          <div>
-            <h3 className="font-semibold mb-4 text-lg">Recent Transactions</h3>
-            
-            {accountTransactions.length > 0 ? (
-              <div className="space-y-3">
-                {accountTransactions.map(transaction => (
-                  <div 
-                    key={transaction.id} 
-                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div>
-                      <p className="font-medium">{transaction.description}</p>
-                      <div className="flex gap-2 items-center">
-                        <Badge variant="outline" className="capitalize">
-                          {transaction.category}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(transaction.date)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className={`font-bold ${transaction.type === 'expense' ? 'text-destructive' : 'text-budget-income'}`}>
-                      {transaction.type === 'expense' ? '-' : '+'}
-                      {formatCurrency(transaction.amount)}
+          <div className="flex items-center gap-4">
+            <div className={`text-2xl font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
+              {formatCurrency(account.balance, account.currency)}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">Edit Account</Button>
+              <Button size="sm">Add Transaction</Button>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-8">
+        {/* Recent Transactions Section */}
+        <div>
+          <h3 className="font-semibold mb-4 text-lg">Recent Transactions</h3>
+          
+          {accountTransactions.length > 0 ? (
+            <div className="space-y-3">
+              {accountTransactions.map(transaction => (
+                <div 
+                  key={transaction.id} 
+                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div>
+                    <p className="font-medium">{transaction.description}</p>
+                    <div className="flex gap-2 items-center">
+                      <Badge variant="outline" className="capitalize">
+                        {transaction.category}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(transaction.date)}
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-6">
-                No transactions found for this account.
-              </p>
-            )}
-          </div>
-
-          {/* Spending Analytics Section */}
-          {account.type === 'checking' && (
-            <div className="border-t pt-8">
-              <h3 className="font-semibold mb-4 text-lg">Spending Analytics</h3>
-              <div className="mt-4">
-                <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
-              </div>
+                  <div className={`font-bold ${transaction.type === 'expense' ? 'text-destructive' : 'text-budget-income'}`}>
+                    {transaction.type === 'expense' ? '-' : '+'}
+                    {formatCurrency(transaction.amount)}
+                  </div>
+                </div>
+              ))}
             </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-6">
+              No transactions found for this account.
+            </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {account.type === 'savings' && (
-        <SavingsBalanceChart />
-      )}
-    </>
+        {/* Analytics Section */}
+        {account.type === 'checking' && (
+          <div className="border-t pt-8">
+            <h3 className="font-semibold mb-4 text-lg">Spending Analytics</h3>
+            <div className="mt-4">
+              <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
+            </div>
+          </div>
+        )}
+
+        {/* Savings Balance Chart Section */}
+        {account.type === 'savings' && (
+          <div className="border-t pt-8">
+            <h3 className="font-semibold mb-4 text-lg">Savings Balance Trend</h3>
+            <div className="mt-4">
+              <SavingsBalanceChart />
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
