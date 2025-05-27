@@ -87,6 +87,18 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
           <div className="border-t pt-8">
             <h3 className="font-semibold mb-4 text-lg">Spending Analytics</h3>
             <div className="mt-4">
+              <div className="pb-2">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <h4 className="text-lg font-semibold">Daily Spending Trend</h4>
+                  <div className="flex gap-1">
+                    <Button variant="default" size="sm">1W</Button>
+                    <Button variant="outline" size="sm">1M</Button>
+                    <Button variant="outline" size="sm">6M</Button>
+                    <Button variant="outline" size="sm">1Y</Button>
+                    <Button variant="outline" size="sm">1W></Button>
+                  </div>
+                </div>
+              </div>
               <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
             </div>
           </div>
@@ -97,6 +109,17 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
           <div className="border-t pt-8">
             <h3 className="font-semibold mb-4 text-lg">Savings Balance Trend</h3>
             <div className="mt-4">
+              <div className="pb-2">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <h4 className="text-lg font-semibold">Savings Balance Trend</h4>
+                  <div className="flex gap-1">
+                    <Button variant="outline" size="sm">1W</Button>
+                    <Button variant="outline" size="sm">1M</Button>
+                    <Button variant="default" size="sm">6M</Button>
+                    <Button variant="outline" size="sm">1Y</Button>
+                  </div>
+                </div>
+              </div>
               <SavingsBalanceChart />
             </div>
           </div>
