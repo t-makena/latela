@@ -15,7 +15,7 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
 
   return (
     <>
-      <Card className="mt-6">
+      <Card className="mt-6 shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -34,7 +34,7 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
                 </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <div className={`text-2xl font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
                 {formatCurrency(account.balance, account.currency)}
               </div>
@@ -45,17 +45,18 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        
+        <CardContent className="space-y-8">
           {/* Recent Transactions Section */}
           <div>
-            <h3 className="font-semibold mb-3">Recent Transactions</h3>
+            <h3 className="font-semibold mb-4 text-lg">Recent Transactions</h3>
             
             {accountTransactions.length > 0 ? (
               <div className="space-y-3">
                 {accountTransactions.map(transaction => (
                   <div 
                     key={transaction.id} 
-                    className="flex items-center justify-between p-3 border border-border rounded-md hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div>
                       <p className="font-medium">{transaction.description}</p>
@@ -84,9 +85,11 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
 
           {/* Spending Analytics Section */}
           {account.type === 'checking' && (
-            <div className="border-t pt-6">
-              <h3 className="font-semibold mb-3">Spending Analytics</h3>
-              <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
+            <div className="border-t pt-8">
+              <h3 className="font-semibold mb-4 text-lg">Spending Analytics</h3>
+              <div className="mt-4">
+                <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
+              </div>
             </div>
           )}
         </CardContent>
