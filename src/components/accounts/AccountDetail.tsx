@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,16 @@ interface AccountDetailProps {
 }
 
 export const AccountDetail = ({ account }: AccountDetailProps) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<'1W' | '1M' | '6M' | '1Y' | '1W>'>('1M');
   const accountTransactions = transactions.filter(t => t.accountId === account.id);
+
+  const periods = [
+    { key: '1W' as const, label: '1W' },
+    { key: '1M' as const, label: '1M' },
+    { key: '6M' as const, label: '6M' },
+    { key: '1Y' as const, label: '1Y' },
+    { key: '1W>' as const, label: '1W{`>`}' },
+  ];
 
   return (
     <Card className="shadow-sm">
@@ -91,15 +101,24 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
                 <div className="flex justify-between items-center flex-wrap gap-2">
                   <h4 className="text-lg font-semibold">Daily Spending Trend</h4>
                   <div className="flex gap-1">
-                    <Button variant="default" size="sm">1W</Button>
-                    <Button variant="outline" size="sm">1M</Button>
-                    <Button variant="outline" size="sm">6M</Button>
-                    <Button variant="outline" size="sm">1Y</Button>
-                    <Button variant="outline" size="sm">1W{`>`}</Button>
+                    {periods.map((period) => (
+                      <Button
+                        key={period.key}
+                        variant={selectedPeriod === period.key ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedPeriod(period.key)}
+                      >
+                        {period.key === '1W>' ? '1W>' : period.label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
               </div>
-              <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
+              <EnhancedSpendingChart 
+                accountSpecific={true} 
+                accountId={account.id} 
+                selectedPeriod={selectedPeriod}
+              />
             </div>
           </div>
         )}

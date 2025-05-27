@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,12 +11,20 @@ import {
 interface EnhancedSpendingChartProps {
   accountSpecific?: boolean;
   accountId?: string;
+  selectedPeriod?: '1W' | '1M' | '6M' | '1Y' | '1W>';
 }
 
-export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: EnhancedSpendingChartProps) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'1W' | '1M' | '6M' | '1Y' | '1W>'>('1M');
+export const EnhancedSpendingChart = ({ 
+  accountSpecific = false, 
+  accountId,
+  selectedPeriod: propSelectedPeriod 
+}: EnhancedSpendingChartProps) => {
+  const [internalSelectedPeriod, setInternalSelectedPeriod] = useState<'1W' | '1M' | '6M' | '1Y' | '1W>'>('1M');
   const [selectedBarData, setSelectedBarData] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Use prop period if provided, otherwise use internal state
+  const selectedPeriod = propSelectedPeriod || internalSelectedPeriod;
 
   const periods = [
     { key: '1W' as const, label: '1W' },
@@ -148,6 +157,25 @@ export const EnhancedSpendingChart = ({ accountSpecific = false, accountId }: En
   return (
     <>
       <div>
+        {/* Show period buttons only if not controlled by parent */}
+        {!propSelectedPeriod && (
+          <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
+            <h4 className="text-lg font-semibold">{getChartTitle()}</h4>
+            <div className="flex gap-1">
+              {periods.map((period) => (
+                <Button
+                  key={period.key}
+                  variant={selectedPeriod === period.key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setInternalSelectedPeriod(period.key)}
+                >
+                  {period.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <ResponsiveContainer width="100%" height={300}>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1W>' ? (
             <ComposedChart data={getChartData()}>

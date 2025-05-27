@@ -47,6 +47,13 @@ const CalendarPage = () => {
     category: ""
   });
 
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-ZA', {
+      style: 'currency',
+      currency: 'ZAR',
+    }).format(amount);
+  };
+
   const handleAddEvent = () => {
     if (selectedDate && newEvent.title && newEvent.budget) {
       const event: Event = {
@@ -105,7 +112,16 @@ const CalendarPage = () => {
                 hasEvent: { 
                   backgroundColor: '#3b82f6',
                   color: 'white',
-                  borderRadius: '50%'
+                  borderRadius: '50%',
+                  fontWeight: 'bold'
+                }
+              }}
+              styles={{
+                day_selected: {
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  borderRadius: '50%',
+                  fontWeight: 'bold'
                 }
               }}
             />
@@ -152,7 +168,7 @@ const CalendarPage = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="budget">Estimated Budget ($)</Label>
+                      <Label htmlFor="budget">Estimated Budget (ZAR)</Label>
                       <Input
                         id="budget"
                         type="number"
@@ -190,7 +206,7 @@ const CalendarPage = () => {
                       <h3 className="font-semibold">{event.title}</h3>
                       <div className="flex items-center text-green-600 font-medium">
                         <DollarSign className="h-4 w-4" />
-                        {event.budget.toFixed(2)}
+                        {formatCurrency(event.budget)}
                       </div>
                     </div>
                     {event.description && (
@@ -206,7 +222,7 @@ const CalendarPage = () => {
                     <span>Total Budget for this day:</span>
                     <div className="flex items-center text-green-600">
                       <DollarSign className="h-4 w-4" />
-                      {totalBudgetForSelectedDate.toFixed(2)}
+                      {formatCurrency(totalBudgetForSelectedDate)}
                     </div>
                   </div>
                 </div>
@@ -226,27 +242,27 @@ const CalendarPage = () => {
       <Card>
         <CardHeader>
           <CardTitle>Upcoming Events & Budget Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card className="p-4">
+          {/* Combined summary stats inside the header */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+            <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">Total Events</p>
               <p className="text-2xl font-bold">{events.length}</p>
-            </Card>
-            <Card className="p-4">
+            </div>
+            <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">Total Budget</p>
               <p className="text-2xl font-bold text-green-600">
-                ${events.reduce((sum, event) => sum + event.budget, 0).toFixed(2)}
+                {formatCurrency(events.reduce((sum, event) => sum + event.budget, 0))}
               </p>
-            </Card>
-            <Card className="p-4">
+            </div>
+            <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">Average per Event</p>
               <p className="text-2xl font-bold text-blue-600">
-                ${events.length > 0 ? (events.reduce((sum, event) => sum + event.budget, 0) / events.length).toFixed(2) : '0.00'}
+                {events.length > 0 ? formatCurrency(events.reduce((sum, event) => sum + event.budget, 0) / events.length) : formatCurrency(0)}
               </p>
-            </Card>
+            </div>
           </div>
-          
+        </CardHeader>
+        <CardContent>
           <div className="space-y-3">
             <h3 className="font-semibold">All Upcoming Events</h3>
             {events.map((event) => (
@@ -259,7 +275,7 @@ const CalendarPage = () => {
                 </div>
                 <div className="flex items-center text-green-600 font-medium">
                   <DollarSign className="h-4 w-4" />
-                  {event.budget.toFixed(2)}
+                  {formatCurrency(event.budget)}
                 </div>
               </div>
             ))}
