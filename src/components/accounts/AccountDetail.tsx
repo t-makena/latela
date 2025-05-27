@@ -34,52 +34,58 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
                 </Badge>
               </div>
             </div>
-            <div className={`text-2xl font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
-              {formatCurrency(account.balance, account.currency)}
+            <div className="flex items-center gap-2">
+              <div className={`text-2xl font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
+                {formatCurrency(account.balance, account.currency)}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm">Edit Account</Button>
+                <Button size="sm">Add Transaction</Button>
+              </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <h3 className="font-semibold mb-3">Recent Transactions</h3>
-          
-          {accountTransactions.length > 0 ? (
-            <div className="space-y-3">
-              {accountTransactions.map(transaction => (
-                <div 
-                  key={transaction.id} 
-                  className="flex items-center justify-between p-3 border border-border rounded-md hover:bg-muted/50 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium">{transaction.description}</p>
-                    <div className="flex gap-2 items-center">
-                      <Badge variant="outline" className="capitalize">
-                        {transaction.category}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(transaction.date)}
-                      </span>
+        <CardContent className="space-y-6">
+          {/* Recent Transactions Section */}
+          <div>
+            <h3 className="font-semibold mb-3">Recent Transactions</h3>
+            
+            {accountTransactions.length > 0 ? (
+              <div className="space-y-3">
+                {accountTransactions.map(transaction => (
+                  <div 
+                    key={transaction.id} 
+                    className="flex items-center justify-between p-3 border border-border rounded-md hover:bg-muted/50 transition-colors"
+                  >
+                    <div>
+                      <p className="font-medium">{transaction.description}</p>
+                      <div className="flex gap-2 items-center">
+                        <Badge variant="outline" className="capitalize">
+                          {transaction.category}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(transaction.date)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={`font-bold ${transaction.type === 'expense' ? 'text-destructive' : 'text-budget-income'}`}>
+                      {transaction.type === 'expense' ? '-' : '+'}
+                      {formatCurrency(transaction.amount)}
                     </div>
                   </div>
-                  <div className={`font-bold ${transaction.type === 'expense' ? 'text-destructive' : 'text-budget-income'}`}>
-                    {transaction.type === 'expense' ? '-' : '+'}
-                    {formatCurrency(transaction.amount)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-6">
-              No transactions found for this account.
-            </p>
-          )}
-          
-          <div className="mt-6 flex justify-end">
-            <Button variant="outline" className="mr-2">Edit Account</Button>
-            <Button>Add Transaction</Button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-6">
+                No transactions found for this account.
+              </p>
+            )}
           </div>
 
+          {/* Spending Analytics Section */}
           {account.type === 'checking' && (
-            <div className="mt-6">
+            <div className="border-t pt-6">
+              <h3 className="font-semibold mb-3">Spending Analytics</h3>
               <EnhancedSpendingChart accountSpecific={true} accountId={account.id} />
             </div>
           )}
