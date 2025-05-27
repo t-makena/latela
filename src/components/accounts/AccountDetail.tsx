@@ -14,7 +14,7 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
   const accountTransactions = transactions.filter(t => t.accountId === account.id);
 
   return (
-    <Card className="mt-6 shadow-sm">
+    <Card className="shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
                     <Button variant="outline" size="sm">1M</Button>
                     <Button variant="outline" size="sm">6M</Button>
                     <Button variant="outline" size="sm">1Y</Button>
-                    <Button variant="outline" size="sm">1W></Button>
+                    <Button variant="outline" size="sm">1W{`>`}</Button>
                   </div>
                 </div>
               </div>
