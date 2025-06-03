@@ -18,6 +18,16 @@ export const BudgetGoalsList = () => {
     currentAmount: number;
   }>(null);
   
+  const [newGoal, setNewGoal] = useState({
+    name: '',
+    targetAmount: 0,
+    currentAmount: 0,
+    category: 'Savings',
+    endDate: ''
+  });
+  
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  
   const handleUpdateGoal = () => {
     if (!editingGoal) return;
     
@@ -31,12 +41,41 @@ export const BudgetGoalsList = () => {
     setEditingGoal(null);
   };
 
+  const handleAddGoal = () => {
+    if (!newGoal.name || newGoal.targetAmount <= 0) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const colors = ['#1e65ff', '#41b883', '#8959a8', '#ff6b6b', '#ffd166'];
+    const newGoalItem = {
+      id: (goals.length + 1).toString(),
+      name: newGoal.name,
+      targetAmount: newGoal.targetAmount,
+      currentAmount: newGoal.currentAmount,
+      category: newGoal.category,
+      endDate: newGoal.endDate || null,
+      color: colors[goals.length % colors.length]
+    };
+
+    setGoals(prev => [...prev, newGoalItem]);
+    setNewGoal({
+      name: '',
+      targetAmount: 0,
+      currentAmount: 0,
+      category: 'Savings',
+      endDate: ''
+    });
+    setShowAddDialog(false);
+    toast.success("Goal added successfully!");
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle>Budget Goals</CardTitle>
-          <Dialog>
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1">
                 <Plus size={16} />
@@ -48,9 +87,53 @@ export const BudgetGoalsList = () => {
                 <DialogTitle>Add New Budget Goal</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <p className="text-muted-foreground text-sm">
-                  Feature coming soon: Create new budget goals!
-                </p>
+                <div className="grid gap-2">
+                  <Label htmlFor="goalName">Goal Name</Label>
+                  <Input 
+                    id="goalName" 
+                    value={newGoal.name} 
+                    onChange={(e) => setNewGoal({...newGoal, name: e.target.value})}
+                    placeholder="e.g., Vacation Fund"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="targetAmount">Target Amount</Label>
+                  <Input 
+                    id="targetAmount" 
+                    type="number" 
+                    value={newGoal.targetAmount || ''} 
+                    onChange={(e) => setNewGoal({
+                      ...newGoal, 
+                      targetAmount: parseFloat(e.target.value) || 0
+                    })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="currentAmount">Current Amount (Optional)</Label>
+                  <Input 
+                    id="currentAmount" 
+                    type="number" 
+                    value={newGoal.currentAmount || ''} 
+                    onChange={(e) => setNewGoal({
+                      ...newGoal, 
+                      currentAmount: parseFloat(e.target.value) || 0
+                    })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="endDate">End Date (Optional)</Label>
+                  <Input 
+                    id="endDate" 
+                    type="date" 
+                    value={newGoal.endDate} 
+                    onChange={(e) => setNewGoal({...newGoal, endDate: e.target.value})}
+                  />
+                </div>
+                <Button onClick={handleAddGoal} className="mt-2">
+                  Add Goal
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
