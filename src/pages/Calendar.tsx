@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,13 +82,6 @@ const CalendarPage = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Calendar & Budget Planning</h1>
-        <p className="text-muted-foreground">
-          Plan your upcoming events and manage their budgets
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Calendar Section */}
         <Card className="h-fit">
