@@ -24,9 +24,9 @@ const Accounts = () => {
             onValueChange={handleTabChange}
           >
             <div className="flex justify-center mb-4">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="inline-flex w-auto min-w-fit">
                 {accounts.map(account => (
-                  <TabsTrigger key={account.id} value={account.id} className="flex gap-2 items-center justify-center">
+                  <TabsTrigger key={account.id} value={account.id} className="flex gap-2 items-center justify-center whitespace-nowrap">
                     <div 
                       className="h-3 w-3 rounded-full"
                       style={{ backgroundColor: account.color }}
