@@ -116,14 +116,6 @@ const CalendarPage = () => {
                   fontWeight: 'bold'
                 }
               }}
-              styles={{
-                day_selected: {
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  borderRadius: '50%',
-                  fontWeight: 'bold'
-                }
-              }}
             />
             <div className="p-6 pt-0">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
