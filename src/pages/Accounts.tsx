@@ -16,13 +16,6 @@ const Accounts = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Accounts</h1>
-        <p className="text-muted-foreground">
-          Manage your bank accounts and track transactions
-        </p>
-      </div>
-      
       <Card>
         <CardContent className="pt-6">
           <Tabs 
