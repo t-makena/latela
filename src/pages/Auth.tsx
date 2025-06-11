@@ -37,7 +37,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
         <div className="space-y-6 text-center lg:text-left">
@@ -45,32 +45,17 @@ const AuthPage = () => {
             <div className="p-3 bg-primary rounded-full">
               <Wallet className="h-8 w-8 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold">Budget Buddy</h1>
+            <h1 className="text-3xl font-bold text-foreground">Budget Buddy</h1>
           </div>
           
           <div className="space-y-4">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900">
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
               Take Control of Your
               <span className="text-primary block">Financial Future</span>
             </h2>
-            <p className="text-xl text-gray-600 leading-relaxed">
+            <p className="text-xl text-muted-foreground leading-relaxed">
               Track expenses, set budgets, and reach your financial goals with our intuitive budgeting app designed for South Africans.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-            <div className="text-center p-4">
-              <div className="text-2xl font-bold text-primary">R50k+</div>
-              <div className="text-sm text-gray-600">Average Savings</div>
-            </div>
-            <div className="text-center p-4">
-              <div className="text-2xl font-bold text-primary">10k+</div>
-              <div className="text-sm text-gray-600">Happy Users</div>
-            </div>
-            <div className="text-center p-4">
-              <div className="text-2xl font-bold text-primary">4.9★</div>
-              <div className="text-sm text-gray-600">User Rating</div>
-            </div>
           </div>
         </div>
 
