@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { monthlySpending, dailySpending, futureDailySpending, sixMonthSpending, formatCurrency, getTargetAverageExpense, categoryBreakdown, getMonthlyIncome, getMonthlySavings } from "@/lib/data";
 import { 
@@ -156,99 +155,76 @@ export const EnhancedSpendingChart = ({
 
   return (
     <>
-      <Card className="shadow-sm">
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center flex-wrap gap-2">
-            <CardTitle>{getChartTitle()}</CardTitle>
-            {/* Show period buttons only if not controlled by parent */}
-            {!propSelectedPeriod && (
-              <div className="flex gap-1">
-                {periods.map((period) => (
-                  <Button
-                    key={period.key}
-                    variant={selectedPeriod === period.key ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setInternalSelectedPeriod(period.key)}
-                  >
-                    {period.label}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1W>' ? (
-              <ComposedChart data={getChartData()}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
-                <Legend />
-                <Bar 
-                  dataKey="amount" 
-                  shape={<CustomBar />}
-                  style={{ cursor: 'pointer' }}
-                />
-                {selectedPeriod === '1W' && (
-                  <Line 
-                    type="monotone" 
-                    dataKey={() => targetExpense} 
-                    stroke="#ffd166" 
-                    strokeWidth={2} 
-                    strokeDasharray="5 5"
-                    name="Target Average Expense"
-                  />
-                )}
-                {selectedPeriod === '1W>' && (
-                  <Line 
-                    type="monotone" 
-                    dataKey={() => futureTargetExpense} 
-                    stroke="#ffd166" 
-                    strokeWidth={2} 
-                    strokeDasharray="5 5"
-                    name="Target Average Expense"
-                  />
-                )}
-              </ComposedChart>
-            ) : (
-              <LineChart data={getChartData()}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value, name) => [
-                  `${formatCurrency(value as number)}`, 
-                  name === 'amount' ? 'Expenses' : name === 'savings' ? 'Savings' : 'Net Balance'
-                ]} />
-                <Legend />
+      <div className="p-6">
+        <ResponsiveContainer width="100%" height={300}>
+          {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1W>' ? (
+            <ComposedChart data={getChartData()}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
+              <Legend />
+              <Bar 
+                dataKey="amount" 
+                shape={<CustomBar />}
+                style={{ cursor: 'pointer' }}
+              />
+              {selectedPeriod === '1W' && (
                 <Line 
                   type="monotone" 
-                  dataKey="amount" 
-                  stroke="#ff6b6b" 
+                  dataKey={() => targetExpense} 
+                  stroke="#ffd166" 
                   strokeWidth={2} 
-                  name="Expenses"
+                  strokeDasharray="5 5"
+                  name="Target Average Expense"
                 />
+              )}
+              {selectedPeriod === '1W>' && (
                 <Line 
                   type="monotone" 
-                  dataKey="savings" 
-                  stroke="#41b883" 
+                  dataKey={() => futureTargetExpense} 
+                  stroke="#ffd166" 
                   strokeWidth={2} 
-                  name="Savings"
+                  strokeDasharray="5 5"
+                  name="Target Average Expense"
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="netBalance" 
-                  stroke="#1e65ff" 
-                  strokeWidth={2} 
-                  name="Net Balance"
-                />
-              </LineChart>
-            )}
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+              )}
+            </ComposedChart>
+          ) : (
+            <LineChart data={getChartData()}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(value, name) => [
+                `${formatCurrency(value as number)}`, 
+                name === 'amount' ? 'Expenses' : name === 'savings' ? 'Savings' : 'Net Balance'
+              ]} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="amount" 
+                stroke="#ff6b6b" 
+                strokeWidth={2} 
+                name="Expenses"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="savings" 
+                stroke="#41b883" 
+                strokeWidth={2} 
+                name="Savings"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="netBalance" 
+                stroke="#1e65ff" 
+                strokeWidth={2} 
+                name="Net Balance"
+              />
+            </LineChart>
+          )}
+        </ResponsiveContainer>
+      </div>
 
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
         <DialogContent>

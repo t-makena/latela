@@ -26,7 +26,7 @@ export const SavingsBalanceChart = () => {
   const savingsGoals = budgetGoals.filter(goal => goal.category === 'Savings');
 
   return (
-    <div>
+    <div className="p-6">
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={getChartData()}>
           <CartesianGrid strokeDasharray="3 3" />

@@ -114,11 +114,13 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
                   </div>
                 </div>
               </div>
-              <EnhancedSpendingChart 
-                accountSpecific={true} 
-                accountId={account.id} 
-                selectedPeriod={selectedPeriod}
-              />
+              <div className="bg-white rounded-lg border">
+                <EnhancedSpendingChart 
+                  accountSpecific={true} 
+                  accountId={account.id} 
+                  selectedPeriod={selectedPeriod}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -139,7 +141,9 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
                   </div>
                 </div>
               </div>
-              <SavingsBalanceChart />
+              <div className="bg-white rounded-lg border">
+                <SavingsBalanceChart />
+              </div>
             </div>
           </div>
         )}
