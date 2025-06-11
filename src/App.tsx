@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Accounts from "./pages/Accounts";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,15 +20,30 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/accounts" element={<Accounts />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={
+            <Layout>
+              <Index />
+            </Layout>
+          } />
+          <Route path="/accounts" element={
+            <Layout>
+              <Accounts />
+            </Layout>
+          } />
+          <Route path="/calendar" element={
+            <Layout>
+              <Calendar />
+            </Layout>
+          } />
+          <Route path="/settings" element={
+            <Layout>
+              <Settings />
+            </Layout>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarDays, Plus, DollarSign, Clock } from "lucide-react";
+import { CalendarDays, Plus, Clock } from "lucide-react";
 import { format } from "date-fns";
 
 interface Event {
@@ -188,8 +189,7 @@ const CalendarPage = () => {
                   <div key={event.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold">{event.title}</h3>
-                      <div className="flex items-center text-green-600 font-medium">
-                        <DollarSign className="h-4 w-4" />
+                      <div className="text-green-600 font-medium">
                         {formatCurrency(event.budget)}
                       </div>
                     </div>
@@ -204,8 +204,7 @@ const CalendarPage = () => {
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center font-semibold">
                     <span>Total Budget for this day:</span>
-                    <div className="flex items-center text-green-600">
-                      <DollarSign className="h-4 w-4" />
+                    <div className="text-green-600">
                       {formatCurrency(totalBudgetForSelectedDate)}
                     </div>
                   </div>
@@ -257,8 +256,7 @@ const CalendarPage = () => {
                     {format(event.date, "MMM dd, yyyy")} • {event.category}
                   </p>
                 </div>
-                <div className="flex items-center text-green-600 font-medium">
-                  <DollarSign className="h-4 w-4" />
+                <div className="text-green-600 font-medium">
                   {formatCurrency(event.budget)}
                 </div>
               </div>
