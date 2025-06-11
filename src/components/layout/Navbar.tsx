@@ -43,8 +43,8 @@ export const Navbar = () => {
   return (
     <>
       {isMobile ? (
-        <Card className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 p-2 rounded-full shadow-lg bg-card">
-          <div className="flex items-center gap-6">
+        <Card className="fixed bottom-4 left-4 right-4 z-50 p-2 rounded-full shadow-lg bg-card mx-auto max-w-md">
+          <div className="flex items-center justify-center gap-6">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
