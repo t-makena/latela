@@ -24,9 +24,25 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
     .filter(t => t.value > 0 && t.source.toLowerCase().includes('salary'))
     .reduce((sum, t) => sum + t.value, 0);
 
+  // Calculate monthly expenses as total of all negative values
   const monthlyExpenses = Math.abs(currentMonthTransactions
     .filter(t => t.value < 0)
     .reduce((sum, t) => sum + t.value, 0));
+
+  // Calculate savings as "transfer from cheque" minus "transfer from savings"
+  const transferFromCheque = currentMonthTransactions
+    .filter(t => t.source.toLowerCase().includes('transfer from cheque'))
+    .reduce((sum, t) => sum + t.value, 0);
+  
+  const transferFromSavings = currentMonthTransactions
+    .filter(t => t.source.toLowerCase().includes('transfer from savings'))
+    .reduce((sum, t) => sum + t.value, 0);
+  
+  const monthlySavings = transferFromCheque - transferFromSavings;
+
+  // Net balance is the total of all transaction values
+  const netBalance = currentMonthTransactions
+    .reduce((sum, t) => sum + t.value, 0);
 
   // Calculate account balances
   const accountBalances = transactions.reduce((acc, transaction) => {
@@ -70,20 +86,30 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
       .filter(t => t.value > 0 && t.source.toLowerCase().includes('salary'))
       .reduce((sum, t) => sum + t.value, 0);
     
-    const savings = income * 0.2; // Assume 20% savings rate
-    const netBalance = income - expenses - savings;
+    const transferFromChequeMonth = monthTransactions
+      .filter(t => t.source.toLowerCase().includes('transfer from cheque'))
+      .reduce((sum, t) => sum + t.value, 0);
+    
+    const transferFromSavingsMonth = monthTransactions
+      .filter(t => t.source.toLowerCase().includes('transfer from savings'))
+      .reduce((sum, t) => sum + t.value, 0);
+    
+    const savings = transferFromChequeMonth - transferFromSavingsMonth;
+    const netBalanceMonth = monthTransactions.reduce((sum, t) => sum + t.value, 0);
 
     return {
       month,
       amount: expenses,
       savings,
-      netBalance
+      netBalance: netBalanceMonth
     };
   });
 
   return {
     monthlyIncome,
     monthlyExpenses,
+    monthlySavings,
+    netBalance,
     accountBalances,
     categoryBreakdownArray,
     monthlySpending,

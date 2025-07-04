@@ -44,9 +44,7 @@ export const FinancialSummary = () => {
     );
   }
 
-  const { monthlyIncome, monthlyExpenses } = calculateFinancialMetrics(transactions);
-  const monthlySavings = monthlyIncome * 0.2; // 20% savings rate
-  const netBalance = monthlyIncome - monthlyExpenses - monthlySavings;
+  const { monthlyIncome, monthlyExpenses, monthlySavings, netBalance } = calculateFinancialMetrics(transactions);
 
   return (
     <Card className="stat-card animate-fade-in">
@@ -65,7 +63,7 @@ export const FinancialSummary = () => {
               {formatCurrency(netBalance)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total income minus expenses and savings
+              Total of all transaction values
             </p>
           </div>
           
@@ -77,7 +75,7 @@ export const FinancialSummary = () => {
               {formatCurrency(monthlyIncome)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Monthly earnings
+              Monthly salary deposits
             </p>
           </div>
           
@@ -89,7 +87,7 @@ export const FinancialSummary = () => {
               {formatCurrency(monthlyExpenses)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Monthly spending
+              Total negative values
             </p>
           </div>
           
@@ -101,7 +99,7 @@ export const FinancialSummary = () => {
               {formatCurrency(monthlySavings)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              20% of monthly income
+              Transfers from cheque minus transfers from savings
             </p>
           </div>
         </div>
