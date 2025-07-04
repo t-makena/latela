@@ -2,10 +2,52 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { accounts, formatCurrency } from "@/lib/data";
+import { formatCurrency } from "@/lib/data";
 import { ChevronRight } from "lucide-react";
+import { useAccounts } from "@/hooks/useAccounts";
 
 export const AccountsOverview = () => {
+  const { accounts, loading, error } = useAccounts();
+
+  if (loading) {
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Accounts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between p-2 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+                  <div>
+                    <div className="h-4 w-24 bg-gray-200 rounded mb-1"></div>
+                    <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+                <div className="h-4 w-20 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Accounts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">Error loading accounts: {error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mt-6">
       <CardHeader className="pb-2">
