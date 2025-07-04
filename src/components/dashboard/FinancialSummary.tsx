@@ -1,12 +1,51 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getNetWorth, getMonthlyIncome, getMonthlyExpenses, getMonthlySavings, formatCurrency } from "@/lib/data";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 
 export const FinancialSummary = () => {
-  const netWorth = getNetWorth();
-  const monthlyIncome = getMonthlyIncome();
-  const monthlyExpenses = getMonthlyExpenses();
-  const monthlySavings = getMonthlySavings(); // Now 20% of income
+  const { transactions, loading, error } = useTransactions();
+
+  if (loading) {
+    return (
+      <Card className="stat-card animate-fade-in">
+        <CardHeader className="pb-2 pt-4">
+          <CardTitle className="text-lg font-medium text-muted-foreground">
+            Financial Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="financial-metric animate-pulse">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                <div className="h-3 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="stat-card animate-fade-in">
+        <CardHeader className="pb-2 pt-4">
+          <CardTitle className="text-lg font-medium text-muted-foreground">
+            Financial Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">Error loading financial data: {error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { monthlyIncome, monthlyExpenses } = calculateFinancialMetrics(transactions);
+  const monthlySavings = monthlyIncome * 0.2; // 20% savings rate
   const netBalance = monthlyIncome - monthlyExpenses - monthlySavings;
 
   return (

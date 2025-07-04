@@ -2,13 +2,17 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/data";
 import { ChevronRight } from "lucide-react";
 import { useAccounts } from "@/hooks/useAccounts";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 
 export const AccountsOverview = () => {
-  const { accounts, loading, error } = useAccounts();
+  const { accounts, loading: accountsLoading, error: accountsError } = useAccounts();
+  const { transactions, loading: transactionsLoading } = useTransactions();
 
+  const loading = accountsLoading || transactionsLoading;
+  
   if (loading) {
     return (
       <Card className="mt-6">
@@ -35,18 +39,26 @@ export const AccountsOverview = () => {
     );
   }
 
-  if (error) {
+  if (accountsError) {
     return (
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>Accounts</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-destructive">Error loading accounts: {error}</p>
+          <p className="text-destructive">Error loading accounts: {accountsError}</p>
         </CardContent>
       </Card>
     );
   }
+
+  const { accountBalances } = calculateFinancialMetrics(transactions);
+
+  // Update accounts with real balances
+  const accountsWithBalances = accounts.map(account => ({
+    ...account,
+    balance: accountBalances[parseInt(account.id)] || 0
+  }));
 
   return (
     <Card className="mt-6">
@@ -62,7 +74,7 @@ export const AccountsOverview = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {accounts.map((account) => (
+          {accountsWithBalances.map((account) => (
             <div key={account.id} className="flex items-center justify-between p-2 hover:bg-muted rounded-md transition-colors">
               <div className="flex items-center gap-3">
                 <div 

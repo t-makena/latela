@@ -25,7 +25,7 @@ export const useAccounts = () => {
           id: account.Acc_no.toString(),
           name: `${account.Bank} ${account.Acc_type || 'Account'}`,
           type: (account.Acc_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
-          balance: 0, // You may want to calculate this from transactions
+          balance: 0, // This will be calculated separately using transactions
           currency: 'ZAR',
           color: getAccountColor(index),
         }));
