@@ -19,9 +19,9 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
            transactionDate.getFullYear() === currentYear;
   });
 
-  // Calculate monthly totals
+  // Calculate monthly income from salary deposits only
   const monthlyIncome = currentMonthTransactions
-    .filter(t => t.value > 0)
+    .filter(t => t.value > 0 && t.source.toLowerCase().includes('salary'))
     .reduce((sum, t) => sum + t.value, 0);
 
   const monthlyExpenses = Math.abs(currentMonthTransactions
@@ -67,7 +67,7 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
       .reduce((sum, t) => sum + t.value, 0));
     
     const income = monthTransactions
-      .filter(t => t.value > 0)
+      .filter(t => t.value > 0 && t.source.toLowerCase().includes('salary'))
       .reduce((sum, t) => sum + t.value, 0);
     
     const savings = income * 0.2; // Assume 20% savings rate
