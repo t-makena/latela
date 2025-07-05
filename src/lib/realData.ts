@@ -1,4 +1,3 @@
-
 import { useTransactions } from '@/hooks/useTransactions';
 
 interface Transaction {
@@ -44,16 +43,16 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
   const monthlyExpenses = Math.abs(expenseTransactions.reduce((sum, t) => sum + t.value, 0));
   console.log('Monthly expenses:', monthlyExpenses);
 
-  // Calculate savings as "transfer from cheque" minus "transfer from savings"
+  // Calculate savings as "transfer from cheque" plus "transfer to cheque"
   const transferFromCheque = currentMonthTransactions
     .filter(t => t.source.toLowerCase().includes('transfer from cheque'))
     .reduce((sum, t) => sum + t.value, 0);
   
-  const transferFromSavings = currentMonthTransactions
-    .filter(t => t.source.toLowerCase().includes('transfer from savings'))
+  const transferToCheque = currentMonthTransactions
+    .filter(t => t.source.toLowerCase().includes('transfer to cheque'))
     .reduce((sum, t) => sum + t.value, 0);
   
-  const monthlySavings = transferFromCheque - transferFromSavings;
+  const monthlySavings = transferFromCheque + transferToCheque;
   console.log('Monthly savings:', monthlySavings);
 
   // Net balance is the total of all transaction values
@@ -114,11 +113,11 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
       .filter(t => t.source.toLowerCase().includes('transfer from cheque'))
       .reduce((sum, t) => sum + t.value, 0);
     
-    const transferFromSavingsMonth = monthTransactions
-      .filter(t => t.source.toLowerCase().includes('transfer from savings'))
+    const transferToChequeMonth = monthTransactions
+      .filter(t => t.source.toLowerCase().includes('transfer to cheque'))
       .reduce((sum, t) => sum + t.value, 0);
     
-    const savings = transferFromChequeMonth - transferFromSavingsMonth;
+    const savings = transferFromChequeMonth + transferToChequeMonth;
     const netBalanceMonth = monthTransactions.reduce((sum, t) => sum + t.value, 0);
 
     return {

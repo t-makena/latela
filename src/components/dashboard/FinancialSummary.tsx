@@ -1,4 +1,5 @@
 
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
@@ -112,7 +113,7 @@ export const FinancialSummary = () => {
               {formatCurrency(monthlySavings)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Transfers from cheque minus transfers from savings
+              Transfers from cheque plus transfers to cheque
             </p>
           </div>
         </div>
@@ -120,3 +121,4 @@ export const FinancialSummary = () => {
     </Card>
   );
 };
+
