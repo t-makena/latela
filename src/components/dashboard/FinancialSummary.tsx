@@ -6,6 +6,10 @@ import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 export const FinancialSummary = () => {
   const { transactions, loading, error } = useTransactions();
 
+  console.log('FinancialSummary - transactions:', transactions);
+  console.log('FinancialSummary - loading:', loading);
+  console.log('FinancialSummary - error:', error);
+
   if (loading) {
     return (
       <Card className="stat-card animate-fade-in">
@@ -44,13 +48,22 @@ export const FinancialSummary = () => {
     );
   }
 
+  // Add debug log before calculations
+  console.log('About to calculate metrics with transactions:', transactions);
+  
   const { monthlyIncome, monthlyExpenses, monthlySavings, netBalance } = calculateFinancialMetrics(transactions);
+
+  // Debug log after calculations
+  console.log('Calculated metrics:', { monthlyIncome, monthlyExpenses, monthlySavings, netBalance });
 
   return (
     <Card className="stat-card animate-fade-in">
       <CardHeader className="pb-2 pt-4">
         <CardTitle className="text-lg font-medium text-muted-foreground">
           Financial Overview
+          {transactions.length === 0 && (
+            <span className="text-sm text-orange-500 ml-2">(No transaction data found)</span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
