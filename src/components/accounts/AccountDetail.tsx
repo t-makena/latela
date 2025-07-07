@@ -1,33 +1,25 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AccountType, formatCurrency, transactions, formatDate } from "@/lib/data";
-import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
-import { SavingsBalanceChart } from "@/components/dashboard/SavingsBalanceChart";
+import { AccountType } from "@/lib/data";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
+import { RecentTransactions } from "./RecentTransactions";
 
 interface AccountDetailProps {
   account: AccountType;
 }
 
 export const AccountDetail = ({ account }: AccountDetailProps) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'1W' | '1M' | '6M' | '1Y' | '1W>'>('1M');
-  const accountTransactions = transactions.filter(t => t.accountId === account.id);
-
-  const periods = [
-    { key: '1W' as const, label: '1W' },
-    { key: '1M' as const, label: '1M' },
-    { key: '6M' as const, label: '6M' },
-    { key: '1Y' as const, label: '1Y' },
-    { key: '1W>' as const, label: '1W{`>`}' },
-  ];
+  const { transactions } = useTransactions();
+  const { accountBalances } = calculateFinancialMetrics(transactions);
+  
+  const accountBalance = accountBalances[parseInt(account.id)] || 0;
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
             <div 
               className="h-10 w-10 rounded-full flex items-center justify-center"
               style={{ backgroundColor: account.color }}
@@ -37,117 +29,32 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
               </span>
             </div>
             <div>
-              <CardTitle>{account.name}</CardTitle>
-              <Badge variant="outline" className="mt-1 capitalize">
-                {account.type}
-              </Badge>
+              <h2 className="text-xl font-semibold">{account.name}</h2>
+              <p className="text-muted-foreground capitalize">{account.type} Account</p>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Current Balance</p>
+              <p className={`text-2xl font-bold ${accountBalance < 0 ? 'text-destructive' : 'text-green-600'}`}>
+                {formatCurrency(accountBalance)}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Account Type</p>
+              <p className="text-lg font-semibold capitalize">{account.type}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Currency</p>
+              <p className="text-lg font-semibold">{account.currency}</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className={`text-2xl font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
-              {formatCurrency(account.balance, account.currency)}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">Edit Account</Button>
-              <Button size="sm">Add Transaction</Button>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-8">
-        {/* Recent Transactions Section */}
-        <div>
-          <h3 className="font-semibold mb-4 text-lg">Recent Transactions</h3>
-          
-          {accountTransactions.length > 0 ? (
-            <div className="space-y-3">
-              {accountTransactions.map(transaction => (
-                <div 
-                  key={transaction.id} 
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium">{transaction.description}</p>
-                    <div className="flex gap-2 items-center">
-                      <Badge variant="outline" className="capitalize">
-                        {transaction.category}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(transaction.date)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className={`font-bold ${transaction.type === 'expense' ? 'text-destructive' : 'text-budget-income'}`}>
-                    {transaction.type === 'expense' ? '-' : '+'}
-                    {formatCurrency(transaction.amount)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-6">
-              No transactions found for this account.
-            </p>
-          )}
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Analytics Section */}
-        {account.type === 'checking' && (
-          <div className="border-t pt-8">
-            <h3 className="font-semibold mb-4 text-lg">Spending Analytics</h3>
-            <div className="mt-4">
-              <div className="pb-2">
-                <div className="flex justify-between items-center flex-wrap gap-2">
-                  <h4 className="text-lg font-semibold">Daily Spending Trend</h4>
-                  <div className="flex gap-1">
-                    {periods.map((period) => (
-                      <Button
-                        key={period.key}
-                        variant={selectedPeriod === period.key ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSelectedPeriod(period.key)}
-                      >
-                        {period.key === '1W>' ? '1W>' : period.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg border">
-                <EnhancedSpendingChart 
-                  accountSpecific={true} 
-                  accountId={account.id} 
-                  selectedPeriod={selectedPeriod}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Savings Balance Chart Section */}
-        {account.type === 'savings' && (
-          <div className="border-t pt-8">
-            <h3 className="font-semibold mb-4 text-lg">Savings Balance Trend</h3>
-            <div className="mt-4">
-              <div className="pb-2">
-                <div className="flex justify-between items-center flex-wrap gap-2">
-                  <h4 className="text-lg font-semibold">Savings Balance Trend</h4>
-                  <div className="flex gap-1">
-                    <Button variant="outline" size="sm">1W</Button>
-                    <Button variant="outline" size="sm">1M</Button>
-                    <Button variant="default" size="sm">6M</Button>
-                    <Button variant="outline" size="sm">1Y</Button>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg border">
-                <SavingsBalanceChart />
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      <RecentTransactions accountId={account.id} />
+    </div>
   );
 };
