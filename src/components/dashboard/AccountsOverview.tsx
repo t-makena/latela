@@ -17,7 +17,7 @@ export const AccountsOverview = () => {
     return (
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Accounts</CardTitle>
+          <CardTitle className="font-georama">Accounts</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -43,7 +43,7 @@ export const AccountsOverview = () => {
     return (
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Accounts</CardTitle>
+          <CardTitle className="font-georama">Accounts</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-destructive">Error loading accounts: {accountsError}</p>
@@ -54,9 +54,19 @@ export const AccountsOverview = () => {
 
   const { accountBalances } = calculateFinancialMetrics(transactions);
 
-  // Update accounts with real balances
+  // Function to clean account names by removing redundant text
+  const cleanAccountName = (name: string) => {
+    return name
+      .replace(/\s+Cheque$/i, '')
+      .replace(/\s+Savings$/i, '')
+      .replace(/\s+Credit$/i, '')
+      .trim();
+  };
+
+  // Update accounts with real balances and clean names
   const accountsWithBalances = accounts.map(account => ({
     ...account,
+    name: cleanAccountName(account.name),
     balance: accountBalances[parseInt(account.id)] || 0
   }));
 
@@ -64,7 +74,7 @@ export const AccountsOverview = () => {
     <Card className="mt-6">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle>Accounts</CardTitle>
+          <CardTitle className="font-georama">Accounts</CardTitle>
           <Link to="/accounts">
             <Button variant="ghost" size="sm" className="gap-1">
               See all <ChevronRight size={16} />
@@ -86,13 +96,13 @@ export const AccountsOverview = () => {
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium">{account.name}</p>
+                  <p className="font-medium font-georama">{account.name}</p>
                   <p className="text-sm text-muted-foreground capitalize">
                     {account.type}
                   </p>
                 </div>
               </div>
-              <div className={`font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
+              <div className={`font-bold font-georama ${account.balance < 0 ? 'text-destructive' : ''}`}>
                 {formatCurrency(account.balance)}
               </div>
             </div>

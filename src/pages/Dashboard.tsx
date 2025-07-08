@@ -18,10 +18,14 @@ const Dashboard = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>Spending Trends</CardTitle>
+          <CardTitle className="font-georama">Spending Trends</CardTitle>
         </CardHeader>
         <CardContent>
-          <EnhancedSpendingChart />
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-full md:min-w-0">
+              <EnhancedSpendingChart />
+            </div>
+          </div>
         </CardContent>
       </Card>
       

@@ -15,7 +15,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="font-georama">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -38,7 +38,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="font-georama">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-destructive">Error loading transactions: {error}</p>
@@ -57,7 +57,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="font-georama">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">No transactions found for this account.</p>
@@ -69,15 +69,15 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Transactions</CardTitle>
+        <CardTitle className="font-georama">Recent Transactions</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="font-georama">Date</TableHead>
+              <TableHead className="font-georama">Description</TableHead>
+              <TableHead className="text-right font-georama">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -86,10 +86,10 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(transaction.created_at)}
                 </TableCell>
-                <TableCell className="font-medium">
+                <TableCell className="font-medium font-georama">
                   {transaction.source}
                 </TableCell>
-                <TableCell className={`text-right font-medium ${
+                <TableCell className={`text-right font-medium font-georama ${
                   transaction.value < 0 ? 'text-destructive' : 'text-green-600'
                 }`}>
                   {formatCurrency(transaction.value)}

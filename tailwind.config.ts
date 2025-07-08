@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'georama': ['Georama', 'sans-serif'],
+			},
 			colors: {
 				border: "hsl(var(--border))",
 				input: "hsl(var(--input))",
@@ -54,10 +58,10 @@ export default {
 				},
 				// Budget app specific colors
 				budget: {
-					primary: "#0EA5E9",
+					primary: "#000000",
 					secondary: "#41b883",
 					expense: "#F97316",
-					income: "#0EA5E9",
+					income: "#000000",
 					neutral: "#6c757d",
 					dark: "#2d3748",
 					light: "#f8fafc"

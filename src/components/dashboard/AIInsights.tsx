@@ -11,7 +11,7 @@ export const AIInsights = () => {
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <Lightbulb className="text-primary" size={18} />
-          <CardTitle>AI Financial Insights</CardTitle>
+          <CardTitle className="font-georama">Financial Insights</CardTitle>
         </div>
       </CardHeader>
       <CardContent>

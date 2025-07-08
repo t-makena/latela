@@ -1,10 +1,12 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Georama:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -13,8 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 30 90% 58%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -30,39 +32,39 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%;
+    --ring: 0 0% 0%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 30 90% 58%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 84% 4.9%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 60%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 0 0% 0%;
   }
 }
 
@@ -72,15 +74,16 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
-    background: linear-gradient(135deg, #7c4dff 0%, #ff914d 100%);
+    @apply bg-white text-foreground;
+    font-family: 'Georama', sans-serif;
+    background: white;
   }
 }
 
 .stat-card {
   @apply rounded-xl bg-white p-3 sm:p-4 md:p-5 transition-all duration-200 hover:shadow-md;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 
     0 1px 1px rgba(255, 255, 255, 0.9) inset,
     0 -1px 1px rgba(0, 0, 0, 0.05) inset,
@@ -96,7 +99,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8), transparent);
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
 
 .stat-card::before {
@@ -106,7 +109,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(to right, #0EA5E9, #F97316);
+  background: black;
   border-bottom-left-radius: 0.75rem;
   border-bottom-right-radius: 0.75rem;
   opacity: 0.3;
@@ -120,7 +123,7 @@
 .progress-value {
   @apply h-full rounded-full transition-all duration-300;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset;
-  background: linear-gradient(to right, #0EA5E9, #F97316);
+  background: black;
 }
 
 /* 3D Card Style */
@@ -132,7 +135,7 @@
     0 15px 25px -5px rgba(0, 0, 0, 0.2),
     0 8px 10px -5px rgba(0, 0, 0, 0.1),
     0 30px 35px -10px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   background: white;
   transform: translateY(-2px);
   transition: transform 0.2s, box-shadow 0.2s;
@@ -155,7 +158,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8), transparent);
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
 
 /* Hover effect for financial metric items */

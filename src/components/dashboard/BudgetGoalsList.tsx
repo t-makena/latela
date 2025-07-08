@@ -11,12 +11,6 @@ import { toast } from "@/components/ui/sonner";
 
 export const BudgetGoalsList = () => {
   const [goals, setGoals] = useState(budgetGoals);
-  const [editingGoal, setEditingGoal] = useState<null | {
-    id: string;
-    name: string;
-    targetAmount: number;
-    currentAmount: number;
-  }>(null);
   
   const [newGoal, setNewGoal] = useState({
     name: '',
@@ -27,19 +21,6 @@ export const BudgetGoalsList = () => {
   });
   
   const [showAddDialog, setShowAddDialog] = useState(false);
-  
-  const handleUpdateGoal = () => {
-    if (!editingGoal) return;
-    
-    setGoals(prev => prev.map(goal => 
-      goal.id === editingGoal.id 
-        ? { ...goal, ...editingGoal }
-        : goal
-    ));
-    
-    toast.success("Goal updated successfully!");
-    setEditingGoal(null);
-  };
 
   const handleAddGoal = () => {
     if (!newGoal.name || newGoal.targetAmount <= 0) {
@@ -47,7 +28,7 @@ export const BudgetGoalsList = () => {
       return;
     }
 
-    const colors = ['#1e65ff', '#41b883', '#8959a8', '#ff6b6b', '#ffd166'];
+    const colors = ['#000000', '#333333', '#666666', '#999999', '#cccccc'];
     const newGoalItem = {
       id: (goals.length + 1).toString(),
       name: newGoal.name,
@@ -74,7 +55,7 @@ export const BudgetGoalsList = () => {
     <Card className="mt-6">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle>Budget Goals</CardTitle>
+          <CardTitle className="font-georama">Budget Goals</CardTitle>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1">
@@ -84,7 +65,7 @@ export const BudgetGoalsList = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Budget Goal</DialogTitle>
+                <DialogTitle className="font-georama">Add New Budget Goal</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -147,73 +128,12 @@ export const BudgetGoalsList = () => {
               <div key={goal.id} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-medium">{goal.name}</p>
+                    <p className="font-medium font-georama">{goal.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {formatCurrency(goal.currentAmount)} of {formatCurrency(goal.targetAmount)} ({percentage}%)
+                      {percentage}%
                       {goal.endDate && ` • Due ${formatDate(goal.endDate)}`}
                     </p>
                   </div>
-                  
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setEditingGoal({
-                          id: goal.id,
-                          name: goal.name,
-                          targetAmount: goal.targetAmount,
-                          currentAmount: goal.currentAmount,
-                        })}
-                      >
-                        Edit
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Edit Goal</DialogTitle>
-                      </DialogHeader>
-                      {editingGoal && (
-                        <div className="grid gap-4 py-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor="name">Goal Name</Label>
-                            <Input 
-                              id="name" 
-                              value={editingGoal.name} 
-                              onChange={(e) => setEditingGoal({...editingGoal, name: e.target.value})}
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="target">Target Amount</Label>
-                            <Input 
-                              id="target" 
-                              type="number" 
-                              value={editingGoal.targetAmount} 
-                              onChange={(e) => setEditingGoal({
-                                ...editingGoal, 
-                                targetAmount: parseFloat(e.target.value) || 0
-                              })}
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="current">Current Amount</Label>
-                            <Input 
-                              id="current" 
-                              type="number" 
-                              value={editingGoal.currentAmount} 
-                              onChange={(e) => setEditingGoal({
-                                ...editingGoal, 
-                                currentAmount: parseFloat(e.target.value) || 0
-                              })}
-                            />
-                          </div>
-                          <Button onClick={handleUpdateGoal} className="mt-2">
-                            Save Changes
-                          </Button>
-                        </div>
-                      )}
-                    </DialogContent>
-                  </Dialog>
                 </div>
                 
                 <div className="progress-bar">
@@ -221,7 +141,7 @@ export const BudgetGoalsList = () => {
                     className="progress-value"
                     style={{ 
                       width: `${Math.min(100, percentage)}%`,
-                      backgroundColor: goal.color 
+                      backgroundColor: '#000000'
                     }}
                   />
                 </div>
