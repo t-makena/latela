@@ -14,13 +14,13 @@ export const FinancialSummary = () => {
 
   if (loading) {
     return (
-      <div className={isMobile ? "border border-black p-4 bg-white" : "stat-card animate-fade-in"}>
-        <div className="pb-2 pt-4">
-          <h2 className="text-lg font-medium text-muted-foreground font-georama">
+      <Card className="stat-card animate-fade-in">
+        <CardHeader className="pb-2 pt-4">
+          <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
             Financial Overview
-          </h2>
-        </div>
-        <div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="financial-metric animate-pulse">
@@ -30,23 +30,23 @@ export const FinancialSummary = () => {
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className={isMobile ? "border border-black p-4 bg-white" : "stat-card animate-fade-in"}>
-        <div className="pb-2 pt-4">
-          <h2 className="text-lg font-medium text-muted-foreground font-georama">
+      <Card className="stat-card animate-fade-in">
+        <CardHeader className="pb-2 pt-4">
+          <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
             Financial Overview
-          </h2>
-        </div>
-        <div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <p className="text-destructive">Error loading financial data: {error}</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -61,21 +61,17 @@ export const FinancialSummary = () => {
   // Calculate daily target spending (monthly expenses / 30 days)
   const dailyTargetSpending = monthlyExpenses / 30;
 
-  const Container = isMobile ? 'div' : Card;
-  const Header = isMobile ? 'div' : CardHeader;
-  const Content = isMobile ? 'div' : CardContent;
-
   return (
-    <Container className={isMobile ? "border border-black p-4 bg-white animate-fade-in" : "stat-card animate-fade-in"}>
-      <Header className="pb-2 pt-4">
-        <h2 className="text-lg font-medium text-muted-foreground font-georama">
+    <Card className="stat-card animate-fade-in">
+      <CardHeader className="pb-2 pt-4">
+        <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
           Financial Overview
           {transactions.length === 0 && (
             <span className="text-sm text-orange-500 ml-2">(No transaction data found)</span>
           )}
-        </h2>
-      </Header>
-      <Content>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="financial-metric">
             <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
@@ -113,7 +109,7 @@ export const FinancialSummary = () => {
             </p>
           </div>
         </div>
-      </Content>
-    </Container>
+      </CardContent>
+    </Card>
   );
 };

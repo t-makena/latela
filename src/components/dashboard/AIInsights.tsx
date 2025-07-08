@@ -8,19 +8,15 @@ export const AIInsights = () => {
   const insights = getAIInsights();
   const isMobile = useIsMobile();
 
-  const Container = isMobile ? 'div' : Card;
-  const Header = isMobile ? 'div' : CardHeader;
-  const Content = isMobile ? 'div' : CardContent;
-
   return (
-    <Container className={isMobile ? "border border-black p-4 bg-white border-t-4 border-t-primary" : "mt-6 border-t-4 border-t-primary"}>
-      <Header className="pb-2">
-        <div className="flex items-center gap-2">
+    <Card className="mt-6 border-t-4 border-t-primary">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2">
           <Lightbulb className="text-primary" size={18} />
-          <h2 className="text-lg font-georama font-medium">Financial Insights</h2>
-        </div>
-      </Header>
-      <Content>
+          <span className="text-lg font-georama font-medium">Financial Insights</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
         <ul className="space-y-3">
           {insights.map((insight, index) => (
             <li key={index} className="flex gap-2 text-sm">
@@ -29,7 +25,7 @@ export const AIInsights = () => {
             </li>
           ))}
         </ul>
-      </Content>
-    </Container>
+      </CardContent>
+    </Card>
   );
 };

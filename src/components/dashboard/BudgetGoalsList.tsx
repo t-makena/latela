@@ -7,16 +7,12 @@ export const BudgetGoalsList = () => {
   const goals = budgetGoals;
   const isMobile = useIsMobile();
 
-  const Container = isMobile ? 'div' : Card;
-  const Header = isMobile ? 'div' : CardHeader;
-  const Content = isMobile ? 'div' : CardContent;
-
   return (
-    <Container className={isMobile ? "border border-black p-4 bg-white" : "stat-card"}>
-      <Header className="pb-2">
-        <h2 className="text-lg font-georama font-medium">Budget Goals</h2>
-      </Header>
-      <Content className="space-y-4">
+    <Card className="stat-card">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         {goals.map((goal, index) => {
           const percentage = (goal.currentAmount / goal.targetAmount) * 100;
           
@@ -42,7 +38,7 @@ export const BudgetGoalsList = () => {
             </div>
           );
         })}
-      </Content>
-    </Container>
+      </CardContent>
+    </Card>
   );
 };

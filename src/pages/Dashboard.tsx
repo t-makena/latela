@@ -20,19 +20,19 @@ const Dashboard = () => {
       </div>
       
       {isMobile ? (
-        <div className="border border-black p-4 bg-white">
-          <div className="pb-2">
-            <h2 className="text-lg font-georama font-medium">Spending Trend</h2>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-georama">Spending Trend</CardTitle>
             <p className="text-sm text-muted-foreground">for the past month</p>
-          </div>
-          <div>
+          </CardHeader>
+          <CardContent>
             <div className="w-full overflow-x-auto">
               <div className="min-w-[200vw] md:min-w-0">
                 <EnhancedSpendingChart />
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ) : (
         <Card>
           <CardHeader>

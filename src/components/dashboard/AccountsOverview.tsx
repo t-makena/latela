@@ -22,45 +22,41 @@ export const AccountsOverview = () => {
 
   if (accountsLoading) {
     return (
-      <div className={isMobile ? "border border-black p-4 bg-white" : "stat-card"}>
-        <div className="pb-2">
-          <h2 className="text-lg font-georama font-medium">Accounts</h2>
-        </div>
-        <div className="space-y-3">
+      <Card className="stat-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-georama font-medium">Accounts</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse">
               <div className="h-4 bg-gray-200 rounded mb-2"></div>
               <div className="h-6 bg-gray-200 rounded"></div>
             </div>
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (accountsError) {
     return (
-      <div className={isMobile ? "border border-black p-4 bg-white" : "stat-card"}>
-        <div className="pb-2">
-          <h2 className="text-lg font-georama font-medium">Accounts</h2>
-        </div>
-        <div>
+      <Card className="stat-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-georama font-medium">Accounts</CardTitle>
+        </CardHeader>
+        <CardContent>
           <p className="text-destructive">Error loading accounts: {accountsError}</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  const Container = isMobile ? 'div' : Card;
-  const Header = isMobile ? 'div' : CardHeader;
-  const Content = isMobile ? 'div' : CardContent;
-
   return (
-    <Container className={isMobile ? "border border-black p-4 bg-white" : "stat-card"}>
-      <Header className="pb-2">
-        <h2 className="text-lg font-georama font-medium">Accounts</h2>
-      </Header>
-      <Content className="space-y-3">
+    <Card className="stat-card">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-georama font-medium">Accounts</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
         {accounts.map((account) => {
           const balance = accountBalances[parseInt(account.id)] || 0;
           const cleanedName = cleanAccountName(account.name);
@@ -90,7 +86,7 @@ export const AccountsOverview = () => {
             </div>
           );
         })}
-      </Content>
-    </Container>
+      </CardContent>
+    </Card>
   );
 };
