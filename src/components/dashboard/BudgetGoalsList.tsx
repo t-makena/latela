@@ -1,10 +1,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getBudgetGoals } from "@/lib/data";
+import { budgetGoals } from "@/lib/data";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const BudgetGoalsList = () => {
-  const goals = getBudgetGoals();
+  const goals = budgetGoals;
   const isMobile = useIsMobile();
 
   const Container = isMobile ? 'div' : Card;
@@ -18,7 +18,7 @@ export const BudgetGoalsList = () => {
       </Header>
       <Content className="space-y-4">
         {goals.map((goal, index) => {
-          const percentage = (goal.current / goal.target) * 100;
+          const percentage = (goal.currentAmount / goal.targetAmount) * 100;
           
           return (
             <div key={index} className="space-y-2">
@@ -37,7 +37,7 @@ export const BudgetGoalsList = () => {
               </div>
               
               <div className="text-xs text-muted-foreground">
-                Due: {goal.dueDate}
+                Due: {goal.endDate}
               </div>
             </div>
           );
