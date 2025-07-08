@@ -2,9 +2,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const FinancialSummary = () => {
   const { transactions, loading, error } = useTransactions();
+  const isMobile = useIsMobile();
 
   console.log('FinancialSummary - transactions:', transactions);
   console.log('FinancialSummary - loading:', loading);
@@ -12,13 +14,13 @@ export const FinancialSummary = () => {
 
   if (loading) {
     return (
-      <Card className="stat-card animate-fade-in">
-        <CardHeader className="pb-2 pt-4">
-          <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
+      <div className={isMobile ? "border border-black p-4 bg-white" : "stat-card animate-fade-in"}>
+        <div className="pb-2 pt-4">
+          <h2 className="text-lg font-medium text-muted-foreground font-georama">
             Financial Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h2>
+        </div>
+        <div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="financial-metric animate-pulse">
@@ -28,23 +30,23 @@ export const FinancialSummary = () => {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="stat-card animate-fade-in">
-        <CardHeader className="pb-2 pt-4">
-          <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
+      <div className={isMobile ? "border border-black p-4 bg-white" : "stat-card animate-fade-in"}>
+        <div className="pb-2 pt-4">
+          <h2 className="text-lg font-medium text-muted-foreground font-georama">
             Financial Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h2>
+        </div>
+        <div>
           <p className="text-destructive">Error loading financial data: {error}</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -59,17 +61,21 @@ export const FinancialSummary = () => {
   // Calculate daily target spending (monthly expenses / 30 days)
   const dailyTargetSpending = monthlyExpenses / 30;
 
+  const Container = isMobile ? 'div' : Card;
+  const Header = isMobile ? 'div' : CardHeader;
+  const Content = isMobile ? 'div' : CardContent;
+
   return (
-    <Card className="stat-card animate-fade-in">
-      <CardHeader className="pb-2 pt-4">
-        <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
+    <Container className={isMobile ? "border border-black p-4 bg-white animate-fade-in" : "stat-card animate-fade-in"}>
+      <Header className="pb-2 pt-4">
+        <h2 className="text-lg font-medium text-muted-foreground font-georama">
           Financial Overview
           {transactions.length === 0 && (
             <span className="text-sm text-orange-500 ml-2">(No transaction data found)</span>
           )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h2>
+      </Header>
+      <Content>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="financial-metric">
             <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
@@ -85,7 +91,7 @@ export const FinancialSummary = () => {
           
           <div className="financial-metric">
             <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-              Target spending for today
+              Spending limit for today
             </div>
             <div className="text-2xl font-bold text-black font-georama">
               {formatCurrency(dailyTargetSpending)}
@@ -103,11 +109,11 @@ export const FinancialSummary = () => {
               {formatCurrency(monthlyExpenses)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total negative values
+              Total expenses
             </p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </Content>
+    </Container>
   );
 };

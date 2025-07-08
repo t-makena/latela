@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -160,8 +161,13 @@ export const EnhancedSpendingChart = ({
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1W>' ? (
             <ComposedChart data={getChartData()}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis />
+              <XAxis 
+                dataKey="day" 
+                label={{ value: 'Past Month', position: 'insideBottom', offset: -10 }}
+              />
+              <YAxis 
+                label={{ value: 'Amount Spent', angle: -90, position: 'insideLeft' }}
+              />
               <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
               <Legend />
               <Bar 
@@ -193,8 +199,13 @@ export const EnhancedSpendingChart = ({
           ) : (
             <LineChart data={getChartData()}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+              <XAxis 
+                dataKey="month"
+                label={{ value: 'Past Month', position: 'insideBottom', offset: -10 }}
+              />
+              <YAxis 
+                label={{ value: 'Amount Spent', angle: -90, position: 'insideLeft' }}
+              />
               <Tooltip formatter={(value, name) => [
                 `${formatCurrency(value as number)}`, 
                 name === 'amount' ? 'Expenses' : name === 'savings' ? 'Savings' : 'Net Balance'
