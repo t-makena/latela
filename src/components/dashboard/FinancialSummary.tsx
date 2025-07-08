@@ -103,7 +103,7 @@ export const FinancialSummary = () => {
           
           <div className="financial-metric">
             <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-              Expenses
+              Total expenses
             </div>
             <div className="text-2xl font-bold text-budget-expense font-georama">
               {formatCurrency(monthlyExpenses)}
