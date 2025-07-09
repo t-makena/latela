@@ -223,31 +223,8 @@ const CalendarPage = () => {
 
       {/* Upcoming Events Overview */}
       <Card>
-        <CardHeader>
-          <CardTitle>Upcoming Events & Budget Summary</CardTitle>
-          {/* Combined summary stats inside the header */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">Total Events</p>
-              <p className="text-2xl font-bold">{events.length}</p>
-            </div>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">Total Budget</p>
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(events.reduce((sum, event) => sum + event.budget, 0))}
-              </p>
-            </div>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">Average per Event</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {events.length > 0 ? formatCurrency(events.reduce((sum, event) => sum + event.budget, 0) / events.length) : formatCurrency(0)}
-              </p>
-            </div>
-          </div>
-        </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <h3 className="font-semibold">All Upcoming Events</h3>
             {events.map((event) => (
               <div key={event.id} className="flex justify-between items-center border-b pb-2">
                 <div>
@@ -261,6 +238,12 @@ const CalendarPage = () => {
                 </div>
               </div>
             ))}
+            <div className="flex justify-between items-center border-t pt-2 font-semibold">
+              <span>Total budget</span>
+              <div className="text-green-600">
+                {formatCurrency(events.reduce((sum, event) => sum + event.budget, 0))}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

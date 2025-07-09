@@ -4,12 +4,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency, formatDate } from "@/lib/realData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Accounts = () => {
   const { accounts, loading, error } = useAccounts();
   const { transactions } = useTransactions();
   const { accountBalances } = calculateFinancialMetrics(transactions);
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
+  const isMobile = useIsMobile();
 
   // Function to clean account names by removing redundant text
   const cleanAccountName = (name: string) => {
@@ -70,9 +73,37 @@ const Accounts = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+      {/* Tablet View - Dropdown Menu */}
+      {!isMobile && (
+        <div className="sticky top-4 z-20 px-4 mb-6 md:block">
+          <div className="max-w-md mx-auto">
+            <Select value={currentAccountIndex.toString()} onValueChange={(value) => setCurrentAccountIndex(parseInt(value))}>
+              <SelectTrigger className="w-full bg-white border-gray-300 rounded-xl h-12">
+                <SelectValue placeholder="Select an account" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 rounded-xl shadow-lg">
+                {accounts.map((account, index) => (
+                  <SelectItem key={account.id} value={index.toString()} className="hover:bg-gray-50">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                        style={{ backgroundColor: account.color }}
+                      >
+                        {cleanAccountName(account.name).charAt(0)}
+                      </div>
+                      <span>{cleanAccountName(account.name)}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+      
       {/* Floating Bank Details Card */}
-      <div className="sticky top-4 z-10 px-4 mb-6">
-        <Card className="mx-auto max-w-sm shadow-lg border-0 bg-white/95 backdrop-blur-sm">
+      <div className={`sticky top-4 z-10 px-4 mb-6 ${!isMobile ? 'md:top-20' : ''}`}>
+        <Card className="mx-auto max-w-sm hover:shadow-lg border-0 bg-white/95 backdrop-blur-sm transition-shadow duration-200">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <div 
@@ -146,30 +177,36 @@ const Accounts = () => {
         )}
       </div>
 
-      {/* Bottom Dots Indicator */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-        {accounts.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentAccountIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all ${
-              index === currentAccountIndex 
-                ? 'bg-black w-6' 
-                : 'bg-gray-400'
-            }`}
-          />
-        ))}
-      </div>
+      {/* Bottom Dots Indicator - Mobile Only */}
+      {isMobile && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          {accounts.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentAccountIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                index === currentAccountIndex 
+                  ? 'bg-black w-6' 
+                  : 'bg-gray-400'
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Touch/Swipe Areas for Navigation */}
-      <div 
-        className="fixed top-0 left-0 w-full h-1/2 z-0"
-        onClick={() => handleScroll('up')}
-      />
-      <div 
-        className="fixed bottom-0 left-0 w-full h-1/2 z-0"
-        onClick={() => handleScroll('down')}
-      />
+      {/* Touch/Swipe Areas for Navigation - Mobile Only */}
+      {isMobile && (
+        <>
+          <div 
+            className="fixed top-0 left-0 w-full h-1/2 z-0"
+            onClick={() => handleScroll('up')}
+          />
+          <div 
+            className="fixed bottom-0 left-0 w-full h-1/2 z-0"
+            onClick={() => handleScroll('down')}
+          />
+        </>
+      )}
     </div>
   );
 };
