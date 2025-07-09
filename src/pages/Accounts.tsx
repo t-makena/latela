@@ -1,384 +1,99 @@
 
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccountDetail } from "@/components/accounts/AccountDetail";
 import { useAccounts } from "@/hooks/useAccounts";
-import { useTransactions } from "@/hooks/useTransactions";
-import { calculateFinancialMetrics, formatCurrency, formatDate } from "@/lib/realData";
 
 const Accounts = () => {
   const { accounts, loading, error } = useAccounts();
-  const { transactions } = useTransactions();
-  const { accountBalances } = calculateFinancialMetrics(transactions);
-  const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
+  const [selectedAccount, setSelectedAccount] = useState<string>("");
 
-  // Function to clean account names by removing redundant text
-  const cleanAccountName = (name: string) => {
-    return name
-      .replace(/\s+Cheque$/i, '')
-      .replace(/\s+Savings$/i, '')
-      .replace(/\s+Credit$/i, '')
-      .trim();
+  // Set initial selected account when accounts load
+  React.useEffect(() => {
+    if (accounts.length > 0 && !selectedAccount) {
+      setSelectedAccount(accounts[0].id);
+    }
+  }, [accounts, selectedAccount]);
+
+  const handleTabChange = (accountId: string) => {
+    setSelectedAccount(accountId);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-pulse">
-          <div className="h-32 w-80 bg-gray-200 rounded-2xl mb-8"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="animate-pulse">
+              <div className="flex justify-center mb-4">
+                <div className="h-10 w-64 bg-gray-200 rounded"></div>
+              </div>
+              <div className="h-96 bg-gray-200 rounded"></div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-destructive">Error loading accounts: {error}</p>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-destructive">Error loading accounts: {error}</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (accounts.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-muted-foreground">No accounts found.</p>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">No accounts found.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  const currentAccount = accounts[currentAccountIndex];
-  const accountBalance = accountBalances[parseInt(currentAccount.id)] || 0;
-  const cleanedAccountName = cleanAccountName(currentAccount.name);
-
-  // Get transactions for current account
-  const accountTransactions = transactions
-    .filter(t => t.acc_no.toString() === currentAccount.id)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-  const handleScroll = (direction: 'up' | 'down') => {
-    if (direction === 'down' && currentAccountIndex < accounts.length - 1) {
-      setCurrentAccountIndex(currentAccountIndex + 1);
-    } else if (direction === 'up' && currentAccountIndex > 0) {
-      setCurrentAccountIndex(currentAccountIndex - 1);
-    }
-  };
+  const currentAccount = accounts.find(acc => acc.id === selectedAccount) || accounts[0];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Layout */}
-      <div className="md:hidden">
-        {/* Floating Bank Details Card */}
-        <div className="sticky top-4 z-10 px-4 mb-6">
-          <Card className="mx-auto max-w-sm border-0 bg-white/95 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div 
-                  className="h-12 w-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: currentAccount.color }}
-                >
-                  <span className="text-white font-bold text-lg">
-                    {cleanedAccountName.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold font-georama">{cleanedAccountName}</h2>
-                  <p className="text-sm text-muted-foreground capitalize">{currentAccount.type} Account</p>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground font-georama mb-1">Current Balance</p>
-                <p className={`text-3xl font-bold font-georama ${accountBalance < 0 ? 'text-destructive' : 'text-green-600'}`}>
-                  {formatCurrency(accountBalance)}
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground font-georama">Type</p>
-                  <p className="text-sm font-semibold capitalize font-georama">{currentAccount.type}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground font-georama">Currency</p>
-                  <p className="text-sm font-semibold font-georama">{currentAccount.currency}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Transactions - Flat on Background */}
-        <div className="px-4 pb-20">
-          <h3 className="text-lg font-semibold font-georama mb-4 text-center">Recent transactions</h3>
-          
-          {accountTransactions.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No transactions found for this account.</p>
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="pt-6">
+          <Tabs 
+            defaultValue={accounts[0]?.id} 
+            value={selectedAccount}
+            onValueChange={handleTabChange}
+          >
+            <div className="flex justify-center mb-4">
+              <TabsList className="inline-flex w-auto min-w-fit">
+                {accounts.map(account => (
+                  <TabsTrigger key={account.id} value={account.id} className="flex gap-2 items-center justify-center whitespace-nowrap">
+                    <div 
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: account.color }}
+                    />
+                    {account.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
             </div>
-          ) : (
-            <div className="space-y-3 max-w-md mx-auto">
-              {accountTransactions.map((transaction, index) => (
-                <div 
-                  key={`${transaction.acc_no}-${transaction.created_at}-${index}`}
-                  className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className="font-medium font-georama text-sm mb-1">
-                        {transaction.source}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(transaction.created_at)}
-                      </p>
-                    </div>
-                    <p className={`font-bold font-georama text-sm ${
-                      transaction.value < 0 ? 'text-destructive' : 'text-green-600'
-                    }`}>
-                      {formatCurrency(transaction.value)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Dots Indicator */}
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {accounts.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentAccountIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentAccountIndex 
-                  ? 'bg-black w-6' 
-                  : 'bg-gray-400'
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Touch/Swipe Areas for Navigation */}
-        <div 
-          className="fixed top-0 left-0 w-full h-1/2 z-0"
-          onClick={() => handleScroll('up')}
-        />
-        <div 
-          className="fixed bottom-0 left-0 w-full h-1/2 z-0"
-          onClick={() => handleScroll('down')}
-        />
-      </div>
-
-      {/* Tablet Layout */}
-      <div className="hidden md:block lg:hidden">
-        <div className="p-6 max-w-2xl mx-auto">
-          {/* Account Selector Dropdown */}
-          <div className="mb-6">
-            <Select value={currentAccount.id} onValueChange={(value) => {
-              const index = accounts.findIndex(acc => acc.id === value);
-              setCurrentAccountIndex(index);
-            }}>
-              <SelectTrigger className="w-full border rounded-lg">
-                <SelectValue placeholder="Select Account" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {cleanAccountName(account.name)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Account Details Card */}
-          <Card className="mb-6 border rounded-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div 
-                  className="h-16 w-16 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: currentAccount.color }}
-                >
-                  <span className="text-white font-bold text-xl">
-                    {cleanedAccountName.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold font-georama">{cleanedAccountName}</h2>
-                  <p className="text-muted-foreground capitalize">{currentAccount.type} Account</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-6">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground font-georama mb-1">Current Balance</p>
-                  <p className={`text-2xl font-bold font-georama ${accountBalance < 0 ? 'text-destructive' : 'text-green-600'}`}>
-                    {formatCurrency(accountBalance)}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground font-georama mb-1">Type</p>
-                  <p className="text-lg font-semibold capitalize font-georama">{currentAccount.type}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground font-georama mb-1">Currency</p>
-                  <p className="text-lg font-semibold font-georama">{currentAccount.currency}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Transactions */}
-          <div>
-            <h3 className="text-xl font-semibold font-georama mb-4">Recent transactions</h3>
             
-            {accountTransactions.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No transactions found for this account.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {accountTransactions.map((transaction, index) => (
-                  <div 
-                    key={`${transaction.acc_no}-${transaction.created_at}-${index}`}
-                    className="bg-white rounded-lg p-4 border border-gray-200"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-medium font-georama mb-1">
-                          {transaction.source}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(transaction.created_at)}
-                        </p>
-                      </div>
-                      <p className={`font-bold font-georama ${
-                        transaction.value < 0 ? 'text-destructive' : 'text-green-600'
-                      }`}>
-                        {formatCurrency(transaction.value)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        <div className="flex h-screen">
-          {/* Left Sidebar - Account Details */}
-          <div className="w-80 bg-white border-r p-6">
-            <Card className="h-full border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div 
-                    className="h-12 w-12 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: currentAccount.color }}
-                  >
-                    <span className="text-white font-bold text-lg">
-                      {cleanedAccountName.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold font-georama">{cleanedAccountName}</h2>
-                    <p className="text-sm text-muted-foreground capitalize">{currentAccount.type} Account</p>
-                  </div>
-                </div>
-                
-                <div className="mb-6">
-                  <p className="text-sm text-muted-foreground font-georama mb-1">Current Balance</p>
-                  <p className={`text-3xl font-bold font-georama ${accountBalance < 0 ? 'text-destructive' : 'text-green-600'}`}>
-                    {formatCurrency(accountBalance)}
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground font-georama">Type</p>
-                    <p className="text-sm font-semibold capitalize font-georama">{currentAccount.type}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-georama">Currency</p>
-                    <p className="text-sm font-semibold font-georama">{currentAccount.currency}</p>
-                  </div>
-                </div>
-
-                {/* Account Navigation */}
-                <div className="mt-8 space-y-2">
-                  {accounts.map((account, index) => (
-                    <button
-                      key={account.id}
-                      onClick={() => setCurrentAccountIndex(index)}
-                      className={`w-full text-left p-2 rounded-lg transition-colors ${
-                        index === currentAccountIndex 
-                          ? 'bg-muted' 
-                          : 'hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="h-8 w-8 rounded-full flex items-center justify-center"
-                          style={{ backgroundColor: account.color }}
-                        >
-                          <span className="text-white font-medium text-sm">
-                            {cleanAccountName(account.name).charAt(0)}
-                          </span>
-                        </div>
-                        <span className="text-sm font-medium">{cleanAccountName(account.name)}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Content - Recent Transactions */}
-          <div className="flex-1 p-6">
-            <h3 className="text-2xl font-semibold font-georama mb-6">Recent transactions</h3>
-            
-            {accountTransactions.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No transactions found for this account.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {accountTransactions.map((transaction, index) => (
-                  <div 
-                    key={`${transaction.acc_no}-${transaction.created_at}-${index}`}
-                    className="bg-white rounded-lg p-4 border border-gray-200"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-medium font-georama mb-1">
-                          {transaction.source}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(transaction.created_at)}
-                        </p>
-                      </div>
-                      <p className={`font-bold font-georama ${
-                        transaction.value < 0 ? 'text-destructive' : 'text-green-600'
-                      }`}>
-                        {formatCurrency(transaction.value)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+            {accounts.map(account => (
+              <TabsContent key={account.id} value={account.id}>
+                <AccountDetail account={account} />
+              </TabsContent>
+            ))}
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

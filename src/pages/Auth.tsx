@@ -45,7 +45,7 @@ const AuthPage = () => {
             <div className="p-3 bg-primary rounded-full">
               <Wallet className="h-8 w-8 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Zaka</h1>
+            <h1 className="text-3xl font-bold text-foreground">Budget Buddy</h1>
           </div>
           
           <div className="space-y-4">
