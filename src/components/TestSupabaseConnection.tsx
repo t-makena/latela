@@ -33,7 +33,8 @@ export default function TestSupabaseConnection() {
         setClients(data || [])
       }
     } catch (err) {
-      setError('Failed to fetch clients')
+      // Use the error variable
+      console.error('Database connection failed:', err);
     } finally {
       setLoading(false)
     }
