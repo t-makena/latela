@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { monthlySpending, categoryBreakdown, formatCurrency } from "@/lib/data";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, 
   Cell, ResponsiveContainer, XAxis, YAxis, 
@@ -12,6 +13,9 @@ interface ChartProps {
 }
 
 export const SpendingChart = ({ type = "line" }: ChartProps) => {
+  const { transactions } = useTransactions();
+  const { monthlySpending, categoryBreakdownArray } = calculateFinancialMetrics(transactions);
+  
   const renderChart = () => {
     switch (type) {
       case "line":
@@ -55,7 +59,7 @@ export const SpendingChart = ({ type = "line" }: ChartProps) => {
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={categoryBreakdown}
+                data={categoryBreakdownArray}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
@@ -64,7 +68,7 @@ export const SpendingChart = ({ type = "line" }: ChartProps) => {
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
-                {categoryBreakdown.map((entry, index) => (
+                {categoryBreakdownArray.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>

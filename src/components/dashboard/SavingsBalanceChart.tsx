@@ -1,13 +1,24 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { savingsBalanceData, formatCurrency, budgetGoals } from "@/lib/data";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
+import { budgetGoals } from "@/lib/data"; // Keep budget goals as static data for now
 import { 
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend 
 } from "recharts";
 
 export const SavingsBalanceChart = () => {
+  const { transactions } = useTransactions();
+  const { monthlySpending } = calculateFinancialMetrics(transactions);
+  
+  // Transform monthly spending data to savings balance format
+  const savingsBalanceData = monthlySpending.map(item => ({
+    month: item.month,
+    balance: item.savings,
+    transfersOut: 0 // Not available in current data structure
+  }));
   const [selectedPeriod, setSelectedPeriod] = useState<'1W' | '1M' | '6M' | '1Y'>('6M');
 
   const periods = [

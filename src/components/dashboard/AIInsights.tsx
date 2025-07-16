@@ -1,11 +1,20 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAIInsights } from "@/lib/data";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics } from "@/lib/realData";
 import { Lightbulb } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const AIInsights = () => {
-  const insights = getAIInsights();
+  const { transactions } = useTransactions();
+  const { monthlyExpenses, monthlySavings, netBalance } = calculateFinancialMetrics(transactions);
+  
+  // Generate insights based on real data
+  const insights = [
+    `Your monthly expenses are ${monthlyExpenses > 0 ? 'R' + monthlyExpenses.toLocaleString() : 'being calculated'}.`,
+    `Net balance this month: ${netBalance > 0 ? '+' : ''}R${netBalance.toLocaleString()}.`,
+    monthlySavings > 0 ? `Great job saving R${monthlySavings.toLocaleString()} this month!` : "Consider setting up automatic savings transfers."
+  ];
   const isMobile = useIsMobile();
 
   return (

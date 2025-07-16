@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { monthlySpending, dailySpending, futureDailySpending, sixMonthSpending, formatCurrency, getTargetAverageExpense, categoryBreakdown, getMonthlyIncome, getMonthlySavings } from "@/lib/data";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { 
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, Cell, ComposedChart
@@ -19,6 +20,8 @@ export const EnhancedSpendingChart = ({
   accountId,
   selectedPeriod: propSelectedPeriod 
 }: EnhancedSpendingChartProps) => {
+  const { transactions } = useTransactions();
+  const { monthlySpending, monthlyIncome, monthlySavings } = calculateFinancialMetrics(transactions);
   const [internalSelectedPeriod, setInternalSelectedPeriod] = useState<'1W' | '1M' | '6M' | '1Y' | '1W>'>('1M');
   const [selectedBarData, setSelectedBarData] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -43,7 +46,7 @@ export const EnhancedSpendingChart = ({
 
   const getChartData = () => {
     if (selectedPeriod === '1W') {
-      return dailySpending;
+      return []; // No daily data available from current transactions
     }
     if (selectedPeriod === '1M') {
       // Generate 4 weeks of data
@@ -95,29 +98,18 @@ export const EnhancedSpendingChart = ({
       ];
     }
     if (selectedPeriod === '1W>') {
-      return futureDailySpending;
+      return []; // No future daily data available
     }
     if (selectedPeriod === '6M') {
-      return sixMonthSpending;
+      return monthlySpending.slice(-6);
     }
     return monthlySpending;
   };
 
-  const targetExpense = getTargetAverageExpense();
+  const targetExpense = monthlyIncome > 0 ? (monthlyIncome - monthlySavings) / 30 : 0;
   const showTargetLine = selectedPeriod === '1W' || selectedPeriod === '1W>';
 
-  // Calculate target average expense for future week
-  const calculateFutureTargetExpense = () => {
-    const monthlyIncome = getMonthlyIncome();
-    const monthlySavings = getMonthlySavings();
-    const today = new Date();
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    const daysRemaining = lastDayOfMonth - today.getDate();
-    
-    return (monthlyIncome - monthlySavings) / daysRemaining;
-  };
-
-  const futureTargetExpense = calculateFutureTargetExpense();
+  const futureTargetExpense = targetExpense;
 
   const handleBarClick = (data: any) => {
     if (selectedPeriod === '1W' || selectedPeriod === '1M') {
