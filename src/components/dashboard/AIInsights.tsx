@@ -1,13 +1,13 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useTransactions } from "@/hooks/useTransactions";
-import { calculateFinancialMetrics } from "@/lib/realData";
 import { Lightbulb } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics } from "@/lib/realData";
 
 export const AIInsights = () => {
   const { transactions } = useTransactions();
   const { monthlyExpenses, monthlySavings, netBalance } = calculateFinancialMetrics(transactions);
+  const isMobile = useIsMobile();
   
   // Generate insights based on real data
   const insights = [
@@ -15,7 +15,6 @@ export const AIInsights = () => {
     `Net balance this month: ${netBalance > 0 ? '+' : ''}R${netBalance.toLocaleString()}.`,
     monthlySavings > 0 ? `Great job saving R${monthlySavings.toLocaleString()} this month!` : "Consider setting up automatic savings transfers."
   ];
-  const isMobile = useIsMobile();
 
   return (
     <Card className="mt-6 border-t-4 border-t-primary">
