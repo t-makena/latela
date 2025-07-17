@@ -72,11 +72,11 @@ const Accounts = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+    <div className="min-h-screen bg-background">
       {/* Tablet View - Dropdown Menu */}
       {!isMobile && (
-        <div className="sticky top-4 z-20 px-4 mb-6 md:block">
-          <div className="max-w-md mx-auto">
+        <div className="p-4 border-b">
+          <div className="max-w-md">
             <Select value={currentAccountIndex.toString()} onValueChange={(value) => setCurrentAccountIndex(parseInt(value))}>
               <SelectTrigger className="w-full bg-white border-gray-300 rounded-xl h-12">
                 <SelectValue placeholder="Select an account" />
@@ -101,9 +101,9 @@ const Accounts = () => {
         </div>
       )}
       
-      {/* Floating Bank Details Card */}
-      <div className={`sticky top-4 z-10 px-4 mb-6 ${!isMobile ? 'md:top-20' : ''}`}>
-        <Card className="mx-auto max-w-sm hover:shadow-lg border-0 bg-white/95 backdrop-blur-sm transition-shadow duration-200">
+      <div className="p-4 space-y-6">
+        {/* Budget Balance Card */}
+        <Card className="border-0 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <div 
@@ -115,66 +115,67 @@ const Accounts = () => {
                 </span>
               </div>
               <div>
-                <h2 className="text-lg font-bold font-georama">{cleanedAccountName}</h2>
-                <p className="text-sm text-muted-foreground capitalize">{currentAccount.type} Account</p>
+                <h2 className="text-lg font-bold text-foreground">{cleanedAccountName}</h2>
+                <p className="text-sm text-muted-foreground">Since 3/1/24</p>
               </div>
             </div>
             
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground font-georama mb-1">Current Balance</p>
-              <p className={`text-3xl font-bold font-georama ${accountBalance < 0 ? 'text-destructive' : 'text-green-600'}`}>
+            <div>
+              <p className={`text-3xl font-bold ${accountBalance < 0 ? 'text-destructive' : 'text-foreground'}`}>
                 {formatCurrency(accountBalance)}
               </p>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground font-georama">Type</p>
-                <p className="text-sm font-semibold capitalize font-georama">{currentAccount.type}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground font-georama">Currency</p>
-                <p className="text-sm font-semibold font-georama">{currentAccount.currency}</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Recent Transactions - Flat on Background */}
-      <div className="px-4 pb-20">
-        <h3 className="text-lg font-semibold font-georama mb-4 text-center">Recent Transactions</h3>
-        
-        {accountTransactions.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No transactions found for this account.</p>
-          </div>
-        ) : (
-          <div className="space-y-3 max-w-md mx-auto">
-            {accountTransactions.map((transaction, index) => (
-              <div 
-                key={`${transaction.acc_no}-${transaction.created_at}-${index}`}
-                className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <p className="font-medium font-georama text-sm mb-1">
-                      {transaction.source}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(transaction.created_at)}
-                    </p>
-                  </div>
-                  <p className={`font-bold font-georama text-sm ${
-                    transaction.value < 0 ? 'text-destructive' : 'text-green-600'
-                  }`}>
-                    {formatCurrency(transaction.value)}
-                  </p>
-                </div>
+        {/* Recent Transactions */}
+        <div>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Recent transactions</h3>
+          
+          {accountTransactions.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No transactions found for this account.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {accountTransactions.slice(0, 4).map((transaction, index) => (
+                <Card key={`${transaction.acc_no}-${transaction.created_at}-${index}`} className="border-0 shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground text-sm mb-1">
+                          {transaction.source}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(transaction.created_at)}
+                        </p>
+                      </div>
+                      <p className={`font-bold text-sm ${
+                        transaction.value < 0 ? 'text-destructive' : 'text-green-600'
+                      }`}>
+                        {formatCurrency(transaction.value)}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Spending Trend */}
+        <div>
+          <h3 className="text-lg font-semibold text-foreground mb-1">Spending Trend</h3>
+          <p className="text-sm text-muted-foreground mb-4">Since last year</p>
+          
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="h-64 bg-muted/20 rounded-lg flex items-center justify-center">
+                <p className="text-muted-foreground">Chart will be implemented here</p>
               </div>
-            ))}
-          </div>
-        )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Bottom Dots Indicator - Mobile Only */}
@@ -186,8 +187,8 @@ const Accounts = () => {
               onClick={() => setCurrentAccountIndex(index)}
               className={`w-2 h-2 rounded-full transition-all ${
                 index === currentAccountIndex 
-                  ? 'bg-black w-6' 
-                  : 'bg-gray-400'
+                  ? 'bg-foreground w-6' 
+                  : 'bg-muted-foreground'
               }`}
             />
           ))}

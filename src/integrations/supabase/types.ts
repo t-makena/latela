@@ -77,6 +77,119 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_history: {
+        Row: {
+          balance_amount: number
+          created_at: string | null
+          id: string
+          line_number: number
+          request_id: string | null
+          transaction_amount: number
+          transaction_category: number | null
+          transaction_date: string
+          transaction_description: string
+          transaction_fee: number | null
+        }
+        Insert: {
+          balance_amount: number
+          created_at?: string | null
+          id?: string
+          line_number: number
+          request_id?: string | null
+          transaction_amount: number
+          transaction_category?: number | null
+          transaction_date: string
+          transaction_description: string
+          transaction_fee?: number | null
+        }
+        Update: {
+          balance_amount?: number
+          created_at?: string | null
+          id?: string
+          line_number?: number
+          request_id?: string | null
+          transaction_amount?: number
+          transaction_category?: number | null
+          transaction_date?: string
+          transaction_description?: string
+          transaction_fee?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_requests"
+            referencedColumns: ["request_id"]
+          },
+        ]
+      }
+      transaction_requests: {
+        Row: {
+          account_number: string
+          created_at: string | null
+          document_format: string
+          file_content: string | null
+          from_date: string
+          id: string
+          purpose_code: string
+          request_id: string
+          requesting_org_id: string
+          requesting_org_name: string
+          result_code: number | null
+          result_description: string | null
+          result_message: string | null
+          status: string | null
+          to_date: string
+          transaction_history: Json | null
+          transaction_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_number: string
+          created_at?: string | null
+          document_format: string
+          file_content?: string | null
+          from_date: string
+          id?: string
+          purpose_code: string
+          request_id: string
+          requesting_org_id: string
+          requesting_org_name: string
+          result_code?: number | null
+          result_description?: string | null
+          result_message?: string | null
+          status?: string | null
+          to_date: string
+          transaction_history?: Json | null
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_number?: string
+          created_at?: string | null
+          document_format?: string
+          file_content?: string | null
+          from_date?: string
+          id?: string
+          purpose_code?: string
+          request_id?: string
+          requesting_org_id?: string
+          requesting_org_name?: string
+          result_code?: number | null
+          result_description?: string | null
+          result_message?: string | null
+          status?: string | null
+          to_date?: string
+          transaction_history?: Json | null
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           acc_no: number
