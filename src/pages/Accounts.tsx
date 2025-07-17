@@ -78,12 +78,12 @@ const Accounts = () => {
       <div className="p-4 space-y-6">
         {/* Budget Balance Card */}
         <Card className="border border-border shadow-sm rounded-3xl mx-4">
-          <CardContent className="p-6 relative">
+          <CardContent className="p-4 relative">
             {/* Left Arrow */}
             <Button
               variant="ghost"
               size="sm"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent z-10"
               onClick={() => handleScroll('up')}
               disabled={currentAccountIndex === 0}
             >
@@ -94,41 +94,44 @@ const Accounts = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent z-10"
               onClick={() => handleScroll('down')}
               disabled={currentAccountIndex === accounts.length - 1}
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
 
-            <div className="flex items-center justify-between">
-              {/* Left side with icon and text */}
-              <div className="flex items-center gap-4">
-                <div 
-                  className="h-16 w-16 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: currentAccount.color }}
-                >
-                  <span className="text-white font-bold text-2xl">
-                    {cleanedAccountName.charAt(0)}
-                  </span>
+            {/* Content container with padding to avoid arrows */}
+            <div className="px-8">
+              <div className="flex items-center justify-between">
+                {/* Left side with icon and text */}
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: currentAccount.color }}
+                  >
+                    <span className="text-white font-bold text-lg">
+                      {cleanedAccountName.charAt(0)}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground mb-1 truncate">
+                      {currentAccount.type?.charAt(0).toUpperCase() + currentAccount.type?.slice(1)} Account
+                    </p>
+                    <h2 className="text-lg font-bold text-foreground mb-1">Budget Balance</h2>
+                    <p className="text-xs text-muted-foreground">Available Balance</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatCurrency(accountBalance)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-lg font-medium text-foreground mb-1">
-                    {currentAccount.type?.charAt(0).toUpperCase() + currentAccount.type?.slice(1)} Account
-                  </p>
-                  <h2 className="text-xl font-bold text-foreground mb-1">Budget Balance</h2>
-                  <p className="text-sm text-muted-foreground">Available Balance</p>
-                  <p className="text-sm text-muted-foreground mt-1">
+
+                {/* Right side with large amount */}
+                <div className="text-right flex-shrink-0">
+                  <p className={`text-2xl font-bold ${accountBalance < 0 ? 'text-destructive' : 'text-foreground'}`}>
                     {formatCurrency(accountBalance)}
                   </p>
                 </div>
-              </div>
-
-              {/* Right side with large amount */}
-              <div className="text-right">
-                <p className={`text-3xl font-bold ${accountBalance < 0 ? 'text-destructive' : 'text-foreground'}`}>
-                  {formatCurrency(accountBalance)}
-                </p>
               </div>
             </div>
           </CardContent>
