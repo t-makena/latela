@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency, formatDate } from "@/lib/realData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,35 +75,67 @@ const Accounts = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Tablet View - Dropdown Menu */}
+      {!isMobile && (
+        <div className="p-4 border-b">
+          <div className="max-w-md">
+            <Select value={currentAccountIndex.toString()} onValueChange={(value) => setCurrentAccountIndex(parseInt(value))}>
+              <SelectTrigger className="w-full bg-white border-gray-300 rounded-xl h-12">
+                <SelectValue placeholder="Select an account" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 rounded-xl shadow-lg">
+                {accounts.map((account, index) => (
+                  <SelectItem key={account.id} value={index.toString()} className="hover:bg-gray-50">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                        style={{ backgroundColor: account.color }}
+                      >
+                        {cleanAccountName(account.name).charAt(0)}
+                      </div>
+                      <span>{cleanAccountName(account.name)}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
       
       <div className="p-4 space-y-6">
         {/* Budget Balance Card */}
-        <Card className="border border-border shadow-sm rounded-3xl mx-4">
+        <Card className={`border border-border shadow-sm rounded-3xl ${!isMobile ? 'mx-0' : 'mx-4'}`}>
           <CardContent className="p-4 relative">
-            {/* Left Arrow */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent z-10"
-              onClick={() => handleScroll('up')}
-              disabled={currentAccountIndex === 0}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
+            {/* Arrows only for mobile */}
+            {isMobile && (
+              <>
+                {/* Left Arrow */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent z-10"
+                  onClick={() => handleScroll('up')}
+                  disabled={currentAccountIndex === 0}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
 
-            {/* Right Arrow */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent z-10"
-              onClick={() => handleScroll('down')}
-              disabled={currentAccountIndex === accounts.length - 1}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
+                {/* Right Arrow */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent z-10"
+                  onClick={() => handleScroll('down')}
+                  disabled={currentAccountIndex === accounts.length - 1}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </>
+            )}
 
-            {/* Content container with padding to avoid arrows */}
-            <div className="px-8">
+            {/* Content container with padding to avoid arrows on mobile */}
+            <div className={isMobile ? "px-8" : "px-4"}>
               <div className="flex items-center justify-between">
                 {/* Left side with icon and text */}
                 <div className="flex items-center gap-3">
@@ -120,15 +153,14 @@ const Accounts = () => {
                     </p>
                     <h2 className="text-lg font-bold text-foreground mb-1">Budget Balance</h2>
                     <p className="text-xs text-muted-foreground">Available Balance</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatCurrency(accountBalance)}
-                    </p>
                   </div>
                 </div>
 
-                {/* Right side with large amount */}
                 <div className="text-right flex-shrink-0">
                   <p className={`text-2xl font-bold ${accountBalance < 0 ? 'text-destructive' : 'text-foreground'}`}>
+                    {formatCurrency(accountBalance)}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
                     {formatCurrency(accountBalance)}
                   </p>
                 </div>
@@ -137,20 +169,22 @@ const Accounts = () => {
           </CardContent>
         </Card>
 
-        {/* Dots Indicator */}
-        <div className="flex justify-center space-x-2 mb-6 mt-4">
-          {accounts.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentAccountIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentAccountIndex 
-                  ? 'bg-foreground' 
-                  : 'bg-muted-foreground'
-              }`}
-            />
-          ))}
-        </div>
+        {/* Dots Indicator - Mobile Only */}
+        {isMobile && (
+          <div className="flex justify-center space-x-2 mb-6 mt-4">
+            {accounts.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentAccountIndex(index)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  index === currentAccountIndex 
+                    ? 'bg-foreground' 
+                    : 'bg-muted-foreground'
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Recent Transactions */}
         <div>
