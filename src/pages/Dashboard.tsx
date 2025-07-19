@@ -6,33 +6,12 @@ import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingCh
 import { AIInsights } from "@/components/dashboard/AIInsights";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
-import piggyBankDoodle from "@/assets/piggy-bank-doodle.png";
-import budgetChartDoodle from "@/assets/budget-chart-doodle.png";
-import happyMoneyDoodle from "@/assets/happy-money-doodle.png";
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="space-y-2 relative">      
-      {/* Fun doodles positioned absolutely */}
-      <img 
-        src={piggyBankDoodle} 
-        alt="" 
-        className="absolute top-4 right-4 w-12 h-12 opacity-20 pointer-events-none z-0 hidden lg:block" 
-      />
-      <img 
-        src={budgetChartDoodle} 
-        alt="" 
-        className="absolute top-80 left-4 w-10 h-10 opacity-15 pointer-events-none z-0 hidden lg:block" 
-      />
-      <img 
-        src={happyMoneyDoodle} 
-        alt="" 
-        className="absolute bottom-20 right-8 w-14 h-14 opacity-25 pointer-events-none z-0 hidden lg:block" 
-      />
-      
-      <div className="relative z-10">
+    <div className="space-y-2 relative z-10">
         <FinancialSummary />
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2">
@@ -73,7 +52,6 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 gap-2 mt-2">
           <AIInsights />
         </div>
-      </div>
     </div>
   );
 };

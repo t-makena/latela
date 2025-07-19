@@ -157,9 +157,7 @@ export const EnhancedSpendingChart = ({
                 dataKey="day" 
                 label={{ value: 'Past Month', position: 'insideBottom', offset: -10 }}
               />
-              <YAxis 
-                label={{ value: 'Amount Spent', angle: -90, position: 'insideLeft' }}
-              />
+              <YAxis />
               <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
               <Legend />
               <Bar 
@@ -195,9 +193,7 @@ export const EnhancedSpendingChart = ({
                 dataKey="month"
                 label={{ value: 'Past Month', position: 'insideBottom', offset: -10 }}
               />
-              <YAxis 
-                label={{ value: 'Amount Spent', angle: -90, position: 'insideLeft' }}
-              />
+              <YAxis />
               <Tooltip formatter={(value, name) => [
                 `${formatCurrency(value as number)}`, 
                 name === 'amount' ? 'Expenses' : name === 'savings' ? 'Savings' : 'Net Balance'

@@ -157,6 +157,24 @@
   background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
 
+/* Mobile flat cards */
+@media (max-width: 768px) {
+  .card {
+    box-shadow: none;
+    border: 1px solid hsl(var(--border));
+    transform: none;
+  }
+  
+  .card:hover {
+    box-shadow: none;
+    transform: none;
+  }
+  
+  .card::before {
+    display: none;
+  }
+}
+
 /* Hover effect for financial metric items */
 .financial-metric {
   @apply transition-all duration-300 cursor-pointer;

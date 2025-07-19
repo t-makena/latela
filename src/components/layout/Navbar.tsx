@@ -43,39 +43,23 @@ export const Navbar = () => {
   return (
     <>
       {isMobile ? (
-        <Card className="fixed bottom-4 left-4 right-4 z-50 p-2 rounded-full shadow-lg bg-card mx-auto max-w-md">
-          <div className="flex items-center justify-center gap-6">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link to={item.href} key={item.name}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "rounded-full",
-                      isActive ? "bg-primary text-primary-foreground" : ""
-                    )}
-                  >
-                    <item.icon size={20} />
-                  </Button>
-                </Link>
-              );
-            })}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="flex items-center justify-between p-4">
+            <h2 className="text-xl font-bold">Zaka</h2>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon">
                   <Menu size={20} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom">
+              <SheetContent side="right">
                 <div className="py-6">
                   <NavContent />
                 </div>
               </SheetContent>
             </Sheet>
           </div>
-        </Card>
+        </div>
       ) : (
         <Card className="h-full p-2">
           <div className="mb-6 p-2">
