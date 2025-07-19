@@ -1,7 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { budgetGoals } from "@/lib/data";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Plus } from "lucide-react";
 
 export const BudgetGoalsList = () => {
   const goals = budgetGoals;
@@ -10,7 +12,12 @@ export const BudgetGoalsList = () => {
   return (
     <Card className="stat-card">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
+          <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {goals.map((goal, index) => {

@@ -81,15 +81,18 @@
 }
 
 .stat-card {
-  @apply rounded-xl bg-white p-3 sm:p-4 md:p-5 transition-all duration-200 hover:shadow-md;
+  @apply rounded-xl bg-white p-3 sm:p-4 md:p-5 transition-all duration-200;
   position: relative;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.stat-card:hover {
   box-shadow: 
     0 1px 1px rgba(255, 255, 255, 0.9) inset,
     0 -1px 1px rgba(0, 0, 0, 0.05) inset,
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
 }
 
 .stat-card::after {
@@ -129,26 +132,19 @@
 /* 3D Card Style */
 .card {
   position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: white;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
   box-shadow: 
     0 1px 1px rgba(255, 255, 255, 0.9) inset,
     0 -1px 1px rgba(0, 0, 0, 0.1) inset,
     0 15px 25px -5px rgba(0, 0, 0, 0.2),
     0 8px 10px -5px rgba(0, 0, 0, 0.1),
     0 30px 35px -10px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: white;
-  transform: translateY(-2px);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 
-    0 1px 1px rgba(255, 255, 255, 0.9) inset,
-    0 -1px 1px rgba(0, 0, 0, 0.1) inset,
-    0 20px 30px -5px rgba(0, 0, 0, 0.25),
-    0 10px 15px -5px rgba(0, 0, 0, 0.15),
-    0 35px 40px -10px rgba(0, 0, 0, 0.2);
 }
 
 .card::before {
