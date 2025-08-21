@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import Index from "./pages/Index";
 import Accounts from "./pages/Accounts";
+import FinancialInsight from "./pages/FinancialInsight";
+import Goals from "./pages/Goals";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
@@ -30,6 +32,16 @@ const App = () => (
           <Route path="/accounts" element={
             <Layout>
               <Accounts />
+            </Layout>
+          } />
+          <Route path="/financial-insight" element={
+            <Layout>
+              <FinancialInsight />
+            </Layout>
+          } />
+          <Route path="/goals" element={
+            <Layout>
+              <Goals />
             </Layout>
           } />
           <Route path="/calendar" element={
