@@ -159,7 +159,6 @@ export const EnhancedSpendingChart = ({
               />
               <YAxis />
               <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
-              <Legend />
               <Bar 
                 dataKey="amount" 
                 shape={<CustomBar />}
@@ -198,7 +197,6 @@ export const EnhancedSpendingChart = ({
                 `${formatCurrency(value as number)}`, 
                 name === 'amount' ? 'Expenses' : name === 'savings' ? 'Savings' : 'Net Balance'
               ]} />
-              <Legend />
               <Line 
                 type="monotone" 
                 dataKey="amount" 
