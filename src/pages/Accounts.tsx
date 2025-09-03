@@ -61,7 +61,7 @@ const Accounts = () => {
 
   // Get transactions for current account
   const accountTransactions = transactions
-    .filter(t => t.acc_no.toString() === currentAccount.id)
+    .filter(t => t.account_id === currentAccount.id)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const handleScroll = (direction: 'up' | 'down') => {
@@ -163,21 +163,21 @@ const Accounts = () => {
           ) : (
             <div className="space-y-3">
               {accountTransactions.slice(0, 4).map((transaction, index) => (
-                <Card key={`${transaction.acc_no}-${transaction.created_at}-${index}`} className="border-0 shadow-sm">
+                <Card key={`${transaction.account_id}-${transaction.created_at}-${index}`} className="border-0 shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-center">
                       <div className="flex-1">
                         <p className="font-medium text-foreground text-sm mb-1">
-                          {transaction.source}
+                          {transaction.description}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDate(transaction.created_at)}
                         </p>
                       </div>
                       <p className={`font-bold text-sm ${
-                        transaction.value < 0 ? 'text-destructive' : 'text-green-600'
+                        transaction.amount < 0 ? 'text-destructive' : 'text-green-600'
                       }`}>
-                        {formatCurrency(transaction.value)}
+                        {formatCurrency(transaction.amount)}
                       </p>
                     </div>
                   </CardContent>
