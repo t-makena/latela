@@ -49,7 +49,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
 
   // Filter transactions for this specific account and get the latest 3
   const accountTransactions = transactions
-    .filter(t => t.acc_no.toString() === accountId)
+    .filter(t => t.account_id === accountId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3);
 
@@ -82,17 +82,17 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
           </TableHeader>
           <TableBody>
             {accountTransactions.map((transaction, index) => (
-              <TableRow key={`${transaction.acc_no}-${transaction.created_at}-${index}`}>
+              <TableRow key={`${transaction.account_id}-${transaction.created_at}-${index}`}>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(transaction.created_at)}
                 </TableCell>
                 <TableCell className="font-medium font-georama">
-                  {transaction.source}
+                  {transaction.description}
                 </TableCell>
                 <TableCell className={`text-right font-medium font-georama ${
-                  transaction.value < 0 ? 'text-destructive' : 'text-green-600'
+                  transaction.amount < 0 ? 'text-destructive' : 'text-green-600'
                 }`}>
-                  {formatCurrency(transaction.value)}
+                  {formatCurrency(transaction.amount)}
                 </TableCell>
               </TableRow>
             ))}

@@ -3,10 +3,17 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Transaction {
-  acc_no: number;
+  id: string;
+  account_id: string;
+  amount: number;
+  description: string;
+  transaction_date: string;
+  type: string;
+  status?: string;
+  category_id?: string;
+  user_id?: string;
   created_at: string;
-  source: string;
-  value: number;
+  updated_at?: string;
 }
 
 export const useTransactions = () => {

@@ -1,11 +1,4 @@
-import { useTransactions } from '@/hooks/useTransactions';
-
-interface Transaction {
-  acc_no: number;
-  created_at: string;
-  source: string;
-  value: number;
-}
+import { Transaction } from '@/lib/data';
 
 export const calculateFinancialMetrics = (transactions: Transaction[]) => {
   console.log('All transactions:', transactions);
@@ -24,59 +17,59 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
 
   // Calculate monthly income from salary deposits only - make the search more flexible
   const salaryTransactions = currentMonthTransactions.filter(t => {
-    const source = t.source.toLowerCase();
-    return t.value > 0 && (
-      source.includes('salary') || 
-      source.includes('wage') || 
-      source.includes('pay') ||
-      source.includes('income')
+    const description = t.description.toLowerCase();
+    return t.amount > 0 && (
+      description.includes('salary') || 
+      description.includes('wage') || 
+      description.includes('pay') ||
+      description.includes('income')
     );
   });
   
   console.log('Salary transactions:', salaryTransactions);
   
-  const monthlyIncome = salaryTransactions.reduce((sum, t) => sum + t.value, 0);
+  const monthlyIncome = salaryTransactions.reduce((sum, t) => sum + t.amount, 0);
   console.log('Monthly income:', monthlyIncome);
 
   // Calculate monthly expenses as total of all negative values
-  const expenseTransactions = currentMonthTransactions.filter(t => t.value < 0);
-  const monthlyExpenses = Math.abs(expenseTransactions.reduce((sum, t) => sum + t.value, 0));
+  const expenseTransactions = currentMonthTransactions.filter(t => t.amount < 0);
+  const monthlyExpenses = Math.abs(expenseTransactions.reduce((sum, t) => sum + t.amount, 0));
   console.log('Monthly expenses:', monthlyExpenses);
 
   // Calculate savings as "transfer from cheque" plus "transfer to cheque"
   const transferFromCheque = currentMonthTransactions
-    .filter(t => t.source.toLowerCase().includes('transfer from cheque'))
-    .reduce((sum, t) => sum + t.value, 0);
+    .filter(t => t.description.toLowerCase().includes('transfer from cheque'))
+    .reduce((sum, t) => sum + t.amount, 0);
   
   const transferToCheque = currentMonthTransactions
-    .filter(t => t.source.toLowerCase().includes('transfer to cheque'))
-    .reduce((sum, t) => sum + t.value, 0);
+    .filter(t => t.description.toLowerCase().includes('transfer to cheque'))
+    .reduce((sum, t) => sum + t.amount, 0);
   
   const monthlySavings = transferFromCheque + transferToCheque;
   console.log('Monthly savings:', monthlySavings);
 
   // Net balance is the total of all transaction values
-  const netBalance = currentMonthTransactions.reduce((sum, t) => sum + t.value, 0);
+  const netBalance = currentMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
   console.log('Net balance:', netBalance);
 
   // Calculate account balances
   const accountBalances = transactions.reduce((acc, transaction) => {
-    if (!acc[transaction.acc_no]) {
-      acc[transaction.acc_no] = 0;
+    if (!acc[transaction.account_id]) {
+      acc[transaction.account_id] = 0;
     }
-    acc[transaction.acc_no] += transaction.value;
+    acc[transaction.account_id] += transaction.amount;
     return acc;
-  }, {} as Record<number, number>);
+  }, {} as Record<string, number>);
 
-  // Generate category breakdown from sources
+  // Generate category breakdown from descriptions
   const categoryBreakdown = transactions
-    .filter(t => t.value < 0) // Only expenses
+    .filter(t => t.amount < 0) // Only expenses
     .reduce((acc, transaction) => {
-      const category = transaction.source;
+      const category = transaction.description;
       if (!acc[category]) {
         acc[category] = 0;
       }
-      acc[category] += Math.abs(transaction.value);
+      acc[category] += Math.abs(transaction.amount);
       return acc;
     }, {} as Record<string, number>);
 
@@ -94,31 +87,31 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
     });
     
     const expenses = Math.abs(monthTransactions
-      .filter(t => t.value < 0)
-      .reduce((sum, t) => sum + t.value, 0));
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + t.amount, 0));
     
     const income = monthTransactions
       .filter(t => {
-        const source = t.source.toLowerCase();
-        return t.value > 0 && (
-          source.includes('salary') || 
-          source.includes('wage') || 
-          source.includes('pay') ||
-          source.includes('income')
+        const description = t.description.toLowerCase();
+        return t.amount > 0 && (
+          description.includes('salary') || 
+          description.includes('wage') || 
+          description.includes('pay') ||
+          description.includes('income')
         );
       })
-      .reduce((sum, t) => sum + t.value, 0);
+      .reduce((sum, t) => sum + t.amount, 0);
     
     const transferFromChequeMonth = monthTransactions
-      .filter(t => t.source.toLowerCase().includes('transfer from cheque'))
-      .reduce((sum, t) => sum + t.value, 0);
+      .filter(t => t.description.toLowerCase().includes('transfer from cheque'))
+      .reduce((sum, t) => sum + t.amount, 0);
     
     const transferToChequeMonth = monthTransactions
-      .filter(t => t.source.toLowerCase().includes('transfer to cheque'))
-      .reduce((sum, t) => sum + t.value, 0);
+      .filter(t => t.description.toLowerCase().includes('transfer to cheque'))
+      .reduce((sum, t) => sum + t.amount, 0);
     
     const savings = transferFromChequeMonth + transferToChequeMonth;
-    const netBalanceMonth = monthTransactions.reduce((sum, t) => sum + t.value, 0);
+    const netBalanceMonth = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
 
     return {
       month,

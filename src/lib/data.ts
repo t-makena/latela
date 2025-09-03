@@ -9,12 +9,16 @@ export interface AccountType {
 
 export interface Transaction {
   id: string;
-  accountId: string;
+  account_id: string;
   amount: number;
-  category: string;
-  date: string;
   description: string;
-  type: 'income' | 'expense';
+  transaction_date: string;
+  type: string;
+  status?: string;
+  category_id?: string;
+  user_id?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface BudgetGoal {
@@ -58,57 +62,63 @@ export const accounts: AccountType[] = [
 export const transactions: Transaction[] = [
   {
     id: '1',
-    accountId: '1',
+    account_id: '1',
     amount: 2500,
-    category: 'Income',
-    date: '2025-05-15',
     description: 'Salary deposit',
+    transaction_date: '2025-05-15',
     type: 'income',
+    status: 'completed',
+    created_at: '2025-05-15T08:00:00Z',
   },
   {
     id: '2',
-    accountId: '1',
+    account_id: '1',
     amount: 120.50,
-    category: 'Groceries',
-    date: '2025-05-16',
     description: 'Whole Foods',
+    transaction_date: '2025-05-16',
     type: 'expense',
+    status: 'completed',
+    created_at: '2025-05-16T10:30:00Z',
   },
   {
     id: '3',
-    accountId: '1',
+    account_id: '1',
     amount: 49.99,
-    category: 'Personal & Lifestyle',
-    date: '2025-05-17',
     description: 'Streaming subscription',
+    transaction_date: '2025-05-17',
     type: 'expense',
+    status: 'completed',
+    created_at: '2025-05-17T12:00:00Z',
   },
   {
     id: '4',
-    accountId: '2',
+    account_id: '2',
     amount: 500,
-    category: 'Transfer',
-    date: '2025-05-15',
     description: 'Monthly savings',
+    transaction_date: '2025-05-15',
     type: 'income',
+    status: 'completed',
+    created_at: '2025-05-15T09:00:00Z',
   },
   {
     id: '5',
-    accountId: '2',
+    account_id: '2',
     amount: 200,
-    category: 'Transfer',
-    date: '2025-05-10',
     description: 'Emergency withdrawal',
+    transaction_date: '2025-05-10',
     type: 'expense',
+    status: 'completed',
+    created_at: '2025-05-10T14:00:00Z',
   },
   {
     id: '6',
-    accountId: '3',
+    account_id: '3',
     amount: 75.25,
-    category: 'Dining',
-    date: '2025-05-14',
     description: 'Restaurant',
+    transaction_date: '2025-05-14',
     type: 'expense',
+    status: 'completed',
+    created_at: '2025-05-14T19:30:00Z',
   },
 ];
 
