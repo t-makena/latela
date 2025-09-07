@@ -7,8 +7,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -22,24 +20,6 @@ const navItems = [
 export const Navbar = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
-  const { signOut, user } = useAuth();
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Signed out",
-        description: "You have been signed out successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Sign out failed",
-        description: "An error occurred while signing out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
   
   const NavContent = () => (
     <div className="flex flex-col gap-2 p-2">

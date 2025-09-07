@@ -34,7 +34,13 @@ export const useTransactions = () => {
           throw error;
         }
 
-        setTransactions(data || []);
+        // Transform Supabase data to match our Transaction interface
+        const transformedTransactions: Transaction[] = (data || []).map(transaction => ({
+          ...transaction,
+          type: transaction.transaction_code === 'DR' ? 'expense' : 'income'
+        }));
+        
+        setTransactions(transformedTransactions);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
         console.error('Error fetching transactions:', err);
