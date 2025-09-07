@@ -23,10 +23,10 @@ export const useAccounts = () => {
         // Transform Supabase data to match our AccountType interface
         const transformedAccounts: AccountType[] = data.map((account, index) => ({
           id: account.id,
-          name: account.name || `${account.bank_name || 'Unknown Bank'} ${account.type || 'Account'}`,
-          type: (account.type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
+          name: `Account ${account.account_number}`,
+          type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
           balance: account.balance || 0,
-          currency: account.currency || 'ZAR',
+          currency: 'ZAR',
           color: getAccountColor(index),
         }));
 
