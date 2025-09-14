@@ -1,4 +1,5 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -33,8 +34,7 @@ export default function TestSupabaseConnection() {
         setClients(data || [])
       }
     } catch (err) {
-      // Use the error variable
-      console.error('Database connection failed:', err);
+      setError('Failed to fetch clients')
     } finally {
       setLoading(false)
     }
@@ -75,11 +75,11 @@ export default function TestSupabaseConnection() {
           {clients.map((client) => (
             <div key={client.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><strong>Name:</strong> {client.Name || 'N/A'}</div>
-                <div><strong>Email:</strong> {client.email || 'N/A'}</div>
-                <div><strong>UUID:</strong> {client.uuid ? client.uuid.substring(0, 8) + '...' : 'N/A'}</div>
+                <div><strong>Name:</strong> {client.Name}</div>
+                <div><strong>Email:</strong> {client.email}</div>
+                <div><strong>UUID:</strong> {client.uuid.substring(0, 8)}...</div>
                 <div><strong>Active:</strong> {client.is_active ? '✅' : '❌'}</div>
-                <div><strong>Created:</strong> {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'N/A'}</div>
+                <div><strong>Created:</strong> {new Date(client.created_at).toLocaleDateString()}</div>
               </div>
             </div>
           ))}
