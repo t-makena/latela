@@ -13,3 +13,10 @@ export default function Home() {
     </main>
   )
 }
+
+// Look for code like this that might be causing issues:
+// new URL(process.env.NEXT_PUBLIC_SUPABASE_URL) // If undefined, this fails
+
+// Make sure you have fallbacks:
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000';
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

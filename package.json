@@ -28,10 +28,9 @@
     "date-fns": "^2.30.0",
     "recharts": "^2.8.0",
     "clsx": "^2.0.0",
-    "currency.js": "^2.0.4"
+    "dinero.js": "^1.9.1"
   },
   "devDependencies": {
-    "@types/currency.js": "^2.0.2",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.0.0"
   },
