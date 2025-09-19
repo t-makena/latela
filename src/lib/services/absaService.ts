@@ -1,5 +1,5 @@
 // src/lib/services/absaToSupabaseService.ts
-import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export interface ABSAAccount {
   number: string;
@@ -39,20 +39,43 @@ export interface ABSAResponse {
   accountHolders: ABSAAccountHolder[];
 }
 
+// Create Supabase client with safe URL handling
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/['"]/g, '').replace(/\/$/, '') || '';
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.replace(/['"]/g, '') || '';
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('Supabase credentials not found in environment variables');
+    return null;
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+}
+
 class ABSAToSupabaseService {
   private accessToken: string;
   private baseUrl: string;
+  private supabase: any;
 
   constructor() {
-    this.accessToken = process.env.ABSA_ACCESS_TOKEN || '';
-    this.baseUrl = process.env.ABSA_BASE_URL || 'https://www.api.absa.africa:9443';
+    this.accessToken = process.env.ABSA_ACCESS_TOKEN?.replace(/['"]/g, '') || '';
+    this.baseUrl = process.env.ABSA_BASE_URL?.replace(/['"]/g, '').replace(/\/$/, '') || 'https://www.api.absa.africa:9443';
+    this.supabase = createSupabaseClient();
 
     if (!this.accessToken) {
-      throw new Error('ABSA_ACCESS_TOKEN not found in environment variables');
+      console.warn('ABSA_ACCESS_TOKEN not found in environment variables');
+    }
+    
+    if (!this.supabase) {
+      console.warn('Supabase client could not be initialized');
     }
   }
 
   private getHeaders() {
+    if (!this.accessToken) {
+      throw new Error('ABSA_ACCESS_TOKEN not configured. Please add ABSA_ACCESS_TOKEN to your environment variables.');
+    }
+
     return {
       'Authorization': `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json'
@@ -89,7 +112,11 @@ class ABSAToSupabaseService {
 
   // Insert account holder into Supabase
   async insertAccountHolder(holder: ABSAAccountHolder): Promise<string> {
-    const { data, error } = await supabase
+    if (!this.supabase) {
+      throw new Error('Supabase client not initialized. Check your environment variables.');
+    }
+
+    const { data, error } = await this.supabase
       .from('account_holders')
       .upsert({
         email: `${holder.name.toLowerCase()}@absa.latela.com`,
@@ -110,10 +137,14 @@ class ABSAToSupabaseService {
 
   // Insert accounts into Supabase
   async insertAccounts(holderId: string, accounts: ABSAAccount[]): Promise<{ [accountNumber: string]: string }> {
+    if (!this.supabase) {
+      throw new Error('Supabase client not initialized. Check your environment variables.');
+    }
+
     const accountIds: { [accountNumber: string]: string } = {};
 
     for (const account of accounts) {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('accounts')
         .upsert({
           account_holder_id: holderId,
@@ -142,6 +173,10 @@ class ABSAToSupabaseService {
 
   // Insert transactions into Supabase
   async insertTransactions(accountIds: { [accountNumber: string]: string }, accounts: ABSAAccount[]): Promise<number> {
+    if (!this.supabase) {
+      throw new Error('Supabase client not initialized. Check your environment variables.');
+    }
+
     let totalTransactions = 0;
 
     for (const account of accounts) {
@@ -151,7 +186,7 @@ class ABSAToSupabaseService {
       if (!accountId) continue;
 
       // Clear existing transactions for this account
-      await supabase
+      await this.supabase
         .from('transactions')
         .delete()
         .eq('account_id', accountId);
@@ -168,7 +203,7 @@ class ABSAToSupabaseService {
         cleared: transaction.cleared
       }));
 
-      const { error } = await supabase
+      const { error } = await this.supabase
         .from('transactions')
         .insert(transactionsToInsert);
 
@@ -192,6 +227,15 @@ class ABSAToSupabaseService {
     error?: string;
   }> {
     try {
+      // Check if services are available
+      if (!this.supabase) {
+        throw new Error('Supabase client not initialized. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY');
+      }
+
+      if (!this.accessToken) {
+        throw new Error('ABSA access token not configured. Check ABSA_ACCESS_TOKEN');
+      }
+
       // 1. Fetch data from ABSA
       console.log('🔄 Fetching data from ABSA API...');
       const absaData = await this.fetchABSAData();
@@ -254,6 +298,10 @@ class ABSAToSupabaseService {
   // Test connection only
   async testConnection(): Promise<{ success: boolean; message: string; data?: any }> {
     try {
+      if (!this.accessToken) {
+        throw new Error('ABSA_ACCESS_TOKEN not configured');
+      }
+
       const data = await this.fetchABSAData();
       const nkosi = this.filterNkosiData(data);
       
@@ -264,7 +312,8 @@ class ABSAToSupabaseService {
           totalAccountHolders: data.accountHolders.length,
           nkosiFound: !!nkosi,
           nkosiAccounts: nkosi?.accounts.length || 0,
-          nkosiTransactions: nkosi?.accounts.reduce((sum, acc) => sum + (acc.transactions?.length || 0), 0) || 0
+          nkosiTransactions: nkosi?.accounts.reduce((sum, acc) => sum + (acc.transactions?.length || 0), 0) || 0,
+          supabaseConfigured: !!this.supabase
         }
       };
     } catch (error) {
@@ -276,4 +325,5 @@ class ABSAToSupabaseService {
   }
 }
 
+// Export service instance
 export const absaToSupabaseService = new ABSAToSupabaseService();
