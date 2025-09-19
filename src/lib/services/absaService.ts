@@ -1,132 +1,279 @@
-// src/lib/services/absaService.ts
+// src/lib/services/absaToSupabaseService.ts
 import { supabase } from './supabase';
 
-export interface TransactionHistoryRequest {
-  accountNumber: string;
-  purposeCode: '0001';
-  documentFormat: 'PDF' | 'JSON' | 'JSON_PDF' | '';
-  fromDate: string;
-  toDate: string;
-  requestingOrgName: string;
-  requestingOrgId: string;
+export interface ABSAAccount {
+  number: string;
+  availBalance: number;
+  balance: number;
+  balanceBroughtForward: number;
+  powerOfAttorney: boolean;
+  limit: number;
+  unclearedEffectsEnabled: boolean;
+  uncleared: number;
+  type: string;
+  status: string;
+  transactions?: ABSATransaction[];
 }
 
-export interface TransactionHistoryResponse {
-  requestId: string;
-  transactionId: string;
-  resultCode: number;
-  resultMessage?: string;
-  resultDescription?: string;
+export interface ABSATransaction {
+  date: string;
+  reference: string;
+  amount: number;
+  balance: number;
+  description: string;
+  transactionCode: string;
+  cleared: boolean;
 }
 
-export interface TransactionLine {
-  transactionDate: string;
-  lineNumber: number;
-  transactionAmount: string;
-  transactionDescription: string;
-  transactionFee: string;
-  transactionCategory: number;
-  balanceAmount: string;
+export interface ABSAAccountHolder {
+  name: string;
+  passportNumber?: string;
+  idNumber?: string;
+  initials: string;
+  profileId: string;
+  accounts: ABSAAccount[];
 }
 
-export class ABSAService {
-  private static instance: ABSAService;
-  
-  public static getInstance(): ABSAService {
-    if (!ABSAService.instance) {
-      ABSAService.instance = new ABSAService();
-    }
-    return ABSAService.instance;
-  }
+export interface ABSAResponse {
+  id: string;
+  accountHolders: ABSAAccountHolder[];
+}
 
-  async requestTransactionHistory(request: TransactionHistoryRequest): Promise<TransactionHistoryResponse> {
-    try {
-      const response = await fetch('/api/absa/transaction-history', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
+class ABSAToSupabaseService {
+  private accessToken: string;
+  private baseUrl: string;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  constructor() {
+    this.accessToken = process.env.ABSA_ACCESS_TOKEN || '';
+    this.baseUrl = process.env.ABSA_BASE_URL || 'https://www.api.absa.africa:9443';
 
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error requesting transaction history:', error);
-      throw error;
+    if (!this.accessToken) {
+      throw new Error('ABSA_ACCESS_TOKEN not found in environment variables');
     }
   }
 
-  async getTransactionRequest(requestId: string) {
-    try {
+  private getHeaders() {
+    return {
+      'Authorization': `Bearer ${this.accessToken}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  // Fetch data from ABSA API
+  async fetchABSAData(): Promise<ABSAResponse> {
+    const response = await fetch(`${this.baseUrl}/absa/retail/api/v1/accountholders`, {
+      method: 'GET',
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`ABSA API failed: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
+  // Filter data for Nkosi only
+  filterNkosiData(absaData: ABSAResponse): ABSAAccountHolder | null {
+    const nkosi = absaData.accountHolders.find(holder => 
+      holder.name.toLowerCase().includes('nkosi')
+    );
+    return nkosi || null;
+  }
+
+  // Convert date format
+  private convertDateFormat(dateStr: string): string {
+    return dateStr.replace('h', ':') + ':00';
+  }
+
+  // Insert account holder into Supabase
+  async insertAccountHolder(holder: ABSAAccountHolder): Promise<string> {
+    const { data, error } = await supabase
+      .from('account_holders')
+      .upsert({
+        email: `${holder.name.toLowerCase()}@absa.latela.com`,
+        name: holder.name,
+        passport_number: holder.passportNumber,
+        id_number: holder.idNumber,
+        initials: holder.initials,
+        profile_id: holder.profileId
+      }, {
+        onConflict: 'email'
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to insert account holder: ${error.message}`);
+    return data.id;
+  }
+
+  // Insert accounts into Supabase
+  async insertAccounts(holderId: string, accounts: ABSAAccount[]): Promise<{ [accountNumber: string]: string }> {
+    const accountIds: { [accountNumber: string]: string } = {};
+
+    for (const account of accounts) {
       const { data, error } = await supabase
-        .from('transaction_requests')
-        .select('*')
-        .eq('request_id', requestId)
+        .from('accounts')
+        .upsert({
+          account_holder_id: holderId,
+          account_number: account.number,
+          account_type: account.type,
+          status: account.status,
+          available_balance: account.availBalance,
+          balance: account.balance,
+          balance_brought_forward: account.balanceBroughtForward,
+          account_limit: account.limit,
+          power_of_attorney: account.powerOfAttorney,
+          uncleared_effects_enabled: account.unclearedEffectsEnabled,
+          uncleared: account.uncleared
+        }, {
+          onConflict: 'account_number'
+        })
+        .select()
         .single();
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error fetching transaction request:', error);
-      throw error;
+      if (error) throw new Error(`Failed to insert account ${account.number}: ${error.message}`);
+      accountIds[account.number] = data.id;
     }
+
+    return accountIds;
   }
 
-  async getTransactionHistory(requestId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('transaction_history')
-        .select('*')
-        .eq('request_id', requestId)
-        .order('line_number', { ascending: true });
+  // Insert transactions into Supabase
+  async insertTransactions(accountIds: { [accountNumber: string]: string }, accounts: ABSAAccount[]): Promise<number> {
+    let totalTransactions = 0;
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error fetching transaction history:', error);
-      throw error;
+    for (const account of accounts) {
+      if (!account.transactions || account.transactions.length === 0) continue;
+
+      const accountId = accountIds[account.number];
+      if (!accountId) continue;
+
+      // Clear existing transactions for this account
+      await supabase
+        .from('transactions')
+        .delete()
+        .eq('account_id', accountId);
+
+      // Insert new transactions
+      const transactionsToInsert = account.transactions.map(transaction => ({
+        account_id: accountId,
+        transaction_date: this.convertDateFormat(transaction.date),
+        reference: transaction.reference,
+        amount: transaction.amount,
+        balance: transaction.balance,
+        description: transaction.description,
+        transaction_code: transaction.transactionCode,
+        cleared: transaction.cleared
+      }));
+
+      const { error } = await supabase
+        .from('transactions')
+        .insert(transactionsToInsert);
+
+      if (error) throw new Error(`Failed to insert transactions for account ${account.number}: ${error.message}`);
+      totalTransactions += transactionsToInsert.length;
     }
+
+    return totalTransactions;
   }
 
-  async getUserTransactionRequests(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('transaction_requests')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error fetching user transaction requests:', error);
-      throw error;
-    }
-  }
-
-  getResultCodeMessage(resultCode: number): string {
-    const messages: { [key: number]: string } = {
-      100: 'Service under heavy load, please try again',
-      101: 'Validation Errors',
-      102: 'Account number not registered with Absa',
-      103: 'Not a digital customer',
-      104: 'Cannot proceed - duplicate requestId',
-      106: 'Request failed',
-      108: 'Consent Failed',
-      109: 'Consent Rejected',
-      110: 'No data available',
-      115: 'Service Unavailable',
-      200: 'Success',
-      999: 'Technical error'
+  // Complete sync process for Nkosi
+  async syncNkosiToSupabase(): Promise<{
+    success: boolean;
+    message: string;
+    stats: {
+      accountHolders: number;
+      accounts: number;
+      transactions: number;
     };
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      // 1. Fetch data from ABSA
+      console.log('🔄 Fetching data from ABSA API...');
+      const absaData = await this.fetchABSAData();
 
-    return messages[resultCode] || 'Unknown error';
+      // 2. Filter for Nkosi only
+      console.log('🔍 Filtering for Nkosi data...');
+      const nkosiData = this.filterNkosiData(absaData);
+      
+      if (!nkosiData) {
+        throw new Error('Nkosi account holder not found in ABSA data');
+      }
+
+      // 3. Insert account holder
+      console.log('👤 Inserting account holder...');
+      const holderId = await this.insertAccountHolder(nkosiData);
+
+      // 4. Insert accounts
+      console.log('🏦 Inserting accounts...');
+      const accountIds = await this.insertAccounts(holderId, nkosiData.accounts);
+
+      // 5. Insert transactions
+      console.log('💳 Inserting transactions...');
+      const transactionCount = await this.insertTransactions(accountIds, nkosiData.accounts);
+
+      const stats = {
+        accountHolders: 1,
+        accounts: nkosiData.accounts.length,
+        transactions: transactionCount
+      };
+
+      console.log('✅ Sync completed successfully!');
+      console.log(`📊 Stats: ${stats.accounts} accounts, ${stats.transactions} transactions`);
+
+      return {
+        success: true,
+        message: `Successfully synced Nkosi's data from ABSA to Supabase`,
+        stats,
+        data: {
+          accountHolder: nkosiData.name,
+          accounts: nkosiData.accounts.map(acc => ({
+            number: acc.number,
+            type: acc.type,
+            balance: acc.balance,
+            transactionCount: acc.transactions?.length || 0
+          }))
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ Sync failed:', error);
+      return {
+        success: false,
+        message: 'Failed to sync Nkosi data from ABSA to Supabase',
+        stats: { accountHolders: 0, accounts: 0, transactions: 0 },
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test connection only
+  async testConnection(): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      const data = await this.fetchABSAData();
+      const nkosi = this.filterNkosiData(data);
+      
+      return {
+        success: true,
+        message: 'ABSA API connection successful',
+        data: {
+          totalAccountHolders: data.accountHolders.length,
+          nkosiFound: !!nkosi,
+          nkosiAccounts: nkosi?.accounts.length || 0,
+          nkosiTransactions: nkosi?.accounts.reduce((sum, acc) => sum + (acc.transactions?.length || 0), 0) || 0
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 }
 
-export const absaService = ABSAService.getInstance();
+export const absaToSupabaseService = new ABSAToSupabaseService();
