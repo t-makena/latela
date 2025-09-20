@@ -48,3 +48,15 @@ export default function Home() {
     </div>
   )
 }
+
+// In your component
+const fetchTransactions = async () => {
+  try {
+    const response = await fetch('/api/absa/transactions');
+    const data = await response.json();
+    console.log('Transactions:', data);
+    // Process your ZAR transactions here
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
