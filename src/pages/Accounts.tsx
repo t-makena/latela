@@ -1,237 +1,237 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAccounts } from "@/hooks/useAccounts";
-import { useTransactions } from "@/hooks/useTransactions";
-import { calculateFinancialMetrics, formatCurrency, formatDate } from "@/lib/realData";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Menu, CircleIcon } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 
 const Accounts = () => {
-  const { accounts, loading, error } = useAccounts();
-  const { transactions } = useTransactions();
-  const { accountBalances } = calculateFinancialMetrics(transactions);
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
-  const isMobile = useIsMobile();
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState("1W");
 
-  // Function to clean account names by removing redundant text
-  const cleanAccountName = (name: string) => {
-    return name
-      .replace(/\s+Cheque$/i, '')
-      .replace(/\s+Savings$/i, '')
-      .replace(/\s+Credit$/i, '')
-      .trim();
-  };
+  // Mock data
+  const accounts = [
+    {
+      id: 1,
+      bankName: "Nedbank Bank Cheque Account",
+      balance: 103779.00,
+      logo: "N",
+      paymentProvider: "mastercard"
+    }
+  ];
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-pulse">
-          <div className="h-32 w-80 bg-gray-200 rounded-2xl mb-8"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const transactions = [
+    {
+      id: 1,
+      category: "Housing & Utilities",
+      categoryColor: "bg-blue-100 text-blue-700",
+      name: "Rent",
+      date: "27 June 2025",
+      amount: -13000.00
+    },
+    {
+      id: 2,
+      category: "Savings & Investments",
+      categoryColor: "bg-green-100 text-green-700",
+      name: "Savings transfer",
+      date: "27 June 2025",
+      amount: -7000.00
+    },
+    {
+      id: 3,
+      category: "Personal & Lifestyle",
+      categoryColor: "bg-orange-100 text-orange-700",
+      name: "Futbol",
+      date: "27 June 2025",
+      amount: -85.00
+    }
+  ];
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-destructive">Error loading accounts: {error}</p>
-      </div>
-    );
-  }
+  const chartData = [
+    { day: "Mon", amount: 850 },
+    { day: "Tue", amount: 1350 },
+    { day: "Wed", amount: 950 },
+    { day: "Thu", amount: 700 },
+    { day: "Fri", amount: 1100 },
+    { day: "Sat", amount: 1300 },
+    { day: "Sun", amount: 1600 }
+  ];
 
-  if (accounts.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-muted-foreground">No accounts found.</p>
-      </div>
-    );
-  }
+  const timeFilters = ["1W", "1M", "3M", "6M", "1Y"];
 
   const currentAccount = accounts[currentAccountIndex];
-  const accountBalance = accountBalances[parseInt(currentAccount.id)] || 0;
-  const cleanedAccountName = cleanAccountName(currentAccount.name);
-
-  // Get transactions for current account
-  const accountTransactions = transactions
-    .filter(t => t.account_id === currentAccount.id)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-  const handleScroll = (direction: 'up' | 'down') => {
-    if (direction === 'down' && currentAccountIndex < accounts.length - 1) {
-      setCurrentAccountIndex(currentAccountIndex + 1);
-    } else if (direction === 'up' && currentAccountIndex > 0) {
-      setCurrentAccountIndex(currentAccountIndex - 1);
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-background">
-      
-      <div className="p-4 space-y-6">
-        {/* Budget Balance Card */}
-        <Card className="border border-border shadow-sm rounded-3xl mx-4">
-          <CardContent className="p-4 relative">
-            {/* Left Arrow */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent z-10"
-              onClick={() => handleScroll('up')}
-              disabled={currentAccountIndex === 0}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 py-4">
+        <h1 className="text-2xl font-bold text-foreground">latela</h1>
+        <Button variant="ghost" size="icon">
+          <Menu className="h-6 w-6" />
+        </Button>
+      </header>
 
-            {/* Right Arrow */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent z-10"
-              onClick={() => handleScroll('down')}
-              disabled={currentAccountIndex === accounts.length - 1}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
+      <div className="px-6 pb-20 space-y-6">
+        {/* Account Card */}
+        <Card className="rounded-3xl border border-border shadow-lg bg-gray-50">
+          <CardContent className="p-6">
+            {/* Bank Name with Logo */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 bg-foreground rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">{currentAccount.logo}</span>
+              </div>
+              <h2 className="text-base font-bold text-foreground">{currentAccount.bankName}</h2>
+            </div>
 
-            {/* Content container with padding to avoid arrows */}
-            <div className="px-8">
-              <div className="flex items-center justify-between">
-                {/* Left side with icon and text */}
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: currentAccount.color }}
-                  >
-                    <span className="text-white font-bold text-lg">
-                      {cleanedAccountName.charAt(0)}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground mb-1 truncate">
-                      {currentAccount.type?.charAt(0).toUpperCase() + currentAccount.type?.slice(1)} Account
-                    </p>
-                    <h2 className="text-lg font-bold text-foreground mb-1">Budget Balance</h2>
-                    <p className="text-xs text-muted-foreground">Available Balance</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatCurrency(accountBalance)}
-                    </p>
-                  </div>
-                </div>
+            {/* Budget Balance */}
+            <div className="flex items-end justify-between mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Budget Balance</p>
+                <p className="text-4xl font-bold text-foreground">
+                  R{currentAccount.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Available Balance: R{currentAccount.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
 
-                {/* Right side with large amount */}
-                <div className="text-right flex-shrink-0">
-                  <p className={`text-2xl font-bold ${accountBalance < 0 ? 'text-destructive' : 'text-foreground'}`}>
-                    {formatCurrency(accountBalance)}
-                  </p>
+              {/* Payment Provider Logo */}
+              <div className="h-12 w-16 bg-foreground rounded-lg flex items-center justify-center">
+                <div className="flex gap-1">
+                  <div className="h-8 w-8 rounded-full bg-destructive opacity-80"></div>
+                  <div className="h-8 w-8 rounded-full bg-secondary -ml-4"></div>
                 </div>
               </div>
+            </div>
+
+            {/* Pagination Dots */}
+            <div className="flex justify-center gap-1.5 mt-4">
+              {accounts.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentAccountIndex(index)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    index === currentAccountIndex 
+                      ? 'w-6 bg-foreground' 
+                      : 'w-1.5 bg-muted-foreground/30'
+                  }`}
+                />
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Dots Indicator */}
-        <div className="flex justify-center space-x-2 mb-6 mt-4">
-          {accounts.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentAccountIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentAccountIndex 
-                  ? 'bg-foreground' 
-                  : 'bg-muted-foreground'
-              }`}
-            />
-          ))}
-        </div>
-
         {/* Recent Transactions */}
         <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Recent transactions</h3>
+          <h3 className="text-sm font-medium text-foreground mb-3">Recent transactions</h3>
           
-          {accountTransactions.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No transactions found for this account.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {accountTransactions.slice(0, 4).map((transaction, index) => (
-                <Card key={`${transaction.account_id}-${transaction.created_at}-${index}`} className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground text-sm mb-1">
-                          {transaction.description}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(transaction.created_at)}
-                        </p>
-                      </div>
-                      <p className={`font-bold text-sm ${
-                        transaction.amount < 0 ? 'text-destructive' : 'text-green-600'
-                      }`}>
-                        {formatCurrency(transaction.amount)}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          <div className="space-y-0 border-t border-border">
+            {transactions.map((transaction) => (
+              <div key={transaction.id} className="py-4 border-b border-border">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <Badge variant="secondary" className={`mb-2 text-xs font-medium ${transaction.categoryColor}`}>
+                      {transaction.category}
+                    </Badge>
+                    <p className="font-semibold text-foreground text-base mb-1">
+                      {transaction.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {transaction.date}
+                    </p>
+                  </div>
+                  <p className="text-destructive font-bold text-base">
+                    -R{Math.abs(transaction.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button className="text-sm text-foreground underline mt-3 font-medium">
+            see more
+          </button>
         </div>
 
-        {/* Spending Trend */}
+        {/* Spending Trend Chart */}
         <div>
-          <h3 className="text-lg font-semibold text-foreground mb-1">Spending Trend</h3>
-          <p className="text-sm text-muted-foreground mb-4">Since last year</p>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-xl font-bold text-foreground">Spending Trend</h3>
+              <p className="text-xs text-muted-foreground">for the past week</p>
+            </div>
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+              <CircleIcon className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Chart */}
+          <div className="h-64 mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis 
+                  dataKey="day" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                />
+                <YAxis 
+                  label={{ value: 'Amount Spent', angle: -90, position: 'insideLeft', style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 } }}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                />
+                <Tooltip 
+                  cursor={{ fill: 'hsl(var(--muted))' }}
+                  contentStyle={{ 
+                    background: 'white', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    fontSize: '12px'
+                  }}
+                />
+                <Bar dataKey="amount" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Week to Date Label */}
+          <p className="text-center text-xs text-muted-foreground mt-2">Week to Date</p>
+
+          {/* Time Filter Buttons */}
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <span className="text-sm font-medium text-foreground">Filter By Past:</span>
+            {timeFilters.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setSelectedTimeFilter(filter)}
+                className={`text-sm font-bold transition-colors ${
+                  selectedTimeFilter === filter 
+                    ? 'text-foreground underline' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Account Insight */}
+        <div className="pt-4">
+          <h3 className="text-xl font-bold text-foreground mb-4">Account insight</h3>
           
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="h-64 bg-muted/20 rounded-lg flex items-center justify-center">
-                <p className="text-muted-foreground">Chart will be implemented here</p>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Placeholder lines for insights */}
+          <div className="space-y-3">
+            <div className="h-0.5 bg-foreground w-full"></div>
+            <div className="h-0.5 bg-foreground w-3/4"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-foreground font-bold">•</span>
+              <div className="h-0.5 bg-foreground w-2/3"></div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Bottom Dots Indicator - Mobile Only */}
-      {isMobile && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {accounts.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentAccountIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentAccountIndex 
-                  ? 'bg-foreground w-6' 
-                  : 'bg-muted-foreground'
-              }`}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Touch/Swipe Areas for Navigation - Mobile Only */}
-      {isMobile && (
-        <>
-          <div 
-            className="fixed top-0 left-0 w-full h-1/2 z-0"
-            onClick={() => handleScroll('up')}
-          />
-          <div 
-            className="fixed bottom-0 left-0 w-full h-1/2 z-0"
-            onClick={() => handleScroll('down')}
-          />
-        </>
-      )}
     </div>
   );
 };
