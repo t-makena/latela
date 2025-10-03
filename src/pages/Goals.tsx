@@ -1,75 +1,136 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Plus, Edit } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Target, Edit2, Plus } from "lucide-react";
 
 const Goals = () => {
-  const goals = [
-    {
-      id: 1,
-      name: "Emergency fund",
-      progress: 50,
-      targetAmount: 10000,
-      currentAmount: 5000,
-      dueDate: "Due 1st Aug 25"
-    }
+  const budgetGoals = [
+    { name: "Emergency Fund", progress: 87, dueDate: "Due: 02 Oct '25" },
+    { name: "MacBook", progress: 57, dueDate: "Due: 24 Dec '25" },
+    { name: "December Holiday", progress: 64, dueDate: "Due: 10 Dec '25" }
   ];
 
-  const insights = [
-    "Due to your spending over the past month, you will need to increase your savings amount for the upcoming month to reach your 'FIFA World Cup trip' goal. Increase your savings by R150 to meet this target or adjust your priority settings.",
-    "You are on track to completing your 'Emergency savings' goal. A reward is in the other side!"
+  const goalsOverview = [
+    { goal: "Emergency fund", priority: "37.60%", split: "60%", timeline: "02 Oct 25" },
+    { goal: "MacBook", priority: "24.30%", split: "20.5%", timeline: "24 Dec 25" },
+    { goal: "Dec Holiday", priority: "10.10%", split: "15%", timeline: "10 Dec 25" },
+    { goal: "Extra savings", priority: "18.00%", split: "4.5%", timeline: "n/a" }
   ];
 
   return (
     <div className="space-y-6 relative z-10">
-      {/* Goals Overview */}
+      {/* Budget Goals Section */}
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="font-georama text-xl">Goals Overview</CardTitle>
-            <Button variant="ghost" size="sm">
-              <Edit className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            <CardTitle className="font-georama text-xl">Budget Goals</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {goals.map((goal) => (
-            <div key={goal.id} className="space-y-3 p-4 rounded-lg border bg-muted/20">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <h3 className="font-medium font-georama">{goal.name}</h3>
-                  <p className="text-sm text-muted-foreground">{goal.dueDate}</p>
-                </div>
-                <span className="text-sm font-medium">{goal.progress}% saved</span>
+        <CardContent className="space-y-6">
+          {budgetGoals.map((goal, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium font-georama">{goal.name}</h3>
+                <span className="text-sm text-muted-foreground">{goal.progress}% Saved</span>
               </div>
-              <Progress value={goal.progress} className="h-2" />
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-foreground transition-all"
+                  style={{ width: `${goal.progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">{goal.dueDate}</p>
             </div>
           ))}
-          
-          <Button 
-            variant="outline" 
-            className="w-full mt-4 flex items-center gap-2 border-dashed"
-          >
-            <Plus className="h-4 w-4" />
-            Add new goal
-          </Button>
         </CardContent>
       </Card>
 
-      {/* Goal Insights */}
+      {/* Goals Overview Table */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="font-georama text-xl">Goal Insight</CardTitle>
+          <div className="flex items-center gap-2">
+            <Edit2 className="h-5 w-5" />
+            <CardTitle className="font-georama text-xl">Goals Overview</CardTitle>
+          </div>
         </CardHeader>
-        <CardContent>
-          <ul className="space-y-4">
-            {insights.map((insight, index) => (
-              <li key={index} className="flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 flex-shrink-0" />
-                <p className="text-sm text-muted-foreground leading-relaxed">{insight}</p>
-              </li>
-            ))}
-          </ul>
+        <CardContent className="space-y-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-medium">Goal</TableHead>
+                <TableHead className="font-medium">
+                  Priority<sup>1</sup>
+                </TableHead>
+                <TableHead className="font-medium">
+                  Split<sup>2</sup>
+                </TableHead>
+                <TableHead className="font-medium">
+                  Timeline<sup>3</sup>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {goalsOverview.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{row.goal}</TableCell>
+                  <TableCell>{row.priority}</TableCell>
+                  <TableCell>{row.split}</TableCell>
+                  <TableCell>{row.timeline}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <div className="flex flex-col items-center gap-2 pt-4">
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="h-10 w-10 rounded-full border-2"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+            <p className="text-sm text-muted-foreground">Add a new goal</p>
+          </div>
+
+          <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
+            <p>1. Priority shows the % of your upcoming monthly savings to be allocated to each goal.</p>
+            <p>2. Split reflects the share each goal has of your current total savings.</p>
+            <p>3. Dates indicate your target deadline and/or the estimated completion date based on the priority and split of the goal.</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Goal Insight Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="font-georama text-xl">Goal insight</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <span className="text-sm">•</span>
+              <div className="flex-1 h-3 bg-muted rounded" />
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-sm">•</span>
+              <div className="flex-1 h-3 bg-muted rounded w-3/4" />
+            </div>
+          </div>
+          
+          <div className="space-y-4 pt-4">
+            <div className="h-px bg-muted" />
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="text-sm">1.</span>
+                <div className="flex-1 h-3 bg-muted rounded w-2/3" />
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-sm">2.</span>
+                <div className="flex-1 h-3 bg-muted rounded w-4/5" />
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
