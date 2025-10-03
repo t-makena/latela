@@ -1,254 +1,155 @@
-
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarIcon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { CalendarDays, Plus, Clock } from "lucide-react";
-import { format } from "date-fns";
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  date: Date;
-  budget: number;
-  category: string;
-}
+const Calendar = () => {
+  // Mock data for the calendar
+  const currentMonth = "September";
+  const currentDate = 2;
+  
+  // Generate calendar dates for September 2024 (starting on Sunday)
+  const calendarDates = [
+    // Week 1
+    { date: "01", isCurrentMonth: true },
+    { date: "02", isCurrentMonth: true, isToday: true },
+    { date: "03", isCurrentMonth: true },
+    { date: "04", isCurrentMonth: true },
+    { date: "05", isCurrentMonth: true },
+    { date: "06", isCurrentMonth: true },
+    { date: "07", isCurrentMonth: true },
+    // Week 2
+    { date: "08", isCurrentMonth: true },
+    { date: "09", isCurrentMonth: true },
+    { date: "10", isCurrentMonth: true },
+    { date: "11", isCurrentMonth: true },
+    { date: "12", isCurrentMonth: true },
+    { date: "13", isCurrentMonth: true },
+    { date: "14", isCurrentMonth: true },
+    // Week 3
+    { date: "15", isCurrentMonth: true },
+    { date: "16", isCurrentMonth: true },
+    { date: "17", isCurrentMonth: true },
+    { date: "18", isCurrentMonth: true },
+    { date: "19", isCurrentMonth: true },
+    { date: "20", isCurrentMonth: true },
+    { date: "21", isCurrentMonth: true },
+    // Week 4
+    { date: "22", isCurrentMonth: true },
+    { date: "23", isCurrentMonth: true },
+    { date: "24", isCurrentMonth: true },
+    { date: "25", isCurrentMonth: true },
+    { date: "26", isCurrentMonth: true },
+    { date: "27", isCurrentMonth: true },
+    { date: "28", isCurrentMonth: true },
+    // Week 5
+    { date: "29", isCurrentMonth: true },
+    { date: "30", isCurrentMonth: true },
+    { date: "31", isCurrentMonth: true },
+    { date: "01", isCurrentMonth: false },
+    { date: "02", isCurrentMonth: false },
+    { date: "03", isCurrentMonth: false },
+    { date: "04", isCurrentMonth: false },
+  ];
 
-const CalendarPage = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [events, setEvents] = useState<Event[]>([
+  const dayLabels = ["m", "t", "w", "t", "f", "s", "s"];
+
+  const events = [
     {
-      id: "1",
-      title: "Birthday Party",
-      description: "Sarah's birthday celebration",
-      date: new Date(2025, 4, 30),
-      budget: 250,
-      category: "Entertainment"
+      date: "Today",
+      title: "Jazz @ Armchair, Lower Main Rd",
+      budget: 500
     },
     {
-      id: "2",
-      title: "Grocery Shopping",
-      description: "Weekly grocery run",
-      date: new Date(2025, 4, 28),
-      budget: 150,
-      category: "Food"
+      date: "08 Sept",
+      title: "Graduation @ Sarah Baartman Hall",
+      budget: 1000
     }
-  ]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newEvent, setNewEvent] = useState({
-    title: "",
-    description: "",
-    budget: "",
-    category: ""
-  });
+  ];
 
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-ZA', {
-      style: 'currency',
-      currency: 'ZAR',
-    }).format(amount);
-  };
-
-  const handleAddEvent = () => {
-    if (selectedDate && newEvent.title && newEvent.budget) {
-      const event: Event = {
-        id: Date.now().toString(),
-        title: newEvent.title,
-        description: newEvent.description,
-        date: selectedDate,
-        budget: parseFloat(newEvent.budget),
-        category: newEvent.category || "Other"
-      };
-      setEvents([...events, event]);
-      setNewEvent({ title: "", description: "", budget: "", category: "" });
-      setIsDialogOpen(false);
-    }
-  };
-
-  const getEventsForDate = (date: Date) => {
-    return events.filter(event => 
-      event.date.toDateString() === date.toDateString()
-    );
-  };
-
-  const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
-  const totalBudgetForSelectedDate = selectedDateEvents.reduce((sum, event) => sum + event.budget, 0);
-
-  const eventDates = events.map(event => event.date);
+  const totalBudget = 1500;
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Calendar Section */}
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5" />
-              Event Calendar
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="w-full border-0 pointer-events-auto"
-              modifiers={{
-                hasEvent: eventDates
-              }}
-              modifiersStyles={{
-                hasEvent: { 
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  borderRadius: '50%',
-                  fontWeight: 'bold'
-                }
-              }}
-            />
-            <div className="p-6 pt-0">
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full" disabled={!selectedDate}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Event for {selectedDate && format(selectedDate, "MMM dd")}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      Add Event for {selectedDate && format(selectedDate, "MMMM dd, yyyy")}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="title">Event Title</Label>
-                      <Input
-                        id="title"
-                        value={newEvent.title}
-                        onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                        placeholder="Enter event title"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={newEvent.description}
-                        onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                        placeholder="Event description (optional)"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="category">Category</Label>
-                      <Input
-                        id="category"
-                        value={newEvent.category}
-                        onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })}
-                        placeholder="e.g., Entertainment, Food, Travel"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="budget">Estimated Budget (ZAR)</Label>
-                      <Input
-                        id="budget"
-                        type="number"
-                        value={newEvent.budget}
-                        onChange={(e) => setNewEvent({ ...newEvent, budget: e.target.value })}
-                        placeholder="0.00"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                    <Button onClick={handleAddEvent} className="w-full">
-                      Add Event
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Events for Selected Date */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Events for {selectedDate && format(selectedDate, "MMMM dd, yyyy")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedDateEvents.length > 0 ? (
-              <div className="space-y-4">
-                {selectedDateEvents.map((event) => (
-                  <div key={event.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold">{event.title}</h3>
-                      <div className="text-green-600 font-medium">
-                        {formatCurrency(event.budget)}
-                      </div>
-                    </div>
-                    {event.description && (
-                      <p className="text-sm text-muted-foreground mb-2">{event.description}</p>
-                    )}
-                    <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block">
-                      {event.category}
-                    </div>
-                  </div>
-                ))}
-                <div className="border-t pt-4">
-                  <div className="flex justify-between items-center font-semibold">
-                    <span>Total Budget for this day:</span>
-                    <div className="text-green-600">
-                      {formatCurrency(totalBudgetForSelectedDate)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground py-8">
-                <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No events scheduled for this date</p>
-                <p className="text-sm">Click "Add Event" to create one</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 pb-8">
+        <h1 className="text-3xl font-bold">latela</h1>
+        <button className="p-2">
+          <Menu className="h-6 w-6" />
+        </button>
       </div>
 
-      {/* Upcoming Events Overview */}
-      <Card>
-        <CardContent>
-          <div className="space-y-3">
-            {events.map((event) => (
-              <div key={event.id} className="flex justify-between items-center border-b pb-2">
-                <div>
-                  <p className="font-medium">{event.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(event.date, "MMM dd, yyyy")} • {event.category}
-                  </p>
+      {/* Main Content */}
+      <div className="px-6 space-y-6">
+        {/* Calendar Section Header */}
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="h-6 w-6" />
+          <h2 className="text-2xl font-bold">Calendar</h2>
+        </div>
+
+        {/* Calendar Card */}
+        <div className="border border-gray-300 rounded-3xl p-6 space-y-4">
+          {/* Month Header with Add Event Button */}
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold">{currentMonth}</h3>
+            <Button variant="ghost" className="text-base font-normal">
+              Add Event
+            </Button>
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="space-y-2">
+            {/* Day Labels */}
+            <div className="grid grid-cols-7 gap-2 mb-4">
+              {dayLabels.map((day, index) => (
+                <div key={index} className="text-center text-sm text-gray-500 font-normal">
+                  {day}
                 </div>
-                <div className="text-green-600 font-medium">
-                  {formatCurrency(event.budget)}
-                </div>
-              </div>
-            ))}
-            <div className="flex justify-between items-center border-t pt-2 font-semibold">
-              <span>Total budget</span>
-              <div className="text-green-600">
-                {formatCurrency(events.reduce((sum, event) => sum + event.budget, 0))}
-              </div>
+              ))}
+            </div>
+
+            {/* Date Grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {calendarDates.map((dateObj, index) => (
+                <button
+                  key={index}
+                  className={`
+                    aspect-square flex items-center justify-center text-base
+                    ${dateObj.isToday 
+                      ? 'bg-black text-white rounded-full font-normal' 
+                      : dateObj.isCurrentMonth 
+                        ? 'text-black font-normal hover:bg-gray-100 rounded-full' 
+                        : 'text-gray-300 font-normal'
+                    }
+                  `}
+                >
+                  {dateObj.date}
+                </button>
+              ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Events List */}
+        <div className="space-y-6">
+          {events.map((event, index) => (
+            <div key={index} className="space-y-2">
+              <h3 className="text-lg font-bold underline">{event.date}</h3>
+              <div className="space-y-1">
+                <p className="text-base">{event.title}</p>
+                <p className="text-base">Budget: R{event.budget.toLocaleString()}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* Total Budget */}
+          <div className="pt-4">
+            <p className="text-base">
+              Total budget (next 30 days): R{totalBudget.toLocaleString()}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default CalendarPage;
+export default Calendar;
