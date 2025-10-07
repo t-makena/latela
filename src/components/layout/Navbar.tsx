@@ -47,7 +47,7 @@ export const Navbar = () => {
       {isMobile ? (
         <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
           <div className="flex items-center justify-between p-4">
-            <h2 className="text-xl font-bold">Zaka</h2>
+            <h2 className="text-xl font-bold">Latela</h2>
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -65,7 +65,7 @@ export const Navbar = () => {
       ) : (
         <Card className="h-full p-2">
           <div className="mb-6 p-2">
-            <h2 className="text-xl font-bold text-center">Zaka</h2>
+            <h2 className="text-xl font-bold text-center">Latela</h2>
           </div>
           <NavContent />
         </Card>
