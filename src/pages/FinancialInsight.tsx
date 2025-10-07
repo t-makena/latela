@@ -1,27 +1,51 @@
 import { TrendingUp, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell
+} from "recharts";
 
 const FinancialInsight = () => {
+  // Stacked bar chart data for spending trend (Mon-Sun)
   const spendingTrendData = [
-    { day: "Mon", amount: 850 },
-    { day: "Tue", amount: 1500 },
-    { day: "Wed", amount: 1100 },
-    { day: "Thu", amount: 600 },
-    { day: "Fri", amount: 1000 },
-    { day: "Sat", amount: 1400 },
-    { day: "Sun", amount: 1800 }
+    { day: "Mon", "F&G": 300, "P&L": 200, "H&U": 250, "T/F": 100, Misc: 0 },
+    { day: "Tue", "F&G": 400, "P&L": 300, "H&U": 450, "T/F": 200, Misc: 0 },
+    { day: "Wed", "F&G": 350, "P&L": 250, "H&U": 0, "T/F": 350, Misc: 0 },
+    { day: "Thu", "F&G": 300, "P&L": 200, "H&U": 0, "T/F": 200, Misc: 0 },
+    { day: "Fri", "F&G": 400, "P&L": 0, "H&U": 300, "T/F": 350, Misc: 0 },
+    { day: "Sat", "F&G": 500, "P&L": 400, "H&U": 0, "T/F": 400, Misc: 0 },
+    { day: "Sun", "F&G": 600, "P&L": 450, "H&U": 300, "T/F": 200, Misc: 0 }
   ];
 
+  // Category data for spending by category chart
   const categoryData = [
-    { category: "F&G", amount: 1200, color: "bg-orange-500" },
-    { category: "P&L", amount: 1100, color: "bg-green-600" },
-    { category: "H&U", amount: 1600, color: "bg-red-500" },
-    { category: "T/F", amount: 1400, color: "bg-blue-700" },
-    { category: "Misc", amount: 1500, color: "bg-black" }
+    { category: "F&G", amount: 2850, color: "#10B981" },
+    { category: "P&L", amount: 1800, color: "#8B5CF6" },
+    { category: "H&U", amount: 1300, color: "#3B82F6" },
+    { category: "T/F", amount: 1800, color: "#F59E0B" },
+    { category: "Misc", amount: 500, color: "#EF4444" }
   ];
 
-  const maxSpending = Math.max(...spendingTrendData.map(d => d.amount));
-  const maxCategory = Math.max(...categoryData.map(d => d.amount));
+  // Category colors for stacked bars
+  const categoryColors = {
+    "F&G": "#10B981",
+    "P&L": "#8B5CF6",
+    "H&U": "#3B82F6",
+    "T/F": "#F59E0B",
+    "Misc": "#EF4444"
+  };
+
+  const handleBarClick = (data: any) => {
+    console.log("Bar clicked:", data);
+    // Future modal implementation
+  };
 
   return (
     <div className="space-y-6 relative z-10">
@@ -63,88 +87,132 @@ const FinancialInsight = () => {
 
       {/* Spending Trend Chart */}
       <div>
-        <div className="flex items-start justify-between mb-2">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">Spending Trend</h2>
             <p className="text-xs text-muted-foreground">for the past week</p>
           </div>
-          <Info className="h-4 w-4" />
-        </div>
-
-        <div className="relative pt-8 pb-4">
-          {/* Y-axis label */}
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 origin-center">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Amount Spent</span>
-          </div>
-
-          {/* Chart */}
-          <div className="ml-8 mr-4">
-            <div className="flex items-end justify-between gap-2 h-48 border-l border-b border-foreground/20 pl-4 pb-2">
-              {spendingTrendData.map((item, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full flex items-end justify-center h-full">
-                    <div 
-                      className="w-full max-w-[40px] bg-foreground rounded-t"
-                      style={{ height: `${(item.amount / maxSpending) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs">{item.day}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-center text-xs text-muted-foreground mt-2">Week to Date</p>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Filter By Past:</span>
+            <Button variant="link" className="h-auto p-0 underline font-semibold">1W</Button>
+            <Button variant="link" className="h-auto p-0 font-semibold">1M</Button>
+            <Button variant="link" className="h-auto p-0 font-semibold">3M</Button>
+            <Button variant="link" className="h-auto p-0 font-semibold">6M</Button>
+            <Button variant="link" className="h-auto p-0 font-semibold">1Y</Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm mt-4">
-          <span className="text-muted-foreground">Filter By Past:</span>
-          <Button variant="link" className="h-auto p-0 underline font-semibold">1W</Button>
-          <Button variant="link" className="h-auto p-0 font-semibold">1M</Button>
-          <Button variant="link" className="h-auto p-0 font-semibold">3M</Button>
-          <Button variant="link" className="h-auto p-0 font-semibold">6M</Button>
-          <Button variant="link" className="h-auto p-0 font-semibold">1Y</Button>
-        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={spendingTrendData} onClick={handleBarClick}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+            <XAxis 
+              dataKey="day" 
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+            />
+            <YAxis 
+              label={{ 
+                value: 'Amount Spent (ZAR)', 
+                angle: -90, 
+                position: 'insideLeft',
+                style: { fill: 'hsl(var(--muted-foreground))' }
+              }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'hsl(var(--background))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '6px'
+              }}
+              formatter={(value: number) => `R${value}`}
+            />
+            <Legend 
+              wrapperStyle={{ paddingTop: '20px' }}
+              formatter={(value) => {
+                const labels: Record<string, string> = {
+                  "F&G": "Food & Groceries",
+                  "P&L": "Personal & Lifestyle",
+                  "H&U": "Housing & Utilities",
+                  "T/F": "Transport/Fuel",
+                  "Misc": "Miscellaneous"
+                };
+                return labels[value] || value;
+              }}
+            />
+            <Bar dataKey="F&G" stackId="a" fill={categoryColors["F&G"]} cursor="pointer" />
+            <Bar dataKey="P&L" stackId="a" fill={categoryColors["P&L"]} cursor="pointer" />
+            <Bar dataKey="H&U" stackId="a" fill={categoryColors["H&U"]} cursor="pointer" />
+            <Bar dataKey="T/F" stackId="a" fill={categoryColors["T/F"]} cursor="pointer" />
+            <Bar dataKey="Misc" stackId="a" fill={categoryColors["Misc"]} cursor="pointer" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Spending By Category Chart */}
       <div>
-        <div>
-          <h2 className="text-lg font-semibold">Spending By Category</h2>
-          <p className="text-xs text-muted-foreground">for the past week</p>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold">Spending By Category</h2>
+            <p className="text-xs text-muted-foreground">for the past week</p>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Filter By Past:</span>
+            <Button variant="link" className="h-auto p-0 underline font-semibold">1W</Button>
+            <Button variant="link" className="h-auto p-0 font-semibold">1M</Button>
+            <Button variant="link" className="h-auto p-0 font-semibold">3M</Button>
+            <Button variant="link" className="h-auto p-0 font-semibold">6M</Button>
+            <Button variant="link" className="h-auto p-0 font-semibold">1Y</Button>
+          </div>
         </div>
 
-        <div className="relative pt-8 pb-4 mt-4">
-          {/* Y-axis label */}
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 origin-center">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Amount Spent</span>
-          </div>
-
-          {/* Chart */}
-          <div className="ml-8 mr-4">
-            <div className="flex items-end justify-between gap-3 h-48 border-l border-b border-foreground/20 pl-4 pb-2">
-              {categoryData.map((item, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full flex items-end justify-center h-full">
-                    <div 
-                      className={`w-full max-w-[50px] ${item.color} rounded-t`}
-                      style={{ height: `${(item.amount / maxCategory) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium">{item.category}</span>
-                </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={categoryData} onClick={handleBarClick}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+            <XAxis 
+              dataKey="category" 
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+            />
+            <YAxis 
+              label={{ 
+                value: 'Amount Spent (ZAR)', 
+                angle: -90, 
+                position: 'insideLeft',
+                style: { fill: 'hsl(var(--muted-foreground))' }
+              }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'hsl(var(--background))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '6px'
+              }}
+              formatter={(value: number) => `R${value.toLocaleString()}`}
+            />
+            <Legend 
+              wrapperStyle={{ paddingTop: '20px' }}
+              formatter={(value) => {
+                const labels: Record<string, string> = {
+                  "F&G": "Food & Groceries",
+                  "P&L": "Personal & Lifestyle",
+                  "H&U": "Housing & Utilities",
+                  "T/F": "Transport/Fuel",
+                  "Misc": "Miscellaneous"
+                };
+                return labels[value] || value;
+              }}
+            />
+            <Bar dataKey="amount" cursor="pointer">
+              {categoryData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm mt-4">
-          <span className="text-muted-foreground">Filter By Past:</span>
-          <Button variant="link" className="h-auto p-0 underline font-semibold">1W</Button>
-          <Button variant="link" className="h-auto p-0 font-semibold">1M</Button>
-          <Button variant="link" className="h-auto p-0 font-semibold">3M</Button>
-          <Button variant="link" className="h-auto p-0 font-semibold">6M</Button>
-          <Button variant="link" className="h-auto p-0 font-semibold">1Y</Button>
-        </div>
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
