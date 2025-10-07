@@ -144,14 +144,6 @@ const Accounts = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4">
-        <h1 className="text-2xl font-bold text-foreground">latela</h1>
-        <Button variant="ghost" size="icon">
-          <Menu className="h-6 w-6" />
-        </Button>
-      </header>
-
       <div className="px-6 pb-20 space-y-6">
         {/* Account Card */}
         <Card className="rounded-3xl border border-border shadow-lg bg-gray-50">
