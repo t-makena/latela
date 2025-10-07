@@ -1,10 +1,11 @@
-import { CalendarIcon, Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Calendar = () => {
   // Mock data for the calendar
-  const currentMonth = "September";
-  const currentDate = 2;
+  const currentMonth = "October";
+  const currentYear = 2025;
+  const currentDate = 7;
   
   // Generate calendar dates for September 2024 (starting on Sunday)
   const calendarDates = [
@@ -68,83 +69,90 @@ const Calendar = () => {
   const totalBudget = 1500;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 pb-8">
-        <h1 className="text-3xl font-bold">latela</h1>
-        <button className="p-2">
-          <Menu className="h-6 w-6" />
-        </button>
-      </div>
-
-      {/* Main Content */}
-      <div className="px-6 space-y-6">
-        {/* Calendar Section Header */}
+    <div className="min-h-screen bg-background p-8">
+      {/* Header with Month/Year and Navigation */}
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-bold text-foreground">
+          {currentMonth} {currentYear}
+        </h1>
+        
         <div className="flex items-center gap-2">
-          <CalendarIcon className="h-6 w-6" />
-          <h2 className="text-2xl font-bold">Calendar</h2>
-        </div>
-
-        {/* Calendar Card */}
-        <div className="border border-gray-300 rounded-3xl p-6 space-y-4">
-          {/* Month Header with Add Event Button */}
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold">{currentMonth}</h3>
-            <Button variant="ghost" className="text-base font-normal">
-              Add Event
+          <Button variant="outline" size="default" className="font-normal">
+            Month
+          </Button>
+          <Button variant="outline" size="default" className="font-normal">
+            Today
+          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon">
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+      </div>
 
-          {/* Calendar Grid */}
-          <div className="space-y-2">
-            {/* Day Labels */}
-            <div className="grid grid-cols-7 gap-2 mb-4">
-              {dayLabels.map((day, index) => (
-                <div key={index} className="text-center text-sm text-gray-500 font-normal">
-                  {day}
-                </div>
-              ))}
-            </div>
+      {/* Main Content: Calendar Grid + Events Sidebar */}
+      <div className="flex gap-8">
+        {/* Calendar Grid */}
+        <div className="flex-1 bg-card rounded-lg border shadow-sm p-8">
+          {/* Day Labels */}
+          <div className="grid grid-cols-7 gap-4 mb-6">
+            {dayLabels.map((day, index) => (
+              <div key={index} className="text-center text-sm font-medium text-muted-foreground uppercase">
+                {day}
+              </div>
+            ))}
+          </div>
 
-            {/* Date Grid */}
-            <div className="grid grid-cols-7 gap-2">
-              {calendarDates.map((dateObj, index) => (
-                <button
-                  key={index}
-                  className={`
-                    aspect-square flex items-center justify-center text-base
-                    ${dateObj.isToday 
-                      ? 'bg-black text-white rounded-full font-normal' 
-                      : dateObj.isCurrentMonth 
-                        ? 'text-black font-normal hover:bg-gray-100 rounded-full' 
-                        : 'text-gray-300 font-normal'
-                    }
-                  `}
-                >
-                  {dateObj.date}
-                </button>
-              ))}
-            </div>
+          {/* Date Grid */}
+          <div className="grid grid-cols-7 gap-4">
+            {calendarDates.map((dateObj, index) => (
+              <button
+                key={index}
+                className={`
+                  h-20 flex items-center justify-center text-base rounded-lg
+                  border border-border/50 transition-colors
+                  ${dateObj.isToday 
+                    ? 'bg-primary/10 text-primary font-semibold border-primary/30' 
+                    : dateObj.isCurrentMonth 
+                      ? 'text-foreground font-normal hover:bg-accent' 
+                      : 'text-muted-foreground/40 font-normal'
+                  }
+                `}
+              >
+                {dateObj.date}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Events List */}
-        <div className="space-y-6">
-          {events.map((event, index) => (
-            <div key={index} className="space-y-2">
-              <h3 className="text-lg font-bold underline">{event.date}</h3>
-              <div className="space-y-1">
-                <p className="text-base">{event.title}</p>
-                <p className="text-base">Budget: R{event.budget.toLocaleString()}</p>
+        {/* Events Sidebar */}
+        <div className="w-80 space-y-6">
+          <div className="bg-card rounded-lg border shadow-sm p-6 space-y-6">
+            <h2 className="text-xl font-bold text-foreground">Upcoming Events</h2>
+            
+            {events.map((event, index) => (
+              <div key={index} className="space-y-2 pb-4 border-b last:border-b-0 last:pb-0">
+                <h3 className="text-sm font-semibold text-primary">{event.date}</h3>
+                <div className="space-y-1">
+                  <p className="text-base text-foreground">{event.title}</p>
+                  <p className="text-sm text-muted-foreground">Budget: R{event.budget.toLocaleString()}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {/* Total Budget */}
-          <div className="pt-4">
-            <p className="text-base">
-              Total budget (next 30 days): R{totalBudget.toLocaleString()}
-            </p>
+            {/* Total Budget */}
+            <div className="pt-4 border-t">
+              <p className="text-sm font-medium text-foreground">
+                Total budget (next 30 days)
+              </p>
+              <p className="text-2xl font-bold text-foreground mt-1">
+                R{totalBudget.toLocaleString()}
+              </p>
+            </div>
           </div>
         </div>
       </div>
