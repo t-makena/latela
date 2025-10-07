@@ -2,12 +2,20 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Menu, CircleIcon } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { Menu, CircleIcon, X } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, Cell } from "recharts";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Accounts = () => {
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("1W");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedWeekData, setSelectedWeekData] = useState<any>(null);
 
   // Mock data
   const accounts = [
@@ -47,15 +55,88 @@ const Accounts = () => {
     }
   ];
 
+  // Category colors mapping
+  const categoryColors = {
+    "Food": "#10B981",
+    "Transportation": "#F59E0B",
+    "Personal & Lifestyle": "#8B5CF6",
+    "Housing & Utilities": "#3B82F6",
+    "Savings & Investments": "#10B981",
+    "Entertainment": "#EC4899",
+    "Healthcare": "#EF4444"
+  };
+
   const chartData = [
-    { day: "Mon", amount: 850 },
-    { day: "Tue", amount: 1350 },
-    { day: "Wed", amount: 950 },
-    { day: "Thu", amount: 700 },
-    { day: "Fri", amount: 1100 },
-    { day: "Sat", amount: 1300 },
-    { day: "Sun", amount: 1600 }
+    {
+      week: "Week 1",
+      dateRange: "2025-05-01 to 2025-05-07",
+      total: 3348,
+      "Food": 581,
+      "Transportation": 494,
+      "Personal & Lifestyle": 533,
+      "Housing & Utilities": 289,
+      "Entertainment": 451
+    },
+    {
+      week: "Week 2",
+      dateRange: "2025-05-08 to 2025-05-14",
+      total: 2890,
+      "Food": 620,
+      "Transportation": 380,
+      "Personal & Lifestyle": 420,
+      "Housing & Utilities": 350,
+      "Entertainment": 320,
+      "Healthcare": 800
+    },
+    {
+      week: "Week 3",
+      dateRange: "2025-05-15 to 2025-05-21",
+      total: 3120,
+      "Food": 590,
+      "Transportation": 510,
+      "Personal & Lifestyle": 680,
+      "Housing & Utilities": 400,
+      "Entertainment": 290,
+      "Healthcare": 650
+    },
+    {
+      week: "Week 4",
+      dateRange: "2025-05-22 to 2025-05-28",
+      total: 2750,
+      "Food": 540,
+      "Transportation": 460,
+      "Personal & Lifestyle": 550,
+      "Housing & Utilities": 320,
+      "Entertainment": 380,
+      "Healthcare": 500
+    }
   ];
+
+  const categories = Object.keys(categoryColors);
+
+  const handleBarClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const weekData = data.activePayload[0].payload;
+      setSelectedWeekData(weekData);
+      setIsModalOpen(true);
+    }
+  };
+
+  const getCategoryBreakdown = () => {
+    if (!selectedWeekData) return [];
+    
+    const breakdown = categories
+      .map(category => ({
+        category,
+        amount: selectedWeekData[category] || 0,
+        color: categoryColors[category as keyof typeof categoryColors],
+        percentage: ((selectedWeekData[category] || 0) / selectedWeekData.total * 100).toFixed(0)
+      }))
+      .filter(item => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+    
+    return breakdown;
+  };
 
   const timeFilters = ["1W", "1M", "3M", "6M", "1Y"];
 
@@ -158,7 +239,7 @@ const Accounts = () => {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h3 className="text-xl font-bold text-foreground">Spending Trend</h3>
-              <p className="text-xs text-muted-foreground">for the past week</p>
+              <p className="text-xs text-muted-foreground">for the past month</p>
             </div>
             <Button variant="ghost" size="icon" className="h-6 w-6">
               <CircleIcon className="h-5 w-5" />
@@ -168,9 +249,9 @@ const Accounts = () => {
           {/* Chart */}
           <div className="h-64 mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart data={chartData} onClick={handleBarClick}>
                 <XAxis 
-                  dataKey="day" 
+                  dataKey="week" 
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
@@ -190,13 +271,25 @@ const Accounts = () => {
                     fontSize: '12px'
                   }}
                 />
-                <Bar dataKey="amount" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]} />
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                  iconType="circle"
+                />
+                {categories.map((category) => (
+                  <Bar 
+                    key={category}
+                    dataKey={category} 
+                    stackId="a" 
+                    fill={categoryColors[category as keyof typeof categoryColors]}
+                    radius={category === categories[categories.length - 1] ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                  />
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Week to Date Label */}
-          <p className="text-center text-xs text-muted-foreground mt-2">Week to Date</p>
+          {/* Month Label */}
+          <p className="text-center text-xs text-muted-foreground mt-2">Monthly Overview</p>
 
           {/* Time Filter Buttons */}
           <div className="flex items-center justify-center gap-4 mt-4">
@@ -232,6 +325,59 @@ const Accounts = () => {
           </div>
         </div>
       </div>
+
+      {/* Detailed Breakdown Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Spending Details - {selectedWeekData?.week}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedWeekData && (
+            <div className="space-y-6">
+              {/* Total Amount */}
+              <div className="text-center">
+                <p className="text-4xl font-bold text-foreground">
+                  R {selectedWeekData.total.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Date: {selectedWeekData.dateRange}
+                </p>
+              </div>
+
+              {/* Category Breakdown */}
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-3">Category Breakdown</h4>
+                <div className="space-y-3">
+                  {getCategoryBreakdown().map((item) => (
+                    <div key={item.category} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="h-3 w-3 rounded-full" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-sm font-medium text-foreground">
+                          {item.category}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-foreground">
+                          R {item.amount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({item.percentage}%)
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
