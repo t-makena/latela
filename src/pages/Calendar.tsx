@@ -72,7 +72,7 @@ const Calendar = () => {
     <div className="min-h-screen bg-background p-8">
       {/* Header with Month/Year and Navigation */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold text-foreground">
+        <h1 className="text-xl font-bold text-foreground">
           {currentMonth} {currentYear}
         </h1>
         
@@ -113,13 +113,13 @@ const Calendar = () => {
               <button
                 key={index}
                 className={`
-                  h-20 flex items-center justify-center text-base rounded-lg
-                  border border-border/50 transition-colors
+                  h-20 flex items-center justify-center text-base rounded-full
+                  transition-colors
                   ${dateObj.isToday 
-                    ? 'bg-primary/10 text-primary font-semibold border-primary/30' 
+                    ? 'bg-black text-white font-semibold' 
                     : dateObj.isCurrentMonth 
-                      ? 'text-foreground font-normal hover:bg-accent' 
-                      : 'text-muted-foreground/40 font-normal'
+                      ? 'text-black font-normal hover:bg-gray-100' 
+                      : 'text-gray-300 font-normal'
                   }
                 `}
               >
@@ -131,25 +131,25 @@ const Calendar = () => {
 
         {/* Events Sidebar */}
         <div className="w-80 space-y-6">
-          <div className="bg-card rounded-lg border shadow-sm p-6 space-y-6">
-            <h2 className="text-xl font-bold text-foreground">Upcoming Events</h2>
+          <div className="bg-white rounded-3xl border-2 border-black p-6 space-y-6">
+            <h2 className="text-xl font-bold text-black">Upcoming Events</h2>
             
             {events.map((event, index) => (
-              <div key={index} className="space-y-2 pb-4 border-b last:border-b-0 last:pb-0">
-                <h3 className="text-sm font-semibold text-primary">{event.date}</h3>
+              <div key={index} className="space-y-2 pb-4 border-b border-black/10 last:border-b-0 last:pb-0">
+                <h3 className="text-sm font-semibold text-black underline">{event.date}</h3>
                 <div className="space-y-1">
-                  <p className="text-base text-foreground">{event.title}</p>
-                  <p className="text-sm text-muted-foreground">Budget: R{event.budget.toLocaleString()}</p>
+                  <p className="text-base text-black">{event.title}</p>
+                  <p className="text-sm text-gray-600">Budget: R{event.budget.toLocaleString()}</p>
                 </div>
               </div>
             ))}
 
             {/* Total Budget */}
-            <div className="pt-4 border-t">
-              <p className="text-sm font-medium text-foreground">
+            <div className="pt-4 border-t border-black/10">
+              <p className="text-sm font-medium text-black">
                 Total budget (next 30 days)
               </p>
-              <p className="text-2xl font-bold text-foreground mt-1">
+              <p className="text-2xl font-bold text-black mt-1">
                 R{totalBudget.toLocaleString()}
               </p>
             </div>
