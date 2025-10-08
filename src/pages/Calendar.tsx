@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 const Calendar = () => {
   // Mock data for the calendar
@@ -95,9 +96,9 @@ const Calendar = () => {
       </div>
 
       {/* Main Content: Calendar Grid + Events Sidebar */}
-      <div className="flex gap-8">
+      <div className="flex gap-6">
         {/* Calendar Grid */}
-        <div className="flex-1 bg-card rounded-lg border shadow-sm p-8">
+        <Card className="flex-1 p-8 shadow-md">
           {/* Day Labels */}
           <div className="grid grid-cols-7 gap-4 mb-6">
             {dayLabels.map((day, index) => (
@@ -116,10 +117,10 @@ const Calendar = () => {
                   h-20 flex items-center justify-center text-base rounded-full
                   transition-colors
                   ${dateObj.isToday 
-                    ? 'bg-black text-white font-semibold' 
+                    ? 'bg-black text-white font-semibold w-12 h-12 mx-auto' 
                     : dateObj.isCurrentMonth 
-                      ? 'text-black font-normal hover:bg-gray-100' 
-                      : 'text-gray-300 font-normal'
+                      ? 'text-foreground font-normal hover:bg-accent' 
+                      : 'text-muted-foreground font-normal'
                   }
                 `}
               >
@@ -127,33 +128,35 @@ const Calendar = () => {
               </button>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* Events Sidebar */}
-        <div className="w-80 space-y-6">
-          <div className="bg-white rounded-3xl border-2 border-black p-6 space-y-6">
-            <h2 className="text-xl font-bold text-black">Upcoming Events</h2>
+        <div className="w-80">
+          <Card className="p-6 space-y-6 shadow-md h-full flex flex-col">
+            <h2 className="text-xl font-bold text-foreground">Upcoming Events</h2>
             
-            {events.map((event, index) => (
-              <div key={index} className="space-y-2 pb-4 border-b border-black/10 last:border-b-0 last:pb-0">
-                <h3 className="text-sm font-semibold text-black underline">{event.date}</h3>
-                <div className="space-y-1">
-                  <p className="text-base text-black">{event.title}</p>
-                  <p className="text-sm text-gray-600">Budget: R{event.budget.toLocaleString()}</p>
+            <div className="flex-1 space-y-6">
+              {events.map((event, index) => (
+                <div key={index} className="space-y-2 pb-4 border-b border-border last:border-b-0 last:pb-0">
+                  <h3 className="text-sm font-semibold text-foreground underline">{event.date}</h3>
+                  <div className="space-y-1">
+                    <p className="text-base text-foreground">{event.title}</p>
+                    <p className="text-sm text-muted-foreground">Budget: R{event.budget.toLocaleString()}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
             {/* Total Budget */}
-            <div className="pt-4 border-t border-black/10">
-              <p className="text-sm font-medium text-black">
+            <div className="pt-4 border-t border-border mt-auto">
+              <p className="text-sm font-medium text-foreground">
                 Total budget (next 30 days)
               </p>
-              <p className="text-2xl font-bold text-black mt-1">
+              <p className="text-2xl font-bold text-foreground mt-1">
                 R{totalBudget.toLocaleString()}
               </p>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
