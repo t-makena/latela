@@ -114,13 +114,12 @@ const Calendar = () => {
               <button
                 key={index}
                 className={`
-                  h-20 flex items-center justify-center text-base rounded-full
-                  transition-colors
+                  flex items-center justify-center text-base rounded-full transition-colors
                   ${dateObj.isToday 
                     ? 'bg-black text-white font-semibold w-12 h-12 mx-auto' 
                     : dateObj.isCurrentMonth 
-                      ? 'text-foreground font-normal hover:bg-accent' 
-                      : 'text-muted-foreground font-normal'
+                      ? 'text-foreground font-normal hover:bg-accent h-20 w-full' 
+                      : 'text-muted-foreground font-normal h-20 w-full'
                   }
                 `}
               >
