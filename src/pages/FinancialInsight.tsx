@@ -13,34 +13,95 @@ import {
 } from "recharts";
 
 const FinancialInsight = () => {
-  // Stacked bar chart data for spending trend (Mon-Sun)
-  const spendingTrendData = [
-    { day: "Mon", "F&G": 300, "P&L": 200, "H&U": 250, "T/F": 100, Misc: 0 },
-    { day: "Tue", "F&G": 400, "P&L": 300, "H&U": 450, "T/F": 200, Misc: 0 },
-    { day: "Wed", "F&G": 350, "P&L": 250, "H&U": 0, "T/F": 350, Misc: 0 },
-    { day: "Thu", "F&G": 300, "P&L": 200, "H&U": 0, "T/F": 200, Misc: 0 },
-    { day: "Fri", "F&G": 400, "P&L": 0, "H&U": 300, "T/F": 350, Misc: 0 },
-    { day: "Sat", "F&G": 500, "P&L": 400, "H&U": 0, "T/F": 400, Misc: 0 },
-    { day: "Sun", "F&G": 600, "P&L": 450, "H&U": 300, "T/F": 200, Misc: 0 }
-  ];
-
-  // Category data for spending by category chart
-  const categoryData = [
-    { category: "F&G", amount: 2850, color: "#10B981" },
-    { category: "P&L", amount: 1800, color: "#8B5CF6" },
-    { category: "H&U", amount: 1300, color: "#3B82F6" },
-    { category: "T/F", amount: 1800, color: "#F59E0B" },
-    { category: "Misc", amount: 500, color: "#EF4444" }
-  ];
-
-  // Category colors for stacked bars
+  // Category colors and labels for all 11 categories
   const categoryColors = {
-    "F&G": "#10B981",
-    "P&L": "#8B5CF6",
-    "H&U": "#3B82F6",
-    "T/F": "#F59E0B",
-    "Misc": "#EF4444"
+    "H&U": "#3B82F6",        // Housing & Utilities - blue
+    "S&I": "#10B981",        // Savings & Investments - green
+    "P&L": "#8B5CF6",        // Personal & Lifestyle - purple
+    "F&G": "#10B981",        // Food & Groceries - emerald green
+    "T/F": "#F59E0B",        // Transportation & Fuel - amber/orange
+    "D&R": "#EC4899",        // Dining & Restaurants - pink
+    "S&R": "#A855F7",        // Shopping & Retail - light purple
+    "E&R": "#F97316",        // Entertainment & Recreation - orange
+    "H&M": "#EF4444",        // Healthcare & Medical - red
+    "B&S": "#6B7280",        // Bills & Subscriptions - gray
+    "Misc": "#14B8A6"        // Miscellaneous - teal
   };
+
+  const categoryLabels: Record<string, string> = {
+    "H&U": "Housing & Utilities",
+    "S&I": "Savings & Investments",
+    "P&L": "Personal & Lifestyle",
+    "F&G": "Food & Groceries",
+    "T/F": "Transportation & Fuel",
+    "D&R": "Dining & Restaurants",
+    "S&R": "Shopping & Retail",
+    "E&R": "Entertainment & Recreation",
+    "H&M": "Healthcare & Medical",
+    "B&S": "Bills & Subscriptions",
+    "Misc": "Miscellaneous"
+  };
+
+  // Stacked bar chart data for spending trend (Mon-Sun) with all 11 categories
+  const spendingTrendData = [
+    { 
+      day: "Mon", 
+      "F&G": 450, "T/F": 120, "D&R": 0, "S&R": 0, 
+      "E&R": 0, "P&L": 200, "H&U": 0, "H&M": 0, 
+      "B&S": 0, "S&I": 500, "Misc": 50 
+    },
+    { 
+      day: "Tue", 
+      "F&G": 380, "T/F": 150, "D&R": 280, "S&R": 0, 
+      "E&R": 0, "P&L": 150, "H&U": 0, "H&M": 0, 
+      "B&S": 0, "S&I": 0, "Misc": 40 
+    },
+    { 
+      day: "Wed", 
+      "F&G": 420, "T/F": 0, "D&R": 0, "S&R": 850, 
+      "E&R": 0, "P&L": 180, "H&U": 3500, "H&M": 0, 
+      "B&S": 0, "S&I": 0, "Misc": 0 
+    },
+    { 
+      day: "Thu", 
+      "F&G": 290, "T/F": 140, "D&R": 0, "S&R": 0, 
+      "E&R": 450, "P&L": 0, "H&U": 0, "H&M": 0, 
+      "B&S": 0, "S&I": 0, "Misc": 60 
+    },
+    { 
+      day: "Fri", 
+      "F&G": 510, "T/F": 180, "D&R": 320, "S&R": 0, 
+      "E&R": 0, "P&L": 250, "H&U": 0, "H&M": 0, 
+      "B&S": 1200, "S&I": 0, "Misc": 0 
+    },
+    { 
+      day: "Sat", 
+      "F&G": 620, "T/F": 0, "D&R": 480, "S&R": 750, 
+      "E&R": 850, "P&L": 320, "H&U": 0, "H&M": 0, 
+      "B&S": 0, "S&I": 0, "Misc": 80 
+    },
+    { 
+      day: "Sun", 
+      "F&G": 580, "T/F": 0, "D&R": 550, "S&R": 0, 
+      "E&R": 680, "P&L": 280, "H&U": 0, "H&M": 650, 
+      "B&S": 0, "S&I": 0, "Misc": 70 
+    }
+  ];
+
+  // Category data for spending by category chart with all 11 categories
+  const categoryData = [
+    { category: "F&G", amount: 3250, color: categoryColors["F&G"] },
+    { category: "T/F", amount: 590, color: categoryColors["T/F"] },
+    { category: "D&R", amount: 1630, color: categoryColors["D&R"] },
+    { category: "S&R", amount: 1600, color: categoryColors["S&R"] },
+    { category: "E&R", amount: 1980, color: categoryColors["E&R"] },
+    { category: "P&L", amount: 1380, color: categoryColors["P&L"] },
+    { category: "H&U", amount: 3500, color: categoryColors["H&U"] },
+    { category: "H&M", amount: 650, color: categoryColors["H&M"] },
+    { category: "B&S", amount: 1200, color: categoryColors["B&S"] },
+    { category: "S&I", amount: 500, color: categoryColors["S&I"] },
+    { category: "Misc", amount: 300, color: categoryColors["Misc"] }
+  ];
 
   const handleBarClick = (data: any) => {
     console.log("Bar clicked:", data);
@@ -112,10 +173,10 @@ const FinancialInsight = () => {
             />
             <YAxis 
               label={{ 
-                value: 'Amount Spent (ZAR)', 
+                value: 'Amount (ZAR)', 
                 angle: -90, 
                 position: 'insideLeft',
-                style: { fill: 'hsl(var(--muted-foreground))' }
+                style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 }
               }}
               tick={{ fill: 'hsl(var(--foreground))' }}
               axisLine={{ stroke: 'hsl(var(--border))' }}
@@ -128,23 +189,16 @@ const FinancialInsight = () => {
               }}
               formatter={(value: number) => `R${value}`}
             />
-            <Legend 
-              wrapperStyle={{ paddingTop: '20px' }}
-              formatter={(value) => {
-                const labels: Record<string, string> = {
-                  "F&G": "Food & Groceries",
-                  "P&L": "Personal & Lifestyle",
-                  "H&U": "Housing & Utilities",
-                  "T/F": "Transport/Fuel",
-                  "Misc": "Miscellaneous"
-                };
-                return labels[value] || value;
-              }}
-            />
-            <Bar dataKey="F&G" stackId="a" fill={categoryColors["F&G"]} cursor="pointer" />
-            <Bar dataKey="P&L" stackId="a" fill={categoryColors["P&L"]} cursor="pointer" />
             <Bar dataKey="H&U" stackId="a" fill={categoryColors["H&U"]} cursor="pointer" />
+            <Bar dataKey="S&I" stackId="a" fill={categoryColors["S&I"]} cursor="pointer" />
+            <Bar dataKey="P&L" stackId="a" fill={categoryColors["P&L"]} cursor="pointer" />
+            <Bar dataKey="F&G" stackId="a" fill={categoryColors["F&G"]} cursor="pointer" />
             <Bar dataKey="T/F" stackId="a" fill={categoryColors["T/F"]} cursor="pointer" />
+            <Bar dataKey="D&R" stackId="a" fill={categoryColors["D&R"]} cursor="pointer" />
+            <Bar dataKey="S&R" stackId="a" fill={categoryColors["S&R"]} cursor="pointer" />
+            <Bar dataKey="E&R" stackId="a" fill={categoryColors["E&R"]} cursor="pointer" />
+            <Bar dataKey="H&M" stackId="a" fill={categoryColors["H&M"]} cursor="pointer" />
+            <Bar dataKey="B&S" stackId="a" fill={categoryColors["B&S"]} cursor="pointer" />
             <Bar dataKey="Misc" stackId="a" fill={categoryColors["Misc"]} cursor="pointer" />
           </BarChart>
         </ResponsiveContainer>
@@ -177,10 +231,10 @@ const FinancialInsight = () => {
             />
             <YAxis 
               label={{ 
-                value: 'Amount Spent (ZAR)', 
+                value: 'Spending (R)', 
                 angle: -90, 
                 position: 'insideLeft',
-                style: { fill: 'hsl(var(--muted-foreground))' }
+                style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 }
               }}
               tick={{ fill: 'hsl(var(--foreground))' }}
               axisLine={{ stroke: 'hsl(var(--border))' }}
@@ -193,19 +247,6 @@ const FinancialInsight = () => {
               }}
               formatter={(value: number) => `R${value.toLocaleString()}`}
             />
-            <Legend 
-              wrapperStyle={{ paddingTop: '20px' }}
-              formatter={(value) => {
-                const labels: Record<string, string> = {
-                  "F&G": "Food & Groceries",
-                  "P&L": "Personal & Lifestyle",
-                  "H&U": "Housing & Utilities",
-                  "T/F": "Transport/Fuel",
-                  "Misc": "Miscellaneous"
-                };
-                return labels[value] || value;
-              }}
-            />
             <Bar dataKey="amount" cursor="pointer">
               {categoryData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
@@ -213,6 +254,21 @@ const FinancialInsight = () => {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        
+        {/* Comprehensive Category Legend */}
+        <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center items-center text-sm">
+          {Object.keys(categoryColors).map((key) => (
+            <div key={key} className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
+              />
+              <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
+                {categoryLabels[key]}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
