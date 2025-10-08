@@ -55,15 +55,19 @@ const Accounts = () => {
     }
   ];
 
-  // Category colors mapping
+  // Category colors mapping - consistent with Dashboard
   const categoryColors = {
-    "Food": "#10B981",
-    "Transportation": "#F59E0B",
-    "Personal & Lifestyle": "#8B5CF6",
     "Housing & Utilities": "#3B82F6",
     "Savings & Investments": "#10B981",
-    "Entertainment": "#EC4899",
-    "Healthcare": "#EF4444"
+    "Personal & Lifestyle": "#8B5CF6",
+    "Food & Groceries": "#EAB308",
+    "Transportation & Fuel": "#6366F1",
+    "Dining & Restaurants": "#EC4899",
+    "Shopping & Retail": "#A855F7",
+    "Entertainment & Recreation": "#F97316",
+    "Healthcare & Medical": "#EF4444",
+    "Bills & Subscriptions": "#6B7280",
+    "Miscellaneous": "#14B8A6"
   };
 
   const chartData = [
@@ -71,44 +75,49 @@ const Accounts = () => {
       week: "Week 1",
       dateRange: "2025-05-01 to 2025-05-07",
       total: 3348,
-      "Food": 581,
-      "Transportation": 494,
+      "Housing & Utilities": 400,
+      "Savings & Investments": 800,
       "Personal & Lifestyle": 533,
-      "Housing & Utilities": 289,
-      "Entertainment": 451
+      "Food & Groceries": 581,
+      "Transportation & Fuel": 494,
+      "Entertainment & Recreation": 451,
+      "Healthcare & Medical": 289
     },
     {
       week: "Week 2",
       dateRange: "2025-05-08 to 2025-05-14",
-      total: 2890,
-      "Food": 620,
-      "Transportation": 380,
-      "Personal & Lifestyle": 420,
+      total: 3590,
       "Housing & Utilities": 350,
-      "Entertainment": 320,
-      "Healthcare": 800
+      "Savings & Investments": 700,
+      "Personal & Lifestyle": 420,
+      "Food & Groceries": 620,
+      "Transportation & Fuel": 380,
+      "Entertainment & Recreation": 320,
+      "Healthcare & Medical": 800
     },
     {
       week: "Week 3",
       dateRange: "2025-05-15 to 2025-05-21",
-      total: 3120,
-      "Food": 590,
-      "Transportation": 510,
-      "Personal & Lifestyle": 680,
+      total: 3870,
       "Housing & Utilities": 400,
-      "Entertainment": 290,
-      "Healthcare": 650
+      "Savings & Investments": 750,
+      "Personal & Lifestyle": 680,
+      "Food & Groceries": 590,
+      "Transportation & Fuel": 510,
+      "Entertainment & Recreation": 290,
+      "Healthcare & Medical": 650
     },
     {
       week: "Week 4",
       dateRange: "2025-05-22 to 2025-05-28",
-      total: 2750,
-      "Food": 540,
-      "Transportation": 460,
-      "Personal & Lifestyle": 550,
+      total: 3350,
       "Housing & Utilities": 320,
-      "Entertainment": 380,
-      "Healthcare": 500
+      "Savings & Investments": 600,
+      "Personal & Lifestyle": 550,
+      "Food & Groceries": 540,
+      "Transportation & Fuel": 460,
+      "Entertainment & Recreation": 380,
+      "Healthcare & Medical": 500
     }
   ];
 
@@ -263,17 +272,13 @@ const Accounts = () => {
                     fontSize: '12px'
                   }}
                 />
-                <Legend 
-                  wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                  iconType="circle"
-                />
-                {categories.map((category) => (
+                {categories.map((category, index) => (
                   <Bar 
                     key={category}
                     dataKey={category} 
                     stackId="a" 
                     fill={categoryColors[category as keyof typeof categoryColors]}
-                    radius={category === categories[categories.length - 1] ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                    radius={index === categories.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                   />
                 ))}
               </BarChart>
@@ -281,7 +286,7 @@ const Accounts = () => {
           </div>
 
           {/* Month Label */}
-          <p className="text-center text-xs text-muted-foreground mt-2">Monthly Overview</p>
+          <p className="text-center text-xs text-muted-foreground mt-4">Monthly Overview</p>
 
           {/* Time Filter Buttons */}
           <div className="flex items-center justify-center gap-4 mt-4">

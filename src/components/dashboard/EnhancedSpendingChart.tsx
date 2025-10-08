@@ -15,6 +15,20 @@ interface EnhancedSpendingChartProps {
   selectedPeriod?: '1W' | '1M' | '6M' | '1Y' | '1W>';
 }
 
+const categoryColors = {
+  "Housing & Utilities": "#3B82F6",
+  "Savings & Investments": "#10B981",
+  "Personal & Lifestyle": "#8B5CF6",
+  "Food & Groceries": "#EAB308",
+  "Transportation & Fuel": "#6366F1",
+  "Dining & Restaurants": "#EC4899",
+  "Shopping & Retail": "#A855F7",
+  "Entertainment & Recreation": "#F97316",
+  "Healthcare & Medical": "#EF4444",
+  "Bills & Subscriptions": "#6B7280",
+  "Miscellaneous": "#14B8A6"
+};
+
 export const EnhancedSpendingChart = ({ 
   accountSpecific = false, 
   accountId,
@@ -49,51 +63,56 @@ export const EnhancedSpendingChart = ({
       return []; // No daily data available from current transactions
     }
     if (selectedPeriod === '1M') {
-      // Generate 4 weeks of data
+      // Generate 4 weeks of data with new categories
+      const categories = Object.keys(categoryColors);
       return [
         {
-          day: 'Week 1',
-          amount: Math.floor(Math.random() * 2000) + 1500,
-          date: '2025-05-01 to 2025-05-07',
-          categories: [
-            { name: 'Food', value: Math.floor(Math.random() * 600) + 400, percentage: 35, color: '#41b883' },
-            { name: 'Transportation', value: Math.floor(Math.random() * 400) + 300, percentage: 25, color: '#ffd166' },
-            { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 500) + 300, percentage: 25, color: '#8959a8' },
-            { name: 'Housing & Utilities', value: Math.floor(Math.random() * 300) + 200, percentage: 15, color: '#1e65ff' }
-          ]
+          week: 'Week 1',
+          "Housing & Utilities": 400,
+          "Savings & Investments": 800,
+          "Personal & Lifestyle": 533,
+          "Food & Groceries": 581,
+          "Transportation & Fuel": 494,
+          "Entertainment & Recreation": 451,
+          "Healthcare & Medical": 289,
+          dateRange: '2025-05-01 to 2025-05-07',
+          total: 3348
         },
         {
-          day: 'Week 2',
-          amount: Math.floor(Math.random() * 2000) + 1500,
-          date: '2025-05-08 to 2025-05-14',
-          categories: [
-            { name: 'Food', value: Math.floor(Math.random() * 600) + 400, percentage: 40, color: '#41b883' },
-            { name: 'Transportation', value: Math.floor(Math.random() * 400) + 300, percentage: 20, color: '#ffd166' },
-            { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 500) + 300, percentage: 25, color: '#8959a8' },
-            { name: 'Housing & Utilities', value: Math.floor(Math.random() * 300) + 200, percentage: 15, color: '#1e65ff' }
-          ]
+          week: 'Week 2',
+          "Housing & Utilities": 350,
+          "Savings & Investments": 700,
+          "Personal & Lifestyle": 420,
+          "Food & Groceries": 620,
+          "Transportation & Fuel": 380,
+          "Entertainment & Recreation": 320,
+          "Healthcare & Medical": 800,
+          dateRange: '2025-05-08 to 2025-05-14',
+          total: 3590
         },
         {
-          day: 'Week 3',
-          amount: Math.floor(Math.random() * 2000) + 1500,
-          date: '2025-05-15 to 2025-05-21',
-          categories: [
-            { name: 'Food', value: Math.floor(Math.random() * 600) + 400, percentage: 30, color: '#41b883' },
-            { name: 'Transportation', value: Math.floor(Math.random() * 400) + 300, percentage: 30, color: '#ffd166' },
-            { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 500) + 300, percentage: 25, color: '#8959a8' },
-            { name: 'Housing & Utilities', value: Math.floor(Math.random() * 300) + 200, percentage: 15, color: '#1e65ff' }
-          ]
+          week: 'Week 3',
+          "Housing & Utilities": 400,
+          "Savings & Investments": 750,
+          "Personal & Lifestyle": 680,
+          "Food & Groceries": 590,
+          "Transportation & Fuel": 510,
+          "Entertainment & Recreation": 290,
+          "Healthcare & Medical": 650,
+          dateRange: '2025-05-15 to 2025-05-21',
+          total: 3870
         },
         {
-          day: 'Week 4',
-          amount: Math.floor(Math.random() * 2000) + 1500,
-          date: '2025-05-22 to 2025-05-28',
-          categories: [
-            { name: 'Food', value: Math.floor(Math.random() * 600) + 400, percentage: 35, color: '#41b883' },
-            { name: 'Transportation', value: Math.floor(Math.random() * 400) + 300, percentage: 25, color: '#ffd166' },
-            { name: 'Personal & Lifestyle', value: Math.floor(Math.random() * 500) + 300, percentage: 20, color: '#8959a8' },
-            { name: 'Housing & Utilities', value: Math.floor(Math.random() * 300) + 200, percentage: 20, color: '#1e65ff' }
-          ]
+          week: 'Week 4',
+          "Housing & Utilities": 320,
+          "Savings & Investments": 600,
+          "Personal & Lifestyle": 550,
+          "Food & Groceries": 540,
+          "Transportation & Fuel": 460,
+          "Entertainment & Recreation": 380,
+          "Healthcare & Medical": 500,
+          dateRange: '2025-05-22 to 2025-05-28',
+          total: 3350
         }
       ];
     }
@@ -106,93 +125,86 @@ export const EnhancedSpendingChart = ({
     return monthlySpending;
   };
 
-  const targetExpense = monthlyIncome > 0 ? (monthlyIncome - monthlySavings) / 30 : 0;
-  const showTargetLine = selectedPeriod === '1W' || selectedPeriod === '1W>';
-
-  const futureTargetExpense = targetExpense;
-
   const handleBarClick = (data: any) => {
-    if (selectedPeriod === '1W' || selectedPeriod === '1M') {
-      setSelectedBarData(data);
+    if (data && data.activePayload && data.activePayload[0]) {
+      const weekData = data.activePayload[0].payload;
+      setSelectedBarData(weekData);
       setShowDetailModal(true);
     }
   };
 
-  const CustomBar = (props: any) => {
-    const { payload, x, y, width, height } = props;
-    if (!payload || !payload.categories) return null;
-
-    let currentY = y;
-    return (
-      <g>
-        {payload.categories.map((category: any, index: number) => {
-          const segmentHeight = (height * category.percentage) / 100;
-          const segment = (
-            <rect
-              key={category.name}
-              x={x}
-              y={currentY}
-              width={width}
-              height={segmentHeight}
-              fill={category.color}
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleBarClick(payload)}
-            />
-          );
-          currentY += segmentHeight;
-          return segment;
-        })}
-      </g>
-    );
+  const getCategoryBreakdown = () => {
+    if (!selectedBarData) return [];
+    
+    const breakdown = Object.keys(categoryColors)
+      .map(category => ({
+        category,
+        amount: selectedBarData[category] || 0,
+        color: categoryColors[category as keyof typeof categoryColors],
+        percentage: ((selectedBarData[category] || 0) / selectedBarData.total * 100).toFixed(0)
+      }))
+      .filter(item => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+    
+    return breakdown;
   };
+
+  const targetExpense = monthlyIncome > 0 ? (monthlyIncome - monthlySavings) / 30 : 0;
+  const futureTargetExpense = targetExpense;
+  const categories = Object.keys(categoryColors);
 
   return (
     <>
       <div className="p-6">
         <ResponsiveContainer width="100%" height={300}>
-          {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1W>' ? (
-            <ComposedChart data={getChartData()}>
+          {selectedPeriod === '1M' ? (
+            <BarChart data={getChartData()} onClick={handleBarClick}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="day" 
-                label={{ value: 'Past Month', position: 'insideBottom', offset: -10 }}
+                dataKey="week" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
               />
-              <YAxis />
-              <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
-              <Bar 
-                dataKey="amount" 
-                shape={<CustomBar />}
-                style={{ cursor: 'pointer' }}
+              <YAxis 
+                label={{ value: 'Amount Spent', angle: -90, position: 'insideLeft', style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 } }}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
               />
-              {selectedPeriod === '1W' && (
-                <Line 
-                  type="monotone" 
-                  dataKey={() => targetExpense} 
-                  stroke="#ffd166" 
-                  strokeWidth={2} 
-                  strokeDasharray="5 5"
-                  name="Target Average Expense"
+              <Tooltip 
+                cursor={{ fill: 'hsl(var(--muted))' }}
+                contentStyle={{ 
+                  background: 'white', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px'
+                }}
+              />
+              {categories.map((category, index) => (
+                <Bar 
+                  key={category}
+                  dataKey={category} 
+                  stackId="a" 
+                  fill={categoryColors[category as keyof typeof categoryColors]}
+                  radius={index === categories.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                 />
-              )}
-              {selectedPeriod === '1W>' && (
-                <Line 
-                  type="monotone" 
-                  dataKey={() => futureTargetExpense} 
-                  stroke="#ffd166" 
-                  strokeWidth={2} 
-                  strokeDasharray="5 5"
-                  name="Target Average Expense"
-                />
-              )}
-            </ComposedChart>
+              ))}
+            </BarChart>
           ) : (
             <LineChart data={getChartData()}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="month"
-                label={{ value: 'Past Month', position: 'insideBottom', offset: -10 }}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
               />
-              <YAxis />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              />
               <Tooltip formatter={(value, name) => [
                 `${formatCurrency(value as number)}`, 
                 name === 'amount' ? 'Expenses' : name === 'savings' ? 'Savings' : 'Net Balance'
@@ -221,40 +233,71 @@ export const EnhancedSpendingChart = ({
             </LineChart>
           )}
         </ResponsiveContainer>
+        
+        <p className="text-center text-xs text-muted-foreground mt-4">Monthly Overview</p>
+        
+        <div className="flex items-center justify-center gap-4 mt-4">
+          <span className="text-sm font-medium text-foreground">Filter By Past:</span>
+          {periods.map((period) => (
+            <button
+              key={period.key}
+              onClick={() => setInternalSelectedPeriod(period.key)}
+              className={`text-sm font-bold transition-colors ${
+                selectedPeriod === period.key 
+                  ? 'text-foreground underline' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {period.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Spending Details - {selectedBarData?.day}</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              Spending Details - {selectedBarData?.week}
+            </DialogTitle>
           </DialogHeader>
+          
           {selectedBarData && (
-            <div className="space-y-4">
-              <div>
-                <p className="text-lg font-semibold">
-                  Total: {formatCurrency(selectedBarData.amount)}
+            <div className="space-y-6">
+              <div className="text-center">
+                <p className="text-4xl font-bold text-foreground">
+                  R {selectedBarData.total?.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Date: {selectedBarData.date}
+                <p className="text-sm text-muted-foreground mt-2">
+                  Date: {selectedBarData.dateRange}
                 </p>
               </div>
-              
+
               <div>
-                <h4 className="font-medium mb-2">Category Breakdown</h4>
-                {selectedBarData.categories?.map((category: any, index: number) => (
-                  <div key={category.name} className="flex justify-between items-center py-1">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <span className="text-sm">{category.name}</span>
+                <h4 className="text-sm font-semibold text-foreground mb-3">Category Breakdown</h4>
+                <div className="space-y-3">
+                  {getCategoryBreakdown().map((item) => (
+                    <div key={item.category} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="h-3 w-3 rounded-full" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-sm font-medium text-foreground">
+                          {item.category}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-foreground">
+                          R {item.amount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({item.percentage}%)
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-sm">
-                      {formatCurrency(category.value)} ({category.percentage}%)
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
