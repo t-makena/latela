@@ -101,38 +101,6 @@ const Goals = () => {
         </CardContent>
       </Card>
 
-      {/* Goal Insight Section */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="font-georama text-xl">Goal insight</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-start gap-2">
-              <span className="text-sm">•</span>
-              <div className="flex-1 h-3 bg-muted rounded" />
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-sm">•</span>
-              <div className="flex-1 h-3 bg-muted rounded w-3/4" />
-            </div>
-          </div>
-          
-          <div className="space-y-4 pt-4">
-            <div className="h-px bg-muted" />
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <span className="text-sm">1.</span>
-                <div className="flex-1 h-3 bg-muted rounded w-2/3" />
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-sm">2.</span>
-                <div className="flex-1 h-3 bg-muted rounded w-4/5" />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
