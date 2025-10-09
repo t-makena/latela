@@ -75,13 +75,13 @@ export const FinancialSummary = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="financial-metric">
             <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-              Net Balance
+              Budget Balance
             </div>
             <div className="text-2xl font-bold font-georama">
               {formatCurrency(netBalance)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total of all transaction values
+              Available balance less budget savings
             </p>
           </div>
           
@@ -105,7 +105,7 @@ export const FinancialSummary = () => {
               {formatCurrency(monthlyExpenses)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total expenses
+              Total spending this month
             </p>
           </div>
         </div>

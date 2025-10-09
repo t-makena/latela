@@ -11,11 +11,19 @@ const Goals = () => {
   ];
 
   const goalsOverview = [
-    { goal: "Emergency fund", priority: "37.60%", split: "60%", timeline: "02 Oct 25" },
-    { goal: "MacBook", priority: "24.30%", split: "20.5%", timeline: "24 Dec 25" },
-    { goal: "Dec Holiday", priority: "10.10%", split: "15%", timeline: "10 Dec 25" },
-    { goal: "Extra savings", priority: "18.00%", split: "4.5%", timeline: "n/a" }
+    { goal: "Emergency fund", priority: "37.60%", split: "60%", amountSaved: 18800, timeline: "02 Oct 25" },
+    { goal: "MacBook", priority: "24.30%", split: "20.5%", amountSaved: 11400, timeline: "24 Dec 25" },
+    { goal: "Dec Holiday", priority: "10.10%", split: "15%", amountSaved: 9600, timeline: "10 Dec 25" },
+    { goal: "Extra savings", priority: "18.00%", split: "4.5%", amountSaved: 5430, timeline: "n/a" }
   ];
+  
+  // Calculate total amount saved
+  const totalAmountSaved = goalsOverview.reduce((total, goal) => total + goal.amountSaved, 0);
+  
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return `R${amount.toLocaleString()}`;
+  };
 
   return (
     <div className="space-y-6 relative z-10">
@@ -55,6 +63,12 @@ const Goals = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Total Amount Saved Summary */}
+          <div className="p-4 bg-muted/30 rounded-lg border-2 border-muted">
+            <p className="text-sm text-muted-foreground mb-1">Total Amount Saved</p>
+            <p className="text-3xl font-bold font-georama">{formatCurrency(totalAmountSaved)}</p>
+          </div>
+          
           <Table>
             <TableHeader>
               <TableRow>
@@ -65,8 +79,11 @@ const Goals = () => {
                 <TableHead className="font-medium">
                   Split<sup>2</sup>
                 </TableHead>
+                <TableHead className="font-medium text-right">
+                  Amount Saved (R)<sup>3</sup>
+                </TableHead>
                 <TableHead className="font-medium">
-                  Timeline<sup>3</sup>
+                  Timeline<sup>4</sup>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -76,6 +93,7 @@ const Goals = () => {
                   <TableCell className="font-medium">{row.goal}</TableCell>
                   <TableCell>{row.priority}</TableCell>
                   <TableCell>{row.split}</TableCell>
+                  <TableCell className="text-right font-medium">{formatCurrency(row.amountSaved)}</TableCell>
                   <TableCell>{row.timeline}</TableCell>
                 </TableRow>
               ))}
@@ -96,7 +114,8 @@ const Goals = () => {
           <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
             <p>1. Priority shows the % of your upcoming monthly savings to be allocated to each goal.</p>
             <p>2. Split reflects the share each goal has of your current total savings.</p>
-            <p>3. Dates indicate your target deadline and/or the estimated completion date based on the priority and split of the goal.</p>
+            <p>3. Amount Saved shows the actual rand value saved for each goal.</p>
+            <p>4. Dates indicate your target deadline and/or the estimated completion date based on the priority and split of the goal.</p>
           </div>
         </CardContent>
       </Card>
