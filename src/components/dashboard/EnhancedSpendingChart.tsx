@@ -173,13 +173,24 @@ export const EnhancedSpendingChart = ({
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
               />
               <Tooltip 
-                cursor={{ fill: 'hsl(var(--muted))' }}
+                cursor={false}
                 contentStyle={{ 
                   background: 'white', 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  fontSize: '12px'
+                  padding: '12px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}
+                labelStyle={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  marginBottom: '8px'
+                }}
+                itemStyle={{ 
+                  fontSize: '14px',
+                  padding: '4px 0'
+                }}
+                formatter={(value: number, name: string) => [`R${value}`, name]}
               />
               {categories.map((category, index) => (
                 <Bar 

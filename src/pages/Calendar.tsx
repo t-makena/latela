@@ -116,7 +116,7 @@ const Calendar = () => {
                 className={`
                   flex items-center justify-center text-base rounded-full transition-colors
                   ${dateObj.isToday 
-                    ? 'bg-black text-white font-semibold w-12 h-12 mx-auto' 
+                    ? 'bg-black text-white font-semibold w-12 h-12 mx-auto shadow-none' 
                     : dateObj.isCurrentMonth 
                       ? 'text-foreground font-normal hover:bg-accent h-20 w-full' 
                       : 'text-muted-foreground font-normal h-20 w-full'
