@@ -64,7 +64,7 @@ const Goals = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Total Amount Saved Summary */}
-          <div className="p-4 bg-muted/30 rounded-lg border-2 border-muted">
+          <div className="p-4">
             <p className="text-sm text-muted-foreground mb-1">Total Amount Saved</p>
             <p className="text-3xl font-bold font-georama">{formatCurrency(totalAmountSaved)}</p>
           </div>
