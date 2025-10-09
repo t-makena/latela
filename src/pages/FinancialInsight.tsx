@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import {
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,8 +13,19 @@ import {
   ResponsiveContainer,
   Cell
 } from "recharts";
+import { useTransactions } from "@/hooks/useTransactions";
+import { calculateFinancialMetrics } from "@/lib/realData";
 
 const FinancialInsight = () => {
+  const { transactions } = useTransactions();
+  const { monthlySpending } = calculateFinancialMetrics(transactions);
+
+  // Net balance data for the graph
+  const netBalanceData = monthlySpending.map(item => ({
+    month: item.month,
+    netBalance: item.netBalance
+  }));
+
   // Category colors and labels for all 11 categories
   const categoryColors = {
     "H&U": "#3B82F6",        // Housing & Utilities - blue
@@ -144,6 +157,64 @@ const FinancialInsight = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Net Balance Over Time Chart */}
+      <div>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold">Net Balance Over Time</h2>
+            <p className="text-xs text-muted-foreground">for the past year</p>
+          </div>
+        </div>
+
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={netBalanceData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+            <XAxis 
+              dataKey="month" 
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+            />
+            <YAxis 
+              label={{ 
+                value: 'Net Balance (ZAR)', 
+                angle: -90, 
+                position: 'insideLeft',
+                style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 }
+              }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'white',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                padding: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+              labelStyle={{ 
+                fontSize: '14px', 
+                fontWeight: '600',
+                marginBottom: '8px'
+              }}
+              itemStyle={{ 
+                fontSize: '14px',
+                padding: '4px 0'
+              }}
+              formatter={(value: number) => [`R${value.toLocaleString()}`, 'Net Balance']}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="netBalance" 
+              stroke="hsl(var(--primary))" 
+              strokeWidth={2}
+              dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Spending Trend Chart */}
