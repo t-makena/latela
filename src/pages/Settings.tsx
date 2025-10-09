@@ -42,6 +42,33 @@ const Settings = () => {
       
       <Card>
         <CardHeader>
+          <CardTitle>Account Management</CardTitle>
+          <CardDescription>
+            Manage your connected bank accounts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Connected Accounts</Label>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add or remove bank accounts to track your finances
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" className="w-full">
+                  Add Account
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Remove Account
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
           <CardTitle>Preferences</CardTitle>
           <CardDescription>
             Customize your app settings
@@ -49,26 +76,6 @@ const Settings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Enable AI Insights</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive personalized financial advice
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive weekly financial reports
-                </p>
-              </div>
-              <Switch defaultChecked={false} />
-            </div>
-            
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Dark Mode</p>
