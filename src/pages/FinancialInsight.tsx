@@ -182,12 +182,27 @@ const FinancialInsight = () => {
               axisLine={{ stroke: 'hsl(var(--border))' }}
             />
             <Tooltip 
+              cursor={false}
               contentStyle={{ 
-                backgroundColor: 'hsl(var(--background))',
+                backgroundColor: 'white',
                 border: '1px solid hsl(var(--border))',
-                borderRadius: '6px'
+                borderRadius: '8px',
+                padding: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}
-              formatter={(value: number) => `R${value}`}
+              labelStyle={{ 
+                fontSize: '14px', 
+                fontWeight: '600',
+                marginBottom: '8px'
+              }}
+              itemStyle={{ 
+                fontSize: '14px',
+                padding: '4px 0'
+              }}
+              formatter={(value: number, name: string) => [
+                `R${value}`, 
+                categoryLabels[name as keyof typeof categoryLabels] || name
+              ]}
             />
             <Bar dataKey="H&U" stackId="a" fill={categoryColors["H&U"]} cursor="pointer" />
             <Bar dataKey="S&I" stackId="a" fill={categoryColors["S&I"]} cursor="pointer" />
@@ -240,12 +255,28 @@ const FinancialInsight = () => {
               axisLine={{ stroke: 'hsl(var(--border))' }}
             />
             <Tooltip 
+              cursor={false}
               contentStyle={{ 
-                backgroundColor: 'hsl(var(--background))',
+                backgroundColor: 'white',
                 border: '1px solid hsl(var(--border))',
-                borderRadius: '6px'
+                borderRadius: '8px',
+                padding: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}
-              formatter={(value: number) => `R${value.toLocaleString()}`}
+              labelStyle={{ 
+                fontSize: '14px', 
+                fontWeight: '600',
+                marginBottom: '8px'
+              }}
+              itemStyle={{ 
+                fontSize: '14px',
+                padding: '4px 0'
+              }}
+              formatter={(value: number, name: string) => {
+                const category = name === 'amount' ? categoryData.find(c => c.amount === value)?.category : name;
+                const fullName = category ? categoryLabels[category as keyof typeof categoryLabels] : name;
+                return [`R${value.toLocaleString()}`, fullName];
+              }}
             />
             <Bar dataKey="amount" cursor="pointer">
               {categoryData.map((entry, index) => (
