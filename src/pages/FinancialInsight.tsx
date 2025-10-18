@@ -1,4 +1,4 @@
-import { TrendingUp, Info } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   BarChart,
@@ -9,22 +9,32 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   Cell
 } from "recharts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics } from "@/lib/realData";
+import { BudgetInsights } from "@/components/financial-insight/BudgetInsights";
+import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
+import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
 
 const FinancialInsight = () => {
-  const { transactions } = useTransactions();
-  const { monthlySpending } = calculateFinancialMetrics(transactions);
+  const { transactions, loading } = useTransactions();
+  const { monthlySpending, monthlyIncome, monthlyExpenses } = calculateFinancialMetrics(transactions);
 
   // Net balance data for the graph
   const netBalanceData = monthlySpending.map(item => ({
     month: item.month,
     netBalance: item.netBalance
   }));
+
+  // Calculate current and previous month data for breakdown
+  const currentMonthData = monthlySpending[monthlySpending.length - 1] || { netBalance: 0 };
+  const previousMonthData = monthlySpending[monthlySpending.length - 2] || { netBalance: 0 };
+  
+  const availableBalance = currentMonthData.netBalance;
+  const budgetBalance = monthlyIncome * 0.3; // 30% of income as budget
+  const spending = monthlyExpenses;
 
   // Category colors and labels for all 11 categories
   const categoryColors = {
@@ -123,39 +133,30 @@ const FinancialInsight = () => {
 
   return (
     <div className="space-y-6 relative z-10">
-      {/* Budget Insight Section */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="h-5 w-5" />
-          <h1 className="text-xl font-georama font-semibold">Budget insight</h1>
+      {/* Budget Insight Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="h-5 w-5" />
+        <h1 className="text-xl font-georama font-semibold">Budget insight</h1>
+      </div>
+      
+      <div className="border-b border-foreground mb-4" />
+
+      {/* Two Column Layout: Budget Insight + Budget Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+          <BudgetInsights isLoading={loading} />
         </div>
-        
-        <div className="border-b border-foreground mb-4" />
-        
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm">•</span>
-              <div className="h-2.5 bg-muted rounded flex-1 max-w-[200px]" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">•</span>
-              <div className="h-2.5 bg-muted rounded flex-1 max-w-[280px]" />
-            </div>
-          </div>
-          
-          <div className="border-b border-foreground/20" />
-          
-          <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <span className="text-sm">1.</span>
-              <div className="h-2.5 bg-muted rounded flex-1 max-w-[220px]" />
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-sm">2.</span>
-              <div className="h-2.5 bg-muted rounded flex-1 max-w-[320px]" />
-            </div>
-          </div>
+        <div>
+          <BudgetBreakdown 
+            availableBalance={availableBalance}
+            budgetBalance={budgetBalance}
+            spending={spending}
+            previousMonth={{
+              availableBalance: previousMonthData.netBalance,
+              budgetBalance: monthlyIncome * 0.3,
+              spending: monthlyExpenses * 0.9 // Previous month spending estimate
+            }}
+          />
         </div>
       </div>
 
@@ -404,6 +405,9 @@ const FinancialInsight = () => {
           ))}
         </div>
       </div>
+
+      {/* Transaction History Section */}
+      <TransactionHistory />
     </div>
   );
 };
