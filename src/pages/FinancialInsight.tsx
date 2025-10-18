@@ -123,11 +123,11 @@ const FinancialInsight = () => {
 
   return (
     <div className="space-y-6 relative z-10">
-      {/* Financial Insight Section */}
+      {/* Budget Insight Section */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="h-5 w-5" />
-          <h1 className="text-xl font-georama font-semibold">Financial insight</h1>
+          <h1 className="text-xl font-georama font-semibold">Budget insight</h1>
         </div>
         
         <div className="border-b border-foreground mb-4" />
@@ -270,10 +270,40 @@ const FinancialInsight = () => {
                 fontSize: '14px',
                 padding: '4px 0'
               }}
-              formatter={(value: number, name: string) => [
-                `R${value}`, 
-                categoryLabels[name as keyof typeof categoryLabels] || name
-              ]}
+              formatter={(value: number, name: string) => {
+                if (value === 0) return null;
+                return [
+                  `R${value}`, 
+                  categoryLabels[name as keyof typeof categoryLabels] || name
+                ];
+              }}
+              content={({ active, payload, label }) => {
+                if (!active || !payload) return null;
+                
+                const activePayload = payload.filter(p => p.value && p.value > 0);
+                if (activePayload.length === 0) return null;
+                
+                const total = activePayload.reduce((sum, p) => sum + (p.value as number || 0), 0);
+                
+                return (
+                  <div style={{
+                    backgroundColor: 'white',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                      {label}: R{total.toLocaleString()}
+                    </p>
+                    {activePayload.map((entry: any, index: number) => (
+                      <p key={index} style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
+                        {categoryLabels[entry.name as keyof typeof categoryLabels] || entry.name}: R{entry.value}
+                      </p>
+                    ))}
+                  </div>
+                );
+              }}
             />
             <Bar dataKey="H&U" stackId="a" fill={categoryColors["H&U"]} cursor="pointer" />
             <Bar dataKey="S&I" stackId="a" fill={categoryColors["S&I"]} cursor="pointer" />
@@ -327,26 +357,28 @@ const FinancialInsight = () => {
             />
             <Tooltip 
               cursor={false}
-              contentStyle={{ 
-                backgroundColor: 'white',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                padding: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}
-              labelStyle={{ 
-                fontSize: '14px', 
-                fontWeight: '600',
-                marginBottom: '8px'
-              }}
-              itemStyle={{ 
-                fontSize: '14px',
-                padding: '4px 0'
-              }}
-              formatter={(value: number, name: string) => {
-                const category = name === 'amount' ? categoryData.find(c => c.amount === value)?.category : name;
-                const fullName = category ? categoryLabels[category as keyof typeof categoryLabels] : name;
-                return [`R${value.toLocaleString()}`, fullName];
+              content={({ active, payload, label }) => {
+                if (!active || !payload || payload.length === 0) return null;
+                
+                const entry = payload[0];
+                const value = entry.value as number;
+                
+                return (
+                  <div style={{
+                    backgroundColor: 'white',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                      {categoryLabels[label as keyof typeof categoryLabels] || label}
+                    </p>
+                    <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
+                      R{value.toLocaleString()}
+                    </p>
+                  </div>
+                );
               }}
             />
             <Bar dataKey="amount" cursor="pointer">
