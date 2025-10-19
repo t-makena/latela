@@ -81,7 +81,7 @@ export const BudgetBreakdown = ({
 
       {/* Budget Pie Chart */}
       <div>
-        <h3 className="text-sm font-semibold mb-3">Budget Allocation</h3>
+        <h3 className="text-sm font-semibold mb-1">Budget Allocation</h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
