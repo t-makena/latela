@@ -101,7 +101,7 @@ export const BudgetBreakdown = ({
             <Legend 
               layout="vertical" 
               align="left" 
-              verticalAlign="middle"
+              verticalAlign="top"
               iconType="circle"
               formatter={(value) => <span className="text-sm">{value}</span>}
             />
