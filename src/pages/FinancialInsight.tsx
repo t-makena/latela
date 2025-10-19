@@ -133,10 +133,10 @@ const FinancialInsight = () => {
 
   return (
     <div className="space-y-6 relative z-10">
-      {/* Budget Insight Header */}
+      {/* Financial Insight Header */}
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp className="h-5 w-5" />
-        <h1 className="text-xl font-georama font-semibold">Budget insight</h1>
+        <h1 className="text-xl font-georama font-semibold">Financial Insight</h1>
       </div>
       
       <div className="border-b border-foreground mb-4" />
