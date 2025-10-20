@@ -18,7 +18,7 @@ import { BudgetInsights } from "@/components/financial-insight/BudgetInsights";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
-import { getFilterDescription } from "@/lib/dateFilterUtils";
+import { getFilterDescription, DateRange } from "@/lib/dateFilterUtils";
 
 const FinancialInsight = () => {
   const { transactions, loading } = useTransactions();
@@ -26,6 +26,9 @@ const FinancialInsight = () => {
   const [spendingTrendFilter, setSpendingTrendFilter] = useState<DateFilterOption>("1W");
   const [categoryFilter, setCategoryFilter] = useState<DateFilterOption>("1W");
   const [netBalanceFilter, setNetBalanceFilter] = useState<DateFilterOption>("1Y");
+  const [customSpendingRange, setCustomSpendingRange] = useState<DateRange | undefined>();
+  const [customCategoryRange, setCustomCategoryRange] = useState<DateRange | undefined>();
+  const [customNetBalanceRange, setCustomNetBalanceRange] = useState<DateRange | undefined>();
 
   // Net balance data for the graph
   const netBalanceData = monthlySpending.map(item => ({
@@ -174,7 +177,12 @@ const FinancialInsight = () => {
           </div>
           <DateFilter 
             selectedFilter={netBalanceFilter}
-            onFilterChange={(filter) => setNetBalanceFilter(filter)}
+            onFilterChange={(filter, dateRange) => {
+              setNetBalanceFilter(filter);
+              if (dateRange) {
+                setCustomNetBalanceRange(dateRange);
+              }
+            }}
           />
         </div>
 
@@ -236,7 +244,12 @@ const FinancialInsight = () => {
           </div>
           <DateFilter 
             selectedFilter={spendingTrendFilter}
-            onFilterChange={(filter) => setSpendingTrendFilter(filter)}
+            onFilterChange={(filter, dateRange) => {
+              setSpendingTrendFilter(filter);
+              if (dateRange) {
+                setCustomSpendingRange(dateRange);
+              }
+            }}
           />
         </div>
 
@@ -335,7 +348,12 @@ const FinancialInsight = () => {
           </div>
           <DateFilter 
             selectedFilter={categoryFilter}
-            onFilterChange={(filter) => setCategoryFilter(filter)}
+            onFilterChange={(filter, dateRange) => {
+              setCategoryFilter(filter);
+              if (dateRange) {
+                setCustomCategoryRange(dateRange);
+              }
+            }}
           />
         </div>
 

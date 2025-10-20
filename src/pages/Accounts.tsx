@@ -11,11 +11,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
-import { getFilterDescription } from "@/lib/dateFilterUtils";
+import { getFilterDescription, DateRange } from "@/lib/dateFilterUtils";
 
 const Accounts = () => {
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
   const [selectedTimeFilter, setSelectedTimeFilter] = useState<DateFilterOption>("1W");
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWeekData, setSelectedWeekData] = useState<any>(null);
 
@@ -246,7 +247,12 @@ const Accounts = () => {
             </div>
             <DateFilter 
               selectedFilter={selectedTimeFilter}
-              onFilterChange={(filter) => setSelectedTimeFilter(filter)}
+              onFilterChange={(filter, dateRange) => {
+                setSelectedTimeFilter(filter);
+                if (dateRange) {
+                  setCustomDateRange(dateRange);
+                }
+              }}
             />
           </div>
 

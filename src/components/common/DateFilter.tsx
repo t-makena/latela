@@ -83,7 +83,7 @@ export const DateFilter = ({ selectedFilter, onFilterChange, className }: DateFi
               : "Custom Period"}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
+        <PopoverContent className="w-auto p-0 bg-white z-50" align="end">
           <Calendar
             mode="range"
             selected={customDateRange}
