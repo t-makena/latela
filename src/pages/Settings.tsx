@@ -7,9 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Edit2, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAccounts } from "@/hooks/useAccounts";
 
 const Settings = () => {
+  const { accounts } = useAccounts();
   const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -18,6 +21,19 @@ const Settings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Email and mobile editing states
+  const [email, setEmail] = useState("john.doe@example.com");
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [editedEmail, setEditedEmail] = useState(email);
+  
+  const [mobile, setMobile] = useState("+27 81 234 5678");
+  const [isEditingMobile, setIsEditingMobile] = useState(false);
+  const [editedMobile, setEditedMobile] = useState(mobile);
+  
+  // Collapsible states
+  const [isUsernameOpen, setIsUsernameOpen] = useState(false);
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
 
   const handleSave = () => {
     toast.success("Settings saved successfully!");
@@ -81,6 +97,32 @@ const Settings = () => {
     }
   };
 
+  const handleSaveEmail = () => {
+    setEmail(editedEmail);
+    setIsEditingEmail(false);
+    toast.success("Email updated successfully!");
+  };
+
+  const handleCancelEmail = () => {
+    setEditedEmail(email);
+    setIsEditingEmail(false);
+  };
+
+  const handleSaveMobile = () => {
+    setMobile(editedMobile);
+    setIsEditingMobile(false);
+    toast.success("Mobile number updated successfully!");
+  };
+
+  const handleCancelMobile = () => {
+    setEditedMobile(mobile);
+    setIsEditingMobile(false);
+  };
+
+  const handleRemoveAccount = (accountId: string) => {
+    toast.success("Account removed successfully!");
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -104,7 +146,57 @@ const Settings = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
-              <Input id="email" type="email" defaultValue="john.doe@example.com" />
+              {isEditingEmail ? (
+                <div className="flex gap-2">
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={editedEmail}
+                    onChange={(e) => setEditedEmail(e.target.value)}
+                  />
+                  <Button size="sm" onClick={handleSaveEmail}>Save</Button>
+                  <Button size="sm" variant="outline" onClick={handleCancelEmail}>Cancel</Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input id="email" type="email" value={email} disabled />
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={() => setIsEditingEmail(true)}
+                    className="shrink-0"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mobile">Mobile Number</Label>
+              {isEditingMobile ? (
+                <div className="flex gap-2">
+                  <Input 
+                    id="mobile" 
+                    type="tel" 
+                    value={editedMobile}
+                    onChange={(e) => setEditedMobile(e.target.value)}
+                  />
+                  <Button size="sm" onClick={handleSaveMobile}>Save</Button>
+                  <Button size="sm" variant="outline" onClick={handleCancelMobile}>Cancel</Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input id="mobile" type="tel" value={mobile} disabled />
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={() => setIsEditingMobile(true)}
+                    className="shrink-0"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -124,14 +216,35 @@ const Settings = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 Add or remove bank accounts to track your finances
               </p>
-              <div className="flex gap-2">
-                <Button variant="outline" className="w-full">
-                  Add Account
-                </Button>
-                <Button variant="outline" className="w-full">
-                  Remove Account
-                </Button>
+              
+              {/* Display connected accounts */}
+              <div className="space-y-2 mb-4">
+                {accounts.map((account) => (
+                  <div 
+                    key={account.id} 
+                    className="flex items-center justify-between p-3 border rounded-lg bg-card"
+                  >
+                    <div>
+                      <p className="font-medium">{account.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Balance: {account.currency} {account.balance.toLocaleString()}
+                      </p>
+                    </div>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      onClick={() => handleRemoveAccount(account.id)}
+                      className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
+              
+              <Button variant="outline" className="w-full">
+                Add Account
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -145,124 +258,143 @@ const Settings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {/* Change Username */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Change Username</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="username"
-                    placeholder="Enter new username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={isLoading}
-                  />
-                  <Button 
-                    onClick={handleChangeUsername} 
-                    disabled={isLoading || !username.trim()}
-                  >
-                    Update
-                  </Button>
+          <div className="space-y-4">
+            {/* Change Username - Collapsible */}
+            <Collapsible open={isUsernameOpen} onOpenChange={setIsUsernameOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full py-2 font-medium hover:text-primary transition-colors">
+                <span>Change Username</span>
+                {isUsernameOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-4">
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      id="username"
+                      placeholder="Enter new username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      disabled={isLoading}
+                    />
+                    <Button 
+                      onClick={handleChangeUsername} 
+                      disabled={isLoading || !username.trim()}
+                    >
+                      Update
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className="border-b border-border" />
 
-            {/* Change Password */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Change Password</h4>
-              
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showCurrentPassword ? "text" : "password"}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+            {/* Change Password - Collapsible */}
+            <Collapsible open={isPasswordOpen} onOpenChange={setIsPasswordOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full py-2 font-medium hover:text-primary transition-colors">
+                <span>Change Password</span>
+                {isPasswordOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="currentPassword"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="newPassword"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Must be at least 8 characters
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={handleChangePassword}
+                    disabled={isLoading || !currentPassword || !newPassword || !confirmPassword}
+                    className="w-full"
                   >
-                    {showCurrentPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    Change Password
                   </Button>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <div className="relative">
-                  <Input
-                    id="newPassword"
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    {showNewPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 8 characters
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleChangePassword}
-                disabled={isLoading || !currentPassword || !newPassword || !confirmPassword}
-                className="w-full"
-              >
-                Change Password
-              </Button>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         </CardContent>
       </Card>
