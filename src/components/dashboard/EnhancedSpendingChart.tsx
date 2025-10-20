@@ -8,7 +8,12 @@ import {
   CartesianGrid, Tooltip
 } from "recharts";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
-import { getFilterDescription } from "@/lib/dateFilterUtils";
+import { 
+  getFilterDescription, 
+  getDateRangeForFilter, 
+  getLabelsForFilter,
+  DateRange 
+} from "@/lib/dateFilterUtils";
 
 interface EnhancedSpendingChartProps {
   accountSpecific?: boolean;
@@ -36,66 +41,102 @@ export const EnhancedSpendingChart = ({
   const { transactions } = useTransactions();
   const { monthlySpending, monthlyIncome, monthlySavings } = calculateFinancialMetrics(transactions);
   const [selectedPeriod, setSelectedPeriod] = useState<DateFilterOption>("1M");
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
   const [selectedBarData, setSelectedBarData] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
+  const dateRange = getDateRangeForFilter(selectedPeriod, customDateRange);
+  const xAxisLabels = getLabelsForFilter(selectedPeriod, dateRange);
+
   const getChartData = () => {
+    const categories = Object.keys(categoryColors);
+    
     if (selectedPeriod === '1W') {
-      return []; // No daily data available from current transactions
+      // Generate data for past 7 days
+      return xAxisLabels.map((label, index) => {
+        const data: any = { day: label };
+        let total = 0;
+        categories.forEach(cat => {
+          const value = 50 + Math.random() * 50;
+          data[cat] = value;
+          total += value;
+        });
+        data.total = total;
+        data.dateRange = label;
+        return data;
+      });
     }
     if (selectedPeriod === '1M') {
-      // Generate 4 weeks of data with new categories
-      const categories = Object.keys(categoryColors);
-      return [
-        {
-          week: 'Week 1',
-          "Housing & Utilities": 400,
-          "Savings & Investments": 800,
-          "Personal & Lifestyle": 533,
-          "Food & Groceries": 581,
-          "Transportation & Fuel": 494,
-          "Entertainment & Recreation": 451,
-          "Healthcare & Medical": 289,
-          dateRange: '2025-05-01 to 2025-05-07',
-          total: 3348
-        },
-        {
-          week: 'Week 2',
-          "Housing & Utilities": 350,
-          "Savings & Investments": 700,
-          "Personal & Lifestyle": 420,
-          "Food & Groceries": 620,
-          "Transportation & Fuel": 380,
-          "Entertainment & Recreation": 320,
-          "Healthcare & Medical": 800,
-          dateRange: '2025-05-08 to 2025-05-14',
-          total: 3590
-        },
-        {
-          week: 'Week 3',
-          "Housing & Utilities": 400,
-          "Savings & Investments": 750,
-          "Personal & Lifestyle": 680,
-          "Food & Groceries": 590,
-          "Transportation & Fuel": 510,
-          "Entertainment & Recreation": 290,
-          "Healthcare & Medical": 650,
-          dateRange: '2025-05-15 to 2025-05-21',
-          total: 3870
-        },
-        {
-          week: 'Week 4',
-          "Housing & Utilities": 320,
-          "Savings & Investments": 600,
-          "Personal & Lifestyle": 550,
-          "Food & Groceries": 540,
-          "Transportation & Fuel": 460,
-          "Entertainment & Recreation": 380,
-          "Healthcare & Medical": 500,
-          dateRange: '2025-05-22 to 2025-05-28',
-          total: 3350
-        }
-      ];
+      // Generate data for past 4 weeks using the actual labels
+      return xAxisLabels.map((label, index) => {
+        const data: any = { week: label };
+        let total = 0;
+        data["Housing & Utilities"] = 300 + Math.random() * 200;
+        data["Savings & Investments"] = 600 + Math.random() * 200;
+        data["Personal & Lifestyle"] = 400 + Math.random() * 200;
+        data["Food & Groceries"] = 500 + Math.random() * 150;
+        data["Transportation & Fuel"] = 400 + Math.random() * 150;
+        data["Entertainment & Recreation"] = 300 + Math.random() * 150;
+        data["Healthcare & Medical"] = 250 + Math.random() * 400;
+        
+        total = categories.reduce((sum, cat) => sum + (data[cat] || 0), 0);
+        data.total = total;
+        data.dateRange = label;
+        return data;
+      });
+    }
+    if (selectedPeriod === '1Y') {
+      // Generate data for past 12 months using the actual labels
+      return xAxisLabels.map((label, index) => ({
+        month: label,
+        amount: 2000 + Math.random() * 1500,
+        savings: 800 + Math.random() * 400,
+        netBalance: 1200 + Math.random() * 800
+      }));
+    }
+    if (selectedPeriod === 'custom') {
+      // For custom, use appropriate format based on range
+      const daysDiff = Math.ceil(
+        (dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      
+      if (daysDiff <= 14) {
+        // Show as days
+        return xAxisLabels.map((label) => {
+          const data: any = { day: label };
+          let total = 0;
+          categories.forEach(cat => {
+            const value = 50 + Math.random() * 50;
+            data[cat] = value;
+            total += value;
+          });
+          data.total = total;
+          data.dateRange = label;
+          return data;
+        });
+      } else if (daysDiff <= 60) {
+        // Show as weeks
+        return xAxisLabels.map((label, index) => {
+          const data: any = { week: label };
+          let total = 0;
+          categories.forEach(cat => {
+            const value = 300 + Math.random() * 200;
+            data[cat] = value;
+            total += value;
+          });
+          data.total = total;
+          data.dateRange = label;
+          return data;
+        });
+      } else {
+        // Show as months
+        return xAxisLabels.map((label) => ({
+          month: label,
+          amount: 2000 + Math.random() * 1500,
+          savings: 800 + Math.random() * 400,
+          netBalance: 1200 + Math.random() * 800
+        }));
+      }
     }
     return monthlySpending;
   };
@@ -135,15 +176,22 @@ export const EnhancedSpendingChart = ({
           <p className="text-sm text-muted-foreground">{getFilterDescription(selectedPeriod)}</p>
           <DateFilter 
             selectedFilter={selectedPeriod}
-            onFilterChange={(filter) => setSelectedPeriod(filter)}
+            onFilterChange={(filter, dateRange) => {
+              setSelectedPeriod(filter);
+              if (dateRange) {
+                setCustomDateRange(dateRange);
+              }
+            }}
           />
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          {selectedPeriod === '1M' ? (
+          {selectedPeriod === '1W' || selectedPeriod === '1M' || 
+           (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
             <BarChart data={getChartData()} onClick={handleBarClick}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="week" 
+                dataKey={selectedPeriod === '1W' || 
+                  (selectedPeriod === 'custom' && xAxisLabels.length <= 14) ? "day" : "week"}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
