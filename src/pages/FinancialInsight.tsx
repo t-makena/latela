@@ -1,5 +1,5 @@
 import { TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -17,10 +17,15 @@ import { calculateFinancialMetrics } from "@/lib/realData";
 import { BudgetInsights } from "@/components/financial-insight/BudgetInsights";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
+import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
+import { getFilterDescription } from "@/lib/dateFilterUtils";
 
 const FinancialInsight = () => {
   const { transactions, loading } = useTransactions();
   const { monthlySpending, monthlyIncome, monthlyExpenses } = calculateFinancialMetrics(transactions);
+  const [spendingTrendFilter, setSpendingTrendFilter] = useState<DateFilterOption>("1W");
+  const [categoryFilter, setCategoryFilter] = useState<DateFilterOption>("1W");
+  const [netBalanceFilter, setNetBalanceFilter] = useState<DateFilterOption>("1Y");
 
   // Net balance data for the graph
   const netBalanceData = monthlySpending.map(item => ({
@@ -165,8 +170,12 @@ const FinancialInsight = () => {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">Net Balance Over Time</h2>
-            <p className="text-xs text-muted-foreground">for the past year</p>
+            <p className="text-xs text-muted-foreground">{getFilterDescription(netBalanceFilter)}</p>
           </div>
+          <DateFilter 
+            selectedFilter={netBalanceFilter}
+            onFilterChange={(filter) => setNetBalanceFilter(filter)}
+          />
         </div>
 
         <ResponsiveContainer width="100%" height={300}>
@@ -223,16 +232,12 @@ const FinancialInsight = () => {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">Spending Trend</h2>
-            <p className="text-xs text-muted-foreground">for the past week</p>
+            <p className="text-xs text-muted-foreground">{getFilterDescription(spendingTrendFilter)}</p>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Filter By Past:</span>
-            <Button variant="link" className="h-auto p-0 underline font-semibold">1W</Button>
-            <Button variant="link" className="h-auto p-0 font-semibold">1M</Button>
-            <Button variant="link" className="h-auto p-0 font-semibold">3M</Button>
-            <Button variant="link" className="h-auto p-0 font-semibold">6M</Button>
-            <Button variant="link" className="h-auto p-0 font-semibold">1Y</Button>
-          </div>
+          <DateFilter 
+            selectedFilter={spendingTrendFilter}
+            onFilterChange={(filter) => setSpendingTrendFilter(filter)}
+          />
         </div>
 
         <ResponsiveContainer width="100%" height={300}>
@@ -326,16 +331,12 @@ const FinancialInsight = () => {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">Spending By Category</h2>
-            <p className="text-xs text-muted-foreground">for the past week</p>
+            <p className="text-xs text-muted-foreground">{getFilterDescription(categoryFilter)}</p>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Filter By Past:</span>
-            <Button variant="link" className="h-auto p-0 underline font-semibold">1W</Button>
-            <Button variant="link" className="h-auto p-0 font-semibold">1M</Button>
-            <Button variant="link" className="h-auto p-0 font-semibold">3M</Button>
-            <Button variant="link" className="h-auto p-0 font-semibold">6M</Button>
-            <Button variant="link" className="h-auto p-0 font-semibold">1Y</Button>
-          </div>
+          <DateFilter 
+            selectedFilter={categoryFilter}
+            onFilterChange={(filter) => setCategoryFilter(filter)}
+          />
         </div>
 
         <ResponsiveContainer width="100%" height={300}>
