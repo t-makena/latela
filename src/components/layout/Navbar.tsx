@@ -38,7 +38,7 @@ export const Navbar = () => {
   };
   
   const NavContent = ({ showLabels = true }: { showLabels?: boolean }) => (
-    <div className="flex flex-col gap-2 p-2">
+    <div className={cn("flex flex-col gap-2", showLabels ? "px-2" : "")}>
       {navItems.map((item) => {
         const isActive = location.pathname === item.href;
         return (
@@ -56,7 +56,7 @@ export const Navbar = () => {
               </Button>
             ) : (
               <div className={cn(
-                "w-full flex items-center justify-center py-3 transition-colors",
+                "w-full flex items-center justify-center py-3 transition-colors cursor-pointer",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}>
                 <item.icon size={20} className="shrink-0" />
@@ -77,7 +77,7 @@ export const Navbar = () => {
       ) : (
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center py-3 text-destructive hover:text-destructive/80 transition-colors mt-auto"
+          className="w-full flex items-center justify-center py-3 text-destructive hover:text-destructive/80 transition-colors mt-auto cursor-pointer"
         >
           <LogOut size={20} className="shrink-0" />
         </button>
@@ -106,16 +106,16 @@ export const Navbar = () => {
           </div>
         </div>
       ) : (
-        <Card 
+        <div 
           className={cn(
-            "h-full p-2 transition-all duration-300 ease-in-out relative",
-            isExpanded ? "w-64" : "w-16"
+            "h-full transition-all duration-300 ease-in-out relative",
+            isExpanded ? "w-64 p-2" : "w-16 py-2"
           )}
         >
           {/* Toggle Button / Logo */}
           <div className={cn(
-            "flex items-center mb-6 p-2",
-            isExpanded ? "justify-between" : "justify-center"
+            "flex items-center mb-6",
+            isExpanded ? "justify-between px-2" : "justify-center"
           )}>
             {isExpanded ? (
               <>
@@ -132,9 +132,9 @@ export const Navbar = () => {
             ) : (
               <button 
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center justify-center p-2 hover:opacity-80 transition-opacity"
+                className="flex items-center justify-center hover:opacity-80 transition-opacity"
               >
-                <img src={latelaLogo} alt="Latela" className="w-8 h-8" />
+                <img src={latelaLogo} alt="Latela" className="w-10 h-10 object-contain" />
               </button>
             )}
           </div>
@@ -142,7 +142,7 @@ export const Navbar = () => {
           <div className="flex flex-col h-[calc(100%-4rem)]">
             <NavContent showLabels={isExpanded} />
           </div>
-        </Card>
+        </div>
       )}
     </>
   );
