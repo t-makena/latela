@@ -10,10 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
+import { getFilterDescription } from "@/lib/dateFilterUtils";
 
 const Accounts = () => {
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
-  const [selectedTimeFilter, setSelectedTimeFilter] = useState("1W");
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState<DateFilterOption>("1W");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWeekData, setSelectedWeekData] = useState<any>(null);
 
@@ -237,14 +239,15 @@ const Accounts = () => {
 
         {/* Spending Trend Chart */}
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-xl font-bold text-foreground">Spending Trend</h3>
-              <p className="text-xs text-muted-foreground">for the past month</p>
+              <p className="text-xs text-muted-foreground">{getFilterDescription(selectedTimeFilter)}</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <CircleIcon className="h-5 w-5" />
-            </Button>
+            <DateFilter 
+              selectedFilter={selectedTimeFilter}
+              onFilterChange={(filter) => setSelectedTimeFilter(filter)}
+            />
           </div>
 
           {/* Chart */}
@@ -285,42 +288,8 @@ const Accounts = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Month Label */}
-          <p className="text-center text-xs text-muted-foreground mt-4">Monthly Overview</p>
-
-          {/* Time Filter Buttons */}
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <span className="text-sm font-medium text-foreground">Filter By Past:</span>
-            {timeFilters.map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSelectedTimeFilter(filter)}
-                className={`text-sm font-bold transition-colors ${
-                  selectedTimeFilter === filter 
-                    ? 'text-foreground underline' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
         </div>
 
-        {/* Account Insight */}
-        <div className="pt-4">
-          <h3 className="text-xl font-bold text-foreground mb-4">Account insight</h3>
-          
-          {/* Placeholder lines for insights */}
-          <div className="space-y-3">
-            <div className="h-0.5 bg-foreground w-full"></div>
-            <div className="h-0.5 bg-foreground w-3/4"></div>
-            <div className="flex items-center gap-2">
-              <span className="text-foreground font-bold">•</span>
-              <div className="h-0.5 bg-foreground w-2/3"></div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Detailed Breakdown Modal */}

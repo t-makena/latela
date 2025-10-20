@@ -1,18 +1,18 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { 
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend, Cell, ComposedChart
+  CartesianGrid, Tooltip
 } from "recharts";
+import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
+import { getFilterDescription } from "@/lib/dateFilterUtils";
 
 interface EnhancedSpendingChartProps {
   accountSpecific?: boolean;
   accountId?: string;
-  selectedPeriod?: '1W' | '1M' | '6M' | '1Y' | '1W>';
 }
 
 const categoryColors = {
@@ -31,32 +31,13 @@ const categoryColors = {
 
 export const EnhancedSpendingChart = ({ 
   accountSpecific = false, 
-  accountId,
-  selectedPeriod: propSelectedPeriod 
+  accountId
 }: EnhancedSpendingChartProps) => {
   const { transactions } = useTransactions();
   const { monthlySpending, monthlyIncome, monthlySavings } = calculateFinancialMetrics(transactions);
-  const [internalSelectedPeriod, setInternalSelectedPeriod] = useState<'1W' | '1M' | '6M' | '1Y' | '1W>'>('1M');
+  const [selectedPeriod, setSelectedPeriod] = useState<DateFilterOption>("1M");
   const [selectedBarData, setSelectedBarData] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-
-  // Use prop period if provided, otherwise use internal state
-  const selectedPeriod = propSelectedPeriod || internalSelectedPeriod;
-
-  const periods = [
-    { key: '1W' as const, label: '1W' },
-    { key: '1M' as const, label: '1M' },
-    { key: '6M' as const, label: '6M' },
-    { key: '1Y' as const, label: '1Y' },
-    { key: '1W>' as const, label: '1W>' },
-  ];
-
-  const getChartTitle = () => {
-    if (selectedPeriod === '1W' || selectedPeriod === '1W>') return 'Daily Spending Trend';
-    if (selectedPeriod === '1M') return 'Weekly Spending Trend';
-    if (selectedPeriod === '6M' || selectedPeriod === '1Y') return 'Monthly Spending Trend';
-    return 'Monthly Spending Trend';
-  };
 
   const getChartData = () => {
     if (selectedPeriod === '1W') {
@@ -116,12 +97,6 @@ export const EnhancedSpendingChart = ({
         }
       ];
     }
-    if (selectedPeriod === '1W>') {
-      return []; // No future daily data available
-    }
-    if (selectedPeriod === '6M') {
-      return monthlySpending.slice(-6);
-    }
     return monthlySpending;
   };
 
@@ -156,6 +131,13 @@ export const EnhancedSpendingChart = ({
   return (
     <>
       <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-muted-foreground">{getFilterDescription(selectedPeriod)}</p>
+          <DateFilter 
+            selectedFilter={selectedPeriod}
+            onFilterChange={(filter) => setSelectedPeriod(filter)}
+          />
+        </div>
         <ResponsiveContainer width="100%" height={300}>
           {selectedPeriod === '1M' ? (
             <BarChart data={getChartData()} onClick={handleBarClick}>
@@ -244,25 +226,6 @@ export const EnhancedSpendingChart = ({
             </LineChart>
           )}
         </ResponsiveContainer>
-        
-        <p className="text-center text-xs text-muted-foreground mt-4">Monthly Overview</p>
-        
-        <div className="flex items-center justify-center gap-4 mt-4">
-          <span className="text-sm font-medium text-foreground">Filter By Past:</span>
-          {periods.map((period) => (
-            <button
-              key={period.key}
-              onClick={() => setInternalSelectedPeriod(period.key)}
-              className={`text-sm font-bold transition-colors ${
-                selectedPeriod === period.key 
-                  ? 'text-foreground underline' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {period.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
