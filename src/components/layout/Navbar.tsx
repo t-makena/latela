@@ -56,8 +56,8 @@ export const Navbar = () => {
               </Button>
             ) : (
               <div className={cn(
-                "w-full flex items-center justify-center py-3 transition-colors cursor-pointer",
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                "w-full flex items-center justify-center py-3 transition-colors cursor-pointer rounded-md",
+                isActive ? "bg-black text-white" : "text-black hover:bg-black/5"
               )}>
                 <item.icon size={20} className="shrink-0" />
               </div>
@@ -134,7 +134,7 @@ export const Navbar = () => {
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="flex items-center justify-center hover:opacity-80 transition-opacity"
               >
-                <img src={latelaLogo} alt="Latela" className="w-10 h-10 object-contain" />
+                <img src={latelaLogo} alt="Latela" className="w-12 h-12 object-contain" />
               </button>
             )}
           </div>
