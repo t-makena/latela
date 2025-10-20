@@ -3,13 +3,14 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Wallet, Calendar, Settings, Menu, TrendingUp, Target, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Wallet, Calendar, Settings, Menu, TrendingUp, Target, LogOut, ChevronLeft } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
+import latelaLogo from "@/assets/latela-logo.png";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -42,31 +43,45 @@ export const Navbar = () => {
         const isActive = location.pathname === item.href;
         return (
           <Link to={item.href} key={item.name}>
-            <Button
-              variant={isActive ? "default" : "ghost"}
-              className={cn(
-                "w-full gap-3 transition-all",
-                showLabels ? "justify-start" : "justify-center px-2",
-                isActive ? "bg-primary text-primary-foreground" : ""
-              )}
-            >
-              <item.icon size={18} className="shrink-0" />
-              {showLabels && <span className="truncate">{item.name}</span>}
-            </Button>
+            {showLabels ? (
+              <Button
+                variant={isActive ? "default" : "ghost"}
+                className={cn(
+                  "w-full gap-3 transition-all justify-start",
+                  isActive ? "bg-primary text-primary-foreground" : ""
+                )}
+              >
+                <item.icon size={18} className="shrink-0" />
+                <span className="truncate">{item.name}</span>
+              </Button>
+            ) : (
+              <div className={cn(
+                "w-full flex items-center justify-center py-3 transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}>
+                <item.icon size={20} className="shrink-0" />
+              </div>
+            )}
           </Link>
         );
       })}
-      <Button
-        variant="ghost"
-        onClick={handleLogout}
-        className={cn(
-          "w-full gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto",
-          showLabels ? "justify-start" : "justify-center px-2"
-        )}
-      >
-        <LogOut size={18} className="shrink-0" />
-        {showLabels && <span className="truncate">Log Out</span>}
-      </Button>
+      {showLabels ? (
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className="w-full gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
+        >
+          <LogOut size={18} className="shrink-0" />
+          <span className="truncate">Log Out</span>
+        </Button>
+      ) : (
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center py-3 text-destructive hover:text-destructive/80 transition-colors mt-auto"
+        >
+          <LogOut size={20} className="shrink-0" />
+        </button>
+      )}
     </div>
   );
 
@@ -97,20 +112,31 @@ export const Navbar = () => {
             isExpanded ? "w-64" : "w-16"
           )}
         >
-          {/* Toggle Button */}
+          {/* Toggle Button / Logo */}
           <div className={cn(
             "flex items-center mb-6 p-2",
             isExpanded ? "justify-between" : "justify-center"
           )}>
-            {isExpanded && <h2 className="text-xl font-bold">Latela</h2>}
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="shrink-0"
-            >
-              {isExpanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-            </Button>
+            {isExpanded ? (
+              <>
+                <h2 className="text-xl font-bold">Latela</h2>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="shrink-0"
+                >
+                  <ChevronLeft size={20} />
+                </Button>
+              </>
+            ) : (
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center justify-center p-2 hover:opacity-80 transition-opacity"
+              >
+                <img src={latelaLogo} alt="Latela" className="w-8 h-8" />
+              </button>
+            )}
           </div>
           
           <div className="flex flex-col h-[calc(100%-4rem)]">
