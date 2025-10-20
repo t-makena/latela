@@ -134,7 +134,7 @@ export const Navbar = () => {
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="flex items-center justify-center hover:opacity-80 transition-opacity"
               >
-                <img src={latelaLogo} alt="Latela" className="w-16 h-16 object-contain" />
+                <img src={latelaLogo} alt="Latela" className="w-20 h-20 object-contain" />
               </button>
             )}
           </div>
