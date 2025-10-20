@@ -21,11 +21,6 @@ export const Layout = ({ children }: LayoutProps) => {
         className="absolute top-4 right-4 w-12 h-12 opacity-10 pointer-events-none z-0 hidden lg:block" 
       />
       <img 
-        src={budgetChartDoodle} 
-        alt="" 
-        className="absolute top-80 left-4 w-10 h-10 opacity-8 pointer-events-none z-0 hidden lg:block" 
-      />
-      <img 
         src={happyMoneyDoodle} 
         alt="" 
         className="absolute bottom-20 right-8 w-14 h-14 opacity-15 pointer-events-none z-0 hidden lg:block" 
