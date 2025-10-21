@@ -168,9 +168,24 @@ const FinancialInsight = () => {
 
       {/* Two Column Layout: Insights + Budget Allocation */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div>
+        <div className="space-y-6">
+          {/* 4-point summary */}
           <BudgetInsights isLoading={loading} />
+          
+          {/* Budget Insight Table */}
+          <BudgetBreakdown 
+            availableBalance={availableBalance}
+            budgetBalance={budgetBalance}
+            spending={spending}
+            previousMonth={{
+              availableBalance: previousMonthData.netBalance,
+              budgetBalance: monthlyIncome * 0.3,
+              spending: monthlyExpenses * 0.9
+            }}
+            showOnlyTable={true}
+          />
         </div>
+        
         <div>
           <h3 className="text-lg font-semibold mb-4">Budget Allocation</h3>
           <BudgetBreakdown 
@@ -185,21 +200,6 @@ const FinancialInsight = () => {
             showOnlyPieChart={true}
           />
         </div>
-      </div>
-
-      {/* Budget Insight Table */}
-      <div className="mb-8 max-w-md">
-        <BudgetBreakdown 
-          availableBalance={availableBalance}
-          budgetBalance={budgetBalance}
-          spending={spending}
-          previousMonth={{
-            availableBalance: previousMonthData.netBalance,
-            budgetBalance: monthlyIncome * 0.3,
-            spending: monthlyExpenses * 0.9
-          }}
-          showOnlyTable={true}
-        />
       </div>
 
       {/* Net Balance Over Time Chart */}
