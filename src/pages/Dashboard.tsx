@@ -22,7 +22,6 @@ const Dashboard = () => {
           <Card className="mt-2">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-georama">Spending Trend</CardTitle>
-              <p className="text-sm text-muted-foreground">for the past month</p>
             </CardHeader>
             <CardContent>
               <div className="w-full overflow-x-auto">
@@ -36,7 +35,6 @@ const Dashboard = () => {
           <Card className="mt-2">
             <CardHeader>
               <CardTitle className="font-georama">Spending Trend</CardTitle>
-              <p className="text-sm text-muted-foreground">for the past month</p>
             </CardHeader>
             <CardContent>
               <div className="w-full overflow-x-auto">
