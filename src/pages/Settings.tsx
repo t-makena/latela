@@ -10,9 +10,11 @@ import { useState } from "react";
 import { Eye, EyeOff, Edit2, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAccounts } from "@/hooks/useAccounts";
+import { useTheme } from "next-themes";
 
 const Settings = () => {
   const { accounts } = useAccounts();
+  const { theme, setTheme } = useTheme();
   const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -415,7 +417,10 @@ const Settings = () => {
                   Switch between light and dark theme
                 </p>
               </div>
-              <Switch defaultChecked={false} />
+              <Switch 
+                checked={theme === "dark"} 
+                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+              />
             </div>
           </div>
         </CardContent>
