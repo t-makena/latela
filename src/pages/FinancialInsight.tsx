@@ -43,7 +43,8 @@ const FinancialInsight = () => {
 
     return labels.map((label) => ({
       month: label,
-      netBalance: 80000 + Math.random() * 30000
+      netBalance: 80000 + Math.random() * 30000,
+      budgetBalance: 90000 + Math.random() * 20000
     }));
   };
 
@@ -174,7 +175,7 @@ const FinancialInsight = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="font-georama">Net Balance Over Time</CardTitle>
+              <CardTitle className="font-georama">Balance</CardTitle>
               <p className="text-xs text-muted-foreground mt-1">{getFilterDescription(netBalanceFilter)}</p>
             </div>
             <DateFilter 
@@ -224,7 +225,10 @@ const FinancialInsight = () => {
                   fontSize: '14px',
                   padding: '4px 0'
                 }}
-                formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Net Balance']}
+                formatter={(value: number, name: string) => {
+                  const label = name === 'netBalance' ? 'Net Balance' : 'Budget Balance';
+                  return [`R${Number(value).toFixed(2)}`, label];
+                }}
               />
               <Line 
                 type="monotone" 
@@ -232,6 +236,15 @@ const FinancialInsight = () => {
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2}
                 dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="budgetBalance" 
+                stroke="hsl(var(--muted-foreground))" 
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={{ fill: 'hsl(var(--muted-foreground))', r: 4 }}
                 activeDot={{ r: 6 }}
               />
             </LineChart>

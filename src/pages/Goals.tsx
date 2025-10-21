@@ -73,16 +73,16 @@ const Goals = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="font-medium w-[28%] px-6">Goal</TableHead>
-                <TableHead className="font-medium w-[16%] px-6">
+                <TableHead className="font-medium w-[14%] px-6">
                   Priority<sup>1</sup>
                 </TableHead>
-                <TableHead className="font-medium w-[16%] px-6">
+                <TableHead className="font-medium w-[14%] px-6">
                   Split<sup>2</sup>
                 </TableHead>
-                <TableHead className="font-medium text-right w-[22%] px-6">
+                <TableHead className="font-medium text-right w-[24%] px-4">
                   Amount Saved (R)<sup>3</sup>
                 </TableHead>
-                <TableHead className="font-medium w-[18%] px-6">
+                <TableHead className="font-medium w-[20%] px-6">
                   Timeline<sup>4</sup>
                 </TableHead>
               </TableRow>
@@ -93,7 +93,7 @@ const Goals = () => {
                   <TableCell className="font-medium px-6 py-4">{row.goal}</TableCell>
                   <TableCell className="px-6 py-4">{row.priority}</TableCell>
                   <TableCell className="px-6 py-4">{row.split}</TableCell>
-                  <TableCell className="text-right font-medium px-6 py-4">{formatCurrency(row.amountSaved)}</TableCell>
+                  <TableCell className="text-right font-medium px-4 py-4">{formatCurrency(row.amountSaved)}</TableCell>
                   <TableCell className="px-6 py-4">{row.timeline}</TableCell>
                 </TableRow>
               ))}
