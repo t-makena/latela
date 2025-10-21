@@ -31,7 +31,11 @@ interface Category {
   color: string;
 }
 
-export const TransactionHistory = () => {
+interface TransactionHistoryProps {
+  initialCategoryFilterName?: string;
+}
+
+export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHistoryProps = {}) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -40,6 +44,16 @@ export const TransactionHistory = () => {
   const [selectedAccount, setSelectedAccount] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("1m");
+
+  // Update category filter when initialCategoryFilterName changes
+  useEffect(() => {
+    if (initialCategoryFilterName && categories.length > 0) {
+      const matchingCategory = categories.find(c => c.name === initialCategoryFilterName);
+      if (matchingCategory) {
+        setSelectedCategory(matchingCategory.id);
+      }
+    }
+  }, [initialCategoryFilterName, categories]);
 
   useEffect(() => {
     fetchData();

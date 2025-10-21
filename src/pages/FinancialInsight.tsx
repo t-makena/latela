@@ -1,5 +1,6 @@
 import { TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -24,12 +25,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const FinancialInsight = () => {
   const { transactions, loading } = useTransactions();
   const { monthlySpending, monthlyIncome, monthlyExpenses } = calculateFinancialMetrics(transactions);
+  const location = useLocation();
   const [spendingTrendFilter, setSpendingTrendFilter] = useState<DateFilterOption>("1W");
   const [categoryFilter, setCategoryFilter] = useState<DateFilterOption>("1W");
   const [netBalanceFilter, setNetBalanceFilter] = useState<DateFilterOption>("1Y");
   const [customSpendingRange, setCustomSpendingRange] = useState<DateRange | undefined>();
   const [customCategoryRange, setCustomCategoryRange] = useState<DateRange | undefined>();
   const [customNetBalanceRange, setCustomNetBalanceRange] = useState<DateRange | undefined>();
+  const [selectedCategoryForHistory, setSelectedCategoryForHistory] = useState<string | undefined>();
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>();
+
+  // Handle category filter from navigation state
+  useEffect(() => {
+    if (location.state?.categoryFilterName) {
+      setSelectedCategoryName(location.state.categoryFilterName);
+      // Scroll to transaction history section
+      setTimeout(() => {
+        document.getElementById('transaction-history')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [location.state]);
 
   // Generate net balance data based on filter
   const getNetBalanceData = () => {
@@ -448,7 +463,9 @@ const FinancialInsight = () => {
       </Card>
 
       {/* Transaction History Section */}
-      <TransactionHistory />
+      <div id="transaction-history">
+        <TransactionHistory initialCategoryFilterName={selectedCategoryName} />
+      </div>
     </div>
   );
 };
