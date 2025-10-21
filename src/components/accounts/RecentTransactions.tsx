@@ -3,7 +3,7 @@ import { useState } from "react";
 import { X, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -186,45 +186,40 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="font-georama">Date</TableHead>
-              <TableHead className="font-georama">Description</TableHead>
-              <TableHead className="font-georama">Category</TableHead>
-              <TableHead className="text-right font-georama">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {accountTransactions.map((transaction, index) => {
-              const category = getCategoryFromDescription(transaction.description);
-              return (
-                <TableRow key={`${transaction.account_id}-${transaction.created_at}-${index}`}>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(transaction.created_at)}
-                  </TableCell>
-                  <TableCell className="font-medium font-georama">
-                    {transaction.description}
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className="cursor-pointer hover:bg-accent transition-colors"
-                      onClick={() => handleCategoryClick(category)}
-                    >
-                      {categoryLabels[category]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className={`text-right font-medium font-georama ${
+        <div className="space-y-4">
+          {accountTransactions.map((transaction, index) => {
+            const category = getCategoryFromDescription(transaction.description);
+            return (
+              <div 
+                key={`${transaction.account_id}-${transaction.created_at}-${index}`}
+                className="border-b last:border-0 pb-4 last:pb-0"
+              >
+                <Badge 
+                  variant="secondary" 
+                  className="cursor-pointer hover:bg-accent transition-colors mb-2"
+                  onClick={() => handleCategoryClick(category)}
+                >
+                  {categoryLabels[category]}
+                </Badge>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg font-georama">
+                      {transaction.description}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(transaction.created_at)}
+                    </p>
+                  </div>
+                  <span className={`font-semibold text-lg font-georama ${
                     transaction.amount < 0 ? 'text-destructive' : 'text-green-600'
                   }`}>
                     {formatCurrency(transaction.amount)}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
