@@ -194,17 +194,17 @@ const FinancialInsight = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
               <XAxis 
                 dataKey="month" 
-                tick={{ fill: 'hsl(var(--foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis 
                 label={{ 
-                  value: 'Net Balance (ZAR)', 
+                  value: 'Balance', 
                   angle: -90, 
                   position: 'insideLeft',
-                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 }
+                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
                 }}
-                tick={{ fill: 'hsl(var(--foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <Tooltip 
@@ -264,17 +264,17 @@ const FinancialInsight = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
               <XAxis 
                 dataKey="day" 
-                tick={{ fill: 'hsl(var(--foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis 
                 label={{ 
-                  value: 'Amount (ZAR)', 
+                  value: 'Amount Spent', 
                   angle: -90, 
                   position: 'insideLeft',
-                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 }
+                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
                 }}
-                tick={{ fill: 'hsl(var(--foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <Tooltip 
@@ -371,17 +371,17 @@ const FinancialInsight = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
               <XAxis 
                 dataKey="category" 
-                tick={{ fill: 'hsl(var(--foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis 
                 label={{ 
-                  value: 'Spending (R)', 
+                  value: 'Amount Spent', 
                   angle: -90, 
                   position: 'insideLeft',
-                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 }
+                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
                 }}
-                tick={{ fill: 'hsl(var(--foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <Tooltip 
