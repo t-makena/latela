@@ -10,13 +10,17 @@ interface BudgetBreakdownProps {
     budgetBalance: number;
     spending: number;
   };
+  showOnlyPieChart?: boolean;
+  showOnlyTable?: boolean;
 }
 
 export const BudgetBreakdown = ({ 
   availableBalance, 
   budgetBalance, 
   spending,
-  previousMonth 
+  previousMonth,
+  showOnlyPieChart = false,
+  showOnlyTable = false
 }: BudgetBreakdownProps) => {
   // Calculate percentage changes
   const availableChange = previousMonth.availableBalance 
@@ -43,6 +47,72 @@ export const BudgetBreakdown = ({
     const percent = ((entry.value / total) * 100).toFixed(2);
     return `${percent}%`;
   };
+
+  if (showOnlyPieChart) {
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={pieData}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={renderCustomLabel}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+          >
+            {pieData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Legend 
+            layout="vertical" 
+            align="right" 
+            verticalAlign="middle"
+            iconType="circle"
+            formatter={(value) => <span className="text-sm">{value}</span>}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  if (showOnlyTable) {
+    return (
+      <div>
+        <h3 className="text-sm font-semibold mb-3">Budget Insight</h3>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">Metric</TableHead>
+              <TableHead className="text-right">1 Mth Chng</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Available Balance</TableCell>
+              <TableCell className={`text-right font-semibold ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Budget Balance</TableCell>
+              <TableCell className={`text-right font-semibold ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Spending</TableCell>
+              <TableCell className={`text-right font-semibold ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

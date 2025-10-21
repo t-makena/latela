@@ -81,13 +81,16 @@ const Accounts = () => {
       return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label) => {
         const data: any = { day: label };
         let total = 0;
+        let topCategory = '';
         categories.forEach(cat => {
           const value = 50 + Math.random() * 100;
           data[cat] = value;
           total += value;
+          if (value > 0) topCategory = cat;
         });
         data.total = total;
         data.dateRange = label;
+        data.topCategory = topCategory;
         return data;
       });
     }
@@ -98,13 +101,34 @@ const Accounts = () => {
         const label = `Week ${i + 1}`;
         const data: any = { week: label };
         let total = 0;
+        let topCategory = '';
         categories.forEach(cat => {
           const value = 300 + Math.random() * 200;
           data[cat] = value;
           total += value;
+          if (value > 0) topCategory = cat;
         });
         data.total = total;
         data.dateRange = label;
+        data.topCategory = topCategory;
+        return data;
+      });
+    }
+    if (selectedTimeFilter === '1Y') {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return months.map((label) => {
+        const data: any = { month: label };
+        let total = 0;
+        let topCategory = '';
+        categories.forEach(cat => {
+          const value = 1200 + Math.random() * 800;
+          data[cat] = value;
+          total += value;
+          if (value > 0) topCategory = cat;
+        });
+        data.total = total;
+        data.dateRange = label;
+        data.topCategory = topCategory;
         return data;
       });
     }
@@ -112,12 +136,15 @@ const Accounts = () => {
     return Array.from({length: 4}, (_, i) => {
       const data: any = { week: `Week ${i + 1}` };
       let total = 0;
+      let topCategory = '';
       categories.forEach(cat => {
         const value = 300 + Math.random() * 200;
         data[cat] = value;
         total += value;
+        if (value > 0) topCategory = cat;
       });
       data.total = total;
+      data.topCategory = topCategory;
       return data;
     });
   };
@@ -285,7 +312,7 @@ const Accounts = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} onClick={handleBarClick}>
                 <XAxis 
-                  dataKey={selectedTimeFilter === '1W' ? "day" : "week"}
+                  dataKey={selectedTimeFilter === '1Y' ? "month" : selectedTimeFilter === '1W' ? "day" : "week"}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
@@ -312,7 +339,14 @@ const Accounts = () => {
                     dataKey={category} 
                     stackId="a" 
                     fill={categoryColors[category as keyof typeof categoryColors]}
-                    radius={index === Object.keys(categoryColors).length - 1 ? [8, 8, 0, 0] : undefined}
+                    shape={(props: any) => {
+                      const { x, y, width, height, payload } = props;
+                      const isTop = payload.topCategory === category;
+                      if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors[category as keyof typeof categoryColors]} />;
+                      const radius = 8;
+                      const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
+                      return <path d={path} fill={categoryColors[category as keyof typeof categoryColors]} />;
+                    }}
                   />
                 ))}
               </BarChart>
