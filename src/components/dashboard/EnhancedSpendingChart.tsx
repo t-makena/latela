@@ -56,13 +56,16 @@ export const EnhancedSpendingChart = ({
       return xAxisLabels.map((label, index) => {
         const data: any = { day: label };
         let total = 0;
+        let topCategory = '';
         categories.forEach(cat => {
           const value = 50 + Math.random() * 50;
           data[cat] = value;
           total += value;
+          if (value > 0) topCategory = cat; // Track last non-zero category
         });
         data.total = total;
         data.dateRange = label;
+        data.topCategory = topCategory;
         return data;
       });
     }
@@ -71,6 +74,7 @@ export const EnhancedSpendingChart = ({
       return xAxisLabels.map((label, index) => {
         const data: any = { week: label };
         let total = 0;
+        let topCategory = '';
         data["Housing & Utilities"] = 300 + Math.random() * 200;
         data["Savings & Investments"] = 600 + Math.random() * 200;
         data["Personal & Lifestyle"] = 400 + Math.random() * 200;
@@ -79,9 +83,15 @@ export const EnhancedSpendingChart = ({
         data["Entertainment & Recreation"] = 300 + Math.random() * 150;
         data["Healthcare & Medical"] = 250 + Math.random() * 400;
         
+        // Find topmost category with value
+        categories.forEach(cat => {
+          if (data[cat] > 0) topCategory = cat;
+        });
+        
         total = categories.reduce((sum, cat) => sum + (data[cat] || 0), 0);
         data.total = total;
         data.dateRange = label;
+        data.topCategory = topCategory;
         return data;
       });
     }
@@ -222,17 +232,127 @@ export const EnhancedSpendingChart = ({
                 }}
                 formatter={(value: number, name: string) => [`R${Number(value).toFixed(2)}`, name]}
               />
-              <Bar dataKey="Housing & Utilities" stackId="a" fill={categoryColors["Housing & Utilities"]} />
-              <Bar dataKey="Savings & Investments" stackId="a" fill={categoryColors["Savings & Investments"]} />
-              <Bar dataKey="Personal & Lifestyle" stackId="a" fill={categoryColors["Personal & Lifestyle"]} />
-              <Bar dataKey="Food & Groceries" stackId="a" fill={categoryColors["Food & Groceries"]} />
-              <Bar dataKey="Transportation & Fuel" stackId="a" fill={categoryColors["Transportation & Fuel"]} />
-              <Bar dataKey="Dining & Restaurants" stackId="a" fill={categoryColors["Dining & Restaurants"]} />
-              <Bar dataKey="Shopping & Retail" stackId="a" fill={categoryColors["Shopping & Retail"]} />
-              <Bar dataKey="Entertainment & Recreation" stackId="a" fill={categoryColors["Entertainment & Recreation"]} />
-              <Bar dataKey="Healthcare & Medical" stackId="a" fill={categoryColors["Healthcare & Medical"]} />
-              <Bar dataKey="Bills & Subscriptions" stackId="a" fill={categoryColors["Bills & Subscriptions"]} />
-              <Bar dataKey="Miscellaneous" stackId="a" fill={categoryColors["Miscellaneous"]} radius={[8, 8, 0, 0]} />
+              <Bar 
+                dataKey="Housing & Utilities" 
+                stackId="a" 
+                fill={categoryColors["Housing & Utilities"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Housing & Utilities";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Housing & Utilities"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Savings & Investments" 
+                stackId="a" 
+                fill={categoryColors["Savings & Investments"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Savings & Investments";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Savings & Investments"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Personal & Lifestyle" 
+                stackId="a" 
+                fill={categoryColors["Personal & Lifestyle"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Personal & Lifestyle";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Personal & Lifestyle"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Food & Groceries" 
+                stackId="a" 
+                fill={categoryColors["Food & Groceries"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Food & Groceries";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Food & Groceries"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Transportation & Fuel" 
+                stackId="a" 
+                fill={categoryColors["Transportation & Fuel"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Transportation & Fuel";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Transportation & Fuel"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Dining & Restaurants" 
+                stackId="a" 
+                fill={categoryColors["Dining & Restaurants"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Dining & Restaurants";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Dining & Restaurants"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Shopping & Retail" 
+                stackId="a" 
+                fill={categoryColors["Shopping & Retail"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Shopping & Retail";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Shopping & Retail"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Entertainment & Recreation" 
+                stackId="a" 
+                fill={categoryColors["Entertainment & Recreation"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Entertainment & Recreation";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Entertainment & Recreation"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Healthcare & Medical" 
+                stackId="a" 
+                fill={categoryColors["Healthcare & Medical"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Healthcare & Medical";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Healthcare & Medical"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Bills & Subscriptions" 
+                stackId="a" 
+                fill={categoryColors["Bills & Subscriptions"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Bills & Subscriptions";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Bills & Subscriptions"]} rx={radius} ry={radius} />;
+                }}
+              />
+              <Bar 
+                dataKey="Miscellaneous" 
+                stackId="a" 
+                fill={categoryColors["Miscellaneous"]}
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isTop = payload.topCategory === "Miscellaneous";
+                  const radius = isTop ? 8 : 0;
+                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Miscellaneous"]} rx={radius} ry={radius} />;
+                }}
+              />
             </BarChart>
           ) : (
             <LineChart data={getChartData()}>
