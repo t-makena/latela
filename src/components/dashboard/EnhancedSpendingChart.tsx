@@ -222,15 +222,17 @@ export const EnhancedSpendingChart = ({
                 }}
                 formatter={(value: number, name: string) => [`R${Number(value).toFixed(2)}`, name]}
               />
-              {categories.map((category, index) => (
-                <Bar 
-                  key={category}
-                  dataKey={category} 
-                  stackId="a" 
-                  fill={categoryColors[category as keyof typeof categoryColors]}
-                  radius={index === categories.length - 1 ? [8, 8, 0, 0] : undefined}
-                />
-              ))}
+              <Bar dataKey="Housing & Utilities" stackId="a" fill={categoryColors["Housing & Utilities"]} />
+              <Bar dataKey="Savings & Investments" stackId="a" fill={categoryColors["Savings & Investments"]} />
+              <Bar dataKey="Personal & Lifestyle" stackId="a" fill={categoryColors["Personal & Lifestyle"]} />
+              <Bar dataKey="Food & Groceries" stackId="a" fill={categoryColors["Food & Groceries"]} />
+              <Bar dataKey="Transportation & Fuel" stackId="a" fill={categoryColors["Transportation & Fuel"]} />
+              <Bar dataKey="Dining & Restaurants" stackId="a" fill={categoryColors["Dining & Restaurants"]} />
+              <Bar dataKey="Shopping & Retail" stackId="a" fill={categoryColors["Shopping & Retail"]} />
+              <Bar dataKey="Entertainment & Recreation" stackId="a" fill={categoryColors["Entertainment & Recreation"]} />
+              <Bar dataKey="Healthcare & Medical" stackId="a" fill={categoryColors["Healthcare & Medical"]} />
+              <Bar dataKey="Bills & Subscriptions" stackId="a" fill={categoryColors["Bills & Subscriptions"]} />
+              <Bar dataKey="Miscellaneous" stackId="a" fill={categoryColors["Miscellaneous"]} radius={[8, 8, 0, 0]} />
             </BarChart>
           ) : (
             <LineChart data={getChartData()}>
