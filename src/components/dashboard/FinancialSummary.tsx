@@ -89,7 +89,7 @@ export const FinancialSummary = () => {
             <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
               Spending limit for today
             </div>
-            <div className="text-2xl font-bold text-black font-georama">
+            <div className="text-2xl font-bold text-foreground font-georama">
               {formatCurrency(dailyTargetSpending)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
