@@ -30,11 +30,23 @@ const FinancialInsight = () => {
   const [customCategoryRange, setCustomCategoryRange] = useState<DateRange | undefined>();
   const [customNetBalanceRange, setCustomNetBalanceRange] = useState<DateRange | undefined>();
 
-  // Net balance data for the graph
-  const netBalanceData = monthlySpending.map(item => ({
-    month: item.month,
-    netBalance: item.netBalance
-  }));
+  // Generate net balance data based on filter
+  const getNetBalanceData = () => {
+    const labels = netBalanceFilter === '1W' ? 
+      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
+      netBalanceFilter === '1M' ? 
+        ["Week 1", "Week 2", "Week 3", "Week 4"] :
+        netBalanceFilter === '1Y' ?
+          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
+          ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    return labels.map((label) => ({
+      month: label,
+      netBalance: 80000 + Math.random() * 30000
+    }));
+  };
+
+  const netBalanceData = getNetBalanceData();
 
   // Calculate current and previous month data for breakdown
   const currentMonthData = monthlySpending[monthlySpending.length - 1] || { netBalance: 0 };
@@ -73,66 +85,54 @@ const FinancialInsight = () => {
     "Misc": "Miscellaneous"
   };
 
-  // Stacked bar chart data for spending trend (Mon-Sun) with all 11 categories
-  const spendingTrendData = [
-    { 
-      day: "Mon", 
-      "F&G": 450, "T/F": 120, "D&R": 0, "S&R": 0, 
-      "E&R": 0, "P&L": 200, "H&U": 0, "H&M": 0, 
-      "B&S": 0, "S&I": 500, "Misc": 50 
-    },
-    { 
-      day: "Tue", 
-      "F&G": 380, "T/F": 150, "D&R": 280, "S&R": 0, 
-      "E&R": 0, "P&L": 150, "H&U": 0, "H&M": 0, 
-      "B&S": 0, "S&I": 0, "Misc": 40 
-    },
-    { 
-      day: "Wed", 
-      "F&G": 420, "T/F": 0, "D&R": 0, "S&R": 850, 
-      "E&R": 0, "P&L": 180, "H&U": 3500, "H&M": 0, 
-      "B&S": 0, "S&I": 0, "Misc": 0 
-    },
-    { 
-      day: "Thu", 
-      "F&G": 290, "T/F": 140, "D&R": 0, "S&R": 0, 
-      "E&R": 450, "P&L": 0, "H&U": 0, "H&M": 0, 
-      "B&S": 0, "S&I": 0, "Misc": 60 
-    },
-    { 
-      day: "Fri", 
-      "F&G": 510, "T/F": 180, "D&R": 320, "S&R": 0, 
-      "E&R": 0, "P&L": 250, "H&U": 0, "H&M": 0, 
-      "B&S": 1200, "S&I": 0, "Misc": 0 
-    },
-    { 
-      day: "Sat", 
-      "F&G": 620, "T/F": 0, "D&R": 480, "S&R": 750, 
-      "E&R": 850, "P&L": 320, "H&U": 0, "H&M": 0, 
-      "B&S": 0, "S&I": 0, "Misc": 80 
-    },
-    { 
-      day: "Sun", 
-      "F&G": 580, "T/F": 0, "D&R": 550, "S&R": 0, 
-      "E&R": 680, "P&L": 280, "H&U": 0, "H&M": 650, 
-      "B&S": 0, "S&I": 0, "Misc": 70 
-    }
-  ];
+  // Generate spending trend data based on filter
+  const getSpendingTrendData = () => {
+    const labels = spendingTrendFilter === '1W' ? 
+      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
+      spendingTrendFilter === '1M' ? 
+        ["Week 1", "Week 2", "Week 3", "Week 4"] :
+        spendingTrendFilter === '1Y' ?
+          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
+          ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  // Category data for spending by category chart with all 11 categories
-  const categoryData = [
-    { category: "F&G", amount: 3250, color: categoryColors["F&G"] },
-    { category: "T/F", amount: 590, color: categoryColors["T/F"] },
-    { category: "D&R", amount: 1630, color: categoryColors["D&R"] },
-    { category: "S&R", amount: 1600, color: categoryColors["S&R"] },
-    { category: "E&R", amount: 1980, color: categoryColors["E&R"] },
-    { category: "P&L", amount: 1380, color: categoryColors["P&L"] },
-    { category: "H&U", amount: 3500, color: categoryColors["H&U"] },
-    { category: "H&M", amount: 650, color: categoryColors["H&M"] },
-    { category: "B&S", amount: 1200, color: categoryColors["B&S"] },
-    { category: "S&I", amount: 500, color: categoryColors["S&I"] },
-    { category: "Misc", amount: 300, color: categoryColors["Misc"] }
-  ];
+    return labels.map((label) => {
+      const data: any = { day: label };
+      data["F&G"] = 300 + Math.random() * 300;
+      data["T/F"] = 100 + Math.random() * 100;
+      data["D&R"] = Math.random() > 0.5 ? 200 + Math.random() * 300 : 0;
+      data["S&R"] = Math.random() > 0.6 ? 500 + Math.random() * 500 : 0;
+      data["E&R"] = Math.random() > 0.5 ? 300 + Math.random() * 600 : 0;
+      data["P&L"] = 150 + Math.random() * 200;
+      data["H&U"] = Math.random() > 0.8 ? 3000 + Math.random() * 1000 : 0;
+      data["H&M"] = Math.random() > 0.7 ? 400 + Math.random() * 400 : 0;
+      data["B&S"] = Math.random() > 0.8 ? 1000 + Math.random() * 500 : 0;
+      data["S&I"] = Math.random() > 0.8 ? 400 + Math.random() * 200 : 0;
+      data["Misc"] = 30 + Math.random() * 70;
+      return data;
+    });
+  };
+
+  const spendingTrendData = getSpendingTrendData();
+
+  // Generate category data based on filter
+  const getCategoryData = () => {
+    const multiplier = categoryFilter === '1W' ? 0.25 : categoryFilter === '1M' ? 1 : categoryFilter === '1Y' ? 12 : 1;
+    return [
+      { category: "F&G", amount: 3250 * multiplier, color: categoryColors["F&G"] },
+      { category: "T/F", amount: 590 * multiplier, color: categoryColors["T/F"] },
+      { category: "D&R", amount: 1630 * multiplier, color: categoryColors["D&R"] },
+      { category: "S&R", amount: 1600 * multiplier, color: categoryColors["S&R"] },
+      { category: "E&R", amount: 1980 * multiplier, color: categoryColors["E&R"] },
+      { category: "P&L", amount: 1380 * multiplier, color: categoryColors["P&L"] },
+      { category: "H&U", amount: 3500 * multiplier, color: categoryColors["H&U"] },
+      { category: "H&M", amount: 650 * multiplier, color: categoryColors["H&M"] },
+      { category: "B&S", amount: 1200 * multiplier, color: categoryColors["B&S"] },
+      { category: "S&I", amount: 500 * multiplier, color: categoryColors["S&I"] },
+      { category: "Misc", amount: 300 * multiplier, color: categoryColors["Misc"] }
+    ];
+  };
+
+  const categoryData = getCategoryData();
 
   const handleBarClick = (data: any) => {
     console.log("Bar clicked:", data);
