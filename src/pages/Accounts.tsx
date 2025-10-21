@@ -19,6 +19,7 @@ const Accounts = () => {
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWeekData, setSelectedWeekData] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Mock data
   const accounts = [
@@ -153,6 +154,16 @@ const Accounts = () => {
 
   const currentAccount = accounts[currentAccountIndex];
 
+  // Filter transactions based on selected category
+  const filteredTransactions = selectedCategory 
+    ? transactions.filter(t => t.category === selectedCategory)
+    : transactions;
+
+  const handleCategoryClick = (category: string) => {
+    // Toggle: if same category is clicked, clear the filter
+    setSelectedCategory(selectedCategory === category ? null : category);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="px-6 pb-20 space-y-6">
@@ -207,14 +218,28 @@ const Accounts = () => {
 
         {/* Recent Transactions */}
         <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Recent transactions</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-foreground">Recent transactions</h3>
+            {selectedCategory && (
+              <button 
+                onClick={() => setSelectedCategory(null)}
+                className="text-xs text-muted-foreground underline"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
           
           <div className="space-y-0 border-t border-border">
-            {transactions.map((transaction) => (
+            {filteredTransactions.map((transaction) => (
               <div key={transaction.id} className="py-4 border-b border-border">
                 <div className="flex items-start justify-between">
                   <div>
-                    <Badge variant="secondary" className={`mb-2 text-xs font-medium ${transaction.categoryColor}`}>
+                    <Badge 
+                      variant="secondary" 
+                      className={`mb-2 text-xs font-medium cursor-pointer transition-opacity hover:opacity-80 ${transaction.categoryColor} ${selectedCategory === transaction.category ? 'ring-2 ring-foreground' : ''}`}
+                      onClick={() => handleCategoryClick(transaction.category)}
+                    >
                       {transaction.category}
                     </Badge>
                     <p className="font-semibold text-foreground text-base mb-1">
