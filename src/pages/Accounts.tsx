@@ -279,6 +279,7 @@ const Accounts = () => {
                     borderRadius: '8px',
                     fontSize: '12px'
                   }}
+                  formatter={(value: number, name: string) => [`R${Number(value).toFixed(2)}`, name]}
                 />
                 {Object.keys(categoryColors).map((category, index) => (
                   <Bar 
