@@ -1,73 +1,69 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import { EventDialog } from "@/components/calendar/EventDialog";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, getDay, startOfWeek, endOfWeek } from "date-fns";
+import { toast } from "sonner";
 
 const Calendar = () => {
-  // Mock data for the calendar
-  const currentMonth = "October";
-  const currentYear = 2025;
-  const currentDate = 7;
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   
-  // Generate calendar dates for September 2024 (starting on Sunday)
-  const calendarDates = [
-    // Week 1
-    { date: "01", isCurrentMonth: true },
-    { date: "02", isCurrentMonth: true, isToday: true },
-    { date: "03", isCurrentMonth: true },
-    { date: "04", isCurrentMonth: true },
-    { date: "05", isCurrentMonth: true },
-    { date: "06", isCurrentMonth: true },
-    { date: "07", isCurrentMonth: true },
-    // Week 2
-    { date: "08", isCurrentMonth: true },
-    { date: "09", isCurrentMonth: true },
-    { date: "10", isCurrentMonth: true },
-    { date: "11", isCurrentMonth: true },
-    { date: "12", isCurrentMonth: true },
-    { date: "13", isCurrentMonth: true },
-    { date: "14", isCurrentMonth: true },
-    // Week 3
-    { date: "15", isCurrentMonth: true },
-    { date: "16", isCurrentMonth: true },
-    { date: "17", isCurrentMonth: true },
-    { date: "18", isCurrentMonth: true },
-    { date: "19", isCurrentMonth: true },
-    { date: "20", isCurrentMonth: true },
-    { date: "21", isCurrentMonth: true },
-    // Week 4
-    { date: "22", isCurrentMonth: true },
-    { date: "23", isCurrentMonth: true },
-    { date: "24", isCurrentMonth: true },
-    { date: "25", isCurrentMonth: true },
-    { date: "26", isCurrentMonth: true },
-    { date: "27", isCurrentMonth: true },
-    { date: "28", isCurrentMonth: true },
-    // Week 5
-    { date: "29", isCurrentMonth: true },
-    { date: "30", isCurrentMonth: true },
-    { date: "31", isCurrentMonth: true },
-    { date: "01", isCurrentMonth: false },
-    { date: "02", isCurrentMonth: false },
-    { date: "03", isCurrentMonth: false },
-    { date: "04", isCurrentMonth: false },
-  ];
+  const currentMonth = format(currentDate, "MMMM");
+  const currentYear = format(currentDate, "yyyy");
+  
+  const { events, upcomingEvents, totalUpcomingBudget, isLoading, createEvent } = useCalendarEvents({
+    year: parseInt(currentYear),
+    month: parseInt(format(currentDate, "M")),
+  });
+  // Generate calendar dates dynamically
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  
+  const calendarDates = eachDayOfInterval({ start: calendarStart, end: calendarEnd }).map(date => ({
+    date,
+    isCurrentMonth: date.getMonth() === currentDate.getMonth(),
+    isToday: isToday(date),
+    hasEvents: events.some(event => isSameDay(new Date(event.eventDate), date)),
+  }));
+
+  const handlePreviousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const handleAddEvent = (date?: Date) => {
+    setSelectedDate(date);
+    setDialogOpen(true);
+  };
+
+  const handleSaveEvent = async (event: any) => {
+    try {
+      await createEvent(event);
+      toast.success("Event created successfully!");
+    } catch (error) {
+      toast.error("Failed to create event");
+    }
+  };
+
+  const formatEventDate = (date: Date) => {
+    if (isToday(date)) return "Today";
+    return format(date, "dd MMM");
+  };
 
   const dayLabels = ["m", "t", "w", "t", "f", "s", "s"];
-
-  const events = [
-    {
-      date: "Today",
-      title: "Jazz @ Armchair, Lower Main Rd",
-      budget: 500
-    },
-    {
-      date: "08 Sept",
-      title: "Graduation @ Sarah Baartman Hall",
-      budget: 1000
-    }
-  ];
-
-  const totalBudget = 1500;
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -81,17 +77,21 @@ const Calendar = () => {
           <Button variant="outline" size="default" className="font-normal">
             Month
           </Button>
-          <Button variant="outline" size="default" className="font-normal">
+          <Button variant="outline" size="default" className="font-normal" onClick={handleToday}>
             Today
           </Button>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" onClick={handleNextMonth}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+          <Button onClick={() => handleAddEvent()} className="ml-4">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Event
+          </Button>
         </div>
       </div>
 
@@ -113,17 +113,21 @@ const Calendar = () => {
             {calendarDates.map((dateObj, index) => (
               <button
                 key={index}
+                onClick={() => handleAddEvent(dateObj.date)}
                 className={`
-                  flex items-center justify-center text-base rounded-full transition-colors
+                  relative flex flex-col items-center justify-center text-base rounded-lg transition-colors
                   ${dateObj.isToday 
-                    ? 'bg-black text-white font-semibold w-12 h-12 mx-auto shadow-none' 
+                    ? 'bg-primary text-primary-foreground font-semibold h-20 w-full' 
                     : dateObj.isCurrentMonth 
                       ? 'text-foreground font-normal hover:bg-accent h-20 w-full' 
                       : 'text-muted-foreground font-normal h-20 w-full'
                   }
                 `}
               >
-                {dateObj.date}
+                <span>{format(dateObj.date, "d")}</span>
+                {dateObj.hasEvents && (
+                  <div className="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-primary" />
+                )}
               </button>
             ))}
           </div>
@@ -134,17 +138,30 @@ const Calendar = () => {
           <Card className="p-6 space-y-6 shadow-md h-full flex flex-col">
             <h2 className="text-xl font-bold text-foreground">Upcoming Events</h2>
             
-            <div className="flex-1 space-y-6">
-              {events.map((event, index) => (
-                <div key={index} className="space-y-2 pb-4 border-b border-border last:border-b-0 last:pb-0">
-                  <h3 className="text-sm font-semibold text-foreground underline">{event.date}</h3>
-                  <div className="space-y-1">
-                    <p className="text-base text-foreground">{event.title}</p>
-                    <p className="text-sm text-muted-foreground">Budget: R{event.budget.toLocaleString()}</p>
+            {isLoading ? (
+              <p className="text-muted-foreground">Loading events...</p>
+            ) : upcomingEvents.length === 0 ? (
+              <p className="text-muted-foreground">No upcoming events in the next 30 days</p>
+            ) : (
+              <div className="flex-1 space-y-6">
+                {upcomingEvents.map((event) => (
+                  <div key={event.id} className="space-y-2 pb-4 border-b border-border last:border-b-0 last:pb-0">
+                    <h3 className="text-sm font-semibold text-foreground underline">
+                      {formatEventDate(event.eventDate)}
+                    </h3>
+                    <div className="space-y-1">
+                      <p className="text-base text-foreground">
+                        {event.eventName}
+                        {event.location && ` @ ${event.location}`}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Budget: R{event.budgetedAmount.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Total Budget */}
             <div className="pt-4 border-t border-border mt-auto">
@@ -152,12 +169,19 @@ const Calendar = () => {
                 Total budget (next 30 days)
               </p>
               <p className="text-2xl font-bold text-foreground mt-1">
-                R{totalBudget.toLocaleString()}
+                R{totalUpcomingBudget.toLocaleString()}
               </p>
             </div>
           </Card>
         </div>
       </div>
+
+      <EventDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={handleSaveEvent}
+        selectedDate={selectedDate}
+      />
     </div>
   );
 };
