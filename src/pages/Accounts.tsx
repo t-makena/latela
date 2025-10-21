@@ -73,56 +73,55 @@ const Accounts = () => {
     "Miscellaneous": "#14B8A6"
   };
 
-  const chartData = [
-    {
-      week: "Week 1",
-      dateRange: "2025-05-01 to 2025-05-07",
-      total: 3348,
-      "Housing & Utilities": 400,
-      "Savings & Investments": 800,
-      "Personal & Lifestyle": 533,
-      "Food & Groceries": 581,
-      "Transportation & Fuel": 494,
-      "Entertainment & Recreation": 451,
-      "Healthcare & Medical": 289
-    },
-    {
-      week: "Week 2",
-      dateRange: "2025-05-08 to 2025-05-14",
-      total: 3590,
-      "Housing & Utilities": 350,
-      "Savings & Investments": 700,
-      "Personal & Lifestyle": 420,
-      "Food & Groceries": 620,
-      "Transportation & Fuel": 380,
-      "Entertainment & Recreation": 320,
-      "Healthcare & Medical": 800
-    },
-    {
-      week: "Week 3",
-      dateRange: "2025-05-15 to 2025-05-21",
-      total: 3870,
-      "Housing & Utilities": 400,
-      "Savings & Investments": 750,
-      "Personal & Lifestyle": 680,
-      "Food & Groceries": 590,
-      "Transportation & Fuel": 510,
-      "Entertainment & Recreation": 290,
-      "Healthcare & Medical": 650
-    },
-    {
-      week: "Week 4",
-      dateRange: "2025-05-22 to 2025-05-28",
-      total: 3350,
-      "Housing & Utilities": 320,
-      "Savings & Investments": 600,
-      "Personal & Lifestyle": 550,
-      "Food & Groceries": 540,
-      "Transportation & Fuel": 460,
-      "Entertainment & Recreation": 380,
-      "Healthcare & Medical": 500
+  const getChartData = () => {
+    const categories = Object.keys(categoryColors);
+    
+    if (selectedTimeFilter === '1W') {
+      return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label) => {
+        const data: any = { day: label };
+        let total = 0;
+        categories.forEach(cat => {
+          const value = 50 + Math.random() * 100;
+          data[cat] = value;
+          total += value;
+        });
+        data.total = total;
+        data.dateRange = label;
+        return data;
+      });
     }
-  ];
+    if (selectedTimeFilter === '1M') {
+      const now = new Date();
+      return Array.from({length: 4}, (_, i) => {
+        const weekNum = Math.floor((now.getDate() - 7 * (3-i)) / 7) + 1;
+        const label = `Week ${i + 1}`;
+        const data: any = { week: label };
+        let total = 0;
+        categories.forEach(cat => {
+          const value = 300 + Math.random() * 200;
+          data[cat] = value;
+          total += value;
+        });
+        data.total = total;
+        data.dateRange = label;
+        return data;
+      });
+    }
+    // Default 1W data
+    return Array.from({length: 4}, (_, i) => {
+      const data: any = { week: `Week ${i + 1}` };
+      let total = 0;
+      categories.forEach(cat => {
+        const value = 300 + Math.random() * 200;
+        data[cat] = value;
+        total += value;
+      });
+      data.total = total;
+      return data;
+    });
+  };
+
+  const chartData = getChartData();
 
   const categories = Object.keys(categoryColors);
 
@@ -261,7 +260,7 @@ const Accounts = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} onClick={handleBarClick}>
                 <XAxis 
-                  dataKey="week" 
+                  dataKey={selectedTimeFilter === '1W' ? "day" : "week"}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
@@ -281,13 +280,13 @@ const Accounts = () => {
                     fontSize: '12px'
                   }}
                 />
-                {categories.map((category, index) => (
+                {Object.keys(categoryColors).map((category, index) => (
                   <Bar 
                     key={category}
                     dataKey={category} 
                     stackId="a" 
                     fill={categoryColors[category as keyof typeof categoryColors]}
-                    radius={index === categories.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                    radius={index === Object.keys(categoryColors).length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                   />
                 ))}
               </BarChart>

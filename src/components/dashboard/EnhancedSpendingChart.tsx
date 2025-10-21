@@ -86,12 +86,10 @@ export const EnhancedSpendingChart = ({
       });
     }
     if (selectedPeriod === '1Y') {
-      // Generate data for past 12 months using the actual labels
+      // Generate data for past 12 months using the actual labels - single line
       return xAxisLabels.map((label, index) => ({
         month: label,
-        amount: 2000 + Math.random() * 1500,
-        savings: 800 + Math.random() * 400,
-        netBalance: 1200 + Math.random() * 800
+        amount: 2000 + Math.random() * 1500
       }));
     }
     if (selectedPeriod === 'custom') {
@@ -173,7 +171,9 @@ export const EnhancedSpendingChart = ({
     <>
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-muted-foreground">{getFilterDescription(selectedPeriod)}</p>
+          <div>
+            <p className="text-sm text-muted-foreground">{getFilterDescription(selectedPeriod)}</p>
+          </div>
           <DateFilter 
             selectedFilter={selectedPeriod}
             onFilterChange={(filter, dateRange) => {
@@ -242,34 +242,21 @@ export const EnhancedSpendingChart = ({
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
               />
               <YAxis 
+                label={{ value: 'Amount Spent per Month', angle: -90, position: 'insideLeft', style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 } }}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
               />
               <Tooltip formatter={(value, name) => [
                 `${formatCurrency(value as number)}`, 
-                name === 'amount' ? 'Expenses' : name === 'savings' ? 'Savings' : 'Net Balance'
+                'Amount Spent'
               ]} />
               <Line 
                 type="monotone" 
                 dataKey="amount" 
-                stroke="#ff6b6b" 
+                stroke="hsl(var(--primary))" 
                 strokeWidth={2} 
-                name="Expenses"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="savings" 
-                stroke="#41b883" 
-                strokeWidth={2} 
-                name="Savings"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="netBalance" 
-                stroke="#1e65ff" 
-                strokeWidth={2} 
-                name="Net Balance"
+                name="Amount Spent"
               />
             </LineChart>
           )}
