@@ -357,16 +357,16 @@ const FinancialInsight = () => {
                   );
                 }}
               />
-              <Bar dataKey="H&U" stackId="a" fill={categoryColors["H&U"]} cursor="pointer" />
-              <Bar dataKey="S&I" stackId="a" fill={categoryColors["S&I"]} cursor="pointer" />
-              <Bar dataKey="P&L" stackId="a" fill={categoryColors["P&L"]} cursor="pointer" />
-              <Bar dataKey="F&G" stackId="a" fill={categoryColors["F&G"]} cursor="pointer" />
-              <Bar dataKey="T/F" stackId="a" fill={categoryColors["T/F"]} cursor="pointer" />
-              <Bar dataKey="D&R" stackId="a" fill={categoryColors["D&R"]} cursor="pointer" />
-              <Bar dataKey="S&R" stackId="a" fill={categoryColors["S&R"]} cursor="pointer" />
-              <Bar dataKey="E&R" stackId="a" fill={categoryColors["E&R"]} cursor="pointer" />
-              <Bar dataKey="H&M" stackId="a" fill={categoryColors["H&M"]} cursor="pointer" />
-              <Bar dataKey="B&S" stackId="a" fill={categoryColors["B&S"]} cursor="pointer" />
+              <Bar dataKey="H&U" stackId="a" fill={categoryColors["H&U"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="S&I" stackId="a" fill={categoryColors["S&I"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="P&L" stackId="a" fill={categoryColors["P&L"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="F&G" stackId="a" fill={categoryColors["F&G"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="T/F" stackId="a" fill={categoryColors["T/F"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="D&R" stackId="a" fill={categoryColors["D&R"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="S&R" stackId="a" fill={categoryColors["S&R"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="E&R" stackId="a" fill={categoryColors["E&R"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="H&M" stackId="a" fill={categoryColors["H&M"]} cursor="pointer" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="B&S" stackId="a" fill={categoryColors["B&S"]} cursor="pointer" radius={[8, 8, 0, 0]} />
               <Bar dataKey="Misc" stackId="a" fill={categoryColors["Misc"]} cursor="pointer" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
