@@ -96,11 +96,34 @@ export const EnhancedSpendingChart = ({
       });
     }
     if (selectedPeriod === '1Y') {
-      // Generate data for past 12 months using the actual labels - single line
-      return xAxisLabels.map((label, index) => ({
-        month: label,
-        amount: 2000 + Math.random() * 1500
-      }));
+      // Generate data for past 12 months using the actual labels - stacked bars
+      return xAxisLabels.map((label, index) => {
+        const data: any = { month: label };
+        let total = 0;
+        let topCategory = '';
+        data["Housing & Utilities"] = 1200 + Math.random() * 800;
+        data["Savings & Investments"] = 2400 + Math.random() * 800;
+        data["Personal & Lifestyle"] = 1600 + Math.random() * 800;
+        data["Food & Groceries"] = 2000 + Math.random() * 600;
+        data["Transportation & Fuel"] = 1600 + Math.random() * 600;
+        data["Dining & Restaurants"] = 1200 + Math.random() * 600;
+        data["Shopping & Retail"] = 1000 + Math.random() * 600;
+        data["Entertainment & Recreation"] = 1200 + Math.random() * 600;
+        data["Healthcare & Medical"] = 1000 + Math.random() * 1600;
+        data["Bills & Subscriptions"] = 1500 + Math.random() * 500;
+        data["Miscellaneous"] = 300 + Math.random() * 200;
+        
+        // Find topmost category with value
+        categories.forEach(cat => {
+          if (data[cat] > 0) topCategory = cat;
+        });
+        
+        total = categories.reduce((sum, cat) => sum + (data[cat] || 0), 0);
+        data.total = total;
+        data.dateRange = label;
+        data.topCategory = topCategory;
+        return data;
+      });
     }
     if (selectedPeriod === 'custom') {
       // For custom, use appropriate format based on range
@@ -195,12 +218,12 @@ export const EnhancedSpendingChart = ({
           />
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          {selectedPeriod === '1W' || selectedPeriod === '1M' || 
+          {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
             <BarChart data={getChartData()} onClick={handleBarClick}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey={selectedPeriod === '1W' || 
+                dataKey={selectedPeriod === '1Y' ? "month" : selectedPeriod === '1W' || 
                   (selectedPeriod === 'custom' && xAxisLabels.length <= 14) ? "day" : "week"}
                 axisLine={false}
                 tickLine={false}
