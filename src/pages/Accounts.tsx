@@ -192,15 +192,15 @@ const Accounts = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="px-6 pb-20 space-y-6">
         {/* Account Card */}
-        <Card className="rounded-3xl border border-border shadow-lg bg-gray-50">
+        <Card className="rounded-3xl border border-border shadow-lg bg-muted/30">
           <CardContent className="p-6">
             {/* Bank Name with Logo */}
             <div className="flex items-center gap-3 mb-6">
               <div className="h-9 w-12 bg-foreground rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">{currentAccount.logo}</span>
+                <span className="text-background font-bold text-lg">{currentAccount.logo}</span>
               </div>
               <h2 className="text-base font-bold text-foreground">{currentAccount.bankName}</h2>
             </div>
@@ -326,10 +326,11 @@ const Accounts = () => {
                 <Tooltip 
                   cursor={{ fill: 'hsl(var(--muted))' }}
                   contentStyle={{ 
-                    background: 'white', 
+                    background: 'hsl(var(--popover))', 
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
-                    fontSize: '12px'
+                    fontSize: '12px',
+                    color: 'hsl(var(--popover-foreground))'
                   }}
                   formatter={(value: number, name: string) => [`R${Number(value).toFixed(2)}`, name]}
                 />
