@@ -161,7 +161,7 @@ const Accounts = () => {
           <CardContent className="p-6">
             {/* Bank Name with Logo */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 bg-foreground rounded-lg flex items-center justify-center">
+              <div className="h-9 w-12 bg-foreground rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">{currentAccount.logo}</span>
               </div>
               <h2 className="text-base font-bold text-foreground">{currentAccount.bankName}</h2>
