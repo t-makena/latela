@@ -240,7 +240,18 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Housing & Utilities";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Housing & Utilities"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Housing & Utilities"]} />;
+                  // Only round top corners
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Housing & Utilities"]} />;
                 }}
               />
               <Bar 
@@ -251,7 +262,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Savings & Investments";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Savings & Investments"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Savings & Investments"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Savings & Investments"]} />;
                 }}
               />
               <Bar 
@@ -262,7 +283,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Personal & Lifestyle";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Personal & Lifestyle"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Personal & Lifestyle"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Personal & Lifestyle"]} />;
                 }}
               />
               <Bar 
@@ -273,7 +304,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Food & Groceries";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Food & Groceries"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Food & Groceries"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Food & Groceries"]} />;
                 }}
               />
               <Bar 
@@ -284,7 +325,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Transportation & Fuel";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Transportation & Fuel"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Transportation & Fuel"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Transportation & Fuel"]} />;
                 }}
               />
               <Bar 
@@ -295,7 +346,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Dining & Restaurants";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Dining & Restaurants"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Dining & Restaurants"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Dining & Restaurants"]} />;
                 }}
               />
               <Bar 
@@ -306,7 +367,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Shopping & Retail";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Shopping & Retail"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Shopping & Retail"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Shopping & Retail"]} />;
                 }}
               />
               <Bar 
@@ -317,7 +388,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Entertainment & Recreation";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Entertainment & Recreation"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Entertainment & Recreation"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Entertainment & Recreation"]} />;
                 }}
               />
               <Bar 
@@ -328,7 +409,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Healthcare & Medical";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Healthcare & Medical"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Healthcare & Medical"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Healthcare & Medical"]} />;
                 }}
               />
               <Bar 
@@ -339,7 +430,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Bills & Subscriptions";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Bills & Subscriptions"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Bills & Subscriptions"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Bills & Subscriptions"]} />;
                 }}
               />
               <Bar 
@@ -350,7 +451,17 @@ export const EnhancedSpendingChart = ({
                   const { x, y, width, height, payload } = props;
                   const isTop = payload.topCategory === "Miscellaneous";
                   const radius = isTop ? 8 : 0;
-                  return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Miscellaneous"]} rx={radius} ry={radius} />;
+                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Miscellaneous"]} />;
+                  const path = `
+                    M ${x},${y + height}
+                    L ${x},${y + radius}
+                    Q ${x},${y} ${x + radius},${y}
+                    L ${x + width - radius},${y}
+                    Q ${x + width},${y} ${x + width},${y + radius}
+                    L ${x + width},${y + height}
+                    Z
+                  `;
+                  return <path d={path} fill={categoryColors["Miscellaneous"]} />;
                 }}
               />
             </BarChart>
