@@ -1,29 +1,40 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Target, Edit2, Plus } from "lucide-react";
+import { Target, Edit2, Plus, Loader2 } from "lucide-react";
+import { useGoals } from "@/hooks/useGoals";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Goals = () => {
-  const budgetGoals = [
-    { name: "Emergency Fund", progress: 87, dueDate: "Due: 02 Oct '25" },
-    { name: "MacBook", progress: 57, dueDate: "Due: 24 Dec '25" },
-    { name: "December Holiday", progress: 64, dueDate: "Due: 10 Dec '25" }
-  ];
-
-  const goalsOverview = [
-    { goal: "Emergency fund", priority: "37.60%", split: "60%", amountSaved: 18800, timeline: "02 Oct 25" },
-    { goal: "MacBook", priority: "24.30%", split: "20.5%", amountSaved: 11400, timeline: "24 Dec 25" },
-    { goal: "Dec Holiday", priority: "10.10%", split: "15%", amountSaved: 9600, timeline: "10 Dec 25" },
-    { goal: "Extra savings", priority: "18.00%", split: "4.5%", amountSaved: 5430, timeline: "n/a" }
-  ];
+  const { goals, loading, error } = useGoals();
+  
+  // Separate goals for the two sections
+  const budgetGoals = goals.slice(0, 3);
+  const goalsOverview = goals;
   
   // Calculate total amount saved
-  const totalAmountSaved = goalsOverview.reduce((total, goal) => total + goal.amountSaved, 0);
+  const totalAmountSaved = goals.reduce((total, goal) => total + goal.amountSaved, 0);
   
   // Format currency
   const formatCurrency = (amount: number) => {
     return `R${amount.toLocaleString()}`;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Error loading goals: {error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-6 relative z-10">
@@ -36,21 +47,25 @@ const Goals = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {budgetGoals.map((goal, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium font-georama">{goal.name}</h3>
-                <span className="text-sm text-muted-foreground">{goal.progress}% Saved</span>
+          {budgetGoals.length > 0 ? (
+            budgetGoals.map((goal) => (
+              <div key={goal.id} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium font-georama">{goal.name}</h3>
+                  <span className="text-sm text-muted-foreground">{goal.progress}% Saved</span>
+                </div>
+                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-foreground transition-all"
+                    style={{ width: `${goal.progress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">{goal.dueDate}</p>
               </div>
-              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-foreground transition-all"
-                  style={{ width: `${goal.progress}%` }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">{goal.dueDate}</p>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">No goals yet. Add your first goal below!</p>
+          )}
         </CardContent>
       </Card>
 
@@ -88,15 +103,23 @@ const Goals = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {goalsOverview.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium px-6 py-4">{row.goal}</TableCell>
-                  <TableCell className="px-6 py-4">{row.priority}</TableCell>
-                  <TableCell className="px-6 py-4 pr-1">{row.split}</TableCell>
-                  <TableCell className="text-right font-medium pl-1 pr-6 py-4">{formatCurrency(row.amountSaved)}</TableCell>
-                  <TableCell className="px-6 py-4">{row.timeline}</TableCell>
+              {goalsOverview.length > 0 ? (
+                goalsOverview.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium px-6 py-4">{row.name}</TableCell>
+                    <TableCell className="px-6 py-4">{row.priority}</TableCell>
+                    <TableCell className="px-6 py-4 pr-1">{row.split}</TableCell>
+                    <TableCell className="text-right font-medium pl-1 pr-6 py-4">{formatCurrency(row.amountSaved)}</TableCell>
+                    <TableCell className="px-6 py-4">{row.timeline}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    No goals found. Click below to add your first goal.
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
 
