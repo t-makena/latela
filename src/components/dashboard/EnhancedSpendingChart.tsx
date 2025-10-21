@@ -222,16 +222,16 @@ export const EnhancedSpendingChart = ({
                 }}
                 formatter={(value: number, name: string) => [`R${Number(value).toFixed(2)}`, name]}
               />
-              <Bar dataKey="Housing & Utilities" stackId="a" fill={categoryColors["Housing & Utilities"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Savings & Investments" stackId="a" fill={categoryColors["Savings & Investments"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Personal & Lifestyle" stackId="a" fill={categoryColors["Personal & Lifestyle"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Food & Groceries" stackId="a" fill={categoryColors["Food & Groceries"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Transportation & Fuel" stackId="a" fill={categoryColors["Transportation & Fuel"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Dining & Restaurants" stackId="a" fill={categoryColors["Dining & Restaurants"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Shopping & Retail" stackId="a" fill={categoryColors["Shopping & Retail"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Entertainment & Recreation" stackId="a" fill={categoryColors["Entertainment & Recreation"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Healthcare & Medical" stackId="a" fill={categoryColors["Healthcare & Medical"]} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="Bills & Subscriptions" stackId="a" fill={categoryColors["Bills & Subscriptions"]} radius={[8, 8, 0, 0]} />
+              <Bar dataKey="Housing & Utilities" stackId="a" fill={categoryColors["Housing & Utilities"]} />
+              <Bar dataKey="Savings & Investments" stackId="a" fill={categoryColors["Savings & Investments"]} />
+              <Bar dataKey="Personal & Lifestyle" stackId="a" fill={categoryColors["Personal & Lifestyle"]} />
+              <Bar dataKey="Food & Groceries" stackId="a" fill={categoryColors["Food & Groceries"]} />
+              <Bar dataKey="Transportation & Fuel" stackId="a" fill={categoryColors["Transportation & Fuel"]} />
+              <Bar dataKey="Dining & Restaurants" stackId="a" fill={categoryColors["Dining & Restaurants"]} />
+              <Bar dataKey="Shopping & Retail" stackId="a" fill={categoryColors["Shopping & Retail"]} />
+              <Bar dataKey="Entertainment & Recreation" stackId="a" fill={categoryColors["Entertainment & Recreation"]} />
+              <Bar dataKey="Healthcare & Medical" stackId="a" fill={categoryColors["Healthcare & Medical"]} />
+              <Bar dataKey="Bills & Subscriptions" stackId="a" fill={categoryColors["Bills & Subscriptions"]} />
               <Bar dataKey="Miscellaneous" stackId="a" fill={categoryColors["Miscellaneous"]} radius={[8, 8, 0, 0]} />
             </BarChart>
           ) : (
