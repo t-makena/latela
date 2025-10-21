@@ -221,7 +221,7 @@ const FinancialInsight = () => {
                 fontSize: '14px',
                 padding: '4px 0'
               }}
-              formatter={(value: number) => [`R${value.toLocaleString()}`, 'Net Balance']}
+              formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Net Balance']}
             />
             <Line 
               type="monotone" 
@@ -292,7 +292,7 @@ const FinancialInsight = () => {
               formatter={(value: number, name: string) => {
                 if (value === 0) return null;
                 return [
-                  `R${value}`, 
+                  `R${Number(value).toFixed(2)}`, 
                   categoryLabels[name as keyof typeof categoryLabels] || name
                 ];
               }}
@@ -313,11 +313,11 @@ const FinancialInsight = () => {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                   }}>
                     <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
-                      {label}: R{total.toLocaleString()}
+                      {label}: R{Number(total).toFixed(2)}
                     </p>
                     {activePayload.map((entry: any, index: number) => (
                       <p key={index} style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
-                        {categoryLabels[entry.name as keyof typeof categoryLabels] || entry.name}: R{entry.value}
+                        {categoryLabels[entry.name as keyof typeof categoryLabels] || entry.name}: R{Number(entry.value).toFixed(2)}
                       </p>
                     ))}
                   </div>
@@ -395,7 +395,7 @@ const FinancialInsight = () => {
                       {categoryLabels[label as keyof typeof categoryLabels] || label}
                     </p>
                     <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
-                      R{value.toLocaleString()}
+                      R{Number(value).toFixed(2)}
                     </p>
                   </div>
                 );
