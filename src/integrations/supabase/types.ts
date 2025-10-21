@@ -109,11 +109,237 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          actual_amount: number | null
+          budgeted_amount: number
+          category: string | null
+          created_at: string | null
+          event_date: string
+          event_description: string | null
+          event_name: string
+          event_time: string | null
+          id: string
+          is_completed: boolean | null
+          is_recurring: boolean | null
+          location: string | null
+          recurrence_end_date: string | null
+          recurrence_pattern: string | null
+          reminder_days_before: number | null
+          reminder_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_amount?: number | null
+          budgeted_amount: number
+          category?: string | null
+          created_at?: string | null
+          event_date: string
+          event_description?: string | null
+          event_name: string
+          event_time?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_recurring?: boolean | null
+          location?: string | null
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
+          reminder_days_before?: number | null
+          reminder_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_amount?: number | null
+          budgeted_amount?: number
+          category?: string | null
+          created_at?: string | null
+          event_date?: string
+          event_description?: string | null
+          event_name?: string
+          event_time?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_recurring?: boolean | null
+          location?: string | null
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
+          reminder_days_before?: number | null
+          reminder_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          budget_amount: number | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          parent_category_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          budget_amount?: number | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          parent_category_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          budget_amount?: number | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          parent_category_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_category_id_fkey"
+            columns: ["parent_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      category_rules: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          priority: number | null
+          rule_type: string
+          rule_value: Json
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          priority?: number | null
+          rule_type: string
+          rule_value: Json
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          priority?: number | null
+          rule_type?: string
+          rule_value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          created_at: string | null
+          current_saved: number | null
+          id: string
+          months_left: number
+          name: string
+          priority: number | null
+          target: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_saved?: number | null
+          id?: string
+          months_left: number
+          name: string
+          priority?: number | null
+          target: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_saved?: number | null
+          id?: string
+          months_left?: number
+          name?: string
+          priority?: number | null
+          target?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      transaction_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          raw_response: Json | null
+          request_id: string | null
+          result_code: number | null
+          result_description: string | null
+          result_message: string | null
+          status: string | null
+          transaction_id: string | null
+          transactions_categorized: number | null
+          transactions_processed: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          raw_response?: Json | null
+          request_id?: string | null
+          result_code?: number | null
+          result_description?: string | null
+          result_message?: string | null
+          status?: string | null
+          transaction_id?: string | null
+          transactions_categorized?: number | null
+          transactions_processed?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          raw_response?: Json | null
+          request_id?: string | null
+          result_code?: number | null
+          result_description?: string | null
+          result_message?: string | null
+          status?: string | null
+          transaction_id?: string | null
+          transactions_categorized?: number | null
+          transactions_processed?: number | null
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           account_id: string | null
           amount: number
+          auto_categorized: boolean | null
           balance: number
+          categorization_confidence: number | null
+          category_id: string | null
           cleared: boolean | null
           created_at: string | null
           description: string | null
@@ -121,11 +347,15 @@ export type Database = {
           reference: string | null
           transaction_code: string | null
           transaction_date: string
+          user_verified: boolean | null
         }
         Insert: {
           account_id?: string | null
           amount: number
+          auto_categorized?: boolean | null
           balance: number
+          categorization_confidence?: number | null
+          category_id?: string | null
           cleared?: boolean | null
           created_at?: string | null
           description?: string | null
@@ -133,11 +363,15 @@ export type Database = {
           reference?: string | null
           transaction_code?: string | null
           transaction_date: string
+          user_verified?: boolean | null
         }
         Update: {
           account_id?: string | null
           amount?: number
+          auto_categorized?: boolean | null
           balance?: number
+          categorization_confidence?: number | null
+          category_id?: string | null
           cleared?: boolean | null
           created_at?: string | null
           description?: string | null
@@ -145,6 +379,7 @@ export type Database = {
           reference?: string | null
           transaction_code?: string | null
           transaction_date?: string
+          user_verified?: boolean | null
         }
         Relationships: [
           {
@@ -154,14 +389,59 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      upcoming_events_summary: {
+        Row: {
+          event_count: number | null
+          total_budget_next_30_days: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      allocate_monthly_savings: {
+        Args: { monthly_savings: number; user_uuid: string }
+        Returns: {
+          formula_check: string
+          goal_name: string
+          monthly_allocation: number
+          priority_percentage: number
+          priority_weight: number
+        }[]
+      }
+      recalculate_goal_priorities: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
+      recalculate_goal_priorities_and_dates: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
+      redistribute_priorities_for_user: {
+        Args: { manually_set_goal_id: string; new_priority_percentage: number }
+        Returns: undefined
+      }
+      update_goal_current_allocation: {
+        Args: { goal_id: string; new_allocation: number }
+        Returns: {
+          months_difference: number
+          new_allocation_val: number
+          new_timeline: string
+          old_allocation: number
+          old_timeline: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
