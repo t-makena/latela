@@ -241,10 +241,9 @@ const FinancialInsight = () => {
               <Line 
                 type="monotone" 
                 dataKey="budgetBalance" 
-                stroke="hsl(var(--muted-foreground))" 
+                stroke="#10B981" 
                 strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ fill: 'hsl(var(--muted-foreground))', r: 4 }}
+                dot={{ fill: '#10B981', r: 4 }}
                 activeDot={{ r: 6 }}
               />
             </LineChart>
