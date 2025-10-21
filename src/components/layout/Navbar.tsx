@@ -57,7 +57,7 @@ export const Navbar = () => {
             ) : (
               <div className={cn(
                 "w-full flex items-center justify-center py-3 transition-colors cursor-pointer rounded-md",
-                isActive ? "bg-black text-white" : "text-black hover:bg-black/5"
+                isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
               )}>
                 <item.icon size={20} className="shrink-0" />
               </div>
