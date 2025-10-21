@@ -220,7 +220,7 @@ export const EnhancedSpendingChart = ({
                   fontSize: '14px',
                   padding: '4px 0'
                 }}
-                formatter={(value: number, name: string) => [`R${value}`, name]}
+                formatter={(value: number, name: string) => [`R${Number(value).toFixed(2)}`, name]}
               />
               {categories.map((category, index) => (
                 <Bar 
