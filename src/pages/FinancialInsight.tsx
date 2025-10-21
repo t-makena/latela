@@ -367,7 +367,7 @@ const FinancialInsight = () => {
               <Bar dataKey="E&R" stackId="a" fill={categoryColors["E&R"]} cursor="pointer" />
               <Bar dataKey="H&M" stackId="a" fill={categoryColors["H&M"]} cursor="pointer" />
               <Bar dataKey="B&S" stackId="a" fill={categoryColors["B&S"]} cursor="pointer" />
-              <Bar dataKey="Misc" stackId="a" fill={categoryColors["Misc"]} cursor="pointer" />
+              <Bar dataKey="Misc" stackId="a" fill={categoryColors["Misc"]} cursor="pointer" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -437,7 +437,7 @@ const FinancialInsight = () => {
                   );
                 }}
               />
-              <Bar dataKey="amount" cursor="pointer">
+              <Bar dataKey="amount" cursor="pointer" radius={[8, 8, 0, 0]}>
                 {categoryData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
