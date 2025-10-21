@@ -287,7 +287,7 @@ const Accounts = () => {
                     dataKey={category} 
                     stackId="a" 
                     fill={categoryColors[category as keyof typeof categoryColors]}
-                    radius={[8, 8, 0, 0]}
+                    radius={index === Object.keys(categoryColors).length - 1 ? [8, 8, 0, 0] : undefined}
                   />
                 ))}
               </BarChart>
