@@ -115,18 +115,18 @@ const Calendar = () => {
                 key={index}
                 onClick={() => handleAddEvent(dateObj.date)}
                 className={`
-                  relative flex flex-col items-center justify-center text-base rounded-lg transition-colors
+                  relative flex flex-col items-center justify-center text-base rounded-full transition-colors mx-auto h-14 w-14
                   ${dateObj.isToday 
-                    ? 'bg-primary text-primary-foreground font-semibold h-20 w-full' 
+                    ? 'bg-primary text-primary-foreground font-semibold' 
                     : dateObj.isCurrentMonth 
-                      ? 'text-foreground font-normal hover:bg-accent h-20 w-full' 
-                      : 'text-muted-foreground font-normal h-20 w-full'
+                      ? 'text-foreground font-normal hover:bg-accent' 
+                      : 'text-muted-foreground font-normal'
                   }
                 `}
               >
                 <span>{format(dateObj.date, "d")}</span>
                 {dateObj.hasEvents && (
-                  <div className="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-primary" />
+                  <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
               </button>
             ))}
