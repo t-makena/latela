@@ -228,7 +228,7 @@ export const EnhancedSpendingChart = ({
                   dataKey={category} 
                   stackId="a" 
                   fill={categoryColors[category as keyof typeof categoryColors]}
-                  radius={index === categories.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                  radius={index === categories.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]}
                 />
               ))}
             </BarChart>

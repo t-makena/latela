@@ -47,7 +47,7 @@ export const SpendingChart = ({ type = "line" }: ChartProps) => {
               <YAxis />
               <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
               <Legend />
-              <Bar dataKey="amount" fill="#1e65ff" />
+              <Bar dataKey="amount" fill="#1e65ff" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         );
