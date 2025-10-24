@@ -30,7 +30,6 @@ export const AddAccountDialog = ({ open, onOpenChange, onSuccess }: AddAccountDi
     bankName: "",
     accountNumber: "",
     accountType: "checking",
-    balance: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,9 +41,9 @@ export const AddAccountDialog = ({ open, onOpenChange, onSuccess }: AddAccountDi
         bank_name: formData.bankName,
         account_number: formData.accountNumber,
         account_type: formData.accountType,
-        balance: parseInt(formData.balance) * 100, // Convert to cents
-        available_balance: parseInt(formData.balance) * 100,
-        balance_brought_forward: parseInt(formData.balance) * 100,
+        balance: 0, // Default to 0
+        available_balance: 0,
+        balance_brought_forward: 0,
         status: "active",
       });
 
@@ -56,7 +55,6 @@ export const AddAccountDialog = ({ open, onOpenChange, onSuccess }: AddAccountDi
         bankName: "",
         accountNumber: "",
         accountType: "checking",
-        balance: "",
       });
       onSuccess?.();
     } catch (error) {
@@ -109,18 +107,6 @@ export const AddAccountDialog = ({ open, onOpenChange, onSuccess }: AddAccountDi
                 <SelectItem value="credit">Credit Card</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="balance">Current Balance (R)</Label>
-            <Input
-              id="balance"
-              type="number"
-              step="0.01"
-              placeholder="e.g., 10000.00"
-              value={formData.balance}
-              onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
-              required
-            />
           </div>
           <div className="flex gap-3 pt-4">
             <Button
