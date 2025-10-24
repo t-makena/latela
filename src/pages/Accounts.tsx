@@ -10,21 +10,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
+import { useAccounts } from "@/hooks/useAccounts";
+import { EmptyAccountState } from "@/components/accounts/EmptyAccountState";
+import { AddAccountDialog } from "@/components/accounts/AddAccountDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Accounts = () => {
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  // Mock data
-  const accounts = [
-    {
-      id: 1,
-      bankName: "Nedbank Bank Cheque Account",
-      balance: 103779.00,
-      logo: "N",
-      paymentProvider: "mastercard"
-    }
-  ];
+  const [addAccountOpen, setAddAccountOpen] = useState(false);
+  
+  const { accounts, loading, error } = useAccounts();
 
   const transactions = [
     {
@@ -53,8 +49,6 @@ const Accounts = () => {
     }
   ];
 
-  const currentAccount = accounts[currentAccountIndex];
-
   // Filter transactions based on selected category
   const filteredTransactions = selectedCategory 
     ? transactions.filter(t => t.category === selectedCategory)
@@ -65,6 +59,46 @@ const Accounts = () => {
     setSelectedCategory(selectedCategory === category ? null : category);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="px-6 pb-20 space-y-6">
+          <Skeleton className="h-[280px] rounded-3xl" />
+          <Skeleton className="h-[200px] rounded-lg" />
+          <Skeleton className="h-[300px] rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="px-6 pb-20">
+          <Card className="p-6">
+            <p className="text-destructive">Error loading accounts: {error}</p>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (accounts.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="px-6 pb-20 pt-6">
+          <EmptyAccountState onClick={() => setAddAccountOpen(true)} />
+          <AddAccountDialog 
+            open={addAccountOpen} 
+            onOpenChange={setAddAccountOpen}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const currentAccount = accounts[currentAccountIndex];
+
   return (
     <div className="min-h-screen bg-background">
       <div className="px-6 pb-20 space-y-6">
@@ -74,9 +108,11 @@ const Accounts = () => {
             {/* Bank Name with Logo */}
             <div className="flex items-center gap-3 mb-6">
               <div className="h-9 w-12 bg-foreground rounded-lg flex items-center justify-center">
-                <span className="text-background font-bold text-lg">{currentAccount.logo}</span>
+                <span className="text-background font-bold text-lg">
+                  {currentAccount.name.charAt(0)}
+                </span>
               </div>
-              <h2 className="text-base font-bold text-foreground">{currentAccount.bankName}</h2>
+              <h2 className="text-base font-bold text-foreground">{currentAccount.name}</h2>
             </div>
 
             {/* Budget Balance */}
@@ -173,6 +209,10 @@ const Accounts = () => {
           </CardContent>
         </Card>
 
+        <AddAccountDialog 
+          open={addAccountOpen} 
+          onOpenChange={setAddAccountOpen}
+        />
       </div>
     </div>
   );
