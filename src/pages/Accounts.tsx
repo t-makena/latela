@@ -14,15 +14,48 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { EmptyAccountState } from "@/components/accounts/EmptyAccountState";
 import { AddAccountDialog } from "@/components/accounts/AddAccountDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 
 const Accounts = () => {
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
   
   const { accounts, loading, error } = useAccounts();
 
-  const transactions = [
+  // Fetch transactions when expanding
+  const fetchTransactions = async () => {
+    setLoadingTransactions(true);
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(40);
+
+      if (error) throw error;
+      setAllTransactions(data || []);
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  const handleSeeMore = () => {
+    setExpanded(true);
+    fetchTransactions();
+  };
+
+  const handleSeeLess = () => {
+    setExpanded(false);
+  };
+
+  // Mock data for now - will use allTransactions when expanded
+  const mockTransactions = [
     {
       id: 1,
       category: "Housing & Utilities",
@@ -49,14 +82,33 @@ const Accounts = () => {
     }
   ];
 
+  // Use mock data or real data based on expanded state
+  const displayTransactions = expanded ? allTransactions : mockTransactions;
+
   // Filter transactions based on selected category
   const filteredTransactions = selectedCategory 
-    ? transactions.filter(t => t.category === selectedCategory)
-    : transactions;
+    ? displayTransactions.filter(t => t.category === selectedCategory)
+    : displayTransactions;
 
   const handleCategoryClick = (category: string) => {
     // Toggle: if same category is clicked, clear the filter
     setSelectedCategory(selectedCategory === category ? null : category);
+  };
+
+  // Helper to format transaction data from Supabase
+  const formatTransaction = (transaction: any) => {
+    return {
+      id: transaction.id,
+      category: "General", // You can map this based on category_id
+      categoryColor: "bg-gray-100 text-gray-700",
+      name: transaction.description || transaction.reference || "Transaction",
+      date: new Date(transaction.transaction_date).toLocaleDateString('en-ZA', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      }),
+      amount: transaction.amount / 100 // Convert from cents
+    };
   };
 
   if (loading) {
@@ -157,46 +209,83 @@ const Accounts = () => {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-foreground">Recent transactions</h3>
-            {selectedCategory && (
-              <button 
-                onClick={() => setSelectedCategory(null)}
-                className="text-xs text-muted-foreground underline"
-              >
-                Clear filter
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {selectedCategory && (
+                <button 
+                  onClick={() => setSelectedCategory(null)}
+                  className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+                >
+                  Clear filter
+                </button>
+              )}
+              {expanded && (
+                <button 
+                  onClick={handleSeeLess}
+                  className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+                >
+                  See less
+                </button>
+              )}
+            </div>
           </div>
           
-          <div className="space-y-0 border-t border-border">
-            {filteredTransactions.map((transaction) => (
-              <div key={transaction.id} className="py-4 border-b border-border">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <Badge 
-                      variant="secondary" 
-                      className={`mb-2 text-xs font-medium cursor-pointer transition-opacity hover:opacity-80 ${transaction.categoryColor} ${selectedCategory === transaction.category ? 'ring-2 ring-foreground' : ''}`}
-                      onClick={() => handleCategoryClick(transaction.category)}
-                    >
-                      {transaction.category}
-                    </Badge>
-                    <p className="font-semibold text-foreground text-base mb-1">
-                      {transaction.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {transaction.date}
-                    </p>
-                  </div>
-                  <p className="text-destructive font-bold text-base">
-                    -R{Math.abs(transaction.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
+          <div className="space-y-0 border-t border-border animate-fade-in">
+            {loadingTransactions ? (
+              <div className="py-4 space-y-4">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
               </div>
-            ))}
+            ) : filteredTransactions.length > 0 ? (
+              filteredTransactions.map((transaction) => {
+                // Format if it's from Supabase
+                const formattedTransaction = expanded 
+                  ? formatTransaction(transaction)
+                  : transaction;
+                
+                return (
+                  <div 
+                    key={formattedTransaction.id} 
+                    className="py-4 border-b border-border animate-fade-in"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <Badge 
+                          variant="secondary" 
+                          className={`mb-2 text-xs font-medium cursor-pointer transition-opacity hover:opacity-80 ${formattedTransaction.categoryColor} ${selectedCategory === formattedTransaction.category ? 'ring-2 ring-foreground' : ''}`}
+                          onClick={() => handleCategoryClick(formattedTransaction.category)}
+                        >
+                          {formattedTransaction.category}
+                        </Badge>
+                        <p className="font-semibold text-foreground text-base mb-1">
+                          {formattedTransaction.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formattedTransaction.date}
+                        </p>
+                      </div>
+                      <p className={`font-bold text-base ${formattedTransaction.amount < 0 ? 'text-destructive' : 'text-green-600'}`}>
+                        {formattedTransaction.amount < 0 ? '-' : '+'}R{Math.abs(formattedTransaction.amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">
+                No transactions found
+              </div>
+            )}
           </div>
 
-          <button className="text-sm text-foreground underline mt-3 font-medium">
-            see more
-          </button>
+          {!expanded && filteredTransactions.length > 0 && (
+            <button 
+              onClick={handleSeeMore}
+              className="text-sm text-foreground underline mt-3 font-medium hover:text-primary transition-colors"
+            >
+              see more
+            </button>
+          )}
         </div>
 
         {/* Spending Trend Chart */}
