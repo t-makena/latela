@@ -18,6 +18,7 @@ import { calculateFinancialMetrics } from "@/lib/realData";
 import { BudgetInsights } from "@/components/financial-insight/BudgetInsights";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
+import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
 import { getFilterDescription, DateRange } from "@/lib/dateFilterUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,10 +27,8 @@ const FinancialInsight = () => {
   const { transactions, loading } = useTransactions();
   const { monthlySpending, monthlyIncome, monthlyExpenses } = calculateFinancialMetrics(transactions);
   const location = useLocation();
-  const [spendingTrendFilter, setSpendingTrendFilter] = useState<DateFilterOption>("1W");
   const [categoryFilter, setCategoryFilter] = useState<DateFilterOption>("1W");
   const [netBalanceFilter, setNetBalanceFilter] = useState<DateFilterOption>("1Y");
-  const [customSpendingRange, setCustomSpendingRange] = useState<DateRange | undefined>();
   const [customCategoryRange, setCustomCategoryRange] = useState<DateRange | undefined>();
   const [customNetBalanceRange, setCustomNetBalanceRange] = useState<DateRange | undefined>();
   const [selectedCategoryForHistory, setSelectedCategoryForHistory] = useState<string | undefined>();
@@ -101,35 +100,6 @@ const FinancialInsight = () => {
     "B&S": "Bills & Subscriptions",
     "Misc": "Miscellaneous"
   };
-
-  // Generate spending trend data based on filter
-  const getSpendingTrendData = () => {
-    const labels = spendingTrendFilter === '1W' ? 
-      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
-      spendingTrendFilter === '1M' ? 
-        ["Week 1", "Week 2", "Week 3", "Week 4"] :
-        spendingTrendFilter === '1Y' ?
-          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
-          ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-    return labels.map((label) => {
-      const data: any = { day: label };
-      data["F&G"] = 300 + Math.random() * 300;
-      data["T/F"] = 100 + Math.random() * 100;
-      data["D&R"] = Math.random() > 0.5 ? 200 + Math.random() * 300 : 0;
-      data["S&R"] = Math.random() > 0.6 ? 500 + Math.random() * 500 : 0;
-      data["E&R"] = Math.random() > 0.5 ? 300 + Math.random() * 600 : 0;
-      data["P&L"] = 150 + Math.random() * 200;
-      data["H&U"] = Math.random() > 0.8 ? 3000 + Math.random() * 1000 : 0;
-      data["H&M"] = Math.random() > 0.7 ? 400 + Math.random() * 400 : 0;
-      data["B&S"] = Math.random() > 0.8 ? 1000 + Math.random() * 500 : 0;
-      data["S&I"] = Math.random() > 0.8 ? 400 + Math.random() * 200 : 0;
-      data["Misc"] = 30 + Math.random() * 70;
-      return data;
-    });
-  };
-
-  const spendingTrendData = getSpendingTrendData();
 
   // Generate category data based on filter
   const getCategoryData = () => {
@@ -286,281 +256,10 @@ const FinancialInsight = () => {
       {/* Spending Trend Chart */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="font-georama">Spending Trend</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">{getFilterDescription(spendingTrendFilter)}</p>
-            </div>
-            <DateFilter 
-              selectedFilter={spendingTrendFilter}
-              onFilterChange={(filter, dateRange) => {
-                setSpendingTrendFilter(filter);
-                if (dateRange) {
-                  setCustomSpendingRange(dateRange);
-                }
-              }}
-            />
-          </div>
+          <CardTitle className="font-georama">Spending Trend</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={spendingTrendData} onClick={handleBarClick}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-              <XAxis 
-                dataKey="day" 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-              />
-              <YAxis 
-                label={{ 
-                  value: 'Amount Spent', 
-                  angle: -90, 
-                  position: 'insideLeft',
-                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                }}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-              />
-              <Tooltip 
-                cursor={false}
-                contentStyle={{ 
-                  backgroundColor: 'white',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-                labelStyle={{ 
-                  fontSize: '14px', 
-                  fontWeight: '600',
-                  marginBottom: '8px'
-                }}
-                itemStyle={{ 
-                  fontSize: '14px',
-                  padding: '4px 0'
-                }}
-                formatter={(value: number, name: string) => {
-                  if (value === 0) return null;
-                  return [
-                    `R${Number(value).toFixed(2)}`, 
-                    categoryLabels[name as keyof typeof categoryLabels] || name
-                  ];
-                }}
-                content={({ active, payload, label }) => {
-                  if (!active || !payload) return null;
-                  
-                  const activePayload = payload.filter(p => p.value && p.value > 0);
-                  if (activePayload.length === 0) return null;
-                  
-                  const total = activePayload.reduce((sum, p) => sum + (p.value as number || 0), 0);
-                  
-                  return (
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                    }}>
-                      <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
-                        {label}: R{Number(total).toFixed(2)}
-                      </p>
-                      {activePayload.map((entry: any, index: number) => (
-                        <p key={index} style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
-                          {categoryLabels[entry.name as keyof typeof categoryLabels] || entry.name}: R{Number(entry.value).toFixed(2)}
-                        </p>
-                      ))}
-                    </div>
-                  );
-                }}
-              />
-              <Bar dataKey="H&U" stackId="a" fill={categoryColors["H&U"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : 
-                                cat === "Savings & Investments" ? "S&I" : 
-                                cat === "Personal & Lifestyle" ? "P&L" : 
-                                cat === "Food & Groceries" ? "F&G" : 
-                                cat === "Transportation & Fuel" ? "T/F" : 
-                                cat === "Dining & Restaurants" ? "D&R" : 
-                                cat === "Shopping & Retail" ? "S&R" : 
-                                cat === "Entertainment & Recreation" ? "E&R" : 
-                                cat === "Healthcare & Medical" ? "H&M" : 
-                                cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "H&U";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["H&U"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["H&U"]} />;
-                }}
-              />
-              <Bar dataKey="S&I" stackId="a" fill={categoryColors["S&I"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "S&I";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["S&I"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["S&I"]} />;
-                }}
-              />
-              <Bar dataKey="P&L" stackId="a" fill={categoryColors["P&L"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "P&L";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["P&L"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["P&L"]} />;
-                }}
-              />
-              <Bar dataKey="F&G" stackId="a" fill={categoryColors["F&G"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "F&G";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["F&G"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["F&G"]} />;
-                }}
-              />
-              <Bar dataKey="T/F" stackId="a" fill={categoryColors["T/F"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "T/F";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["T/F"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["T/F"]} />;
-                }}
-              />
-              <Bar dataKey="D&R" stackId="a" fill={categoryColors["D&R"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "D&R";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["D&R"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["D&R"]} />;
-                }}
-              />
-              <Bar dataKey="S&R" stackId="a" fill={categoryColors["S&R"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "S&R";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["S&R"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["S&R"]} />;
-                }}
-              />
-              <Bar dataKey="E&R" stackId="a" fill={categoryColors["E&R"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "E&R";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["E&R"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["E&R"]} />;
-                }}
-              />
-              <Bar dataKey="H&M" stackId="a" fill={categoryColors["H&M"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "H&M";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["H&M"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["H&M"]} />;
-                }}
-              />
-              <Bar dataKey="B&S" stackId="a" fill={categoryColors["B&S"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "B&S";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["B&S"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["B&S"]} />;
-                }}
-              />
-              <Bar dataKey="Misc" stackId="a" fill={categoryColors["Misc"]} cursor="pointer" 
-                shape={(props: any) => {
-                  const { x, y, width, height, payload } = props;
-                  const categories = Object.keys(categoryColors);
-                  let topCategory = '';
-                  categories.forEach(cat => {
-                    const key = cat === "Housing & Utilities" ? "H&U" : cat === "Savings & Investments" ? "S&I" : cat === "Personal & Lifestyle" ? "P&L" : cat === "Food & Groceries" ? "F&G" : cat === "Transportation & Fuel" ? "T/F" : cat === "Dining & Restaurants" ? "D&R" : cat === "Shopping & Retail" ? "S&R" : cat === "Entertainment & Recreation" ? "E&R" : cat === "Healthcare & Medical" ? "H&M" : cat === "Bills & Subscriptions" ? "B&S" : "Misc";
-                    if (payload[key] > 0) topCategory = key;
-                  });
-                  const isTop = topCategory === "Misc";
-                  if (!isTop) return <rect x={x} y={y} width={width} height={height} fill={categoryColors["Misc"]} />;
-                  const radius = 8;
-                  const path = `M ${x},${y + height} L ${x},${y + radius} Q ${x},${y} ${x + radius},${y} L ${x + width - radius},${y} Q ${x + width},${y} ${x + width},${y + radius} L ${x + width},${y + height} Z`;
-                  return <path d={path} fill={categoryColors["Misc"]} />;
-                }}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <EnhancedSpendingChart />
         </CardContent>
       </Card>
 
