@@ -14,6 +14,7 @@ import {
   getLabelsForFilter,
   DateRange 
 } from "@/lib/dateFilterUtils";
+import { generateChartDataFromTransactions } from "@/lib/chartDataUtils";
 
 interface EnhancedSpendingChartProps {
   accountSpecific?: boolean;
@@ -49,127 +50,26 @@ export const EnhancedSpendingChart = ({
   const xAxisLabels = getLabelsForFilter(selectedPeriod, dateRange);
 
   const getChartData = () => {
-    const categories = Object.keys(categoryColors);
+    // Determine period type for data aggregation
+    let periodType: 'day' | 'week' | 'month' = 'day';
     
-    if (selectedPeriod === '1W') {
-      // Generate data for past 7 days
-      return xAxisLabels.map((label, index) => {
-        const data: any = { day: label };
-        let total = 0;
-        let topCategory = '';
-        categories.forEach(cat => {
-          const value = 50 + Math.random() * 50;
-          data[cat] = value;
-          total += value;
-          if (value > 0) topCategory = cat; // Track last non-zero category
-        });
-        data.total = total;
-        data.dateRange = label;
-        data.topCategory = topCategory;
-        return data;
-      });
+    if (selectedPeriod === '1W' || (selectedPeriod === 'custom' && xAxisLabels.length <= 14)) {
+      periodType = 'day';
+    } else if (selectedPeriod === '1M' || (selectedPeriod === 'custom' && xAxisLabels.length <= 30)) {
+      periodType = 'week';
+    } else {
+      periodType = 'month';
     }
-    if (selectedPeriod === '1M') {
-      // Generate data for past 4 weeks using the actual labels
-      return xAxisLabels.map((label, index) => {
-        const data: any = { week: label };
-        let total = 0;
-        let topCategory = '';
-        data["Housing & Utilities"] = 300 + Math.random() * 200;
-        data["Savings & Investments"] = 600 + Math.random() * 200;
-        data["Personal & Lifestyle"] = 400 + Math.random() * 200;
-        data["Food & Groceries"] = 500 + Math.random() * 150;
-        data["Transportation & Fuel"] = 400 + Math.random() * 150;
-        data["Entertainment & Recreation"] = 300 + Math.random() * 150;
-        data["Healthcare & Medical"] = 250 + Math.random() * 400;
-        
-        // Find topmost category with value
-        categories.forEach(cat => {
-          if (data[cat] > 0) topCategory = cat;
-        });
-        
-        total = categories.reduce((sum, cat) => sum + (data[cat] || 0), 0);
-        data.total = total;
-        data.dateRange = label;
-        data.topCategory = topCategory;
-        return data;
-      });
-    }
-    if (selectedPeriod === '1Y') {
-      // Generate data for past 12 months using the actual labels - stacked bars
-      return xAxisLabels.map((label, index) => {
-        const data: any = { month: label };
-        let total = 0;
-        let topCategory = '';
-        data["Housing & Utilities"] = 1200 + Math.random() * 800;
-        data["Savings & Investments"] = 2400 + Math.random() * 800;
-        data["Personal & Lifestyle"] = 1600 + Math.random() * 800;
-        data["Food & Groceries"] = 2000 + Math.random() * 600;
-        data["Transportation & Fuel"] = 1600 + Math.random() * 600;
-        data["Dining & Restaurants"] = 1200 + Math.random() * 600;
-        data["Shopping & Retail"] = 1000 + Math.random() * 600;
-        data["Entertainment & Recreation"] = 1200 + Math.random() * 600;
-        data["Healthcare & Medical"] = 1000 + Math.random() * 1600;
-        data["Bills & Subscriptions"] = 1500 + Math.random() * 500;
-        data["Miscellaneous"] = 300 + Math.random() * 200;
-        
-        // Find topmost category with value
-        categories.forEach(cat => {
-          if (data[cat] > 0) topCategory = cat;
-        });
-        
-        total = categories.reduce((sum, cat) => sum + (data[cat] || 0), 0);
-        data.total = total;
-        data.dateRange = label;
-        data.topCategory = topCategory;
-        return data;
-      });
-    }
-    if (selectedPeriod === 'custom') {
-      // For custom, use appropriate format based on range
-      const daysDiff = Math.ceil(
-        (dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      
-      if (daysDiff <= 14) {
-        // Show as days
-        return xAxisLabels.map((label) => {
-          const data: any = { day: label };
-          let total = 0;
-          categories.forEach(cat => {
-            const value = 50 + Math.random() * 50;
-            data[cat] = value;
-            total += value;
-          });
-          data.total = total;
-          data.dateRange = label;
-          return data;
-        });
-      } else if (daysDiff <= 60) {
-        // Show as weeks
-        return xAxisLabels.map((label, index) => {
-          const data: any = { week: label };
-          let total = 0;
-          categories.forEach(cat => {
-            const value = 300 + Math.random() * 200;
-            data[cat] = value;
-            total += value;
-          });
-          data.total = total;
-          data.dateRange = label;
-          return data;
-        });
-      } else {
-        // Show as months
-        return xAxisLabels.map((label) => ({
-          month: label,
-          amount: 2000 + Math.random() * 1500,
-          savings: 800 + Math.random() * 400,
-          netBalance: 1200 + Math.random() * 800
-        }));
-      }
-    }
-    return monthlySpending;
+
+    // Generate chart data from real transactions
+    const chartData = generateChartDataFromTransactions(
+      transactions,
+      xAxisLabels,
+      dateRange,
+      periodType
+    );
+
+    return chartData;
   };
 
   const handleBarClick = (data: any) => {
