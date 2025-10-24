@@ -238,22 +238,42 @@ export const EnhancedSpendingChart = ({
               <Tooltip 
                 cursor={false}
                 contentStyle={{ 
-                  background: 'white', 
+                  background: 'hsl(var(--popover))', 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
                   padding: '12px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  color: 'hsl(var(--popover-foreground))'
                 }}
-                labelStyle={{ 
-                  fontSize: '14px', 
-                  fontWeight: '600',
-                  marginBottom: '8px'
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  
+                  const total = payload[0].payload.total || 0;
+                  
+                  return (
+                    <div style={{
+                      background: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      color: 'hsl(var(--popover-foreground))'
+                    }}>
+                      <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                        {label}
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: 'hsl(var(--primary))' }}>
+                        Total: {formatCurrency(total)}
+                      </div>
+                      {payload.map((entry: any, index: number) => (
+                        <div key={index} style={{ fontSize: '12px', padding: '2px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '12px', height: '12px', backgroundColor: entry.color, borderRadius: '2px' }} />
+                          <span>{entry.name}: {formatCurrency(entry.value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
                 }}
-                itemStyle={{ 
-                  fontSize: '14px',
-                  padding: '4px 0'
-                }}
-                formatter={(value: number, name: string) => [`R${Number(value).toFixed(2)}`, name]}
               />
               <Bar 
                 dataKey="Housing & Utilities" 
