@@ -54,50 +54,68 @@ export type Database = {
         Row: {
           account_holder_id: string | null
           account_limit: number | null
+          account_name: string | null
           account_number: string
           account_type: string
           available_balance: number
           balance: number
           balance_brought_forward: number
+          bank_name: string | null
           created_at: string | null
+          currency: string | null
+          current_balance: number | null
           id: string
+          is_active: boolean | null
           power_of_attorney: boolean | null
           status: string
           uncleared: number | null
           uncleared_effects_enabled: boolean | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           account_holder_id?: string | null
           account_limit?: number | null
+          account_name?: string | null
           account_number: string
           account_type: string
           available_balance: number
           balance: number
           balance_brought_forward: number
+          bank_name?: string | null
           created_at?: string | null
+          currency?: string | null
+          current_balance?: number | null
           id?: string
+          is_active?: boolean | null
           power_of_attorney?: boolean | null
           status: string
           uncleared?: number | null
           uncleared_effects_enabled?: boolean | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           account_holder_id?: string | null
           account_limit?: number | null
+          account_name?: string | null
           account_number?: string
           account_type?: string
           available_balance?: number
           balance?: number
           balance_brought_forward?: number
+          bank_name?: string | null
           created_at?: string | null
+          currency?: string | null
+          current_balance?: number | null
           id?: string
+          is_active?: boolean | null
           power_of_attorney?: boolean | null
           status?: string
           uncleared?: number | null
           uncleared_effects_enabled?: boolean | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -290,6 +308,39 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_categories: {
+        Row: {
+          category: string
+          confidence: number | null
+          created_at: string | null
+          frequency: number | null
+          id: string
+          merchant_name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          confidence?: number | null
+          created_at?: string | null
+          frequency?: number | null
+          id?: string
+          merchant_name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          confidence?: number | null
+          created_at?: string | null
+          frequency?: number | null
+          id?: string
+          merchant_name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       transaction_requests: {
         Row: {
           created_at: string | null
@@ -347,6 +398,7 @@ export type Database = {
           reference: string | null
           transaction_code: string | null
           transaction_date: string
+          user_id: string | null
           user_verified: boolean | null
         }
         Insert: {
@@ -363,6 +415,7 @@ export type Database = {
           reference?: string | null
           transaction_code?: string | null
           transaction_date: string
+          user_id?: string | null
           user_verified?: boolean | null
         }
         Update: {
@@ -379,6 +432,7 @@ export type Database = {
           reference?: string | null
           transaction_code?: string | null
           transaction_date?: string
+          user_id?: string | null
           user_verified?: boolean | null
         }
         Relationships: [
