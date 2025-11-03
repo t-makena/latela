@@ -155,13 +155,12 @@
   background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
 
-/* Mobile flat cards and optimizations */
-@media (max-width: 768px) {
+/* Mobile and Tablet flat cards and optimizations */
+@media (max-width: 1024px) {
   .card {
     box-shadow: none;
     border: 1px solid #E5E7EB;
     transform: none;
-    font-size: 0.9rem;
   }
   
   .card:hover {
@@ -174,7 +173,6 @@
   }
   
   .stat-card {
-    padding: 0.75rem;
     box-shadow: none;
     border: 1px solid #E5E7EB;
   }
@@ -186,6 +184,17 @@
   .stat-card::after,
   .stat-card::before {
     display: none;
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .card {
+    font-size: 0.9rem;
+  }
+  
+  .stat-card {
+    padding: 0.75rem;
   }
   
   h1 {
