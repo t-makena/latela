@@ -8,7 +8,7 @@ interface EmptyAccountStateProps {
 export const EmptyAccountState = ({ onClick }: EmptyAccountStateProps) => {
   return (
     <Card 
-      className="rounded-3xl border border-border shadow-lg bg-muted/30 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl"
+      className="rounded-3xl border border-gray-200 bg-muted/30 cursor-pointer transition-all active:bg-muted/40"
       onClick={onClick}
     >
       <CardContent className="p-12 flex flex-col items-center justify-center min-h-[280px]">
