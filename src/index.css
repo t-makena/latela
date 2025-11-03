@@ -80,41 +80,10 @@
 }
 
 .stat-card {
-  @apply rounded-xl bg-card p-3 sm:p-4 md:p-5 transition-all duration-200;
+  @apply rounded-xl bg-card p-2 sm:p-3 md:p-4 transition-all duration-200;
   position: relative;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid #E5E7EB;
   overflow: hidden;
-}
-
-.stat-card:hover {
-  box-shadow: 
-    0 1px 1px rgba(255, 255, 255, 0.9) inset,
-    0 -1px 1px rgba(0, 0, 0, 0.05) inset,
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.stat-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: hsl(var(--primary));
-  border-bottom-left-radius: 0.75rem;
-  border-bottom-right-radius: 0.75rem;
-  opacity: 0.3;
 }
 
 .progress-bar {
@@ -128,73 +97,18 @@
   background: hsl(var(--primary));
 }
 
-/* 3D Card Style */
+/* Flat Card Style */
 .card {
   position: relative;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid #E5E7EB;
   background: hsl(var(--card));
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: none;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 1px 1px rgba(255, 255, 255, 0.9) inset,
-    0 -1px 1px rgba(0, 0, 0, 0.05) inset,
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
-}
-
-/* Mobile and Tablet flat cards and optimizations */
-@media (max-width: 1024px) {
-  .card {
-    box-shadow: none;
-    border: 1px solid #E5E7EB;
-    transform: none;
-  }
-  
-  .card:hover {
-    box-shadow: none;
-    transform: none;
-  }
-  
-  .card::before {
-    display: none;
-  }
-  
-  .stat-card {
-    box-shadow: none;
-    border: 1px solid #E5E7EB;
-  }
-  
-  .stat-card:hover {
-    box-shadow: none;
-  }
-  
-  .stat-card::after,
-  .stat-card::before {
-    display: none;
-  }
-}
-
-/* Mobile-specific optimizations */
+/* Mobile optimization */
 @media (max-width: 768px) {
   .card {
     font-size: 0.9rem;
-  }
-  
-  .stat-card {
-    padding: 0.75rem;
   }
   
   h1 {
@@ -207,6 +121,10 @@
   
   h3 {
     font-size: 1.1rem;
+  }
+  
+  .stat-card {
+    padding: 0.75rem;
   }
 }
 
