@@ -163,11 +163,6 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold font-georama">latela</h1>
-        </div>
-
         {/* Screen 1: Welcome */}
         {step === 1 && (
           <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
@@ -198,10 +193,7 @@ const Auth = () => {
         {step === 2 && (
           <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold">Welcome to Latela</h2>
-              <p className="text-muted-foreground">
-                Choose how you'd like to continue
-              </p>
+              <h2 className="text-2xl font-bold">Welcome to latela</h2>
             </div>
             <div className="w-full space-y-4">
               <Button
