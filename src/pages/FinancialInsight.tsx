@@ -44,7 +44,7 @@ const FinancialInsight = () => {
     }
   }, [location.state]);
 
-  // Generate net balance data based on filter
+  // Generate net balance data based on filter - empty until real data is available
   const getNetBalanceData = () => {
     const labels = netBalanceFilter === '1W' ? 
       ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
@@ -56,8 +56,8 @@ const FinancialInsight = () => {
 
     return labels.map((label) => ({
       month: label,
-      netBalance: 80000 + Math.random() * 30000,
-      budgetBalance: 90000 + Math.random() * 20000
+      netBalance: 0,
+      budgetBalance: 0
     }));
   };
 
@@ -100,21 +100,20 @@ const FinancialInsight = () => {
     "Misc": "Miscellaneous"
   };
 
-  // Generate category data based on filter
+  // Generate category data based on filter - empty until real data is available
   const getCategoryData = () => {
-    const multiplier = categoryFilter === '1W' ? 0.25 : categoryFilter === '1M' ? 1 : categoryFilter === '1Y' ? 12 : 1;
     return [
-      { category: "F&G", amount: 3250 * multiplier, color: categoryColors["F&G"] },
-      { category: "T/F", amount: 590 * multiplier, color: categoryColors["T/F"] },
-      { category: "D&R", amount: 1630 * multiplier, color: categoryColors["D&R"] },
-      { category: "S&R", amount: 1600 * multiplier, color: categoryColors["S&R"] },
-      { category: "E&R", amount: 1980 * multiplier, color: categoryColors["E&R"] },
-      { category: "P&L", amount: 1380 * multiplier, color: categoryColors["P&L"] },
-      { category: "H&U", amount: 3500 * multiplier, color: categoryColors["H&U"] },
-      { category: "H&M", amount: 650 * multiplier, color: categoryColors["H&M"] },
-      { category: "B&S", amount: 1200 * multiplier, color: categoryColors["B&S"] },
-      { category: "S&I", amount: 500 * multiplier, color: categoryColors["S&I"] },
-      { category: "Misc", amount: 300 * multiplier, color: categoryColors["Misc"] }
+      { category: "F&G", amount: 0, color: categoryColors["F&G"] },
+      { category: "T/F", amount: 0, color: categoryColors["T/F"] },
+      { category: "D&R", amount: 0, color: categoryColors["D&R"] },
+      { category: "S&R", amount: 0, color: categoryColors["S&R"] },
+      { category: "E&R", amount: 0, color: categoryColors["E&R"] },
+      { category: "P&L", amount: 0, color: categoryColors["P&L"] },
+      { category: "H&U", amount: 0, color: categoryColors["H&U"] },
+      { category: "H&M", amount: 0, color: categoryColors["H&M"] },
+      { category: "B&S", amount: 0, color: categoryColors["B&S"] },
+      { category: "S&I", amount: 0, color: categoryColors["S&I"] },
+      { category: "Misc", amount: 0, color: categoryColors["Misc"] }
     ];
   };
 
