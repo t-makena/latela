@@ -173,22 +173,34 @@ function parsePDF(content: string, fileName: string) {
   // Extract account number using improved function
   const accountNumber = extractAccountNumber(content, bankName);
   
-  // Extract balance with more comprehensive patterns
-  const balancePatterns = [
-    /(?:Current|Closing|Available|Statement)\s+Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
-    /Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
-    /R\s*([\d,\s]+\.\d{2})\s+(?:CR|DR)?$/gm,
-  ];
-  
+  // Extract balance with specific patterns for different banks
   let currentBalance = 0;
-  for (const pattern of balancePatterns) {
-    const matches = Array.from(content.matchAll(pattern));
-    if (matches.length > 0) {
-      // Get the last balance mentioned (most recent)
-      const lastMatch = matches[matches.length - 1];
-      if (lastMatch[1]) {
-        currentBalance = parseAmount(lastMatch[1]);
-        break;
+  
+  // Capitec-specific balance extraction
+  if (bankName === 'Capitec') {
+    const closingBalanceMatch = content.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
+    if (closingBalanceMatch && closingBalanceMatch[1]) {
+      currentBalance = parseAmount(closingBalanceMatch[1]);
+    }
+  }
+  
+  // Fallback to generic patterns if not found
+  if (currentBalance === 0) {
+    const balancePatterns = [
+      /(?:Current|Closing|Available|Statement)\s+Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
+      /Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
+      /R\s*([\d,\s]+\.\d{2})\s+(?:CR|DR)?$/gm,
+    ];
+    
+    for (const pattern of balancePatterns) {
+      const matches = Array.from(content.matchAll(pattern));
+      if (matches.length > 0) {
+        // Get the last balance mentioned (most recent)
+        const lastMatch = matches[matches.length - 1];
+        if (lastMatch[1]) {
+          currentBalance = parseAmount(lastMatch[1]);
+          break;
+        }
       }
     }
   }
@@ -221,88 +233,180 @@ function parsePDF(content: string, fileName: string) {
 function extractTransactionsFromPDF(content: string, bankName: string) {
   const transactions = [];
   
-  // Split content into lines for better parsing
-  const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-  
-  // Multiple date patterns for SA banks
-  const datePatterns = [
-    /(\d{1,2}\/\d{1,2}\/\d{4})/,           // DD/MM/YYYY or D/M/YYYY
-    /(\d{4}\/\d{1,2}\/\d{1,2})/,           // YYYY/MM/DD or YYYY/M/D
-    /(\d{1,2}-\d{1,2}-\d{4})/,             // DD-MM-YYYY
-    /(\d{4}-\d{1,2}-\d{1,2})/,             // YYYY-MM-DD
-    /(\d{2}\s+[A-Za-z]{3}\s+\d{4})/,       // DD MMM YYYY
-  ];
-  
-  // Amount pattern - more flexible to catch various formats
-  const amountPattern = /R?\s*([\d,\s]+\.\d{2})/;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  // Capitec-specific parsing using table structure
+  if (bankName === 'Capitec') {
+    // Match Capitec transaction rows: Date | Description | Category | Money In | Money Out | Fee* | Balance
+    // Pattern to match: DD/MM/YYYY followed by text, then amounts
+    const lines = content.split('\n');
     
-    // Try to find a date in the line
-    let dateMatch = null;
-    let dateStr = '';
-    
-    for (const datePattern of datePatterns) {
-      dateMatch = line.match(datePattern);
-      if (dateMatch) {
-        dateStr = dateMatch[1];
-        break;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Match Capitec date format (DD/MM/YYYY)
+      const dateMatch = line.match(/^(\d{2}\/\d{2}\/\d{4})\s+(.+)/);
+      if (!dateMatch) continue;
+      
+      const dateStr = dateMatch[1];
+      const restOfLine = dateMatch[2];
+      
+      // Split by pipe or multiple spaces to separate columns
+      const parts = restOfLine.split(/\s*\|\s*|\s{2,}/).filter(p => p.trim());
+      
+      if (parts.length < 2) continue;
+      
+      // Description is the first part
+      let description = parts[0].trim();
+      
+      // Find money amounts in the remaining parts
+      let moneyIn = 0;
+      let moneyOut = 0;
+      let fee = 0;
+      let balance = 0;
+      
+      // Look for amounts in format: optional negative, digits with optional commas and spaces, dot, 2 decimals
+      const amountPattern = /(-)?[\d,\s]+\.\d{2}/g;
+      
+      for (let j = 1; j < parts.length; j++) {
+        const part = parts[j].trim();
+        const amounts = part.match(amountPattern);
+        
+        if (amounts) {
+          for (const amt of amounts) {
+            const parsedAmt = parseAmount(amt);
+            
+            // Determine which column this amount belongs to based on position and value
+            if (parsedAmt > 0 && moneyIn === 0 && j < parts.length - 2) {
+              moneyIn = parsedAmt;
+            } else if (parsedAmt < 0 || (moneyOut === 0 && j < parts.length - 2)) {
+              if (Math.abs(parsedAmt) < 50 && fee === 0) {
+                fee = Math.abs(parsedAmt);
+              } else if (moneyOut === 0) {
+                moneyOut = Math.abs(parsedAmt);
+              }
+            } else if (j === parts.length - 1 || balance === 0) {
+              balance = Math.abs(parsedAmt);
+            }
+          }
+        }
       }
-    }
-    
-    if (!dateMatch) continue;
-    
-    // Extract the rest of the line after the date
-    const afterDate = line.substring(line.indexOf(dateStr) + dateStr.length).trim();
-    
-    // Find all amounts in the line
-    const amounts = [];
-    let match;
-    const amountRegex = new RegExp(amountPattern, 'g');
-    while ((match = amountRegex.exec(afterDate)) !== null) {
-      amounts.push(match[1]);
-    }
-    
-    if (amounts.length === 0) continue;
-    
-    // Description is everything between date and first amount
-    const firstAmountIndex = afterDate.indexOf(amounts[0]);
-    let description = afterDate.substring(0, firstAmountIndex).trim();
-    
-    // If description is too short, check next line
-    if (description.length < 3 && i + 1 < lines.length) {
-      const nextLine = lines[i + 1];
-      if (!datePatterns.some(p => p.test(nextLine))) {
-        description = nextLine.trim();
-        i++; // Skip the next line
+      
+      // Determine transaction type and amount
+      let amount = 0;
+      let isDebit = false;
+      
+      if (moneyOut > 0) {
+        amount = moneyOut;
+        isDebit = true;
+      } else if (moneyIn > 0) {
+        amount = moneyIn;
+        isDebit = false;
       }
-    }
-    
-    // Parse amounts - last one is usually balance, second-to-last is transaction amount
-    const amount = amounts.length >= 2 ? parseAmount(amounts[amounts.length - 2]) : parseAmount(amounts[0]);
-    const balance = amounts.length >= 2 ? parseAmount(amounts[amounts.length - 1]) : 0;
-    
-    // Determine transaction type
-    const descUpper = description.toUpperCase();
-    const isDebit = descUpper.includes('DEBIT') || 
-                    descUpper.includes('PURCHASE') ||
-                    descUpper.includes('PAYMENT') ||
-                    descUpper.includes('WITHDRAWAL') ||
-                    descUpper.includes('FEE') ||
-                    descUpper.includes('LEVY') ||
-                    amount < 0;
-    
-    if (description.length > 2) {
+      
+      // Add fee to the transaction amount if it's a debit
+      if (fee > 0 && isDebit) {
+        amount += fee;
+      }
+      
+      // Skip if no valid amount found
+      if (amount === 0) continue;
+      
+      // Additional checks for transaction type based on description
+      const descUpper = description.toUpperCase();
+      if (!isDebit) {
+        isDebit = descUpper.includes('PURCHASE') ||
+                  descUpper.includes('PAYMENT') && !descUpper.includes('RECEIVED') ||
+                  descUpper.includes('WITHDRAWAL') ||
+                  descUpper.includes('FEE') ||
+                  descUpper.includes('SENT') ||
+                  descUpper.includes('DEBIT ORDER') ||
+                  descUpper.includes('TRANSFER') && !descUpper.includes('FROM');
+      }
+      
       transactions.push({
         date: normalizeDate(dateStr, bankName),
         description: description,
-        amount: Math.abs(amount),
+        amount: amount,
         balance: balance,
         reference: description.substring(0, 50),
         merchantName: extractMerchantName(description),
         type: isDebit ? 'debit' : 'credit',
       });
+    }
+  } else {
+    // Generic parsing for other banks
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+    
+    const datePatterns = [
+      /(\d{1,2}\/\d{1,2}\/\d{4})/,
+      /(\d{4}\/\d{1,2}\/\d{1,2})/,
+      /(\d{1,2}-\d{1,2}-\d{4})/,
+      /(\d{4}-\d{1,2}-\d{1,2})/,
+      /(\d{2}\s+[A-Za-z]{3}\s+\d{4})/,
+    ];
+    
+    const amountPattern = /R?\s*([\d,\s]+\.\d{2})/;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      let dateMatch = null;
+      let dateStr = '';
+      
+      for (const datePattern of datePatterns) {
+        dateMatch = line.match(datePattern);
+        if (dateMatch) {
+          dateStr = dateMatch[1];
+          break;
+        }
+      }
+      
+      if (!dateMatch) continue;
+      
+      const afterDate = line.substring(line.indexOf(dateStr) + dateStr.length).trim();
+      
+      const amounts = [];
+      let match;
+      const amountRegex = new RegExp(amountPattern, 'g');
+      while ((match = amountRegex.exec(afterDate)) !== null) {
+        amounts.push(match[1]);
+      }
+      
+      if (amounts.length === 0) continue;
+      
+      const firstAmountIndex = afterDate.indexOf(amounts[0]);
+      let description = afterDate.substring(0, firstAmountIndex).trim();
+      
+      if (description.length < 3 && i + 1 < lines.length) {
+        const nextLine = lines[i + 1];
+        if (!datePatterns.some(p => p.test(nextLine))) {
+          description = nextLine.trim();
+          i++;
+        }
+      }
+      
+      const amount = amounts.length >= 2 ? parseAmount(amounts[amounts.length - 2]) : parseAmount(amounts[0]);
+      const balance = amounts.length >= 2 ? parseAmount(amounts[amounts.length - 1]) : 0;
+      
+      const descUpper = description.toUpperCase();
+      const isDebit = descUpper.includes('DEBIT') || 
+                      descUpper.includes('PURCHASE') ||
+                      descUpper.includes('PAYMENT') ||
+                      descUpper.includes('WITHDRAWAL') ||
+                      descUpper.includes('FEE') ||
+                      descUpper.includes('LEVY') ||
+                      amount < 0;
+      
+      if (description.length > 2) {
+        transactions.push({
+          date: normalizeDate(dateStr, bankName),
+          description: description,
+          amount: Math.abs(amount),
+          balance: balance,
+          reference: description.substring(0, 50),
+          merchantName: extractMerchantName(description),
+          type: isDebit ? 'debit' : 'credit',
+        });
+      }
     }
   }
   
@@ -313,6 +417,12 @@ function detectBank(fileName: string, content: string): string {
   const contentUpper = content.toUpperCase();
   const fileUpper = fileName.toUpperCase();
   
+  // Check Capitec first with more specific patterns
+  if (contentUpper.includes('CAPITEC BANK') || 
+      contentUpper.includes('CAPITEC') && contentUpper.includes('ACCOUNT STATEMENT') ||
+      fileUpper.includes('CAPITEC')) {
+    return 'Capitec';
+  }
   if (contentUpper.includes('FNB') || contentUpper.includes('FIRST NATIONAL BANK') || fileUpper.includes('FNB')) {
     return 'FNB';
   }
@@ -324,9 +434,6 @@ function detectBank(fileName: string, content: string): string {
   }
   if (contentUpper.includes('NEDBANK') || fileUpper.includes('NEDBANK')) {
     return 'Nedbank';
-  }
-  if (contentUpper.includes('CAPITEC') || fileUpper.includes('CAPITEC')) {
-    return 'Capitec';
   }
   if (contentUpper.includes('DISCOVERY BANK') || contentUpper.includes('DISCOVERY') || fileUpper.includes('DISCOVERY')) {
     return 'Discovery Bank';
@@ -364,8 +471,8 @@ function extractAccountNumber(content: string, bankName: string): string {
       /(\d{10,16})\s+Current/i
     ],
     'Capitec': [
+      /Account:\s*(\d{10,16})/i,
       /Account\s+Number[:\s]+(\d{10,16})/i,
-      /Global\s+One[:\s]+(\d{10,16})/i
     ]
   };
 
@@ -374,7 +481,12 @@ function extractAccountNumber(content: string, bankName: string): string {
   for (const pattern of patterns) {
     const match = content.match(pattern);
     if (match && match[1]) {
-      return match[1].replace(/[\s-]/g, '');
+      const fullNumber = match[1].replace(/[\s-]/g, '');
+      // For Capitec, return only last 4 digits
+      if (bankName === 'Capitec' && fullNumber.length >= 4) {
+        return fullNumber.slice(-4);
+      }
+      return fullNumber;
     }
   }
 
@@ -390,11 +502,16 @@ function extractAccountNumber(content: string, bankName: string): string {
   for (const pattern of genericPatterns) {
     const match = content.match(pattern);
     if (match && match[1]) {
-      return match[1].replace(/[\s-]/g, '');
+      const fullNumber = match[1].replace(/[\s-]/g, '');
+      // For Capitec, return only last 4 digits
+      if (bankName === 'Capitec' && fullNumber.length >= 4) {
+        return fullNumber.slice(-4);
+      }
+      return fullNumber;
     }
   }
 
-  return '0000000000';
+  return '0000';
 }
 
 function normalizeDate(dateStr: string, bankName: string): string {
