@@ -12,7 +12,7 @@ import {
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { useAccounts } from "@/hooks/useAccounts";
 import { EmptyAccountState } from "@/components/accounts/EmptyAccountState";
-import { AddAccountDialog } from "@/components/accounts/AddAccountDialog";
+import { StatementUploadDialog } from "@/components/accounts/StatementUploadDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -140,9 +140,10 @@ const Accounts = () => {
       <div className="min-h-screen bg-background">
         <div className="px-6 pb-20 pt-6">
           <EmptyAccountState onClick={() => setAddAccountOpen(true)} />
-          <AddAccountDialog 
+          <StatementUploadDialog 
             open={addAccountOpen} 
             onOpenChange={setAddAccountOpen}
+            onSuccess={() => window.location.reload()}
           />
         </div>
       </div>
@@ -298,9 +299,10 @@ const Accounts = () => {
           </CardContent>
         </Card>
 
-        <AddAccountDialog 
+        <StatementUploadDialog 
           open={addAccountOpen} 
           onOpenChange={setAddAccountOpen}
+          onSuccess={() => window.location.reload()}
         />
       </div>
     </div>
