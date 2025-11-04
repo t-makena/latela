@@ -78,7 +78,7 @@ export const StatementUploadDialog = ({
         }
 
         // Create account with parsed data
-        const { error: accountError } = await supabase
+        const { data: accountData, error: accountError } = await supabase
           .from('accounts')
           .insert({
             account_number: data.accountInfo.accountNumber,
@@ -98,6 +98,31 @@ export const StatementUploadDialog = ({
 
         if (accountError) {
           throw accountError;
+        }
+
+        // Import transactions if any were parsed
+        if (data.transactions && data.transactions.length > 0) {
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          
+          const transactionsToInsert = data.transactions.map((t: any) => ({
+            user_id: userId,
+            account_id: accountData.id,
+            transaction_date: new Date(t.date).toISOString(),
+            description: t.description,
+            reference: t.reference || t.description.substring(0, 50),
+            amount: Math.round(Math.abs(t.amount) * 100), // Convert to cents
+            balance: t.balance ? Math.round(t.balance * 100) : 0,
+            cleared: true,
+          }));
+
+          const { error: transError } = await supabase
+            .from('transactions')
+            .insert(transactionsToInsert);
+
+          if (transError) {
+            console.error('Transaction import error:', transError);
+            // Don't fail the whole operation, account was created successfully
+          }
         }
 
         toast({
