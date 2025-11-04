@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import pdfParse from "npm:pdf-parse@1.1.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,8 +13,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  console.log('[PARSE-STATEMENT] ========== New Request ==========');
+
   try {
     const { fileContent, fileName, fileType } = await req.json();
+    console.log('[REQUEST] File:', fileName, '| Type:', fileType, '| Size:', fileContent?.length || 0, 'bytes (base64)');
 
     if (!fileContent || !fileName) {
       throw new Error('Missing required fields');
@@ -21,32 +26,54 @@ serve(async (req) => {
 
     // Decode base64 content
     const decodedContent = atob(fileContent);
+    const decodedSize = decodedContent.length;
+    console.log('[DECODE] Decoded size:', decodedSize, 'bytes');
 
     let parsedData;
 
     if (fileType === 'text/csv') {
+      console.log('[PARSE] Starting CSV parsing...');
       parsedData = parseCSV(decodedContent, fileName);
     } else if (fileType === 'application/pdf') {
-      parsedData = parsePDF(decodedContent, fileName);
+      console.log('[PARSE] Starting PDF parsing...');
+      parsedData = await parsePDF(decodedContent, fileName);
     } else {
       throw new Error('Unsupported file type');
     }
+
+    const processingTime = Date.now() - startTime;
+    console.log('[SUCCESS] Parsing completed in', processingTime, 'ms');
+    console.log('[RESULT] Bank:', parsedData.accountInfo?.bankName);
+    console.log('[RESULT] Account:', parsedData.accountInfo?.accountNumber);
+    console.log('[RESULT] Balance:', parsedData.accountInfo?.currentBalance);
+    console.log('[RESULT] Transactions:', parsedData.transactions?.length || 0);
 
     return new Response(
       JSON.stringify({
         success: true,
         ...parsedData,
+        debug: {
+          processingTimeMs: processingTime,
+          fileSize: decodedSize,
+        }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
-    console.error('Parse error:', error);
+    const processingTime = Date.now() - startTime;
+    console.error('[ERROR] Parse error after', processingTime, 'ms:', error);
+    console.error('[ERROR] Stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
     return new Response(
       JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
+        debug: {
+          processingTimeMs: processingTime,
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+        }
       }),
       {
         status: 400,
@@ -165,79 +192,131 @@ function parseCSV(content: string, fileName: string) {
   };
 }
 
-function parsePDF(content: string, fileName: string) {
-  // For PDF, we'll do text extraction and pattern matching
+async function parsePDF(content: string, fileName: string) {
+  console.log('[PDF] Starting PDF text extraction...');
   
-  const bankName = detectBank(fileName, content);
-  
-  // Extract account number using improved function
-  const accountNumber = extractAccountNumber(content, bankName);
-  
-  // Extract balance with specific patterns for different banks
-  let currentBalance = 0;
-  
-  // Capitec-specific balance extraction
-  if (bankName === 'Capitec') {
-    const closingBalanceMatch = content.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
-    if (closingBalanceMatch && closingBalanceMatch[1]) {
-      currentBalance = parseAmount(closingBalanceMatch[1]);
-    }
-  }
-  
-  // Fallback to generic patterns if not found
-  if (currentBalance === 0) {
-    const balancePatterns = [
-      /(?:Current|Closing|Available|Statement)\s+Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
-      /Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
-      /R\s*([\d,\s]+\.\d{2})\s+(?:CR|DR)?$/gm,
-    ];
+  try {
+    // Convert string content to Uint8Array buffer for pdf-parse
+    const encoder = new TextEncoder();
+    const buffer = encoder.encode(content);
+    console.log('[PDF] Buffer created:', buffer.length, 'bytes');
     
-    for (const pattern of balancePatterns) {
-      const matches = Array.from(content.matchAll(pattern));
-      if (matches.length > 0) {
-        // Get the last balance mentioned (most recent)
-        const lastMatch = matches[matches.length - 1];
-        if (lastMatch[1]) {
-          currentBalance = parseAmount(lastMatch[1]);
-          break;
+    // Extract text using pdf-parse
+    const pdfData = await pdfParse(buffer);
+    const extractedText = pdfData.text;
+    const numPages = pdfData.numpages;
+    
+    console.log('[PDF] Text extracted successfully');
+    console.log('[PDF] Pages:', numPages);
+    console.log('[PDF] Text length:', extractedText.length, 'characters');
+    console.log('[PDF] First 500 chars:', extractedText.substring(0, 500));
+    
+    if (extractedText.length < 50) {
+      console.warn('[PDF] WARNING: Very little text extracted. PDF might be image-based or encrypted.');
+    }
+    
+    // Detect bank
+    const bankName = detectBank(fileName, extractedText);
+    console.log('[BANK] Detected bank:', bankName);
+    
+    // Extract account number
+    const accountNumber = extractAccountNumber(extractedText, bankName);
+    console.log('[ACCOUNT] Extracted account number:', accountNumber);
+    
+    // Extract balance with specific patterns for different banks
+    let currentBalance = 0;
+    console.log('[BALANCE] Attempting to extract balance...');
+    
+    // Capitec-specific balance extraction
+    if (bankName === 'Capitec') {
+      const closingBalanceMatch = extractedText.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
+      if (closingBalanceMatch && closingBalanceMatch[1]) {
+        currentBalance = parseAmount(closingBalanceMatch[1]);
+        console.log('[BALANCE] Found Capitec closing balance:', currentBalance);
+      }
+    }
+    
+    // Fallback to generic patterns if not found
+    if (currentBalance === 0) {
+      const balancePatterns = [
+        /(?:Current|Closing|Available|Statement)\s+Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
+        /Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
+        /R\s*([\d,\s]+\.\d{2})\s+(?:CR|DR)?$/gm,
+      ];
+      
+      for (let i = 0; i < balancePatterns.length; i++) {
+        const pattern = balancePatterns[i];
+        const matches = Array.from(extractedText.matchAll(pattern));
+        console.log(`[BALANCE] Pattern ${i + 1} matches:`, matches.length);
+        
+        if (matches.length > 0) {
+          // Get the last balance mentioned (most recent)
+          const lastMatch = matches[matches.length - 1];
+          if (lastMatch[1]) {
+            currentBalance = parseAmount(lastMatch[1]);
+            console.log('[BALANCE] Found balance with pattern', i + 1, ':', currentBalance);
+            break;
+          }
         }
       }
     }
-  }
-  
-  const accountType = detectAccountType(content, fileName);
-  
-  // Extract transactions using improved patterns
-  const transactions = extractTransactionsFromPDF(content, bankName);
+    
+    if (currentBalance === 0) {
+      console.warn('[BALANCE] WARNING: No balance found in PDF');
+    }
+    
+    const accountType = detectAccountType(extractedText, fileName);
+    console.log('[ACCOUNT-TYPE] Detected type:', accountType);
+    
+    // Extract transactions using improved patterns
+    console.log('[TRANSACTIONS] Starting transaction extraction...');
+    const transactions = extractTransactionsFromPDF(extractedText, bankName);
+    console.log('[TRANSACTIONS] Extracted', transactions.length, 'transactions');
+    
+    if (transactions.length > 0) {
+      console.log('[TRANSACTIONS] Sample transaction:', JSON.stringify(transactions[0], null, 2));
+    } else {
+      console.warn('[TRANSACTIONS] WARNING: No transactions found');
+    }
 
-  return {
-    accountInfo: {
-      accountNumber,
-      bankName,
-      accountType,
-      accountName: `${bankName} ${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Account`,
-      currentBalance,
-      currency: 'ZAR',
-    },
-    transactions,
-    summary: {
-      totalTransactions: transactions.length,
-      dateRange: transactions.length > 0 ? {
-        from: transactions[transactions.length - 1].date,
-        to: transactions[0].date,
-      } : null,
-    },
-  };
+    return {
+      accountInfo: {
+        accountNumber,
+        bankName,
+        accountType,
+        accountName: `${bankName} ${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Account`,
+        currentBalance,
+        currency: 'ZAR',
+      },
+      transactions,
+      summary: {
+        totalTransactions: transactions.length,
+        dateRange: transactions.length > 0 ? {
+          from: transactions[transactions.length - 1].date,
+          to: transactions[0].date,
+        } : null,
+      },
+    };
+  } catch (error) {
+    console.error('[PDF] Error during PDF parsing:', error);
+    console.error('[PDF] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    throw error;
+  }
 }
 
 function extractTransactionsFromPDF(content: string, bankName: string) {
   const transactions = [];
+  console.log('[TRANS-EXTRACT] Extracting transactions for bank:', bankName);
   
   // Capitec-specific parsing using table structure
   if (bankName === 'Capitec') {
+    console.log('[TRANS-EXTRACT] Using Capitec-specific parsing logic');
     // Match Capitec transaction rows: Date | Description | Category | Money In | Money Out | Fee* | Balance
     // Pattern to match: DD/MM/YYYY followed by text, then amounts
     const lines = content.split('\n');
+    console.log('[TRANS-EXTRACT] Processing', lines.length, 'lines');
+    
+    let matchedLines = 0;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -245,6 +324,11 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
       // Match Capitec date format (DD/MM/YYYY)
       const dateMatch = line.match(/^(\d{2}\/\d{2}\/\d{4})\s+(.+)/);
       if (!dateMatch) continue;
+      
+      matchedLines++;
+      if (matchedLines <= 3) {
+        console.log(`[TRANS-EXTRACT] Matched line ${matchedLines}:`, line.substring(0, 100));
+      }
       
       const dateStr = dateMatch[1];
       const restOfLine = dateMatch[2];
@@ -332,9 +416,13 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
         type: isDebit ? 'debit' : 'credit',
       });
     }
+    
+    console.log('[TRANS-EXTRACT] Capitec: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
   } else {
+    console.log('[TRANS-EXTRACT] Using generic parsing logic');
     // Generic parsing for other banks
     const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+    console.log('[TRANS-EXTRACT] Processing', lines.length, 'lines');
     
     const datePatterns = [
       /(\d{1,2}\/\d{1,2}\/\d{4})/,
@@ -345,6 +433,8 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
     ];
     
     const amountPattern = /R?\s*([\d,\s]+\.\d{2})/;
+    
+    let matchedLines = 0;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -361,6 +451,11 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
       }
       
       if (!dateMatch) continue;
+      
+      matchedLines++;
+      if (matchedLines <= 3) {
+        console.log(`[TRANS-EXTRACT] Matched line ${matchedLines}:`, line.substring(0, 100));
+      }
       
       const afterDate = line.substring(line.indexOf(dateStr) + dateStr.length).trim();
       
@@ -408,12 +503,15 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
         });
       }
     }
+    
+    console.log('[TRANS-EXTRACT] Generic: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
   }
   
   return transactions;
 }
 
 function detectBank(fileName: string, content: string): string {
+  console.log('[DETECT-BANK] Analyzing file:', fileName);
   const contentUpper = content.toUpperCase();
   const fileUpper = fileName.toUpperCase();
   
@@ -421,37 +519,49 @@ function detectBank(fileName: string, content: string): string {
   if (contentUpper.includes('CAPITEC BANK') || 
       contentUpper.includes('CAPITEC') && contentUpper.includes('ACCOUNT STATEMENT') ||
       fileUpper.includes('CAPITEC')) {
+    console.log('[DETECT-BANK] Matched: Capitec');
     return 'Capitec';
   }
   if (contentUpper.includes('FNB') || contentUpper.includes('FIRST NATIONAL BANK') || fileUpper.includes('FNB')) {
+    console.log('[DETECT-BANK] Matched: FNB');
     return 'FNB';
   }
   if (contentUpper.includes('ABSA') || fileUpper.includes('ABSA')) {
+    console.log('[DETECT-BANK] Matched: ABSA');
     return 'ABSA';
   }
   if (contentUpper.includes('STANDARD BANK') || contentUpper.includes('STANBIC') || fileUpper.includes('STANDARD')) {
+    console.log('[DETECT-BANK] Matched: Standard Bank');
     return 'Standard Bank';
   }
   if (contentUpper.includes('NEDBANK') || fileUpper.includes('NEDBANK')) {
+    console.log('[DETECT-BANK] Matched: Nedbank');
     return 'Nedbank';
   }
   if (contentUpper.includes('DISCOVERY BANK') || contentUpper.includes('DISCOVERY') || fileUpper.includes('DISCOVERY')) {
+    console.log('[DETECT-BANK] Matched: Discovery Bank');
     return 'Discovery Bank';
   }
   if (contentUpper.includes('TYMEBANK') || contentUpper.includes('TYME BANK') || fileUpper.includes('TYME')) {
+    console.log('[DETECT-BANK] Matched: TymeBank');
     return 'TymeBank';
   }
   if (contentUpper.includes('BANK ZERO') || fileUpper.includes('BANKZERO')) {
+    console.log('[DETECT-BANK] Matched: Bank Zero');
     return 'Bank Zero';
   }
   if (contentUpper.includes('INVESTEC') || fileUpper.includes('INVESTEC')) {
+    console.log('[DETECT-BANK] Matched: Investec');
     return 'Investec';
   }
 
+  console.log('[DETECT-BANK] No match found - returning Unknown Bank');
   return 'Unknown Bank';
 }
 
 function extractAccountNumber(content: string, bankName: string): string {
+  console.log('[EXTRACT-ACCT] Extracting account number for bank:', bankName);
+  
   // Bank-specific patterns
   const bankPatterns: Record<string, RegExp[]> = {
     'FNB': [
@@ -478,17 +588,26 @@ function extractAccountNumber(content: string, bankName: string): string {
 
   // Try bank-specific patterns first
   const patterns = bankPatterns[bankName] || [];
-  for (const pattern of patterns) {
+  console.log('[EXTRACT-ACCT] Trying', patterns.length, 'bank-specific patterns');
+  
+  for (let i = 0; i < patterns.length; i++) {
+    const pattern = patterns[i];
     const match = content.match(pattern);
     if (match && match[1]) {
       const fullNumber = match[1].replace(/[\s-]/g, '');
+      console.log('[EXTRACT-ACCT] Matched with bank-specific pattern', i + 1, ':', fullNumber);
+      
       // For Capitec, return only last 4 digits
       if (bankName === 'Capitec' && fullNumber.length >= 4) {
-        return fullNumber.slice(-4);
+        const maskedNumber = fullNumber.slice(-4);
+        console.log('[EXTRACT-ACCT] Capitec - using last 4 digits:', maskedNumber);
+        return maskedNumber;
       }
       return fullNumber;
     }
   }
+
+  console.log('[EXTRACT-ACCT] No bank-specific match, trying generic patterns...');
 
   // Generic fallback patterns
   const genericPatterns = [
@@ -499,18 +618,24 @@ function extractAccountNumber(content: string, bankName: string): string {
     /\b(\d{10,16})\b/
   ];
 
-  for (const pattern of genericPatterns) {
+  for (let i = 0; i < genericPatterns.length; i++) {
+    const pattern = genericPatterns[i];
     const match = content.match(pattern);
     if (match && match[1]) {
       const fullNumber = match[1].replace(/[\s-]/g, '');
+      console.log('[EXTRACT-ACCT] Matched with generic pattern', i + 1, ':', fullNumber);
+      
       // For Capitec, return only last 4 digits
       if (bankName === 'Capitec' && fullNumber.length >= 4) {
-        return fullNumber.slice(-4);
+        const maskedNumber = fullNumber.slice(-4);
+        console.log('[EXTRACT-ACCT] Capitec - using last 4 digits:', maskedNumber);
+        return maskedNumber;
       }
       return fullNumber;
     }
   }
 
+  console.log('[EXTRACT-ACCT] No account number found - returning default 0000');
   return '0000';
 }
 
