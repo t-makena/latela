@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import welcomeIllustration from "@/assets/onboarding-welcome.png";
+import valueIllustration from "@/assets/onboarding-value.png";
 
 const Auth = () => {
   const [step, setStep] = useState(1); // 1: Welcome, 2: Choose (Login/Signup), 3: Login Form, 4: Signup Form
@@ -194,6 +195,13 @@ const Auth = () => {
           <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
             <div className="space-y-2">
               <h2 className="text-2xl font-bold">Welcome to latela</h2>
+            </div>
+            <div className="w-full max-w-xs">
+              <img
+                src={valueIllustration}
+                alt="Financial insights illustration"
+                className="w-full h-auto"
+              />
             </div>
             <div className="w-full space-y-4">
               <Button
