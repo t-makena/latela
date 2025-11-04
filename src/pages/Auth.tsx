@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import welcomeIllustration from "@/assets/onboarding-welcome.png";
 
 const Auth = () => {
+  const [step, setStep] = useState(1); // 1: Welcome, 2: Choose (Login/Signup), 3: Login Form, 4: Signup Form
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -143,49 +145,128 @@ const Auth = () => {
     }
   };
 
+  const handleInputChange = (
+    field: string,
+    value: string,
+    formType: "login" | "signup"
+  ) => {
+    if (formType === "login") {
+      setLoginData((prev) => ({ ...prev, [field]: value }));
+    } else {
+      setSignupData((prev) => ({ ...prev, [field]: value }));
+    }
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        {/* Logo */}
+        <div className="text-center mb-12">
           <h1 className="text-3xl font-bold font-georama">latela</h1>
-          <p className="text-muted-foreground mt-2">your personal budget buddy</p>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
+        {/* Screen 1: Welcome */}
+        {step === 1 && (
+          <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
+            <div className="w-full max-w-xs">
+              <img
+                src={welcomeIllustration}
+                alt="Welcome illustration"
+                className="w-full h-auto"
+              />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">your personal budget buddy</h2>
+              <p className="text-muted-foreground">
+                Manage all of your money in one place!
+              </p>
+            </div>
+            <Button
+              onClick={() => setStep(2)}
+              className="w-full bg-foreground text-background hover:bg-foreground/90"
+            >
+              Continue
+            </Button>
+            <ProgressDots current={1} total={2} />
+          </div>
+        )}
 
-          <TabsContent value="login" className="space-y-4 mt-6">
-            <form onSubmit={handleLogin} className="space-y-4">
+        {/* Screen 2: Choose Login or Sign Up */}
+        {step === 2 && (
+          <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Welcome to Latela</h2>
+              <p className="text-muted-foreground">
+                Choose how you'd like to continue
+              </p>
+            </div>
+            <div className="w-full space-y-4">
+              <Button
+                onClick={() => setStep(3)}
+                className="w-full bg-foreground text-background hover:bg-foreground/90"
+              >
+                Login
+              </Button>
+              <Button
+                onClick={() => setStep(4)}
+                variant="outline"
+                className="w-full"
+              >
+                Sign Up
+              </Button>
+            </div>
+            <ProgressDots current={2} total={2} />
+          </div>
+        )}
+
+        {/* Screen 3: Login Form */}
+        {step === 3 && (
+          <div className="animate-fade-in">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold">Login</h2>
+              <p className="text-muted-foreground mt-2">Welcome back!</p>
+            </div>
+            <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+                <Label htmlFor="login-email" className="font-bold text-sm">
+                  Email
+                </Label>
                 <Input
                   id="login-email"
                   type="email"
                   placeholder="you@example.com"
                   value={loginData.email}
-                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                  onChange={(e) =>
+                    handleInputChange("email", e.target.value, "login")
+                  }
+                  className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
+                <Label htmlFor="login-password" className="font-bold text-sm">
+                  Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="login-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={loginData.password}
-                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value, "login")
+                    }
+                    className="border-0 border-b rounded-none px-0 pr-10 focus-visible:ring-0 focus-visible:border-primary"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    className="absolute right-0 top-1/2 -translate-y-1/2"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -196,28 +277,49 @@ const Auth = () => {
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? "Logging in..." : "Login"}
-              </Button>
+              <div className="space-y-4">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-foreground text-background hover:bg-foreground/90"
+                >
+                  {isLoading ? "Logging in..." : "Login"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setStep(2)}
+                  className="w-full"
+                >
+                  Back
+                </Button>
+              </div>
             </form>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="signup" className="space-y-4 mt-6">
-            <form onSubmit={handleSignup} className="space-y-4">
+        {/* Screen 4: Signup Form */}
+        {step === 4 && (
+          <div className="animate-fade-in">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold">Sign Up</h2>
+              <p className="text-muted-foreground mt-2">
+                Create your account
+              </p>
+            </div>
+            <form onSubmit={handleSignup} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="signup-username">Username</Label>
+                <Label htmlFor="signup-username" className="font-bold text-sm">
+                  Username
+                </Label>
                 <Input
                   id="signup-username"
                   placeholder="Your name"
                   value={signupData.username}
-                  onChange={(e) => {
-                    setSignupData({ ...signupData, username: e.target.value });
-                    setErrors({ ...errors, username: "" });
-                  }}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value, "signup")
+                  }
+                  className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
                 />
                 {errors.username && (
                   <p className="text-sm text-destructive">{errors.username}</p>
@@ -225,16 +327,18 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-email" className="font-bold text-sm">
+                  Email
+                </Label>
                 <Input
                   id="signup-email"
                   type="email"
                   placeholder="you@example.com"
                   value={signupData.email}
-                  onChange={(e) => {
-                    setSignupData({ ...signupData, email: e.target.value });
-                    setErrors({ ...errors, email: "" });
-                  }}
+                  onChange={(e) =>
+                    handleInputChange("email", e.target.value, "signup")
+                  }
+                  className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive">{errors.email}</p>
@@ -242,50 +346,111 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={signupData.password}
-                  onChange={(e) => {
-                    setSignupData({ ...signupData, password: e.target.value });
-                    setErrors({ ...errors, password: "" });
-                  }}
-                />
+                <Label htmlFor="signup-password" className="font-bold text-sm">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="signup-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={signupData.password}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value, "signup")
+                    }
+                    className="border-0 border-b rounded-none px-0 pr-10 focus-visible:ring-0 focus-visible:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-sm text-destructive">{errors.password}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-confirm">Confirm Password</Label>
-                <Input
-                  id="signup-confirm"
-                  type="password"
-                  placeholder="••••••••"
-                  value={signupData.confirmPassword}
-                  onChange={(e) => {
-                    setSignupData({ ...signupData, confirmPassword: e.target.value });
-                    setErrors({ ...errors, confirmPassword: "" });
-                  }}
-                />
+                <Label htmlFor="signup-confirm" className="font-bold text-sm">
+                  Confirm Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="signup-confirm"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={signupData.confirmPassword}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "confirmPassword",
+                        e.target.value,
+                        "signup"
+                      )
+                    }
+                    className="border-0 border-b rounded-none px-0 pr-10 focus-visible:ring-0 focus-visible:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </div>
                 {errors.confirmPassword && (
-                  <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.confirmPassword}
+                  </p>
                 )}
               </div>
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? "Creating account..." : "Sign Up"}
-              </Button>
+              <div className="space-y-4">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-foreground text-background hover:bg-foreground/90"
+                >
+                  {isLoading ? "Creating account..." : "Sign Up"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setStep(2)}
+                  className="w-full"
+                >
+                  Back
+                </Button>
+              </div>
             </form>
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </div>
+    </div>
+  );
+};
+
+const ProgressDots = ({ current, total }: { current: number; total: number }) => {
+  return (
+    <div className="flex gap-2 justify-center">
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className={`h-2 w-2 rounded-full transition-colors ${
+            i + 1 === current ? "bg-foreground" : "bg-muted"
+          }`}
+        />
+      ))}
     </div>
   );
 };
