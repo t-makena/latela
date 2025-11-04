@@ -121,8 +121,39 @@ const Settings = () => {
     setIsEditingMobile(false);
   };
 
-  const handleRemoveAccount = (accountId: string) => {
-    toast.success("Account removed successfully!");
+  const handleRemoveAccount = async (accountId: string) => {
+    if (!confirm("Are you sure you want to remove this account? All associated transactions will also be deleted.")) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // First delete all transactions associated with this account
+      const { error: transactionsError } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('account_id', accountId);
+
+      if (transactionsError) throw transactionsError;
+
+      // Then delete the account itself
+      const { error: accountError } = await supabase
+        .from('accounts')
+        .delete()
+        .eq('id', accountId);
+
+      if (accountError) throw accountError;
+
+      toast.success("Account removed successfully!");
+      
+      // Reload the page to refresh the accounts list
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error removing account:', error);
+      toast.error(error.message || "Failed to remove account");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -236,7 +267,9 @@ const Settings = () => {
                       size="icon" 
                       variant="ghost" 
                       onClick={() => handleRemoveAccount(account.id)}
+                      disabled={isLoading}
                       className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                      title="Remove account"
                     >
                       <X className="h-4 w-4" />
                     </Button>
