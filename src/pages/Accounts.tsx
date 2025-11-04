@@ -54,36 +54,8 @@ const Accounts = () => {
     setExpanded(false);
   };
 
-  // Mock data for now - will use allTransactions when expanded
-  const mockTransactions = [
-    {
-      id: 1,
-      category: "Housing & Utilities",
-      categoryColor: "bg-blue-100 text-blue-700",
-      name: "Rent",
-      date: "27 June 2025",
-      amount: -13000.00
-    },
-    {
-      id: 2,
-      category: "Savings & Investments",
-      categoryColor: "bg-green-100 text-green-700",
-      name: "Savings transfer",
-      date: "27 June 2025",
-      amount: -7000.00
-    },
-    {
-      id: 3,
-      category: "Personal & Lifestyle",
-      categoryColor: "bg-orange-100 text-orange-700",
-      name: "Futbol",
-      date: "27 June 2025",
-      amount: -85.00
-    }
-  ];
-
-  // Use mock data or real data based on expanded state
-  const displayTransactions = expanded ? allTransactions : mockTransactions;
+  // Use real transactions data
+  const displayTransactions = allTransactions;
 
   // Filter transactions based on selected category
   const filteredTransactions = selectedCategory 
