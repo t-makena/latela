@@ -203,7 +203,7 @@ async function parsePDF(content: string, fileName: string) {
     
     // Extract text using pdf-parse
     const pdfData = await pdfParse(buffer);
-    const extractedText = pdfData.text;
+    let extractedText = pdfData.text;
     const numPages = pdfData.numpages;
     
     console.log('[PDF] Text extracted successfully');
@@ -211,8 +211,19 @@ async function parsePDF(content: string, fileName: string) {
     console.log('[PDF] Text length:', extractedText.length, 'characters');
     console.log('[PDF] First 500 chars:', extractedText.substring(0, 500));
     
-    if (extractedText.length < 50) {
-      console.warn('[PDF] WARNING: Very little text extracted. PDF might be image-based or encrypted.');
+    // If text extraction yielded minimal content, try OCR
+    if (extractedText.length < 100) {
+      console.warn('[PDF] Very little text extracted (', extractedText.length, 'chars). Attempting OCR...');
+      const ocrText = await performOCR(content);
+      
+      if (ocrText && ocrText.length > extractedText.length) {
+        console.log('[OCR] OCR yielded more text:', ocrText.length, 'chars vs', extractedText.length, 'chars');
+        extractedText = ocrText;
+      } else if (ocrText) {
+        console.log('[OCR] OCR completed but yielded less text:', ocrText.length, 'chars');
+      } else {
+        console.warn('[OCR] OCR failed to extract text');
+      }
     }
     
     // Detect bank
@@ -301,6 +312,83 @@ async function parsePDF(content: string, fileName: string) {
     console.error('[PDF] Error during PDF parsing:', error);
     console.error('[PDF] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     throw error;
+  }
+}
+
+async function performOCR(base64Content: string): Promise<string> {
+  console.log('[OCR] Starting OCR process...');
+  
+  const apiKey = Deno.env.get('OCR_SPACE_API_KEY');
+  
+  if (!apiKey) {
+    console.error('[OCR] No OCR_SPACE_API_KEY found in environment variables');
+    return '';
+  }
+  
+  try {
+    console.log('[OCR] Sending request to OCR.Space API...');
+    
+    // OCR.Space API expects base64 data with proper prefix
+    const base64WithPrefix = `data:application/pdf;base64,${btoa(base64Content)}`;
+    
+    const formData = new FormData();
+    formData.append('base64Image', base64WithPrefix);
+    formData.append('language', 'eng');
+    formData.append('isOverlayRequired', 'false');
+    formData.append('detectOrientation', 'true');
+    formData.append('scale', 'true');
+    formData.append('OCREngine', '2'); // Use OCR Engine 2 for better accuracy
+    formData.append('filetype', 'PDF');
+    
+    const response = await fetch('https://api.ocr.space/parse/image', {
+      method: 'POST',
+      headers: { 
+        'apikey': apiKey 
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      console.error('[OCR] API request failed with status:', response.status);
+      const errorText = await response.text();
+      console.error('[OCR] Error response:', errorText);
+      return '';
+    }
+    
+    const result = await response.json();
+    console.log('[OCR] API Response status:', result.OCRExitCode);
+    console.log('[OCR] Processing time:', result.ProcessingTimeInMilliseconds, 'ms');
+    
+    if (result.IsErroredOnProcessing) {
+      console.error('[OCR] OCR processing error:', result.ErrorMessage);
+      console.error('[OCR] Error details:', result.ErrorDetails);
+      return '';
+    }
+    
+    if (result.ParsedResults && result.ParsedResults.length > 0) {
+      let fullText = '';
+      
+      for (let i = 0; i < result.ParsedResults.length; i++) {
+        const pageResult = result.ParsedResults[i];
+        console.log(`[OCR] Page ${i + 1} text length:`, pageResult.ParsedText?.length || 0);
+        
+        if (pageResult.ParsedText) {
+          fullText += pageResult.ParsedText + '\n';
+        }
+      }
+      
+      console.log('[OCR] Total OCR text extracted:', fullText.length, 'characters');
+      console.log('[OCR] First 500 chars:', fullText.substring(0, 500));
+      
+      return fullText;
+    }
+    
+    console.warn('[OCR] No parsed results in OCR response');
+    return '';
+  } catch (error) {
+    console.error('[OCR] Error during OCR processing:', error);
+    console.error('[OCR] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    return '';
   }
 }
 
