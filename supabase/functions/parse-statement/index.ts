@@ -173,25 +173,29 @@ function parsePDF(content: string, fileName: string) {
   // Extract account number using improved function
   const accountNumber = extractAccountNumber(content, bankName);
   
-  // Extract balance (looking for patterns like "Balance: R 1,234.56" or "Current Balance")
+  // Extract balance with more comprehensive patterns
   const balancePatterns = [
-    /(?:Current\s+)?Balance[:\s]+R?\s*([\d,]+\.?\d*)/i,
-    /Closing\s+Balance[:\s]+R?\s*([\d,]+\.?\d*)/i,
-    /Available\s+Balance[:\s]+R?\s*([\d,]+\.?\d*)/i,
+    /(?:Current|Closing|Available|Statement)\s+Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
+    /Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
+    /R\s*([\d,\s]+\.\d{2})\s+(?:CR|DR)?$/gm,
   ];
   
   let currentBalance = 0;
   for (const pattern of balancePatterns) {
-    const balanceMatch = content.match(pattern);
-    if (balanceMatch && balanceMatch[1]) {
-      currentBalance = parseAmount(balanceMatch[1]);
-      break;
+    const matches = Array.from(content.matchAll(pattern));
+    if (matches.length > 0) {
+      // Get the last balance mentioned (most recent)
+      const lastMatch = matches[matches.length - 1];
+      if (lastMatch[1]) {
+        currentBalance = parseAmount(lastMatch[1]);
+        break;
+      }
     }
   }
   
   const accountType = detectAccountType(content, fileName);
   
-  // Extract transactions using bank-specific patterns
+  // Extract transactions using improved patterns
   const transactions = extractTransactionsFromPDF(content, bankName);
 
   return {
@@ -217,40 +221,89 @@ function parsePDF(content: string, fileName: string) {
 function extractTransactionsFromPDF(content: string, bankName: string) {
   const transactions = [];
   
-  // Bank-specific row patterns
-  const patterns: Record<string, RegExp> = {
-    'FNB': /(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})/g,
-    'ABSA': /(\d{4}-\d{2}-\d{2})\s+(.+?)\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})/g,
-    'Standard Bank': /(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([\d,]+\.\d{2})/g,
-    'Nedbank': /(\d{2}-\d{2}-\d{4})\s+(.+?)\s+([\d,]+\.\d{2})/g,
-    'Capitec': /(\d{4}\/\d{2}\/\d{2})\s+(.+?)\s+([\d\s]+\.\d{2})/g,
-  };
+  // Split content into lines for better parsing
+  const lines = content.split('\n').map(line => line.trim()).filter(line => line);
   
-  const pattern = patterns[bankName] || /(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})\s+(.+?)\s+([\d,\s]+\.\d{2})/g;
+  // Multiple date patterns for SA banks
+  const datePatterns = [
+    /(\d{1,2}\/\d{1,2}\/\d{4})/,           // DD/MM/YYYY or D/M/YYYY
+    /(\d{4}\/\d{1,2}\/\d{1,2})/,           // YYYY/MM/DD or YYYY/M/D
+    /(\d{1,2}-\d{1,2}-\d{4})/,             // DD-MM-YYYY
+    /(\d{4}-\d{1,2}-\d{1,2})/,             // YYYY-MM-DD
+    /(\d{2}\s+[A-Za-z]{3}\s+\d{4})/,       // DD MMM YYYY
+  ];
   
-  const matches = content.matchAll(pattern);
+  // Amount pattern - more flexible to catch various formats
+  const amountPattern = /R?\s*([\d,\s]+\.\d{2})/;
   
-  for (const match of matches) {
-    const date = match[1];
-    const description = match[2].trim();
-    const amount = parseAmount(match[3]);
-    const balance = match[4] ? parseAmount(match[4]) : 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     
-    // Determine if debit or credit
-    const isDebit = description.toUpperCase().includes('DEBIT') || 
-                    description.toUpperCase().includes('PURCHASE') ||
-                    description.toUpperCase().includes('PAYMENT') ||
+    // Try to find a date in the line
+    let dateMatch = null;
+    let dateStr = '';
+    
+    for (const datePattern of datePatterns) {
+      dateMatch = line.match(datePattern);
+      if (dateMatch) {
+        dateStr = dateMatch[1];
+        break;
+      }
+    }
+    
+    if (!dateMatch) continue;
+    
+    // Extract the rest of the line after the date
+    const afterDate = line.substring(line.indexOf(dateStr) + dateStr.length).trim();
+    
+    // Find all amounts in the line
+    const amounts = [];
+    let match;
+    const amountRegex = new RegExp(amountPattern, 'g');
+    while ((match = amountRegex.exec(afterDate)) !== null) {
+      amounts.push(match[1]);
+    }
+    
+    if (amounts.length === 0) continue;
+    
+    // Description is everything between date and first amount
+    const firstAmountIndex = afterDate.indexOf(amounts[0]);
+    let description = afterDate.substring(0, firstAmountIndex).trim();
+    
+    // If description is too short, check next line
+    if (description.length < 3 && i + 1 < lines.length) {
+      const nextLine = lines[i + 1];
+      if (!datePatterns.some(p => p.test(nextLine))) {
+        description = nextLine.trim();
+        i++; // Skip the next line
+      }
+    }
+    
+    // Parse amounts - last one is usually balance, second-to-last is transaction amount
+    const amount = amounts.length >= 2 ? parseAmount(amounts[amounts.length - 2]) : parseAmount(amounts[0]);
+    const balance = amounts.length >= 2 ? parseAmount(amounts[amounts.length - 1]) : 0;
+    
+    // Determine transaction type
+    const descUpper = description.toUpperCase();
+    const isDebit = descUpper.includes('DEBIT') || 
+                    descUpper.includes('PURCHASE') ||
+                    descUpper.includes('PAYMENT') ||
+                    descUpper.includes('WITHDRAWAL') ||
+                    descUpper.includes('FEE') ||
+                    descUpper.includes('LEVY') ||
                     amount < 0;
     
-    transactions.push({
-      date: normalizeDate(date, bankName),
-      description: description,
-      amount: Math.abs(amount),
-      balance: balance,
-      reference: description.substring(0, 50),
-      merchantName: extractMerchantName(description),
-      type: isDebit ? 'debit' : 'credit',
-    });
+    if (description.length > 2) {
+      transactions.push({
+        date: normalizeDate(dateStr, bankName),
+        description: description,
+        amount: Math.abs(amount),
+        balance: balance,
+        reference: description.substring(0, 50),
+        merchantName: extractMerchantName(description),
+        type: isDebit ? 'debit' : 'credit',
+      });
+    }
   }
   
   return transactions;
