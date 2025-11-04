@@ -15,7 +15,6 @@ import {
 } from "recharts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics } from "@/lib/realData";
-import { BudgetInsights } from "@/components/financial-insight/BudgetInsights";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
@@ -136,13 +135,10 @@ const FinancialInsight = () => {
       
       <div className="border-b border-foreground mb-6" />
 
-      {/* Two Column Layout: Insights + Budget Allocation */}
+      {/* Two Column Layout: Budget Insight + Budget Allocation */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="space-y-6">
-          {/* 4-point summary */}
-          <BudgetInsights isLoading={loading} />
-          
-          {/* Budget Insight Table */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Budget Insight</h3>
           <BudgetBreakdown 
             availableBalance={availableBalance}
             budgetBalance={budgetBalance}
