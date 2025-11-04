@@ -623,47 +623,79 @@ function detectBank(fileName: string, content: string): string {
   const contentUpper = content.toUpperCase();
   const fileUpper = fileName.toUpperCase();
   
-  // Check Capitec first with more specific patterns
-  if (contentUpper.includes('CAPITEC BANK') || 
-      contentUpper.includes('CAPITEC') && contentUpper.includes('ACCOUNT STATEMENT') ||
-      fileUpper.includes('CAPITEC')) {
-    console.log('[DETECT-BANK] Matched: Capitec');
+  // More flexible Capitec detection - check for any mention of Capitec
+  if (contentUpper.includes('CAPITEC') || fileUpper.includes('CAPITEC')) {
+    console.log('[DETECT-BANK] Matched: Capitec (flexible match)');
     return 'Capitec';
   }
-  if (contentUpper.includes('FNB') || contentUpper.includes('FIRST NATIONAL BANK') || fileUpper.includes('FNB')) {
+  
+  // FNB variations
+  if (contentUpper.includes('FNB') || 
+      contentUpper.includes('FIRST NATIONAL BANK') || 
+      contentUpper.includes('FIRSTRAND') ||
+      fileUpper.includes('FNB')) {
     console.log('[DETECT-BANK] Matched: FNB');
     return 'FNB';
   }
-  if (contentUpper.includes('ABSA') || fileUpper.includes('ABSA')) {
+  
+  // ABSA variations
+  if (contentUpper.includes('ABSA') || 
+      contentUpper.includes('AMALGAMATED BANKS') ||
+      fileUpper.includes('ABSA')) {
     console.log('[DETECT-BANK] Matched: ABSA');
     return 'ABSA';
   }
-  if (contentUpper.includes('STANDARD BANK') || contentUpper.includes('STANBIC') || fileUpper.includes('STANDARD')) {
+  
+  // Standard Bank variations
+  if (contentUpper.includes('STANDARD BANK') || 
+      contentUpper.includes('STANBIC') || 
+      contentUpper.includes('STANDARD CHARTERED') ||
+      fileUpper.includes('STANDARD')) {
     console.log('[DETECT-BANK] Matched: Standard Bank');
     return 'Standard Bank';
   }
-  if (contentUpper.includes('NEDBANK') || fileUpper.includes('NEDBANK')) {
+  
+  // Nedbank variations
+  if (contentUpper.includes('NEDBANK') || 
+      contentUpper.includes('NED BANK') ||
+      fileUpper.includes('NEDBANK')) {
     console.log('[DETECT-BANK] Matched: Nedbank');
     return 'Nedbank';
   }
-  if (contentUpper.includes('DISCOVERY BANK') || contentUpper.includes('DISCOVERY') || fileUpper.includes('DISCOVERY')) {
+  
+  // Discovery Bank variations
+  if (contentUpper.includes('DISCOVERY BANK') || 
+      contentUpper.includes('DISCOVERY') && (contentUpper.includes('BANK') || contentUpper.includes('ACCOUNT')) ||
+      fileUpper.includes('DISCOVERY')) {
     console.log('[DETECT-BANK] Matched: Discovery Bank');
     return 'Discovery Bank';
   }
-  if (contentUpper.includes('TYMEBANK') || contentUpper.includes('TYME BANK') || fileUpper.includes('TYME')) {
+  
+  // TymeBank variations
+  if (contentUpper.includes('TYMEBANK') || 
+      contentUpper.includes('TYME BANK') || 
+      contentUpper.includes('TYME DIGITAL') ||
+      fileUpper.includes('TYME')) {
     console.log('[DETECT-BANK] Matched: TymeBank');
     return 'TymeBank';
   }
-  if (contentUpper.includes('BANK ZERO') || fileUpper.includes('BANKZERO')) {
+  
+  // Bank Zero variations
+  if (contentUpper.includes('BANK ZERO') || 
+      contentUpper.includes('BANKZERO') ||
+      fileUpper.includes('BANKZERO')) {
     console.log('[DETECT-BANK] Matched: Bank Zero');
     return 'Bank Zero';
   }
+  
+  // Investec variations
   if (contentUpper.includes('INVESTEC') || fileUpper.includes('INVESTEC')) {
     console.log('[DETECT-BANK] Matched: Investec');
     return 'Investec';
   }
 
   console.log('[DETECT-BANK] No match found - returning Unknown Bank');
+  console.log('[DETECT-BANK] Content sample (first 1000 chars):', content.substring(0, 1000));
   return 'Unknown Bank';
 }
 
