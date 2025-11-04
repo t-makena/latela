@@ -193,7 +193,7 @@ function parseCSV(content: string, fileName: string) {
 }
 
 async function parsePDF(content: string, fileName: string) {
-  console.log('[PDF] Starting PDF text extraction...');
+  console.log('[PDF] Starting dual extraction (PDF + OCR)...');
   
   try {
     // Convert string content to Uint8Array buffer for pdf-parse
@@ -201,37 +201,57 @@ async function parsePDF(content: string, fileName: string) {
     const buffer = encoder.encode(content);
     console.log('[PDF] Buffer created:', buffer.length, 'bytes');
     
-    // Extract text using pdf-parse
-    const pdfData = await pdfParse(buffer);
-    let extractedText = pdfData.text;
-    const numPages = pdfData.numpages;
+    // Run BOTH PDF text extraction AND OCR in parallel
+    console.log('[PDF] Running PDF text extraction and OCR simultaneously...');
+    const [pdfResult, ocrText] = await Promise.all([
+      (async () => {
+        try {
+          const pdfData = await pdfParse(buffer);
+          console.log('[PDF] Text extraction complete');
+          console.log('[PDF] Pages:', pdfData.numpages);
+          console.log('[PDF] Text length:', pdfData.text.length, 'characters');
+          return { text: pdfData.text, pages: pdfData.numpages };
+        } catch (error) {
+          console.error('[PDF] Text extraction failed:', error);
+          return { text: '', pages: 0 };
+        }
+      })(),
+      performOCR(content)
+    ]);
     
-    console.log('[PDF] Text extracted successfully');
-    console.log('[PDF] Pages:', numPages);
-    console.log('[PDF] Text length:', extractedText.length, 'characters');
-    console.log('[PDF] First 500 chars:', extractedText.substring(0, 500));
+    const pdfText = pdfResult.text;
+    const numPages = pdfResult.pages;
     
-    // If text extraction yielded minimal content, try OCR
-    if (extractedText.length < 100) {
-      console.warn('[PDF] Very little text extracted (', extractedText.length, 'chars). Attempting OCR...');
-      const ocrText = await performOCR(content);
-      
-      if (ocrText && ocrText.length > extractedText.length) {
-        console.log('[OCR] OCR yielded more text:', ocrText.length, 'chars vs', extractedText.length, 'chars');
-        extractedText = ocrText;
-      } else if (ocrText) {
-        console.log('[OCR] OCR completed but yielded less text:', ocrText.length, 'chars');
-      } else {
-        console.warn('[OCR] OCR failed to extract text');
-      }
+    console.log('[PDF] PDF Text length:', pdfText.length, 'characters');
+    console.log('[OCR] OCR Text length:', ocrText.length, 'characters');
+    
+    // Combine both texts - prioritize the longer one but keep both for better pattern matching
+    let combinedText = '';
+    
+    if (pdfText.length > 0 && ocrText.length > 0) {
+      // Both methods extracted text - combine them
+      console.log('[COMBINE] Using combined text from both PDF and OCR');
+      combinedText = pdfText + '\n\n=== OCR TEXT ===\n\n' + ocrText;
+    } else if (pdfText.length > 0) {
+      console.log('[COMBINE] Using only PDF text (OCR failed)');
+      combinedText = pdfText;
+    } else if (ocrText.length > 0) {
+      console.log('[COMBINE] Using only OCR text (PDF extraction failed)');
+      combinedText = ocrText;
+    } else {
+      console.error('[COMBINE] Both PDF extraction and OCR failed!');
+      throw new Error('Unable to extract any text from PDF');
     }
     
+    console.log('[COMBINE] Combined text length:', combinedText.length, 'characters');
+    console.log('[COMBINE] First 500 chars:', combinedText.substring(0, 500));
+    
     // Detect bank
-    const bankName = detectBank(fileName, extractedText);
+    const bankName = detectBank(fileName, combinedText);
     console.log('[BANK] Detected bank:', bankName);
     
     // Extract account number
-    const accountNumber = extractAccountNumber(extractedText, bankName);
+    const accountNumber = extractAccountNumber(combinedText, bankName);
     console.log('[ACCOUNT] Extracted account number:', accountNumber);
     
     // Extract balance with specific patterns for different banks
@@ -240,7 +260,7 @@ async function parsePDF(content: string, fileName: string) {
     
     // Capitec-specific balance extraction
     if (bankName === 'Capitec') {
-      const closingBalanceMatch = extractedText.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
+      const closingBalanceMatch = combinedText.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
       if (closingBalanceMatch && closingBalanceMatch[1]) {
         currentBalance = parseAmount(closingBalanceMatch[1]);
         console.log('[BALANCE] Found Capitec closing balance:', currentBalance);
@@ -257,7 +277,7 @@ async function parsePDF(content: string, fileName: string) {
       
       for (let i = 0; i < balancePatterns.length; i++) {
         const pattern = balancePatterns[i];
-        const matches = Array.from(extractedText.matchAll(pattern));
+        const matches = Array.from(combinedText.matchAll(pattern));
         console.log(`[BALANCE] Pattern ${i + 1} matches:`, matches.length);
         
         if (matches.length > 0) {
@@ -276,12 +296,12 @@ async function parsePDF(content: string, fileName: string) {
       console.warn('[BALANCE] WARNING: No balance found in PDF');
     }
     
-    const accountType = detectAccountType(extractedText, fileName);
+    const accountType = detectAccountType(combinedText, fileName);
     console.log('[ACCOUNT-TYPE] Detected type:', accountType);
     
     // Extract transactions using improved patterns
     console.log('[TRANSACTIONS] Starting transaction extraction...');
-    const transactions = extractTransactionsFromPDF(extractedText, bankName);
+    const transactions = extractTransactionsFromPDF(combinedText, bankName);
     console.log('[TRANSACTIONS] Extracted', transactions.length, 'transactions');
     
     if (transactions.length > 0) {
