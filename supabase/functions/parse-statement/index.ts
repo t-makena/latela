@@ -66,14 +66,25 @@ function parseCSV(content: string, fileName: string) {
   // Detect bank from filename or content
   const bankName = detectBank(fileName, content);
   
-  // Parse header
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  // Parse header - support various column naming conventions
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
   
-  // Find column indices
-  const dateIdx = headers.findIndex(h => h.includes('date'));
-  const descIdx = headers.findIndex(h => h.includes('description') || h.includes('detail'));
-  const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('value'));
-  const balanceIdx = headers.findIndex(h => h.includes('balance'));
+  // Find column indices with multiple possible names per field
+  const dateIdx = headers.findIndex(h => 
+    h.includes('date') || h.includes('transaction date') || h === 'date'
+  );
+  const descIdx = headers.findIndex(h => 
+    h.includes('description') || h.includes('detail') || h.includes('narrative') || h === 'description'
+  );
+  const amountIdx = headers.findIndex(h => 
+    h.includes('amount') || h.includes('value') || h === 'amount'
+  );
+  const balanceIdx = headers.findIndex(h => 
+    h.includes('balance') || h === 'balance'
+  );
+  const typeIdx = headers.findIndex(h => 
+    h.includes('type') || h === 'type'
+  );
   
   if (dateIdx === -1 || descIdx === -1 || amountIdx === -1) {
     throw new Error('Could not find required columns in CSV');
@@ -88,7 +99,7 @@ function parseCSV(content: string, fileName: string) {
     const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
     
     // Try to extract account number from first few rows
-    if (i <= 3 && !accountNumber) {
+    if (i <= 5 && !accountNumber) {
       const accMatch = lines[i].match(/\b\d{10,16}\b/);
       if (accMatch) {
         accountNumber = accMatch[0];
@@ -96,26 +107,39 @@ function parseCSV(content: string, fileName: string) {
     }
 
     if (values.length > Math.max(dateIdx, descIdx, amountIdx)) {
-      const amount = parseAmount(values[amountIdx]);
+      const rawAmount = values[amountIdx];
+      const amount = parseAmount(rawAmount);
       const balance = balanceIdx !== -1 ? parseAmount(values[balanceIdx]) : 0;
+      const rawDescription = values[descIdx];
+      const typeValue = typeIdx !== -1 ? values[typeIdx] : '';
       
       if (balance > 0) {
         currentBalance = balance;
       }
 
+      // Determine transaction type
+      const isDebit = rawAmount.includes('-') || 
+                      typeValue.toUpperCase().includes('DEBIT') ||
+                      rawDescription.toUpperCase().includes('DEBIT') ||
+                      rawDescription.toUpperCase().includes('PURCHASE') ||
+                      rawDescription.toUpperCase().includes('PAYMENT');
+
       transactions.push({
-        date: values[dateIdx],
-        description: values[descIdx],
-        amount: amount,
+        date: normalizeDate(values[dateIdx], bankName),
+        description: rawDescription,
+        amount: Math.abs(amount),
         balance: balance,
-        reference: values[descIdx].substring(0, 50),
+        reference: rawDescription.substring(0, 50),
+        merchantName: extractMerchantName(rawDescription),
+        type: isDebit ? 'debit' : 'credit',
       });
     }
   }
 
-  // If no account number found, generate from filename
+  // If no account number found, use better extraction
   if (!accountNumber) {
-    accountNumber = fileName.replace(/\D/g, '').substring(0, 10) || '0000000000';
+    const fullContent = lines.slice(0, 5).join('\n');
+    accountNumber = extractAccountNumber(fullContent, bankName);
   }
 
   // Detect account type
@@ -142,65 +166,223 @@ function parseCSV(content: string, fileName: string) {
 }
 
 function parsePDF(content: string, fileName: string) {
-  // For PDF, we'll do basic text extraction
-  // In a real implementation, you'd use a proper PDF parser
+  // For PDF, we'll do text extraction and pattern matching
   
   const bankName = detectBank(fileName, content);
   
-  // Extract account number (looking for patterns like 62XXXXXXXX or similar)
-  const accountMatch = content.match(/\b\d{10,16}\b/);
-  const accountNumber = accountMatch ? accountMatch[0] : '0000000000';
+  // Extract account number using improved function
+  const accountNumber = extractAccountNumber(content, bankName);
   
-  // Extract balance (looking for patterns like "Balance: R 1,234.56")
-  const balanceMatch = content.match(/(?:balance|current balance).*?R?\s*([\d,]+\.?\d*)/i);
-  const currentBalance = balanceMatch ? parseAmount(balanceMatch[1]) : 0;
+  // Extract balance (looking for patterns like "Balance: R 1,234.56" or "Current Balance")
+  const balancePatterns = [
+    /(?:Current\s+)?Balance[:\s]+R?\s*([\d,]+\.?\d*)/i,
+    /Closing\s+Balance[:\s]+R?\s*([\d,]+\.?\d*)/i,
+    /Available\s+Balance[:\s]+R?\s*([\d,]+\.?\d*)/i,
+  ];
+  
+  let currentBalance = 0;
+  for (const pattern of balancePatterns) {
+    const balanceMatch = content.match(pattern);
+    if (balanceMatch && balanceMatch[1]) {
+      currentBalance = parseAmount(balanceMatch[1]);
+      break;
+    }
+  }
   
   const accountType = detectAccountType(content, fileName);
+  
+  // Extract transactions using bank-specific patterns
+  const transactions = extractTransactionsFromPDF(content, bankName);
 
-  // For now, return minimal data
-  // In production, you'd parse actual transactions from the PDF
   return {
     accountInfo: {
       accountNumber,
       bankName,
       accountType,
-      accountName: `${bankName} Account`,
+      accountName: `${bankName} ${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Account`,
       currentBalance,
       currency: 'ZAR',
     },
-    transactions: [],
+    transactions,
     summary: {
-      totalTransactions: 0,
-      dateRange: null,
+      totalTransactions: transactions.length,
+      dateRange: transactions.length > 0 ? {
+        from: transactions[transactions.length - 1].date,
+        to: transactions[0].date,
+      } : null,
     },
   };
 }
 
-function detectBank(fileName: string, content: string): string {
-  const lowerFileName = fileName.toLowerCase();
-  const lowerContent = content.toLowerCase();
+function extractTransactionsFromPDF(content: string, bankName: string) {
+  const transactions = [];
   
-  const banks = [
-    { name: 'FNB', keywords: ['fnb', 'first national'] },
-    { name: 'ABSA', keywords: ['absa'] },
-    { name: 'Standard Bank', keywords: ['standard bank', 'stanbic'] },
-    { name: 'Nedbank', keywords: ['nedbank'] },
-    { name: 'Capitec', keywords: ['capitec'] },
-    { name: 'Discovery Bank', keywords: ['discovery'] },
-    { name: 'TymeBank', keywords: ['tymebank', 'tyme'] },
-    { name: 'Bank Zero', keywords: ['bank zero'] },
-    { name: 'Investec', keywords: ['investec'] },
-  ];
+  // Bank-specific row patterns
+  const patterns: Record<string, RegExp> = {
+    'FNB': /(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})/g,
+    'ABSA': /(\d{4}-\d{2}-\d{2})\s+(.+?)\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})/g,
+    'Standard Bank': /(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([\d,]+\.\d{2})/g,
+    'Nedbank': /(\d{2}-\d{2}-\d{4})\s+(.+?)\s+([\d,]+\.\d{2})/g,
+    'Capitec': /(\d{4}\/\d{2}\/\d{2})\s+(.+?)\s+([\d\s]+\.\d{2})/g,
+  };
+  
+  const pattern = patterns[bankName] || /(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})\s+(.+?)\s+([\d,\s]+\.\d{2})/g;
+  
+  const matches = content.matchAll(pattern);
+  
+  for (const match of matches) {
+    const date = match[1];
+    const description = match[2].trim();
+    const amount = parseAmount(match[3]);
+    const balance = match[4] ? parseAmount(match[4]) : 0;
+    
+    // Determine if debit or credit
+    const isDebit = description.toUpperCase().includes('DEBIT') || 
+                    description.toUpperCase().includes('PURCHASE') ||
+                    description.toUpperCase().includes('PAYMENT') ||
+                    amount < 0;
+    
+    transactions.push({
+      date: normalizeDate(date, bankName),
+      description: description,
+      amount: Math.abs(amount),
+      balance: balance,
+      reference: description.substring(0, 50),
+      merchantName: extractMerchantName(description),
+      type: isDebit ? 'debit' : 'credit',
+    });
+  }
+  
+  return transactions;
+}
 
-  for (const bank of banks) {
-    for (const keyword of bank.keywords) {
-      if (lowerFileName.includes(keyword) || lowerContent.includes(keyword)) {
-        return bank.name;
-      }
-    }
+function detectBank(fileName: string, content: string): string {
+  const contentUpper = content.toUpperCase();
+  const fileUpper = fileName.toUpperCase();
+  
+  if (contentUpper.includes('FNB') || contentUpper.includes('FIRST NATIONAL BANK') || fileUpper.includes('FNB')) {
+    return 'FNB';
+  }
+  if (contentUpper.includes('ABSA') || fileUpper.includes('ABSA')) {
+    return 'ABSA';
+  }
+  if (contentUpper.includes('STANDARD BANK') || contentUpper.includes('STANBIC') || fileUpper.includes('STANDARD')) {
+    return 'Standard Bank';
+  }
+  if (contentUpper.includes('NEDBANK') || fileUpper.includes('NEDBANK')) {
+    return 'Nedbank';
+  }
+  if (contentUpper.includes('CAPITEC') || fileUpper.includes('CAPITEC')) {
+    return 'Capitec';
+  }
+  if (contentUpper.includes('DISCOVERY BANK') || contentUpper.includes('DISCOVERY') || fileUpper.includes('DISCOVERY')) {
+    return 'Discovery Bank';
+  }
+  if (contentUpper.includes('TYMEBANK') || contentUpper.includes('TYME BANK') || fileUpper.includes('TYME')) {
+    return 'TymeBank';
+  }
+  if (contentUpper.includes('BANK ZERO') || fileUpper.includes('BANKZERO')) {
+    return 'Bank Zero';
+  }
+  if (contentUpper.includes('INVESTEC') || fileUpper.includes('INVESTEC')) {
+    return 'Investec';
   }
 
   return 'Unknown Bank';
+}
+
+function extractAccountNumber(content: string, bankName: string): string {
+  // Bank-specific patterns
+  const bankPatterns: Record<string, RegExp[]> = {
+    'FNB': [
+      /Account\s+Number[:\s]+(\d{10,16})/i,
+      /Acc(?:ount)?[:\s]+(\d{10,16})/i
+    ],
+    'ABSA': [
+      /Account\s+(?:Number|No)[:\s]+(\d{10,16})/i,
+      /(\d{10})\s+\d{2}\/\d{2}\/\d{4}/
+    ],
+    'Standard Bank': [
+      /Account\s+(?:Number|No)[:\s]+(\d{10,16})/i,
+      /Acc[:\s]+(\d{10,16})/i
+    ],
+    'Nedbank': [
+      /Account\s+Number[:\s]+(\d{10,16})/i,
+      /(\d{10,16})\s+Current/i
+    ],
+    'Capitec': [
+      /Account\s+Number[:\s]+(\d{10,16})/i,
+      /Global\s+One[:\s]+(\d{10,16})/i
+    ]
+  };
+
+  // Try bank-specific patterns first
+  const patterns = bankPatterns[bankName] || [];
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      return match[1].replace(/[\s-]/g, '');
+    }
+  }
+
+  // Generic fallback patterns
+  const genericPatterns = [
+    /Account\s*(?:Number|No|#)?[:\s]+(\d{10,16})/i,
+    /Acc(?:ount)?[:\s]+(\d{10,16})/i,
+    /A\/C[:\s]+(\d{10,16})/i,
+    /(\d{10,16})\s*(?:Cheque|Current|Savings)/i,
+    /\b(\d{10,16})\b/
+  ];
+
+  for (const pattern of genericPatterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      return match[1].replace(/[\s-]/g, '');
+    }
+  }
+
+  return '0000000000';
+}
+
+function normalizeDate(dateStr: string, bankName: string): string {
+  // Handle different SA bank date formats
+  if (dateStr.includes('/')) {
+    const parts = dateStr.split('/');
+    if (parts[0].length === 4) {
+      // YYYY/MM/DD (Capitec)
+      return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+    } else {
+      // DD/MM/YYYY (FNB, Standard Bank)
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+  } else if (dateStr.includes('-')) {
+    const parts = dateStr.split('-');
+    if (parts[0].length === 4) {
+      // Already YYYY-MM-DD (ABSA)
+      return dateStr;
+    } else {
+      // DD-MM-YYYY (Nedbank)
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+  }
+  
+  return dateStr;
+}
+
+function extractMerchantName(description: string): string {
+  let merchant = description
+    .replace(/\bPURCHASE\b|\bDEBIT\b|\bCREDIT\b|\bPAYMENT\b|\bTRANSFER\b/gi, '')
+    .replace(/\bCARD\s+\d+/gi, '') // Remove card numbers
+    .replace(/\d{2}\/\d{2}\/\d{4}/g, '') // Remove dates
+    .replace(/\d{4}-\d{2}-\d{2}/g, '') // Remove dates
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Take first meaningful part (often the merchant name comes first)
+  const parts = merchant.split(/\s{2,}/); // Split on multiple spaces
+  merchant = parts[0] || merchant;
+  
+  return merchant.substring(0, 100); // Limit length
 }
 
 function detectAccountType(content: string, fileName: string): 'checking' | 'savings' | 'credit' {
