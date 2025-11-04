@@ -246,6 +246,24 @@ async function parsePDF(content: string, fileName: string) {
     console.log('[COMBINE] Combined text length:', combinedText.length, 'characters');
     console.log('[COMBINE] First 500 chars:', combinedText.substring(0, 500));
     
+    // If combined text is still too short, throw a helpful error
+    if (combinedText.length < 50) {
+      console.error('[COMBINE] CRITICAL: Insufficient text extracted');
+      console.error('[COMBINE] PDF text length:', pdfText.length);
+      console.error('[COMBINE] OCR text length:', ocrText.length);
+      console.error('[COMBINE] This usually means:');
+      console.error('[COMBINE]   1. PDF has corrupt/compressed streams (Bad FCHECK errors)');
+      console.error('[COMBINE]   2. PDF is image-based but OCR quality is poor');
+      console.error('[COMBINE]   3. OCR hit page limit (free tier: 3 pages, this PDF:', numPages, 'pages)');
+      
+      throw new Error(
+        `Unable to extract readable text from PDF. ` +
+        `Extracted only ${combinedText.length} characters from ${numPages} pages. ` +
+        `This PDF may be corrupted, have poor image quality, or exceed the 3-page OCR limit. ` +
+        `Try: 1) Downloading a fresh copy, 2) Converting to images first, 3) Using first 3 pages only.`
+      );
+    }
+    
     // Detect bank
     const bankName = detectBank(fileName, combinedText);
     console.log('[BANK] Detected bank:', bankName);
@@ -347,6 +365,7 @@ async function performOCR(base64Content: string): Promise<string> {
   
   try {
     console.log('[OCR] Sending request to OCR.Space API...');
+    console.log('[OCR] Note: Free tier OCR.Space limits to 3 pages per request');
     
     // OCR.Space API expects base64 data with proper prefix
     const base64WithPrefix = `data:application/pdf;base64,${btoa(base64Content)}`;
@@ -359,6 +378,7 @@ async function performOCR(base64Content: string): Promise<string> {
     formData.append('scale', 'true');
     formData.append('OCREngine', '2'); // Use OCR Engine 2 for better accuracy
     formData.append('filetype', 'PDF');
+    formData.append('isTable', 'true'); // Enable table detection for bank statements
     
     const response = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
@@ -382,7 +402,19 @@ async function performOCR(base64Content: string): Promise<string> {
     if (result.IsErroredOnProcessing) {
       console.error('[OCR] OCR processing error:', result.ErrorMessage);
       console.error('[OCR] Error details:', result.ErrorDetails);
-      return '';
+      
+      // Check if it's a page limit error
+      if (result.ErrorDetails && Array.isArray(result.ErrorDetails)) {
+        const pageLimitError = result.ErrorDetails.find((err: string) => 
+          err.includes('maximum page limit') || err.includes('page limit')
+        );
+        if (pageLimitError) {
+          console.warn('[OCR] Page limit reached - only first 3 pages processed');
+          // Continue processing even with page limit - we'll get the first 3 pages
+        }
+      } else {
+        return '';
+      }
     }
     
     if (result.ParsedResults && result.ParsedResults.length > 0) {
@@ -393,12 +425,16 @@ async function performOCR(base64Content: string): Promise<string> {
         console.log(`[OCR] Page ${i + 1} text length:`, pageResult.ParsedText?.length || 0);
         
         if (pageResult.ParsedText) {
-          fullText += pageResult.ParsedText + '\n';
+          fullText += pageResult.ParsedText + '\n\n--- PAGE BREAK ---\n\n';
         }
       }
       
       console.log('[OCR] Total OCR text extracted:', fullText.length, 'characters');
-      console.log('[OCR] First 500 chars:', fullText.substring(0, 500));
+      console.log('[OCR] First 1000 chars:', fullText.substring(0, 1000));
+      
+      if (fullText.length === 0) {
+        console.error('[OCR] No text extracted from any page - PDF may be image-based with poor quality');
+      }
       
       return fullText;
     }
