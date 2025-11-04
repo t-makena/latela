@@ -122,6 +122,27 @@ export const StatementUploadDialog = ({
           if (transError) {
             console.error('Transaction import error:', transError);
             // Don't fail the whole operation, account was created successfully
+          } else {
+            // Categorize transactions using AI
+            toast({
+              title: "Categorizing transactions...",
+              description: "Using AI to categorize your transactions",
+            });
+
+            const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
+              body: { accountId: accountData.id }
+            });
+
+            if (catError) {
+              console.error('Categorization error:', catError);
+              toast({
+                title: "Categorization incomplete",
+                description: "Transactions imported but some couldn't be categorized",
+                variant: "destructive",
+              });
+            } else if (catData?.success) {
+              console.log(`Categorization complete: ${catData.categorized} transactions, ${catData.cached} from cache, ${catData.aiCalls} AI calls, ~$${catData.cost}`);
+            }
           }
         }
 
