@@ -81,7 +81,6 @@ export const BudgetBreakdown = ({
   if (showOnlyTable) {
     return (
       <div>
-        <h3 className="text-sm font-semibold mb-3">Budget Insight</h3>
         <Table>
           <TableHeader>
             <TableRow>
