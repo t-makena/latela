@@ -22,6 +22,7 @@ const Dashboard = () => {
           <div className="mt-2 -mx-3">
             <div className="pb-2 mb-2 px-3">
               <div className="text-base font-georama">Spending Trend</div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">for the past month</p>
             </div>
             <div>
               <EnhancedSpendingChart />
