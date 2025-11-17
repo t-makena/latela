@@ -11,7 +11,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDateForDialog, setSelectedDateForDialog] = useState<Date | undefined>();
+  const [selectedDateForFilter, setSelectedDateForFilter] = useState<Date | undefined>();
+  const [lastTapTime, setLastTapTime] = useState<number>(0);
+  const [lastTapDate, setLastTapDate] = useState<Date | null>(null);
   const isMobile = useIsMobile();
   
   const currentMonth = format(currentDate, "MMMM");
@@ -46,8 +49,32 @@ const Calendar = () => {
     setCurrentDate(new Date());
   };
 
-  const handleAddEvent = (date?: Date) => {
-    setSelectedDate(date);
+  const handleDateClick = (date: Date) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300; // milliseconds
+
+    // Check if this is a double tap on the same date
+    if (
+      lastTapDate &&
+      isSameDay(lastTapDate, date) &&
+      now - lastTapTime < DOUBLE_TAP_DELAY
+    ) {
+      // Double tap - open dialog
+      setSelectedDateForDialog(date);
+      setDialogOpen(true);
+      setLastTapTime(0);
+      setLastTapDate(null);
+    } else {
+      // Single tap - filter events for this date
+      setSelectedDateForFilter(date);
+      setLastTapTime(now);
+      setLastTapDate(date);
+    }
+  };
+
+  const handleAddEvent = () => {
+    // Use the currently selected filter date if available
+    setSelectedDateForDialog(selectedDateForFilter || undefined);
     setDialogOpen(true);
   };
 
@@ -63,6 +90,23 @@ const Calendar = () => {
   const formatEventDate = (date: Date) => {
     if (isToday(date)) return "Today";
     return format(date, "dd MMM");
+  };
+
+  // Filter events based on selected date
+  const displayedEvents = selectedDateForFilter
+    ? events.filter(event => isSameDay(new Date(event.eventDate), selectedDateForFilter))
+    : upcomingEvents;
+
+  const displayedTotalBudget = selectedDateForFilter
+    ? displayedEvents.reduce((sum, event) => sum + event.budgetedAmount, 0)
+    : totalUpcomingBudget;
+
+  const getEventsSectionTitle = () => {
+    if (!selectedDateForFilter) return "Upcoming Events";
+    if (isToday(selectedDateForFilter)) return "Today's Events";
+    const isPast = selectedDateForFilter < new Date();
+    if (isPast) return `Events on ${format(selectedDateForFilter, "dd MMM yyyy")}`;
+    return `Events on ${format(selectedDateForFilter, "dd MMM yyyy")}`;
   };
 
   const dayLabels = ["m", "t", "w", "t", "f", "s", "s"];
@@ -95,7 +139,7 @@ const Calendar = () => {
             </Button>
           </div>
           {!isMobile && (
-            <Button onClick={() => handleAddEvent()} className="ml-4">
+            <Button onClick={handleAddEvent} className="ml-4">
               <Plus className="h-4 w-4 mr-2" />
               Add Event
             </Button>
@@ -118,41 +162,65 @@ const Calendar = () => {
 
           {/* Date Grid */}
           <div className={`grid grid-cols-7 ${isMobile ? 'gap-1' : 'gap-4'}`}>
-            {calendarDates.map((dateObj, index) => (
-              <button
-                key={index}
-                onClick={() => handleAddEvent(dateObj.date)}
-                className={`
-                  relative flex flex-col items-center justify-center ${isMobile ? 'text-sm h-10 w-10' : 'text-base h-14 w-14'} rounded-full transition-colors mx-auto
-                  ${dateObj.isToday 
-                    ? 'bg-primary text-primary-foreground font-semibold' 
-                    : dateObj.isCurrentMonth 
-                      ? 'text-foreground font-normal hover:bg-accent' 
-                      : 'text-muted-foreground font-normal'
-                  }
-                `}
-              >
-                <span>{format(dateObj.date, "d")}</span>
-                {dateObj.hasEvents && (
-                  <div className={`absolute ${isMobile ? 'bottom-0.5 w-1 h-1' : 'bottom-1 w-1.5 h-1.5'} rounded-full bg-primary`} />
-                )}
-              </button>
-            ))}
+            {calendarDates.map((dateObj, index) => {
+              const isSelectedDate = selectedDateForFilter && isSameDay(dateObj.date, selectedDateForFilter);
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleDateClick(dateObj.date)}
+                  className={`
+                    relative flex flex-col items-center justify-center ${isMobile ? 'text-sm h-10 w-10' : 'text-base h-14 w-14'} rounded-full transition-colors mx-auto
+                    ${dateObj.isToday 
+                      ? 'bg-primary text-primary-foreground font-semibold' 
+                      : isSelectedDate
+                        ? 'bg-accent border-2 border-primary text-foreground font-semibold'
+                        : dateObj.isCurrentMonth 
+                          ? 'text-foreground font-normal hover:bg-accent' 
+                          : 'text-muted-foreground font-normal'
+                    }
+                  `}
+                >
+                  <span>{format(dateObj.date, "d")}</span>
+                  {dateObj.hasEvents && (
+                    <div className={`absolute ${isMobile ? 'bottom-0.5 w-1 h-1' : 'bottom-1 w-1.5 h-1.5'} rounded-full ${dateObj.isToday ? 'bg-primary-foreground' : 'bg-primary'}`} />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </Card>
 
         {/* Events Sidebar */}
         <div className={isMobile ? 'w-full' : 'w-80'}>
           <Card className={`${isMobile ? 'p-4' : 'p-6'} space-y-6 shadow-md h-full flex flex-col`}>
-            <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-foreground`}>Upcoming Events</h2>
+            <div className="flex items-center justify-between">
+              <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-foreground`}>
+                {getEventsSectionTitle()}
+              </h2>
+              {selectedDateForFilter && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDateForFilter(undefined)}
+                  className="text-xs"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
             
             {isLoading ? (
               <p className="text-muted-foreground">Loading events...</p>
-            ) : upcomingEvents.length === 0 ? (
-              <p className="text-muted-foreground">No upcoming events in the next 30 days</p>
+            ) : displayedEvents.length === 0 ? (
+              <p className="text-muted-foreground">
+                {selectedDateForFilter 
+                  ? `No events on ${format(selectedDateForFilter, "dd MMM yyyy")}`
+                  : "No upcoming events in the next 30 days"
+                }
+              </p>
             ) : (
               <div className="flex-1 space-y-6">
-                {upcomingEvents.map((event) => (
+                {displayedEvents.map((event) => (
                   <div key={event.id} className="space-y-2 pb-4 border-b border-border last:border-b-0 last:pb-0">
                     <h3 className="text-sm font-semibold text-foreground underline">
                       {formatEventDate(event.eventDate)}
@@ -174,10 +242,13 @@ const Calendar = () => {
             {/* Total Budget */}
             <div className="pt-4 border-t border-border mt-auto">
               <p className="text-sm font-medium text-foreground">
-                Total budget (next 30 days)
+                {selectedDateForFilter 
+                  ? `Total for ${format(selectedDateForFilter, "dd MMM")}`
+                  : "Total budget (next 30 days)"
+                }
               </p>
               <p className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-foreground mt-1`}>
-                R{totalUpcomingBudget.toLocaleString()}
+                R{displayedTotalBudget.toLocaleString()}
               </p>
             </div>
           </Card>
@@ -188,8 +259,19 @@ const Calendar = () => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSave={handleSaveEvent}
-        selectedDate={selectedDate}
+        selectedDate={selectedDateForDialog}
       />
+
+      {/* Mobile FAB */}
+      {isMobile && (
+        <Button
+          onClick={handleAddEvent}
+          size="lg"
+          className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg z-50"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,16 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate }: EventD
     category: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update form date when selectedDate changes
+  useEffect(() => {
+    if (selectedDate) {
+      setFormData(prev => ({
+        ...prev,
+        eventDate: format(selectedDate, "yyyy-MM-dd")
+      }));
+    }
+  }, [selectedDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
