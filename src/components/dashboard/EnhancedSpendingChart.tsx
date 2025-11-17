@@ -122,7 +122,7 @@ export const EnhancedSpendingChart = ({
         <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
-            <BarChart data={getChartData()} onClick={handleBarClick}>
+            <BarChart data={getChartData()} onClick={handleBarClick} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey={selectedPeriod === '1Y' ? "month" : selectedPeriod === '1W' || 

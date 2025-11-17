@@ -191,7 +191,7 @@ const FinancialInsight = () => {
           </div>
           <div>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={netBalanceData}>
+              <LineChart data={netBalanceData} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis 
                   dataKey="month" 
@@ -275,7 +275,7 @@ const FinancialInsight = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-              <LineChart data={netBalanceData}>
+              <LineChart data={netBalanceData} margin={{ left: 20, right: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis 
                   dataKey="month" 
@@ -383,7 +383,7 @@ const FinancialInsight = () => {
           </div>
           <div>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={categoryData} onClick={handleBarClick}>
+              <BarChart data={categoryData} onClick={handleBarClick} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis 
                   dataKey="category" 
@@ -475,7 +475,7 @@ const FinancialInsight = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryData} onClick={handleBarClick}>
+              <BarChart data={categoryData} onClick={handleBarClick} margin={{ left: 20, right: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis 
                   dataKey="category" 
