@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
@@ -21,7 +21,7 @@ const Calendar = () => {
   const currentMonth = format(currentDate, "MMMM");
   const currentYear = format(currentDate, "yyyy");
   
-  const { events, upcomingEvents, totalUpcomingBudget, isLoading, createEvent, updateEvent } = useCalendarEvents({
+  const { events, upcomingEvents, totalUpcomingBudget, isLoading, createEvent, updateEvent, deleteEvent } = useCalendarEvents({
     year: parseInt(currentYear),
     month: parseInt(format(currentDate, "M")),
   });
@@ -98,6 +98,15 @@ const Calendar = () => {
       setSelectedEvent(undefined);
     } catch (error) {
       toast.error(event.id ? "Failed to update event" : "Failed to create event");
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string, eventName: string) => {
+    try {
+      await deleteEvent(eventId);
+      toast.success(`"${eventName}" deleted successfully`);
+    } catch (error) {
+      toast.error("Failed to delete event");
     }
   };
 
@@ -251,13 +260,22 @@ const Calendar = () => {
                       {formatEventDate(event.eventDate)}
                     </h3>
                     <div className="space-y-1">
-                      <button 
-                        onClick={() => handleEditEvent(event)}
-                        className="text-base text-foreground hover:text-primary transition-colors text-left w-full"
-                      >
-                        {event.eventName}
-                        {event.location && ` @ ${event.location}`}
-                      </button>
+                      <div className="flex items-start justify-between gap-2">
+                        <button 
+                          onClick={() => handleEditEvent(event)}
+                          className="text-base text-foreground hover:text-primary transition-colors text-left flex-1"
+                        >
+                          {event.eventName}
+                          {event.location && ` @ ${event.location}`}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEvent(event.id, event.eventName)}
+                          className="text-muted-foreground hover:text-destructive active:text-destructive transition-colors p-1"
+                          aria-label="Delete event"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         Budget: R{event.budgetedAmount.toLocaleString()}
                       </p>
