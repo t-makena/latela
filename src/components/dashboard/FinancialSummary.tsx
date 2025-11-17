@@ -16,7 +16,7 @@ export const FinancialSummary = () => {
     const content = (
       <>
         <div className={isMobile ? "pb-1" : "pb-2 pt-4"}>
-          <div className={isMobile ? "text-base font-medium text-muted-foreground font-georama" : "text-lg font-medium text-muted-foreground font-georama"}>
+          <div className={isMobile ? "text-base font-medium text-foreground font-georama" : "text-lg font-medium text-foreground font-georama"}>
             Financial Overview
           </div>
         </div>
@@ -39,7 +39,7 @@ export const FinancialSummary = () => {
     ) : (
       <Card className="stat-card animate-fade-in">
         <CardHeader className="pb-2 pt-4">
-          <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
+          <CardTitle className="text-lg font-medium text-foreground font-georama">
             Financial Overview
           </CardTitle>
         </CardHeader>
@@ -62,7 +62,7 @@ export const FinancialSummary = () => {
     return isMobile ? (
       <div className="animate-fade-in mb-4">
         <div className="pb-1">
-          <div className="text-base font-medium text-muted-foreground font-georama">
+          <div className="text-base font-medium text-foreground font-georama">
             Financial Overview
           </div>
         </div>
@@ -73,7 +73,7 @@ export const FinancialSummary = () => {
     ) : (
       <Card className="stat-card animate-fade-in">
         <CardHeader className="pb-2 pt-4">
-          <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
+          <CardTitle className="text-lg font-medium text-foreground font-georama">
             Financial Overview
           </CardTitle>
         </CardHeader>
@@ -138,7 +138,7 @@ export const FinancialSummary = () => {
   return isMobile ? (
     <div className="animate-fade-in mb-4">
       <div className="pb-1 mb-3">
-        <div className="text-base font-medium text-muted-foreground font-georama">
+        <div className="text-base font-medium text-foreground font-georama">
           Financial Overview
           {transactions.length === 0 && (
             <span className="text-xs text-orange-500 ml-2">(No transaction data found)</span>
@@ -150,7 +150,7 @@ export const FinancialSummary = () => {
   ) : (
     <Card className="stat-card animate-fade-in">
       <CardHeader className="pb-2 pt-4">
-        <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
+        <CardTitle className="text-lg font-medium text-foreground font-georama">
           Financial Overview
           {transactions.length === 0 && (
             <span className="text-sm text-orange-500 ml-2">(No transaction data found)</span>
