@@ -15,6 +15,7 @@ import { EmptyAccountState } from "@/components/accounts/EmptyAccountState";
 import { StatementUploadDialog } from "@/components/accounts/StatementUploadDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Accounts = () => {
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
@@ -23,6 +24,7 @@ const Accounts = () => {
   const [expanded, setExpanded] = useState(false);
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const isMobile = useIsMobile();
   
   const { accounts, loading, error } = useAccounts();
 
@@ -262,14 +264,25 @@ const Accounts = () => {
         </div>
 
         {/* Spending Trend Chart */}
-        <Card className="mt-2">
-          <CardHeader>
-            <CardTitle className="font-georama">Spending Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EnhancedSpendingChart />
-          </CardContent>
-        </Card>
+        {isMobile ? (
+          <div className="mt-2 -mx-6">
+            <div className="pb-2 mb-2 px-6">
+              <div className="font-georama">Spending Trend</div>
+            </div>
+            <div>
+              <EnhancedSpendingChart />
+            </div>
+          </div>
+        ) : (
+          <Card className="mt-2">
+            <CardHeader>
+              <CardTitle className="font-georama">Spending Trend</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EnhancedSpendingChart />
+            </CardContent>
+          </Card>
+        )}
 
         <StatementUploadDialog 
           open={addAccountOpen} 
