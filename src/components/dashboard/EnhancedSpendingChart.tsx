@@ -15,6 +15,7 @@ import {
   DateRange 
 } from "@/lib/dateFilterUtils";
 import { generateChartDataFromTransactions } from "@/lib/chartDataUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface EnhancedSpendingChartProps {
   accountSpecific?: boolean;
@@ -45,6 +46,7 @@ export const EnhancedSpendingChart = ({
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
   const [selectedBarData, setSelectedBarData] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const isMobile = useIsMobile();
 
   const dateRange = getDateRangeForFilter(selectedPeriod, customDateRange);
   const xAxisLabels = getLabelsForFilter(selectedPeriod, dateRange);
@@ -117,7 +119,7 @@ export const EnhancedSpendingChart = ({
             }}
           />
         </div>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
             <BarChart data={getChartData()} onClick={handleBarClick}>
@@ -127,13 +129,18 @@ export const EnhancedSpendingChart = ({
                   (selectedPeriod === 'custom' && xAxisLabels.length <= 14) ? "day" : "week"}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }}
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 60 : 30}
+                interval={isMobile ? "preserveStartEnd" : 0}
               />
               <YAxis 
-                label={{ value: 'Amount Spent', angle: -90, position: 'insideLeft', style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 } }}
+                label={isMobile ? undefined : { value: 'Amount Spent', angle: -90, position: 'insideLeft', style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 } }}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }}
+                width={isMobile ? 45 : 60}
               />
               <Tooltip 
                 cursor={false}

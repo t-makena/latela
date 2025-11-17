@@ -7,6 +7,7 @@ import {
   Cell, ResponsiveContainer, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend 
 } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChartProps {
   type?: "line" | "bar" | "pie";
@@ -15,16 +16,23 @@ interface ChartProps {
 export const SpendingChart = ({ type = "line" }: ChartProps) => {
   const { transactions } = useTransactions();
   const { monthlySpending, categoryBreakdownArray } = calculateFinancialMetrics(transactions);
+  const isMobile = useIsMobile();
   
   const renderChart = () => {
     switch (type) {
       case "line":
         return (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
             <LineChart data={monthlySpending}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fontSize: isMobile ? 10 : 12 }}
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 60 : 30}
+              />
+              <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 45 : 60} />
               <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
               <Legend />
               <Line 
@@ -40,11 +48,17 @@ export const SpendingChart = ({ type = "line" }: ChartProps) => {
       
       case "bar":
         return (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
             <BarChart data={monthlySpending}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fontSize: isMobile ? 10 : 12 }}
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 60 : 30}
+              />
+              <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 45 : 60} />
               <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
               <Legend />
               <Bar dataKey="amount" fill="#1e65ff" radius={[8, 8, 0, 0]} />
@@ -56,24 +70,29 @@ export const SpendingChart = ({ type = "line" }: ChartProps) => {
         const COLORS = ['#1e65ff', '#41b883', '#ff6b6b', '#ffd166', '#8959a8', '#6c757d'];
         
         return (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
             <PieChart>
               <Pie
                 data={categoryBreakdownArray}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                outerRadius={100}
+                outerRadius={isMobile ? 70 : 100}
                 fill="#8884d8"
                 dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={isMobile ? false : ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {categoryBreakdownArray.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip formatter={(value) => formatCurrency(value as number)} />
-              <Legend />
+              <Legend 
+                layout={isMobile ? "horizontal" : "vertical"}
+                align={isMobile ? "center" : "right"}
+                verticalAlign={isMobile ? "bottom" : "middle"}
+                wrapperStyle={{ fontSize: isMobile ? '11px' : '12px' }}
+              />
             </PieChart>
           </ResponsiveContainer>
         );

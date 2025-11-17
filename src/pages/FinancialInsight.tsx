@@ -21,6 +21,7 @@ import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingCh
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
 import { getFilterDescription, DateRange } from "@/lib/dateFilterUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const FinancialInsight = () => {
   const { transactions, loading } = useTransactions();
@@ -32,6 +33,7 @@ const FinancialInsight = () => {
   const [customNetBalanceRange, setCustomNetBalanceRange] = useState<DateRange | undefined>();
   const [selectedCategoryForHistory, setSelectedCategoryForHistory] = useState<string | undefined>();
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>();
+  const isMobile = useIsMobile();
 
   // Handle category filter from navigation state
   useEffect(() => {
@@ -187,23 +189,27 @@ const FinancialInsight = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
             <LineChart data={netBalanceData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
               <XAxis 
                 dataKey="month" 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 60 : 30}
               />
               <YAxis 
-                label={{ 
+                label={isMobile ? undefined : { 
                   value: 'Balance', 
                   angle: -90, 
                   position: 'insideLeft',
                   style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
                 }}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
+                width={isMobile ? 45 : 60}
               />
               <Tooltip 
                 contentStyle={{ 
@@ -278,23 +284,27 @@ const FinancialInsight = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
             <BarChart data={categoryData} onClick={handleBarClick}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
               <XAxis 
                 dataKey="category" 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 9 : 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 60 : 30}
               />
               <YAxis 
-                label={{ 
+                label={isMobile ? undefined : { 
                   value: 'Amount Spent', 
                   angle: -90, 
                   position: 'insideLeft',
                   style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
                 }}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
+                width={isMobile ? 45 : 60}
               />
               <Tooltip 
                 cursor={false}
