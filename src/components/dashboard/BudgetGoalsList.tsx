@@ -1,10 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useGoals } from "@/hooks/useGoals";
-import { Target } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const BudgetGoalsList = () => {
@@ -20,14 +17,7 @@ export const BudgetGoalsList = () => {
     const content = (
       <>
         <div className="pb-2">
-          <div className="flex justify-between items-center">
-            <div className={isMobile ? "text-base font-georama font-medium" : "text-lg font-georama font-medium"}>Budget Goals</div>
-            <Link to="/goals">
-              <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                <Target className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+          <div className={isMobile ? "text-base font-georama font-medium" : "text-lg font-georama font-medium"}>Budget Goals</div>
         </div>
         <div className="space-y-4">
           <Skeleton className="h-16 w-full" />
@@ -41,14 +31,7 @@ export const BudgetGoalsList = () => {
     ) : (
       <Card className="stat-card">
         <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
-            <Link to="/goals">
-              <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                <Target className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+          <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Skeleton className="h-16 w-full" />
@@ -62,14 +45,7 @@ export const BudgetGoalsList = () => {
     const emptyContent = (
       <>
         <div className="pb-2">
-          <div className="flex justify-between items-center">
-            <div className={isMobile ? "text-base font-georama font-medium" : "text-lg font-georama font-medium"}>Budget Goals</div>
-            <Link to="/goals">
-              <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                <Target className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+          <div className={isMobile ? "text-base font-georama font-medium" : "text-lg font-georama font-medium"}>Budget Goals</div>
         </div>
         <div>
           <p className="text-sm text-muted-foreground text-center py-4">
@@ -84,14 +60,7 @@ export const BudgetGoalsList = () => {
     ) : (
       <Card className="stat-card">
         <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
-            <Link to="/goals">
-              <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                <Target className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+          <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
@@ -135,28 +104,14 @@ export const BudgetGoalsList = () => {
   return isMobile ? (
     <div className="mb-4">
       <div className="pb-2 mb-3">
-        <div className="flex justify-between items-center">
-          <div className="text-base font-georama font-medium">Budget Goals</div>
-          <Link to="/goals">
-            <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-              <Target className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
+        <div className="text-base font-georama font-medium">Budget Goals</div>
       </div>
       {goalsContent}
     </div>
   ) : (
     <Card className="stat-card">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
-          <Link to="/goals">
-            <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-              <Target className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
+        <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {goalsContent}
