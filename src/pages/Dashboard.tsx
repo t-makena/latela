@@ -19,11 +19,11 @@ const Dashboard = () => {
         </div>
         
         {isMobile ? (
-          <div className="mt-2">
-            <div className="pb-2 mb-3">
+          <div className="mt-2 -mx-3">
+            <div className="pb-2 mb-2 px-3">
               <div className="text-base font-georama">Spending Trend</div>
             </div>
-            <div className="p-3">
+            <div>
               <EnhancedSpendingChart />
             </div>
           </div>

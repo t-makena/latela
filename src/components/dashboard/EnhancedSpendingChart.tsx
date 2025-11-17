@@ -104,8 +104,8 @@ export const EnhancedSpendingChart = ({
 
   return (
     <>
-      <div className={isMobile ? "p-3" : "p-6"}>
-        <div className={isMobile ? "flex flex-col gap-2 mb-3" : "flex items-center justify-between mb-4"}>
+      <div className={isMobile ? "" : "p-6"}>
+        <div className={isMobile ? "flex flex-col gap-2 mb-3 px-3" : "flex items-center justify-between mb-4"}>
           <div>
             <p className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>{getFilterDescription(selectedPeriod)}</p>
           </div>
