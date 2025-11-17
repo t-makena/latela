@@ -211,17 +211,17 @@ const Calendar = () => {
               <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-foreground`}>
                 {getEventsSectionTitle()}
               </h2>
-              {selectedDateForFilter && (
-                isMobile ? (
-                  <Button
-                    size="sm"
-                    onClick={handleAddEvent}
-                    className="text-xs"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Event
-                  </Button>
-                ) : (
+              {isMobile ? (
+                <Button
+                  size="sm"
+                  onClick={handleAddEvent}
+                  className="text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add
+                </Button>
+              ) : (
+                selectedDateForFilter && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -294,16 +294,6 @@ const Calendar = () => {
         event={selectedEvent}
       />
 
-      {/* Mobile FAB */}
-      {isMobile && (
-        <Button
-          onClick={handleAddEvent}
-          size="lg"
-          className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg z-50"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      )}
     </div>
   );
 };
