@@ -162,7 +162,7 @@ const Calendar = () => {
       </div>
 
       {/* Main Content: Calendar Grid + Events Sidebar */}
-      <div className={`flex ${isMobile ? 'flex-col gap-4' : 'gap-6'}`}>
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
         {/* Calendar Grid */}
         <Card className={`flex-1 ${isMobile ? 'p-4' : 'p-8'} shadow-md`}>
           {/* Day Labels */}
@@ -205,7 +205,7 @@ const Calendar = () => {
         </Card>
 
         {/* Events Sidebar */}
-        <div className={isMobile ? 'w-full' : 'w-80'}>
+        <div className="w-full lg:w-80">
           <Card className={`${isMobile ? 'p-4' : 'p-6'} space-y-6 shadow-md h-full flex flex-col`}>
             <div className="flex items-center justify-between">
               <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-foreground`}>
