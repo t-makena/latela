@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export type DateFilterOption = "1W" | "1M" | "1Y" | "custom";
 
@@ -26,6 +27,7 @@ interface DateFilterProps {
 export const DateFilter = ({ selectedFilter, onFilterChange, className }: DateFilterProps) => {
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleFilterClick = (filter: DateFilterOption) => {
     if (filter === "custom") {
@@ -45,28 +47,28 @@ export const DateFilter = ({ selectedFilter, onFilterChange, className }: DateFi
   };
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-1.5", className)}>
       <Button
         variant={selectedFilter === "1W" ? "default" : "outline"}
-        size="sm"
+        size={isMobile ? "sm" : "sm"}
         onClick={() => handleFilterClick("1W")}
-        className="min-w-[60px]"
+        className={isMobile ? "min-w-[48px] h-8 text-xs px-2" : "min-w-[60px]"}
       >
         1W
       </Button>
       <Button
         variant={selectedFilter === "1M" ? "default" : "outline"}
-        size="sm"
+        size={isMobile ? "sm" : "sm"}
         onClick={() => handleFilterClick("1M")}
-        className="min-w-[60px]"
+        className={isMobile ? "min-w-[48px] h-8 text-xs px-2" : "min-w-[60px]"}
       >
         1M
       </Button>
       <Button
         variant={selectedFilter === "1Y" ? "default" : "outline"}
-        size="sm"
+        size={isMobile ? "sm" : "sm"}
         onClick={() => handleFilterClick("1Y")}
-        className="min-w-[60px]"
+        className={isMobile ? "min-w-[48px] h-8 text-xs px-2" : "min-w-[60px]"}
       >
         1Y
       </Button>
@@ -74,13 +76,14 @@ export const DateFilter = ({ selectedFilter, onFilterChange, className }: DateFi
         <PopoverTrigger asChild>
           <Button
             variant={selectedFilter === "custom" ? "default" : "outline"}
-            size="sm"
-            className="min-w-[140px] justify-start"
+            size={isMobile ? "sm" : "sm"}
+            className={isMobile ? "h-8 text-xs px-2" : "min-w-[140px] justify-start"}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {selectedFilter === "custom" && customDateRange
+            <CalendarIcon className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
+            {!isMobile && (selectedFilter === "custom" && customDateRange
               ? `${format(customDateRange.from, "PP")} - ${format(customDateRange.to, "PP")}`
-              : "Custom Period"}
+              : "Custom Period")}
+            {isMobile && selectedFilter === "custom" && "Cus"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0 bg-white z-50" align="end">
@@ -90,7 +93,7 @@ export const DateFilter = ({ selectedFilter, onFilterChange, className }: DateFi
             onSelect={handleDateRangeSelect}
             initialFocus
             className={cn("p-3 pointer-events-auto")}
-            numberOfMonths={2}
+            numberOfMonths={isMobile ? 1 : 2}
           />
         </PopoverContent>
       </Popover>

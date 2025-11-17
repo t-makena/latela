@@ -20,9 +20,9 @@ const Dashboard = () => {
         
         <Card className="mt-2">
           <CardHeader className={isMobile ? "pb-2" : ""}>
-            <CardTitle className={isMobile ? "text-lg font-georama" : "font-georama"}>Spending Trend</CardTitle>
+            <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Spending Trend</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className={isMobile ? "p-3" : ""}>
             <EnhancedSpendingChart />
           </CardContent>
         </Card>
