@@ -13,6 +13,7 @@ const Calendar = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDateForDialog, setSelectedDateForDialog] = useState<Date | undefined>();
   const [selectedDateForFilter, setSelectedDateForFilter] = useState<Date | undefined>();
+  const [selectedEvent, setSelectedEvent] = useState<any | undefined>();
   const [lastTapTime, setLastTapTime] = useState<number>(0);
   const [lastTapDate, setLastTapDate] = useState<Date | null>(null);
   const isMobile = useIsMobile();
@@ -20,7 +21,7 @@ const Calendar = () => {
   const currentMonth = format(currentDate, "MMMM");
   const currentYear = format(currentDate, "yyyy");
   
-  const { events, upcomingEvents, totalUpcomingBudget, isLoading, createEvent } = useCalendarEvents({
+  const { events, upcomingEvents, totalUpcomingBudget, isLoading, createEvent, updateEvent } = useCalendarEvents({
     year: parseInt(currentYear),
     month: parseInt(format(currentDate, "M")),
   });
@@ -75,15 +76,28 @@ const Calendar = () => {
   const handleAddEvent = () => {
     // Use the currently selected filter date if available
     setSelectedDateForDialog(selectedDateForFilter || undefined);
+    setSelectedEvent(undefined);
+    setDialogOpen(true);
+  };
+
+  const handleEditEvent = (event: any) => {
+    setSelectedEvent(event);
+    setSelectedDateForDialog(undefined);
     setDialogOpen(true);
   };
 
   const handleSaveEvent = async (event: any) => {
     try {
-      await createEvent(event);
-      toast.success("Event created successfully!");
+      if (event.id) {
+        await updateEvent(event);
+        toast.success("Event updated successfully!");
+      } else {
+        await createEvent(event);
+        toast.success("Event created successfully!");
+      }
+      setSelectedEvent(undefined);
     } catch (error) {
-      toast.error("Failed to create event");
+      toast.error(event.id ? "Failed to update event" : "Failed to create event");
     }
   };
 
@@ -198,14 +212,25 @@ const Calendar = () => {
                 {getEventsSectionTitle()}
               </h2>
               {selectedDateForFilter && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedDateForFilter(undefined)}
-                  className="text-xs"
-                >
-                  Clear
-                </Button>
+                isMobile ? (
+                  <Button
+                    size="sm"
+                    onClick={handleAddEvent}
+                    className="text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Event
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedDateForFilter(undefined)}
+                    className="text-xs"
+                  >
+                    Clear
+                  </Button>
+                )
               )}
             </div>
             
@@ -226,10 +251,13 @@ const Calendar = () => {
                       {formatEventDate(event.eventDate)}
                     </h3>
                     <div className="space-y-1">
-                      <p className="text-base text-foreground">
+                      <button 
+                        onClick={() => handleEditEvent(event)}
+                        className="text-base text-foreground hover:text-primary transition-colors text-left w-full"
+                      >
                         {event.eventName}
                         {event.location && ` @ ${event.location}`}
-                      </p>
+                      </button>
                       <p className="text-sm text-muted-foreground">
                         Budget: R{event.budgetedAmount.toLocaleString()}
                       </p>
@@ -257,9 +285,13 @@ const Calendar = () => {
 
       <EventDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setSelectedEvent(undefined);
+        }}
         onSave={handleSaveEvent}
         selectedDate={selectedDateForDialog}
+        event={selectedEvent}
       />
 
       {/* Mobile FAB */}
