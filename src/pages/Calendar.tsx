@@ -6,11 +6,13 @@ import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { EventDialog } from "@/components/calendar/EventDialog";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, getDay, startOfWeek, endOfWeek } from "date-fns";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const isMobile = useIsMobile();
   
   const currentMonth = format(currentDate, "MMMM");
   const currentYear = format(currentDate, "yyyy");
@@ -66,20 +68,24 @@ const Calendar = () => {
   const dayLabels = ["m", "t", "w", "t", "f", "s", "s"];
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className={`min-h-screen bg-background ${isMobile ? 'p-4' : 'p-8'}`}>
       {/* Header with Month/Year and Navigation */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-xl font-bold text-foreground">
+      <div className={`flex items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'}`}>
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-xl'} font-bold text-foreground`}>
           {currentMonth} {currentYear}
         </h1>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="default" className="font-normal">
-            Month
-          </Button>
-          <Button variant="outline" size="default" className="font-normal" onClick={handleToday}>
-            Today
-          </Button>
+          {!isMobile && (
+            <>
+              <Button variant="outline" size="default" className="font-normal">
+                Month
+              </Button>
+              <Button variant="outline" size="default" className="font-normal" onClick={handleToday}>
+                Today
+              </Button>
+            </>
+          )}
           <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
               <ChevronLeft className="h-4 w-4" />
@@ -88,34 +94,36 @@ const Calendar = () => {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <Button onClick={() => handleAddEvent()} className="ml-4">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Event
-          </Button>
+          {!isMobile && (
+            <Button onClick={() => handleAddEvent()} className="ml-4">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Event
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Main Content: Calendar Grid + Events Sidebar */}
-      <div className="flex gap-6">
+      <div className={`flex ${isMobile ? 'flex-col gap-4' : 'gap-6'}`}>
         {/* Calendar Grid */}
-        <Card className="flex-1 p-8 shadow-md">
+        <Card className={`flex-1 ${isMobile ? 'p-4' : 'p-8'} shadow-md`}>
           {/* Day Labels */}
-          <div className="grid grid-cols-7 gap-4 mb-6">
+          <div className={`grid grid-cols-7 ${isMobile ? 'gap-1 mb-2' : 'gap-4 mb-6'}`}>
             {dayLabels.map((day, index) => (
-              <div key={index} className="text-center text-sm font-medium text-muted-foreground uppercase">
+              <div key={index} className={`text-center ${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground uppercase`}>
                 {day}
               </div>
             ))}
           </div>
 
           {/* Date Grid */}
-          <div className="grid grid-cols-7 gap-4">
+          <div className={`grid grid-cols-7 ${isMobile ? 'gap-1' : 'gap-4'}`}>
             {calendarDates.map((dateObj, index) => (
               <button
                 key={index}
                 onClick={() => handleAddEvent(dateObj.date)}
                 className={`
-                  relative flex flex-col items-center justify-center text-base rounded-full transition-colors mx-auto h-14 w-14
+                  relative flex flex-col items-center justify-center ${isMobile ? 'text-sm h-10 w-10' : 'text-base h-14 w-14'} rounded-full transition-colors mx-auto
                   ${dateObj.isToday 
                     ? 'bg-primary text-primary-foreground font-semibold' 
                     : dateObj.isCurrentMonth 
@@ -126,7 +134,7 @@ const Calendar = () => {
               >
                 <span>{format(dateObj.date, "d")}</span>
                 {dateObj.hasEvents && (
-                  <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary" />
+                  <div className={`absolute ${isMobile ? 'bottom-0.5 w-1 h-1' : 'bottom-1 w-1.5 h-1.5'} rounded-full bg-primary`} />
                 )}
               </button>
             ))}
@@ -134,9 +142,9 @@ const Calendar = () => {
         </Card>
 
         {/* Events Sidebar */}
-        <div className="w-80">
-          <Card className="p-6 space-y-6 shadow-md h-full flex flex-col">
-            <h2 className="text-xl font-bold text-foreground">Upcoming Events</h2>
+        <div className={isMobile ? 'w-full' : 'w-80'}>
+          <Card className={`${isMobile ? 'p-4' : 'p-6'} space-y-6 shadow-md h-full flex flex-col`}>
+            <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-foreground`}>Upcoming Events</h2>
             
             {isLoading ? (
               <p className="text-muted-foreground">Loading events...</p>
@@ -168,7 +176,7 @@ const Calendar = () => {
               <p className="text-sm font-medium text-foreground">
                 Total budget (next 30 days)
               </p>
-              <p className="text-2xl font-bold text-foreground mt-1">
+              <p className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-foreground mt-1`}>
                 R{totalUpcomingBudget.toLocaleString()}
               </p>
             </div>
