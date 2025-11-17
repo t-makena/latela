@@ -13,7 +13,30 @@ export const FinancialSummary = () => {
   console.log('FinancialSummary - error:', error);
 
   if (loading) {
-    return (
+    const content = (
+      <>
+        <div className={isMobile ? "pb-1" : "pb-2 pt-4"}>
+          <div className={isMobile ? "text-base font-medium text-muted-foreground font-georama" : "text-lg font-medium text-muted-foreground font-georama"}>
+            Financial Overview
+          </div>
+        </div>
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="financial-metric animate-pulse">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                <div className="h-3 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+
+    return isMobile ? (
+      <div className="animate-fade-in mb-4">{content}</div>
+    ) : (
       <Card className="stat-card animate-fade-in">
         <CardHeader className="pb-2 pt-4">
           <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
@@ -36,7 +59,18 @@ export const FinancialSummary = () => {
   }
 
   if (error) {
-    return (
+    return isMobile ? (
+      <div className="animate-fade-in mb-4">
+        <div className="pb-1">
+          <div className="text-base font-medium text-muted-foreground font-georama">
+            Financial Overview
+          </div>
+        </div>
+        <div>
+          <p className="text-destructive">Error loading financial data: {error}</p>
+        </div>
+      </div>
+    ) : (
       <Card className="stat-card animate-fade-in">
         <CardHeader className="pb-2 pt-4">
           <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
@@ -61,7 +95,59 @@ export const FinancialSummary = () => {
   // Calculate daily target spending (monthly expenses / 30 days)
   const dailyTargetSpending = monthlyExpenses / 30;
 
-  return (
+  const content = (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="financial-metric">
+        <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+          Budget Balance
+        </div>
+        <div className={isMobile ? "text-xl font-bold font-georama" : "text-2xl font-bold font-georama"}>
+          {formatCurrency(netBalance)}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Available balance less budget savings
+        </p>
+      </div>
+      
+      <div className="financial-metric">
+        <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+          Spending limit for today
+        </div>
+        <div className={isMobile ? "text-xl font-bold text-foreground font-georama" : "text-2xl font-bold text-foreground font-georama"}>
+          {formatCurrency(dailyTargetSpending)}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Target spending for the month: {formatCurrency(monthlyExpenses)}
+        </p>
+      </div>
+      
+      <div className="financial-metric">
+        <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+          Total expenses
+        </div>
+        <div className={isMobile ? "text-xl font-bold text-budget-expense font-georama" : "text-2xl font-bold text-budget-expense font-georama"}>
+          {formatCurrency(monthlyExpenses)}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Total spending this month
+        </p>
+      </div>
+    </div>
+  );
+
+  return isMobile ? (
+    <div className="animate-fade-in mb-4">
+      <div className="pb-1 mb-3">
+        <div className="text-base font-medium text-muted-foreground font-georama">
+          Financial Overview
+          {transactions.length === 0 && (
+            <span className="text-xs text-orange-500 ml-2">(No transaction data found)</span>
+          )}
+        </div>
+      </div>
+      <div>{content}</div>
+    </div>
+  ) : (
     <Card className="stat-card animate-fade-in">
       <CardHeader className="pb-2 pt-4">
         <CardTitle className="text-lg font-medium text-muted-foreground font-georama">
@@ -72,43 +158,7 @@ export const FinancialSummary = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="financial-metric">
-            <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-              Budget Balance
-            </div>
-            <div className="text-2xl font-bold font-georama">
-              {formatCurrency(netBalance)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Available balance less budget savings
-            </p>
-          </div>
-          
-          <div className="financial-metric">
-            <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-              Spending limit for today
-            </div>
-            <div className="text-2xl font-bold text-foreground font-georama">
-              {formatCurrency(dailyTargetSpending)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Target spending for the month: {formatCurrency(monthlyExpenses)}
-            </p>
-          </div>
-          
-          <div className="financial-metric">
-            <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-              Total expenses
-            </div>
-            <div className="text-2xl font-bold text-budget-expense font-georama">
-              {formatCurrency(monthlyExpenses)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Total spending this month
-            </p>
-          </div>
-        </div>
+        {content}
       </CardContent>
     </Card>
   );

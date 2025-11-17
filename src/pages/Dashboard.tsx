@@ -18,14 +18,25 @@ const Dashboard = () => {
           <BudgetGoalsList />
         </div>
         
-        <Card className="mt-2">
-          <CardHeader className={isMobile ? "pb-2" : ""}>
-            <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Spending Trend</CardTitle>
-          </CardHeader>
-          <CardContent className={isMobile ? "p-3" : ""}>
-            <EnhancedSpendingChart />
-          </CardContent>
-        </Card>
+        {isMobile ? (
+          <div className="mt-2">
+            <div className="pb-2 mb-3">
+              <div className="text-base font-georama">Spending Trend</div>
+            </div>
+            <div className="p-3">
+              <EnhancedSpendingChart />
+            </div>
+          </div>
+        ) : (
+          <Card className="mt-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-georama">Spending Trend</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3">
+              <EnhancedSpendingChart />
+            </CardContent>
+          </Card>
+        )}
     </div>
   );
 };
