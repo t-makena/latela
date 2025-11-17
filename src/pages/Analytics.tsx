@@ -15,8 +15,9 @@ const Analytics = () => {
       
       <div className="grid grid-cols-1 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Monthly Spending Analysis</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-georama">Monthly Spending Analysis</CardTitle>
+            <p className="text-[10px] text-muted-foreground mt-0.5">for the past year</p>
           </CardHeader>
           <CardContent>
             <SpendingChart type="bar" />
@@ -44,8 +45,9 @@ const Analytics = () => {
         </Card>
         
         <Card>
-          <CardHeader>
-            <CardTitle>Spending by Category</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-georama">Spending by Category</CardTitle>
+            <p className="text-[10px] text-muted-foreground mt-0.5">for the past month</p>
           </CardHeader>
           <CardContent>
             <SpendingChart type="pie" />

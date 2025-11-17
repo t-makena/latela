@@ -262,8 +262,8 @@ const FinancialInsight = () => {
           <CardHeader className={isMobile ? "pb-2" : ""}>
             <div className={isMobile ? "flex flex-col gap-2" : "flex items-center justify-between"}>
               <div>
-                <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Balance</CardTitle>
-                <p className={isMobile ? "text-[10px] text-muted-foreground mt-0.5" : "text-xs text-muted-foreground mt-1"}>{getFilterDescription(netBalanceFilter)}</p>
+                <CardTitle className="text-base font-georama">Balance</CardTitle>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
               </div>
               <DateFilter 
                 selectedFilter={netBalanceFilter}
@@ -348,6 +348,7 @@ const FinancialInsight = () => {
         <div className="mt-4 -mx-3">
           <div className="pb-2 mb-2 px-3">
             <div className="text-base font-georama">Spending Trend</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">for the past month</p>
           </div>
           <div>
             <EnhancedSpendingChart />
@@ -357,6 +358,7 @@ const FinancialInsight = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-georama">Spending Trend</CardTitle>
+            <p className="text-[10px] text-muted-foreground mt-0.5">for the past month</p>
           </CardHeader>
           <CardContent className="p-3">
             <EnhancedSpendingChart />
@@ -477,8 +479,8 @@ const FinancialInsight = () => {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="font-georama">Spending By Category</CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">{getFilterDescription(categoryFilter)}</p>
+                <CardTitle className="text-base font-georama">Spending By Category</CardTitle>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               </div>
               <DateFilter 
                 selectedFilter={categoryFilter}
