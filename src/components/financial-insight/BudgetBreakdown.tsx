@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BudgetBreakdownProps {
   availableBalance: number;
@@ -22,6 +23,8 @@ export const BudgetBreakdown = ({
   showOnlyPieChart = false,
   showOnlyTable = false
 }: BudgetBreakdownProps) => {
+  const isMobile = useIsMobile();
+  
   // Calculate percentage changes
   const availableChange = previousMonth.availableBalance 
     ? ((availableBalance - previousMonth.availableBalance) / previousMonth.availableBalance * 100).toFixed(0)
@@ -50,7 +53,7 @@ export const BudgetBreakdown = ({
 
   if (showOnlyPieChart) {
     return (
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
         <PieChart>
           <Pie
             data={pieData}
@@ -58,7 +61,7 @@ export const BudgetBreakdown = ({
             cy="50%"
             labelLine={false}
             label={renderCustomLabel}
-            outerRadius={80}
+            outerRadius={isMobile ? 60 : 80}
             fill="#8884d8"
             dataKey="value"
           >
@@ -67,11 +70,11 @@ export const BudgetBreakdown = ({
             ))}
           </Pie>
           <Legend 
-            layout="vertical" 
-            align="right" 
-            verticalAlign="middle"
+            layout={isMobile ? "horizontal" : "vertical"}
+            align={isMobile ? "center" : "right"}
+            verticalAlign={isMobile ? "bottom" : "middle"}
             iconType="circle"
-            formatter={(value) => <span className="text-sm">{value}</span>}
+            formatter={(value) => <span className="text-xs">{value}</span>}
           />
         </PieChart>
       </ResponsiveContainer>
@@ -151,7 +154,7 @@ export const BudgetBreakdown = ({
       {/* Budget Pie Chart */}
       <div>
         <h3 className="text-sm font-semibold">Budget Allocation</h3>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
           <PieChart>
             <Pie
               data={pieData}
@@ -159,7 +162,7 @@ export const BudgetBreakdown = ({
               cy="50%"
               labelLine={false}
               label={renderCustomLabel}
-              outerRadius={80}
+              outerRadius={isMobile ? 60 : 80}
               fill="#8884d8"
               dataKey="value"
             >
@@ -168,11 +171,11 @@ export const BudgetBreakdown = ({
               ))}
             </Pie>
             <Legend 
-              layout="vertical" 
-              align="left" 
-              verticalAlign="top"
+              layout={isMobile ? "horizontal" : "vertical"}
+              align={isMobile ? "center" : "left"}
+              verticalAlign={isMobile ? "bottom" : "top"}
               iconType="circle"
-              formatter={(value) => <span className="text-sm">{value}</span>}
+              formatter={(value) => <span className="text-xs">{value}</span>}
             />
           </PieChart>
         </ResponsiveContainer>
