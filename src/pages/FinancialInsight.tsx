@@ -170,192 +170,379 @@ const FinancialInsight = () => {
       </div>
 
       {/* Net Balance Over Time Chart */}
-      <Card>
-        <CardHeader className={isMobile ? "pb-2" : ""}>
-          <div className={isMobile ? "flex flex-col gap-2" : "flex items-center justify-between"}>
-            <div>
-              <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Balance</CardTitle>
-              <p className={isMobile ? "text-[10px] text-muted-foreground mt-0.5" : "text-xs text-muted-foreground mt-1"}>{getFilterDescription(netBalanceFilter)}</p>
+      {isMobile ? (
+        <div className="mt-4">
+          <div className={isMobile ? "pb-2 mb-2" : "pb-2"}>
+            <div className={isMobile ? "flex flex-col gap-1" : "flex items-center justify-between"}>
+              <div>
+                <div className={isMobile ? "text-base font-georama" : "font-georama"}>Balance</div>
+                <p className={isMobile ? "text-[10px] text-muted-foreground mt-0.5" : "text-xs text-muted-foreground mt-1"}>{getFilterDescription(netBalanceFilter)}</p>
+              </div>
+              <DateFilter 
+                selectedFilter={netBalanceFilter}
+                onFilterChange={(filter, dateRange) => {
+                  setNetBalanceFilter(filter);
+                  if (dateRange) {
+                    setCustomNetBalanceRange(dateRange);
+                  }
+                }}
+              />
             </div>
-            <DateFilter 
-              selectedFilter={netBalanceFilter}
-              onFilterChange={(filter, dateRange) => {
-                setNetBalanceFilter(filter);
-                if (dateRange) {
-                  setCustomNetBalanceRange(dateRange);
-                }
-              }}
-            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-            <LineChart data={netBalanceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-              <XAxis 
-                dataKey="month" 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-                angle={isMobile ? -45 : 0}
-                textAnchor={isMobile ? "end" : "middle"}
-                height={isMobile ? 60 : 30}
-              />
-              <YAxis 
-                label={isMobile ? undefined : { 
-                  value: 'Balance', 
-                  angle: -90, 
-                  position: 'insideLeft',
-                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+          <div>
+            <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+              <LineChart data={netBalanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  angle={isMobile ? -45 : 0}
+                  textAnchor={isMobile ? "end" : "middle"}
+                  height={isMobile ? 60 : 30}
+                />
+                <YAxis 
+                  label={isMobile ? undefined : { 
+                    value: 'Balance', 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                  }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  width={isMobile ? 45 : 60}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                  labelStyle={{ 
+                    fontSize: '14px', 
+                    fontWeight: '600',
+                    marginBottom: '8px'
+                  }}
+                  itemStyle={{ 
+                    fontSize: '14px',
+                    padding: '4px 0'
+                  }}
+                  formatter={(value: number, name: string) => {
+                    const label = name === 'netBalance' ? 'Net Balance' : 'Budget Balance';
+                    return [`R${Number(value).toFixed(2)}`, label];
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="netBalance" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2}
+                  dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="budgetBalance" 
+                  stroke="#10B981" 
+                  strokeWidth={2}
+                  dot={{ fill: '#10B981', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : (
+        <Card>
+          <CardHeader className={isMobile ? "pb-2" : ""}>
+            <div className={isMobile ? "flex flex-col gap-2" : "flex items-center justify-between"}>
+              <div>
+                <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Balance</CardTitle>
+                <p className={isMobile ? "text-[10px] text-muted-foreground mt-0.5" : "text-xs text-muted-foreground mt-1"}>{getFilterDescription(netBalanceFilter)}</p>
+              </div>
+              <DateFilter 
+                selectedFilter={netBalanceFilter}
+                onFilterChange={(filter, dateRange) => {
+                  setNetBalanceFilter(filter);
+                  if (dateRange) {
+                    setCustomNetBalanceRange(dateRange);
+                  }
                 }}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-                width={isMobile ? 45 : 60}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-                labelStyle={{ 
-                  fontSize: '14px', 
-                  fontWeight: '600',
-                  marginBottom: '8px'
-                }}
-                itemStyle={{ 
-                  fontSize: '14px',
-                  padding: '4px 0'
-                }}
-                formatter={(value: number, name: string) => {
-                  const label = name === 'netBalance' ? 'Net Balance' : 'Budget Balance';
-                  return [`R${Number(value).toFixed(2)}`, label];
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="netBalance" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={2}
-                dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="budgetBalance" 
-                stroke="#10B981" 
-                strokeWidth={2}
-                dot={{ fill: '#10B981', r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+              <LineChart data={netBalanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  angle={isMobile ? -45 : 0}
+                  textAnchor={isMobile ? "end" : "middle"}
+                  height={isMobile ? 60 : 30}
+                />
+                <YAxis 
+                  label={isMobile ? undefined : { 
+                    value: 'Balance', 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                  }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  width={isMobile ? 45 : 60}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                  labelStyle={{ 
+                    fontSize: '14px', 
+                    fontWeight: '600',
+                    marginBottom: '8px'
+                  }}
+                  itemStyle={{ 
+                    fontSize: '14px',
+                    padding: '4px 0'
+                  }}
+                  formatter={(value: number, name: string) => {
+                    const label = name === 'netBalance' ? 'Net Balance' : 'Budget Balance';
+                    return [`R${Number(value).toFixed(2)}`, label];
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="netBalance" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2}
+                  dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="budgetBalance" 
+                  stroke="#10B981" 
+                  strokeWidth={2}
+                  dot={{ fill: '#10B981', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Spending Trend Chart */}
-      <Card>
-        <CardHeader className={isMobile ? "pb-2" : ""}>
-          <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Spending Trend</CardTitle>
-        </CardHeader>
-        <CardContent className={isMobile ? "p-3" : ""}>
-          <EnhancedSpendingChart />
-        </CardContent>
-      </Card>
+      {isMobile ? (
+        <div className="mt-4">
+          <div className="pb-2 mb-2">
+            <div className="text-base font-georama">Spending Trend</div>
+          </div>
+          <div className="p-3">
+            <EnhancedSpendingChart />
+          </div>
+        </div>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-georama">Spending Trend</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3">
+            <EnhancedSpendingChart />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Spending By Category Chart */}
-      <Card>
-        <CardHeader className={isMobile ? "pb-2" : ""}>
-          <div className={isMobile ? "flex flex-col gap-2" : "flex items-center justify-between"}>
-            <div>
-              <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Spending By Category</CardTitle>
-              <p className={isMobile ? "text-[10px] text-muted-foreground mt-0.5" : "text-xs text-muted-foreground mt-1"}>{getFilterDescription(categoryFilter)}</p>
-            </div>
-            <DateFilter 
-              selectedFilter={categoryFilter}
-              onFilterChange={(filter, dateRange) => {
-                setCategoryFilter(filter);
-                if (dateRange) {
-                  setCustomCategoryRange(dateRange);
-                }
-              }}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-            <BarChart data={categoryData} onClick={handleBarClick}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-              <XAxis 
-                dataKey="category" 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 9 : 11 }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-                angle={isMobile ? -45 : 0}
-                textAnchor={isMobile ? "end" : "middle"}
-                height={isMobile ? 60 : 30}
-              />
-              <YAxis 
-                label={isMobile ? undefined : { 
-                  value: 'Amount Spent', 
-                  angle: -90, 
-                  position: 'insideLeft',
-                  style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                }}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-                width={isMobile ? 45 : 60}
-              />
-              <Tooltip 
-                cursor={false}
-                content={({ active, payload, label }) => {
-                  if (!active || !payload || payload.length === 0) return null;
-                  
-                  const entry = payload[0];
-                  const value = entry.value as number;
-                  
-                  return (
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                    }}>
-                      <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
-                        {categoryLabels[label as keyof typeof categoryLabels] || label}
-                      </p>
-                      <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
-                        R{Number(value).toFixed(2)}
-                      </p>
-                    </div>
-                  );
-                }}
-              />
-              <Bar dataKey="amount" cursor="pointer" radius={[8, 8, 0, 0]}>
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          
-          {/* Comprehensive Category Legend */}
-          <div className={isMobile ? "mt-4 flex flex-wrap gap-x-3 gap-y-1.5 justify-center items-center text-xs" : "mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center items-center text-sm"}>
-            {Object.keys(categoryColors).map((key) => (
-              <div key={key} className="flex items-center gap-2">
-                <div 
-                  className={isMobile ? "w-2.5 h-2.5 rounded-full" : "w-3 h-3 rounded-full"}
-                  style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
-                />
-                <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
-                  {categoryLabels[key]}
-                </span>
+      {isMobile ? (
+        <div className="mt-4">
+          <div className="pb-2 mb-2">
+            <div className="flex flex-col gap-1">
+              <div>
+                <div className="text-base font-georama">Spending By Category</div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               </div>
-            ))}
+              <DateFilter 
+                selectedFilter={categoryFilter}
+                onFilterChange={(filter, dateRange) => {
+                  setCategoryFilter(filter);
+                  if (dateRange) {
+                    setCustomCategoryRange(dateRange);
+                  }
+                }}
+              />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+              <BarChart data={categoryData} onClick={handleBarClick}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                <XAxis 
+                  dataKey="category" 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 9 : 11 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  angle={isMobile ? -45 : 0}
+                  textAnchor={isMobile ? "end" : "middle"}
+                  height={isMobile ? 60 : 30}
+                />
+                <YAxis 
+                  label={isMobile ? undefined : { 
+                    value: 'Amount Spent', 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                  }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  width={isMobile ? 45 : 60}
+                />
+                <Tooltip 
+                  cursor={false}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload || payload.length === 0) return null;
+                    
+                    const entry = payload[0];
+                    const value = entry.value as number;
+                    
+                    return (
+                      <div style={{
+                        backgroundColor: 'white',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                          {categoryLabels[label as keyof typeof categoryLabels] || label}
+                        </p>
+                        <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
+                          R{Number(value).toFixed(2)}
+                        </p>
+                      </div>
+                    );
+                  }}
+                />
+                <Bar dataKey="amount" cursor="pointer" radius={[8, 8, 0, 0]}>
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            
+            {/* Comprehensive Category Legend */}
+            <div className={isMobile ? "mt-4 flex flex-wrap gap-x-3 gap-y-1.5 justify-center items-center text-xs" : "mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center items-center text-sm"}>
+              {Object.keys(categoryColors).map((key) => (
+                <div key={key} className="flex items-center gap-2">
+                  <div 
+                    className={isMobile ? "w-2.5 h-2.5 rounded-full" : "w-3 h-3 rounded-full"}
+                    style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
+                  />
+                  <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
+                    {categoryLabels[key]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="font-georama">Spending By Category</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">{getFilterDescription(categoryFilter)}</p>
+              </div>
+              <DateFilter 
+                selectedFilter={categoryFilter}
+                onFilterChange={(filter, dateRange) => {
+                  setCategoryFilter(filter);
+                  if (dateRange) {
+                    setCustomCategoryRange(dateRange);
+                  }
+                }}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={categoryData} onClick={handleBarClick}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                <XAxis 
+                  dataKey="category" 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                />
+                <YAxis 
+                  label={{ 
+                    value: 'Amount Spent', 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                  }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                />
+                <Tooltip 
+                  cursor={false}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload || payload.length === 0) return null;
+                    
+                    const entry = payload[0];
+                    const value = entry.value as number;
+                    
+                    return (
+                      <div style={{
+                        backgroundColor: 'white',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                          {categoryLabels[label as keyof typeof categoryLabels] || label}
+                        </p>
+                        <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
+                          R{Number(value).toFixed(2)}
+                        </p>
+                      </div>
+                    );
+                  }}
+                />
+                <Bar dataKey="amount" cursor="pointer" radius={[8, 8, 0, 0]}>
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            
+            {/* Comprehensive Category Legend */}
+            <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center items-center text-sm">
+              {Object.keys(categoryColors).map((key) => (
+                <div key={key} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
+                  />
+                  <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
+                    {categoryLabels[key]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Transaction History Section */}
       <div id="transaction-history">
