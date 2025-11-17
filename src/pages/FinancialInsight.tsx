@@ -130,8 +130,8 @@ const FinancialInsight = () => {
     <div className="space-y-6 relative z-10">
       {/* Financial Insight Header */}
       <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="h-5 w-5" />
-        <h1 className="text-xl font-georama font-semibold">Financial Insight</h1>
+        <TrendingUp className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
+        <h1 className={isMobile ? "text-lg font-georama font-semibold" : "text-xl font-georama font-semibold"}>Financial Insight</h1>
       </div>
       
       <div className="border-b border-foreground mb-6" />
@@ -139,7 +139,7 @@ const FinancialInsight = () => {
       {/* Two Column Layout: Budget Insight + Budget Allocation */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div>
-          <h3 className="text-lg font-semibold mb-4">Budget Insight</h3>
+          <h3 className={isMobile ? "text-base font-semibold mb-3" : "text-lg font-semibold mb-4"}>Budget Insight</h3>
           <BudgetBreakdown 
             availableBalance={availableBalance}
             budgetBalance={budgetBalance}
@@ -154,7 +154,7 @@ const FinancialInsight = () => {
         </div>
         
         <div>
-          <h3 className="text-lg font-semibold mb-4">Budget Allocation</h3>
+          <h3 className={isMobile ? "text-base font-semibold mb-3" : "text-lg font-semibold mb-4"}>Budget Allocation</h3>
           <BudgetBreakdown 
             availableBalance={availableBalance}
             budgetBalance={budgetBalance}
@@ -171,11 +171,11 @@ const FinancialInsight = () => {
 
       {/* Net Balance Over Time Chart */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className={isMobile ? "pb-2" : ""}>
+          <div className={isMobile ? "flex flex-col gap-2" : "flex items-center justify-between"}>
             <div>
-              <CardTitle className="font-georama">Balance</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">{getFilterDescription(netBalanceFilter)}</p>
+              <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Balance</CardTitle>
+              <p className={isMobile ? "text-[10px] text-muted-foreground mt-0.5" : "text-xs text-muted-foreground mt-1"}>{getFilterDescription(netBalanceFilter)}</p>
             </div>
             <DateFilter 
               selectedFilter={netBalanceFilter}
@@ -256,21 +256,21 @@ const FinancialInsight = () => {
 
       {/* Spending Trend Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle className="font-georama">Spending Trend</CardTitle>
+        <CardHeader className={isMobile ? "pb-2" : ""}>
+          <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Spending Trend</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className={isMobile ? "p-3" : ""}>
           <EnhancedSpendingChart />
         </CardContent>
       </Card>
 
       {/* Spending By Category Chart */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className={isMobile ? "pb-2" : ""}>
+          <div className={isMobile ? "flex flex-col gap-2" : "flex items-center justify-between"}>
             <div>
-              <CardTitle className="font-georama">Spending By Category</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">{getFilterDescription(categoryFilter)}</p>
+              <CardTitle className={isMobile ? "text-base font-georama" : "font-georama"}>Spending By Category</CardTitle>
+              <p className={isMobile ? "text-[10px] text-muted-foreground mt-0.5" : "text-xs text-muted-foreground mt-1"}>{getFilterDescription(categoryFilter)}</p>
             </div>
             <DateFilter 
               selectedFilter={categoryFilter}
@@ -341,11 +341,11 @@ const FinancialInsight = () => {
           </ResponsiveContainer>
           
           {/* Comprehensive Category Legend */}
-          <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center items-center text-sm">
+          <div className={isMobile ? "mt-4 flex flex-wrap gap-x-3 gap-y-1.5 justify-center items-center text-xs" : "mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center items-center text-sm"}>
             {Object.keys(categoryColors).map((key) => (
               <div key={key} className="flex items-center gap-2">
                 <div 
-                  className="w-3 h-3 rounded-full" 
+                  className={isMobile ? "w-2.5 h-2.5 rounded-full" : "w-3 h-3 rounded-full"}
                   style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
                 />
                 <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
