@@ -81,14 +81,14 @@ const FinancialInsight = () => {
     "H&U": "#3B82F6",        // Housing & Utilities - blue
     "S&I": "#10B981",        // Savings & Investments - green
     "P&L": "#8B5CF6",        // Personal & Lifestyle - purple
-    "F&G": "#10B981",        // Food & Groceries - emerald green
+    "F&G": "#84CC16",        // Food & Groceries - lime green
     "T/F": "#F59E0B",        // Transportation & Fuel - amber/orange
     "D&R": "#EC4899",        // Dining & Restaurants - pink
     "S&R": "#A855F7",        // Shopping & Retail - light purple
     "E&R": "#F97316",        // Entertainment & Recreation - orange
     "H&M": "#EF4444",        // Healthcare & Medical - red
     "B&S": "#6B7280",        // Bills & Subscriptions - gray
-    "Misc": "#14B8A6"        // Miscellaneous - teal
+    "Misc": "#06B6D4"        // Miscellaneous - cyan
   };
 
   const categoryLabels: Record<string, string> = {
