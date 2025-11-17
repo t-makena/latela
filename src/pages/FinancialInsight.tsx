@@ -171,12 +171,12 @@ const FinancialInsight = () => {
 
       {/* Net Balance Over Time Chart */}
       {isMobile ? (
-        <div className="mt-4">
-          <div className={isMobile ? "pb-2 mb-2" : "pb-2"}>
-            <div className={isMobile ? "flex flex-col gap-1" : "flex items-center justify-between"}>
+        <div className="mt-4 -mx-3">
+          <div className="pb-2 mb-2 px-3">
+            <div className="flex flex-col gap-1">
               <div>
-                <div className={isMobile ? "text-base font-georama" : "font-georama"}>Balance</div>
-                <p className={isMobile ? "text-[10px] text-muted-foreground mt-0.5" : "text-xs text-muted-foreground mt-1"}>{getFilterDescription(netBalanceFilter)}</p>
+                <div className="text-base font-georama">Balance</div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
               </div>
               <DateFilter 
                 selectedFilter={netBalanceFilter}
@@ -190,7 +190,7 @@ const FinancialInsight = () => {
             </div>
           </div>
           <div>
-            <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+            <ResponsiveContainer width="100%" height={220}>
               <LineChart data={netBalanceData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis 
@@ -342,11 +342,11 @@ const FinancialInsight = () => {
 
       {/* Spending Trend Chart */}
       {isMobile ? (
-        <div className="mt-4">
-          <div className="pb-2 mb-2">
+        <div className="mt-4 -mx-3">
+          <div className="pb-2 mb-2 px-3">
             <div className="text-base font-georama">Spending Trend</div>
           </div>
-          <div className="p-3">
+          <div>
             <EnhancedSpendingChart />
           </div>
         </div>
@@ -363,8 +363,8 @@ const FinancialInsight = () => {
 
       {/* Spending By Category Chart */}
       {isMobile ? (
-        <div className="mt-4">
-          <div className="pb-2 mb-2">
+        <div className="mt-4 -mx-3">
+          <div className="pb-2 mb-2 px-3">
             <div className="flex flex-col gap-1">
               <div>
                 <div className="text-base font-georama">Spending By Category</div>
@@ -382,7 +382,7 @@ const FinancialInsight = () => {
             </div>
           </div>
           <div>
-            <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+            <ResponsiveContainer width="100%" height={220}>
               <BarChart data={categoryData} onClick={handleBarClick}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                 <XAxis 
