@@ -454,7 +454,7 @@ const FinancialInsight = () => {
                   <DialogHeader>
                     <DialogTitle>Category Legend</DialogTitle>
                   </DialogHeader>
-                  <div className={isMobile ? "flex flex-col gap-2" : "flex flex-wrap gap-x-3 gap-y-2 justify-start items-center text-sm"}>
+                  <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-2 gap-x-8 gap-y-2 text-sm"}>
                     {Object.keys(categoryColors).map((key) => (
                       <div key={key} className="flex items-center gap-2">
                         <div 
@@ -557,7 +557,7 @@ const FinancialInsight = () => {
                   <DialogHeader>
                     <DialogTitle>Category Legend</DialogTitle>
                   </DialogHeader>
-                  <div className={isMobile ? "flex flex-col gap-2" : "flex flex-wrap gap-x-3 gap-y-2 justify-start items-center text-sm"}>
+                  <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-2 gap-x-8 gap-y-2 text-sm"}>
                     {Object.keys(categoryColors).map((key) => (
                       <div key={key} className="flex items-center gap-2">
                         <div 
