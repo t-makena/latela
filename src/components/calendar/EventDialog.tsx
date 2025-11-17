@@ -10,11 +10,12 @@ import { format } from "date-fns";
 interface EventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (event: Omit<CalendarEvent, "id" | "userId">) => Promise<void>;
+  onSave: (event: Omit<CalendarEvent, "id" | "userId"> | CalendarEvent) => Promise<void>;
   selectedDate?: Date;
+  event?: CalendarEvent;
 }
 
-export const EventDialog = ({ open, onOpenChange, onSave, selectedDate }: EventDialogProps) => {
+export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }: EventDialogProps) => {
   const [formData, setFormData] = useState({
     eventName: "",
     eventDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
@@ -26,22 +27,32 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate }: EventD
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Update form date when selectedDate changes
+  // Update form when event or selectedDate changes
   useEffect(() => {
-    if (selectedDate) {
+    if (event) {
+      setFormData({
+        eventName: event.eventName,
+        eventDate: format(event.eventDate, "yyyy-MM-dd"),
+        eventTime: event.eventTime || "",
+        budgetedAmount: event.budgetedAmount.toString(),
+        location: event.location || "",
+        eventDescription: event.eventDescription || "",
+        category: event.category || "",
+      });
+    } else if (selectedDate) {
       setFormData(prev => ({
         ...prev,
         eventDate: format(selectedDate, "yyyy-MM-dd")
       }));
     }
-  }, [selectedDate]);
+  }, [selectedDate, event]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      await onSave({
+      const eventData = {
         eventName: formData.eventName,
         eventDate: new Date(formData.eventDate),
         eventTime: formData.eventTime || undefined,
@@ -51,7 +62,13 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate }: EventD
         category: formData.category || undefined,
         isRecurring: false,
         isCompleted: false,
-      });
+      };
+
+      if (event) {
+        await onSave({ ...eventData, id: event.id, userId: event.userId });
+      } else {
+        await onSave(eventData);
+      }
 
       // Reset form
       setFormData({
@@ -75,7 +92,7 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate }: EventD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Event</DialogTitle>
+          <DialogTitle>{event ? "Edit Event" : "Add New Event"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -158,7 +175,7 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate }: EventD
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save Event"}
+              {isSubmitting ? "Saving..." : event ? "Update Event" : "Save Event"}
             </Button>
           </DialogFooter>
         </form>
