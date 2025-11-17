@@ -1,4 +1,4 @@
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
@@ -21,6 +21,8 @@ import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingCh
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
 import { getFilterDescription, DateRange } from "@/lib/dateFilterUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const FinancialInsight = () => {
@@ -33,6 +35,7 @@ const FinancialInsight = () => {
   const [customNetBalanceRange, setCustomNetBalanceRange] = useState<DateRange | undefined>();
   const [selectedCategoryForHistory, setSelectedCategoryForHistory] = useState<string | undefined>();
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>();
+  const [legendDialogOpen, setLegendDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
   // Handle category filter from navigation state
@@ -438,19 +441,34 @@ const FinancialInsight = () => {
               </BarChart>
             </ResponsiveContainer>
             
-            {/* Comprehensive Category Legend */}
-            <div className={isMobile ? "mt-4 flex flex-wrap gap-x-3 gap-y-1.5 justify-center items-center text-xs" : "mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center items-center text-sm"}>
-              {Object.keys(categoryColors).map((key) => (
-                <div key={key} className="flex items-center gap-2">
-                  <div 
-                    className={isMobile ? "w-2.5 h-2.5 rounded-full" : "w-3 h-3 rounded-full"}
-                    style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
-                  />
-                  <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
-                    {categoryLabels[key]}
-                  </span>
-                </div>
-              ))}
+            {/* See Legend Button */}
+            <div className="mt-4 flex justify-center">
+              <Dialog open={legendDialogOpen} onOpenChange={setLegendDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Info className="h-4 w-4" />
+                    See Legend
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Category Legend</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-wrap gap-x-3 gap-y-2 justify-start items-center text-sm">
+                    {Object.keys(categoryColors).map((key) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
+                        />
+                        <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
+                          {categoryLabels[key]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
@@ -526,19 +544,34 @@ const FinancialInsight = () => {
               </BarChart>
             </ResponsiveContainer>
             
-            {/* Comprehensive Category Legend */}
-            <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center items-center text-sm">
-              {Object.keys(categoryColors).map((key) => (
-                <div key={key} className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
-                  />
-                  <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
-                    {categoryLabels[key]}
-                  </span>
-                </div>
-              ))}
+            {/* See Legend Button */}
+            <div className="mt-4 flex justify-center">
+              <Dialog open={legendDialogOpen} onOpenChange={setLegendDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Info className="h-4 w-4" />
+                    See Legend
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Category Legend</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-wrap gap-x-3 gap-y-2 justify-start items-center text-sm">
+                    {Object.keys(categoryColors).map((key) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
+                        />
+                        <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
+                          {categoryLabels[key]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
