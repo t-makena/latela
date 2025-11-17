@@ -26,14 +26,14 @@ const categoryColors = {
   "Housing & Utilities": "#3B82F6",
   "Savings & Investments": "#10B981",
   "Personal & Lifestyle": "#8B5CF6",
-  "Food & Groceries": "#EAB308",
+  "Food & Groceries": "#84CC16",
   "Transportation & Fuel": "#6366F1",
   "Dining & Restaurants": "#EC4899",
   "Shopping & Retail": "#A855F7",
   "Entertainment & Recreation": "#F97316",
   "Healthcare & Medical": "#EF4444",
   "Bills & Subscriptions": "#6B7280",
-  "Miscellaneous": "#14B8A6"
+  "Miscellaneous": "#06B6D4"
 };
 
 export const EnhancedSpendingChart = ({ 
