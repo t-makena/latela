@@ -47,11 +47,11 @@ export const Navbar = () => {
               <Button
                 variant={isActive ? "default" : "ghost"}
                 className={cn(
-                  "w-full gap-3 transition-all justify-start",
+                  "w-full gap-3 transition-all justify-start text-base",
                   isActive ? "bg-primary text-primary-foreground" : ""
                 )}
               >
-                <item.icon size={18} className="shrink-0" />
+                <item.icon size={20} className="shrink-0" />
                 <span className="truncate">{item.name}</span>
               </Button>
             ) : (
@@ -69,9 +69,9 @@ export const Navbar = () => {
         <Button
           variant="ghost"
           onClick={handleLogout}
-          className="w-full gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
+          className="w-full gap-3 text-base text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
         >
-          <LogOut size={18} className="shrink-0" />
+          <LogOut size={20} className="shrink-0" />
           <span className="truncate">Log Out</span>
         </Button>
       ) : (
@@ -122,7 +122,7 @@ export const Navbar = () => {
           )}>
             {isExpanded ? (
               <>
-                <h2 className="text-xl font-bold">Latela</h2>
+                <h2 className="text-2xl font-bold">Latela</h2>
                 <Button 
                   variant="ghost" 
                   size="icon"
@@ -135,9 +135,9 @@ export const Navbar = () => {
             ) : (
               <button 
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center justify-center hover:opacity-80 transition-opacity"
+                className="flex items-center justify-center hover:opacity-80 transition-opacity font-bold text-lg"
               >
-                <img src={latelaLogo} alt="Latela" className="w-24 h-24 object-contain dark:invert" />
+                Latela
               </button>
             )}
           </div>
