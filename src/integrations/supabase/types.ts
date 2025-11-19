@@ -14,42 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      account_holders: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-          id_number: string | null
-          initials: string | null
-          name: string
-          passport_number: string | null
-          profile_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-          id_number?: string | null
-          initials?: string | null
-          name: string
-          passport_number?: string | null
-          profile_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          id_number?: string | null
-          initials?: string | null
-          name?: string
-          passport_number?: string | null
-          profile_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       accounts: {
         Row: {
           account_holder_id: string | null
@@ -117,15 +81,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "accounts_account_holder_id_fkey"
-            columns: ["account_holder_id"]
-            isOneToOne: false
-            referencedRelation: "account_holders"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       calendar_events: {
         Row: {
@@ -308,7 +264,7 @@ export type Database = {
         }
         Relationships: []
       }
-      merchant_categories: {
+      merchants: {
         Row: {
           category: string
           confidence: number | null
@@ -338,48 +294,6 @@ export type Database = {
           merchant_name?: string
           updated_at?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      transaction_requests: {
-        Row: {
-          created_at: string | null
-          id: string
-          raw_response: Json | null
-          request_id: string | null
-          result_code: number | null
-          result_description: string | null
-          result_message: string | null
-          status: string | null
-          transaction_id: string | null
-          transactions_categorized: number | null
-          transactions_processed: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          raw_response?: Json | null
-          request_id?: string | null
-          result_code?: number | null
-          result_description?: string | null
-          result_message?: string | null
-          status?: string | null
-          transaction_id?: string | null
-          transactions_categorized?: number | null
-          transactions_processed?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          raw_response?: Json | null
-          request_id?: string | null
-          result_code?: number | null
-          result_description?: string | null
-          result_message?: string | null
-          status?: string | null
-          transaction_id?: string | null
-          transactions_categorized?: number | null
-          transactions_processed?: number | null
         }
         Relationships: []
       }
