@@ -96,43 +96,42 @@ export const FinancialSummary = () => {
   const dailyTargetSpending = monthlyExpenses / 30;
 
   const content = (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div className="financial-metric">
-        <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-          Budget Balance
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="financial-metric">
+          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+            Budget Balance<sup className="text-xs ml-1">1</sup>
+          </div>
+          <div className={isMobile ? "text-xl font-bold font-georama" : "text-2xl font-bold font-georama"}>
+            {formatCurrency(netBalance)}
+          </div>
         </div>
-        <div className={isMobile ? "text-xl font-bold font-georama" : "text-2xl font-bold font-georama"}>
-          {formatCurrency(netBalance)}
+        
+        <div className="financial-metric">
+          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+            Spending limit for today<sup className="text-xs ml-1">2</sup>
+          </div>
+          <div className={isMobile ? "text-xl font-bold text-foreground font-georama" : "text-2xl font-bold text-foreground font-georama"}>
+            {formatCurrency(dailyTargetSpending)}
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Available balance less budget savings
-        </p>
+        
+        <div className="financial-metric">
+          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+            Total expenses<sup className="text-xs ml-1">3</sup>
+          </div>
+          <div className={isMobile ? "text-xl font-bold text-budget-expense font-georama" : "text-2xl font-bold text-budget-expense font-georama"}>
+            {formatCurrency(monthlyExpenses)}
+          </div>
+        </div>
       </div>
       
-      <div className="financial-metric">
-        <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-          Spending limit for today
-        </div>
-        <div className={isMobile ? "text-xl font-bold text-foreground font-georama" : "text-2xl font-bold text-foreground font-georama"}>
-          {formatCurrency(dailyTargetSpending)}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Target spending for the month: {formatCurrency(monthlyExpenses)}
-        </p>
+      <div className="mt-6 space-y-2 text-xs text-muted-foreground">
+        <p><sup>1</sup> <strong>Budget Balance:</strong> Available balance less budget savings</p>
+        <p><sup>2</sup> <strong>Spending limit for today:</strong> Target spending for the month: {formatCurrency(monthlyExpenses)}</p>
+        <p><sup>3</sup> <strong>Total expenses:</strong> Total spending this month</p>
       </div>
-      
-      <div className="financial-metric">
-        <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-          Total expenses
-        </div>
-        <div className={isMobile ? "text-xl font-bold text-budget-expense font-georama" : "text-2xl font-bold text-budget-expense font-georama"}>
-          {formatCurrency(monthlyExpenses)}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Total spending this month
-        </p>
-      </div>
-    </div>
+    </>
   );
 
   return isMobile ? (
