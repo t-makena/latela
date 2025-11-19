@@ -4,7 +4,11 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export const FinancialSummary = () => {
+interface FinancialSummaryProps {
+  showExplanations?: boolean;
+}
+
+export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryProps) => {
   const { transactions, loading, error } = useTransactions();
   const isMobile = useIsMobile();
 
@@ -126,11 +130,13 @@ export const FinancialSummary = () => {
         </div>
       </div>
       
-      <div className="mt-6 space-y-2 text-xs text-muted-foreground">
-        <p><sup>1</sup> <strong>Budget Balance:</strong> Available balance less budget savings</p>
-        <p><sup>2</sup> <strong>Spending limit for today:</strong> Target spending for the month: {formatCurrency(monthlyExpenses)}</p>
-        <p><sup>3</sup> <strong>Total expenses:</strong> Total spending this month</p>
-      </div>
+      {showExplanations && (
+        <div className="mt-6 space-y-2 text-xs text-muted-foreground">
+          <p><sup>1</sup> <strong>Budget Balance:</strong> Available balance less budget savings</p>
+          <p><sup>2</sup> <strong>Spending limit for today:</strong> Target spending for the month: {formatCurrency(monthlyExpenses)}</p>
+          <p><sup>3</sup> <strong>Total expenses:</strong> Total spending this month</p>
+        </div>
+      )}
     </>
   );
 
