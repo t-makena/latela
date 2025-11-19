@@ -88,22 +88,25 @@ export const Navbar = () => {
   return (
     <>
       {isMobile ? (
-        <div className="fixed top-0 right-0 z-50">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="m-4">
-                <Menu size={20} />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-              <div className="flex flex-col items-center mb-6 pt-4">
-                <h2 className="text-xl font-bold">Latela</h2>
-              </div>
-              <div className="py-2">
-                <NavContent showLabels={true} />
-              </div>
-            </SheetContent>
-          </Sheet>
+        <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="flex items-center justify-between p-4">
+            <img src={latelaLogo} alt="Latela" className="h-8" />
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu size={20} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="flex flex-col items-center mb-6 pt-4">
+                  <img src={latelaLogo} alt="Latela" className="h-10" />
+                </div>
+                <div className="py-2">
+                  <NavContent showLabels={true} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       ) : (
         <div 
