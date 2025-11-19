@@ -131,14 +131,6 @@ const FinancialInsight = () => {
 
   return (
     <div className="space-y-6 relative z-10">
-      {/* Financial Insight Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
-        <h1 className={isMobile ? "text-lg font-georama font-semibold" : "text-xl font-georama font-semibold"}>Financial Insight</h1>
-      </div>
-      
-      <div className="border-b border-foreground mb-6" />
-
       {/* Two Column Layout: Budget Insight + Budget Allocation */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div>
