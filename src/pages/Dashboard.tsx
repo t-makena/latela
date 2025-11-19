@@ -3,6 +3,7 @@ import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { AccountsOverview } from "@/components/dashboard/AccountsOverview";
 import { BudgetGoalsList } from "@/components/dashboard/BudgetGoalsList";
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
+import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -11,7 +12,11 @@ import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 const Dashboard = () => {
   const isMobile = useIsMobile();
   const { transactions } = useTransactions();
-  const { monthlyExpenses } = calculateFinancialMetrics(transactions);
+  const { monthlyIncome, monthlyExpenses, netBalance } = calculateFinancialMetrics(transactions);
+
+  const availableBalance = netBalance;
+  const budgetBalance = monthlyIncome * 0.3;
+  const spending = monthlyExpenses;
 
   return (
     <div className="space-y-2 relative z-10">
@@ -43,6 +48,23 @@ const Dashboard = () => {
               <EnhancedSpendingChart />
             </CardContent>
           </Card>
+        )}
+
+        {isMobile && (
+          <div className="mt-4 px-3">
+            <h3 className="text-sm font-semibold mb-2">Budget Insight</h3>
+            <BudgetBreakdown
+              availableBalance={availableBalance}
+              budgetBalance={budgetBalance}
+              spending={spending}
+              previousMonth={{
+                availableBalance: availableBalance * 0.9,
+                budgetBalance: budgetBalance * 0.9,
+                spending: spending * 0.9,
+              }}
+              showOnlyTable
+            />
+          </div>
         )}
         
         {isMobile && (
