@@ -46,20 +46,21 @@ export const Navbar = () => {
             {showLabels ? (
               <Button
                 variant={isActive ? "default" : "ghost"}
+                size="lg"
                 className={cn(
-                  "w-full gap-3 transition-all justify-start text-base",
+                  "w-full gap-3 transition-all justify-start text-base h-12",
                   isActive ? "bg-primary text-primary-foreground" : ""
                 )}
               >
-                <item.icon size={20} className="shrink-0" />
+                <item.icon size={22} className="shrink-0" />
                 <span className="truncate">{item.name}</span>
               </Button>
             ) : (
               <div className={cn(
-                "w-full flex items-center justify-center py-3 transition-colors cursor-pointer rounded-md",
+                "w-full flex items-center justify-center py-4 transition-colors cursor-pointer rounded-md",
                 isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
               )}>
-                <item.icon size={20} className="shrink-0" />
+                <item.icon size={22} className="shrink-0" />
               </div>
             )}
           </Link>
@@ -68,18 +69,19 @@ export const Navbar = () => {
       {showLabels ? (
         <Button
           variant="ghost"
+          size="lg"
           onClick={handleLogout}
-          className="w-full gap-3 text-base text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
+          className="w-full gap-3 text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
         >
-          <LogOut size={20} className="shrink-0" />
+          <LogOut size={22} className="shrink-0" />
           <span className="truncate">Log Out</span>
         </Button>
       ) : (
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center py-3 text-destructive hover:text-destructive/80 transition-colors mt-auto cursor-pointer"
+          className="w-full flex items-center justify-center py-4 text-destructive hover:text-destructive/80 transition-colors mt-auto cursor-pointer"
         >
-          <LogOut size={20} className="shrink-0" />
+          <LogOut size={22} className="shrink-0" />
         </button>
       )}
     </div>
@@ -90,7 +92,7 @@ export const Navbar = () => {
       {isMobile ? (
         <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
           <div className="flex items-center justify-between p-4">
-            <img src={latelaLogo} alt="Latela" className="h-8" />
+            <h1 className="text-2xl font-bold">Latela</h1>
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -99,7 +101,7 @@ export const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right">
                 <div className="flex flex-col items-center mb-6 pt-4">
-                  <img src={latelaLogo} alt="Latela" className="h-10" />
+                  <h2 className="text-2xl font-bold">Latela</h2>
                 </div>
                 <div className="py-2">
                   <NavContent showLabels={true} />
