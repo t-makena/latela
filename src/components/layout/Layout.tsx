@@ -32,7 +32,7 @@ export const Layout = ({ children }: LayoutProps) => {
             <Navbar />
           </div>
         )}
-        <main className={`flex-1 overflow-y-auto ${isMobile ? 'px-3 pt-3' : ''}`}>
+        <main className={`flex-1 overflow-y-auto ${isMobile ? 'px-3 pt-20' : ''}`}>
           {children}
         </main>
         {isMobile && <Navbar />}
