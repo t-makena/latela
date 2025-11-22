@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { categorizeTransaction } from "@/lib/transactionCategories";
 
 const FinancialInsight = () => {
   const { transactions, loading } = useTransactions();
@@ -108,64 +109,19 @@ const FinancialInsight = () => {
     "Misc": "Miscellaneous"
   };
 
-  // Category mapping for transaction categorization
-  const categoryKeywordMapping: { [key: string]: string } = {
-    'woolworths': 'F&G',
-    'pick n pay': 'F&G',
-    'checkers': 'F&G',
-    'groceries': 'F&G',
-    'food': 'F&G',
-    'supermarket': 'F&G',
-    'uber': 'T/F',
-    'shell': 'T/F',
-    'engen': 'T/F',
-    'fuel': 'T/F',
-    'petrol': 'T/F',
-    'transport': 'T/F',
-    'mcdonalds': 'D&R',
-    'kfc': 'D&R',
-    'nandos': 'D&R',
-    'restaurant': 'D&R',
-    'dining': 'D&R',
-    'takeaway': 'D&R',
-    'takealot': 'S&R',
-    'mr price': 'S&R',
-    'edgars': 'S&R',
-    'game': 'S&R',
-    'shopping': 'S&R',
-    'retail': 'S&R',
-    'clothing': 'S&R',
-    'netflix': 'B&S',
-    'subscription': 'B&S',
-    'spotify': 'B&S',
-    'insurance': 'B&S',
-    'dischem': 'H&M',
-    'clicks': 'H&M',
-    'pharmacy': 'H&M',
-    'medical': 'H&M',
-    'doctor': 'H&M',
-    'health': 'H&M',
-    'rent': 'H&U',
-    'utilities': 'H&U',
-    'electricity': 'H&U',
-    'water': 'H&U',
-    'gym': 'E&R',
-    'entertainment': 'E&R',
-    'movie': 'E&R',
-    'savings': 'S&I',
-    'investment': 'S&I',
-  };
-
-  const categorizeTrans = (description: string): string => {
-    const desc = description?.toLowerCase() || '';
-    
-    for (const [keyword, category] of Object.entries(categoryKeywordMapping)) {
-      if (desc.includes(keyword)) {
-        return category;
-      }
-    }
-    
-    return 'Misc';
+  // Category short code mapping
+  const categoryToShortCode: { [key: string]: string } = {
+    "Housing & Utilities": "H&U",
+    "Savings & Investments": "S&I",
+    "Personal & Lifestyle": "P&L",
+    "Food & Groceries": "F&G",
+    "Transportation & Fuel": "T/F",
+    "Dining & Restaurants": "D&R",
+    "Shopping & Retail": "S&R",
+    "Entertainment & Recreation": "E&R",
+    "Healthcare & Medical": "H&M",
+    "Bills & Subscriptions": "B&S",
+    "Miscellaneous": "Misc"
   };
 
   // Generate category data based on actual transactions and filter
@@ -197,9 +153,10 @@ const FinancialInsight = () => {
 
     // Aggregate transactions by category
     filteredTransactions.forEach(transaction => {
-      const category = categorizeTrans(transaction.description || '');
+      const fullCategory = categorizeTransaction(transaction.description || '');
+      const shortCode = categoryToShortCode[fullCategory] || 'Misc';
       const amount = Math.abs(transaction.amount) / 100; // Convert from cents
-      categoryTotals[category] += amount;
+      categoryTotals[shortCode] += amount;
     });
 
     return [
