@@ -127,7 +127,7 @@ export const generateChartDataFromTransactions = (
 
     if (labelIndex >= 0 && labelIndex < chartData.length) {
       const category = categorizeTransaction(transaction);
-      const amount = Math.abs(transaction.amount);
+      const amount = Math.abs(transaction.amount) / 100; // Convert from cents to Rands
       
       chartData[labelIndex][category] = (chartData[labelIndex][category] || 0) + amount;
       chartData[labelIndex].total += amount;
