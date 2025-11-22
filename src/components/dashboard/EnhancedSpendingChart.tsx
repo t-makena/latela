@@ -172,7 +172,7 @@ export const EnhancedSpendingChart = ({
                       <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: 'hsl(var(--primary))' }}>
                         Total: {formatCurrency(total)}
                       </div>
-                      {payload.map((entry: any, index: number) => (
+                      {payload.filter((entry: any) => entry.value > 0).map((entry: any, index: number) => (
                         <div key={index} style={{ fontSize: '12px', padding: '2px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '12px', height: '12px', backgroundColor: entry.color, borderRadius: '2px' }} />
                           <span>{entry.name}: {formatCurrency(entry.value)}</span>
