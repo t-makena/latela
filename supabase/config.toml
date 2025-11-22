@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.categorize-transactions]
 verify_jwt = true
+
+[functions.generate-test-transactions]
+verify_jwt = true
