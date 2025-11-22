@@ -37,11 +37,18 @@ export const AddAccountDialog = ({ open, onOpenChange, onSuccess }: AddAccountDi
     setLoading(true);
 
     try {
+      // Get the authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+
       const { error } = await supabase.from("accounts").insert({
+        user_id: user.id,
         bank_name: formData.bankName,
         account_number: formData.accountNumber,
         account_type: formData.accountType,
-        balance: 0, // Default to 0
+        balance: 0,
         available_balance: 0,
         balance_brought_forward: 0,
         status: "active",
