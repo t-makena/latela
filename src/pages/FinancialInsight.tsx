@@ -36,6 +36,9 @@ const FinancialInsight = () => {
   const [selectedCategoryForHistory, setSelectedCategoryForHistory] = useState<string | undefined>();
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>();
   const [legendDialogOpen, setLegendDialogOpen] = useState(false);
+  const [selectedCategoryForGraph, setSelectedCategoryForGraph] = useState<string | null>(null);
+  const [lastClickTime, setLastClickTime] = useState<number>(0);
+  const [lastClickedCategory, setLastClickedCategory] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   // Handle category filter from navigation state
@@ -125,9 +128,38 @@ const FinancialInsight = () => {
   const categoryData = getCategoryData();
 
   const handleBarClick = (data: any) => {
-    console.log("Bar clicked:", data);
-    // Future modal implementation
+    const currentTime = Date.now();
+    const category = data?.activeLabel;
+    
+    if (category === lastClickedCategory && currentTime - lastClickTime < 300) {
+      // Double click detected
+      setSelectedCategoryForGraph(category);
+    } else {
+      // Single click
+      setLastClickedCategory(category);
+      setLastClickTime(currentTime);
+    }
   };
+
+  // Generate time-series data for selected category
+  const getCategoryLineData = () => {
+    if (!selectedCategoryForGraph) return [];
+
+    const labels = categoryFilter === '1W' ? 
+      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
+      categoryFilter === '1M' ? 
+        ["Week 1", "Week 2", "Week 3", "Week 4"] :
+        categoryFilter === '1Y' ?
+          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
+          ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    return labels.map((label) => ({
+      period: label,
+      amount: 0
+    }));
+  };
+
+  const categoryLineData = getCategoryLineData();
 
   return (
     <div className="space-y-6 relative z-10">
@@ -364,106 +396,178 @@ const FinancialInsight = () => {
           <div className="pb-2 mb-2 px-3">
             <div className="flex flex-col gap-1">
               <div>
-                <div className="text-base font-georama">Spending By Category</div>
+                <div className="text-base font-georama">
+                  {selectedCategoryForGraph 
+                    ? `${categoryLabels[selectedCategoryForGraph as keyof typeof categoryLabels]} Trend`
+                    : "Spending By Category"}
+                </div>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               </div>
-              <DateFilter 
-                selectedFilter={categoryFilter}
-                onFilterChange={(filter, dateRange) => {
-                  setCategoryFilter(filter);
-                  if (dateRange) {
-                    setCustomCategoryRange(dateRange);
-                  }
-                }}
-              />
+              <div className="flex items-center gap-2">
+                {selectedCategoryForGraph && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setSelectedCategoryForGraph(null)}
+                    className="text-xs h-7"
+                  >
+                    Back to Categories
+                  </Button>
+                )}
+                <DateFilter 
+                  selectedFilter={categoryFilter}
+                  onFilterChange={(filter, dateRange) => {
+                    setCategoryFilter(filter);
+                    if (dateRange) {
+                      setCustomCategoryRange(dateRange);
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
           <div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={categoryData} onClick={handleBarClick} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis 
-                  dataKey="category" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 9 : 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  angle={isMobile ? -45 : 0}
-                  textAnchor={isMobile ? "end" : "middle"}
-                  height={isMobile ? 60 : 30}
-                />
-                <YAxis 
-                  label={isMobile ? undefined : { 
-                    value: 'Amount Spent', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                  }}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  width={isMobile ? 45 : 60}
-                />
-                <Tooltip 
-                  cursor={false}
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload || payload.length === 0) return null;
-                    
-                    const entry = payload[0];
-                    const value = entry.value as number;
-                    
-                    return (
-                      <div style={{
-                        backgroundColor: 'white',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        padding: '12px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                      }}>
-                        <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
-                          {categoryLabels[label as keyof typeof categoryLabels] || label}
-                        </p>
-                        <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
-                          R{Number(value).toFixed(2)}
-                        </p>
+            {selectedCategoryForGraph ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={categoryLineData} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                  <XAxis 
+                    dataKey="period" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 9 : 11 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    angle={isMobile ? -45 : 0}
+                    textAnchor={isMobile ? "end" : "middle"}
+                    height={isMobile ? 60 : 30}
+                  />
+                  <YAxis 
+                    label={isMobile ? undefined : { 
+                      value: 'Amount Spent', 
+                      angle: -90, 
+                      position: 'insideLeft',
+                      style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                    }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    width={isMobile ? 45 : 60}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    labelStyle={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600',
+                      marginBottom: '8px'
+                    }}
+                    itemStyle={{ 
+                      fontSize: '14px',
+                      padding: '4px 0'
+                    }}
+                    formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke={categoryColors[selectedCategoryForGraph as keyof typeof categoryColors]}
+                    strokeWidth={2}
+                    dot={{ fill: categoryColors[selectedCategoryForGraph as keyof typeof categoryColors], r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={categoryData} onClick={handleBarClick} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                    <XAxis 
+                      dataKey="category" 
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 9 : 11 }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? "end" : "middle"}
+                      height={isMobile ? 60 : 30}
+                    />
+                    <YAxis 
+                      label={isMobile ? undefined : { 
+                        value: 'Amount Spent', 
+                        angle: -90, 
+                        position: 'insideLeft',
+                        style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                      }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      width={isMobile ? 45 : 60}
+                    />
+                    <Tooltip 
+                      cursor={false}
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload || payload.length === 0) return null;
+                        
+                        const entry = payload[0];
+                        const value = entry.value as number;
+                        
+                        return (
+                          <div style={{
+                            backgroundColor: 'white',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                          }}>
+                            <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                              {categoryLabels[label as keyof typeof categoryLabels] || label}
+                            </p>
+                            <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
+                              R{Number(value).toFixed(2)}
+                            </p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Bar dataKey="amount" cursor="pointer" radius={[8, 8, 0, 0]}>
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+                
+                {/* See Legend Button */}
+                <div className="mt-4 flex justify-center">
+                  <Dialog open={legendDialogOpen} onOpenChange={setLegendDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Info className="h-4 w-4" />
+                        See Legend
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Category Legend</DialogTitle>
+                      </DialogHeader>
+                      <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-2 gap-x-8 gap-y-2 text-sm"}>
+                        {Object.keys(categoryColors).map((key) => (
+                          <div key={key} className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
+                            />
+                            <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
+                              {categoryLabels[key]}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    );
-                  }}
-                />
-                <Bar dataKey="amount" cursor="pointer" radius={[8, 8, 0, 0]}>
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            
-            {/* See Legend Button */}
-            <div className="mt-4 flex justify-center">
-              <Dialog open={legendDialogOpen} onOpenChange={setLegendDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Info className="h-4 w-4" />
-                    See Legend
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Category Legend</DialogTitle>
-                  </DialogHeader>
-                  <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-2 gap-x-8 gap-y-2 text-sm"}>
-                    {Object.keys(categoryColors).map((key) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
-                        />
-                        <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
-                          {categoryLabels[key]}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </>
+            )}
           </div>
         </div>
       ) : (
@@ -471,102 +575,169 @@ const FinancialInsight = () => {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base font-georama">Spending By Category</CardTitle>
+                <CardTitle className="text-base font-georama">
+                  {selectedCategoryForGraph 
+                    ? `${categoryLabels[selectedCategoryForGraph as keyof typeof categoryLabels]} Trend`
+                    : "Spending By Category"}
+                </CardTitle>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               </div>
-              <DateFilter 
-                selectedFilter={categoryFilter}
-                onFilterChange={(filter, dateRange) => {
-                  setCategoryFilter(filter);
-                  if (dateRange) {
-                    setCustomCategoryRange(dateRange);
-                  }
-                }}
-              />
+              <div className="flex items-center gap-2">
+                {selectedCategoryForGraph && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setSelectedCategoryForGraph(null)}
+                  >
+                    Back to Categories
+                  </Button>
+                )}
+                <DateFilter 
+                  selectedFilter={categoryFilter}
+                  onFilterChange={(filter, dateRange) => {
+                    setCategoryFilter(filter);
+                    if (dateRange) {
+                      setCustomCategoryRange(dateRange);
+                    }
+                  }}
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryData} onClick={handleBarClick} margin={{ left: 20, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis 
-                  dataKey="category" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                />
-                <YAxis 
-                  label={{ 
-                    value: 'Amount Spent', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                  }}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                />
-                <Tooltip 
-                  cursor={false}
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload || payload.length === 0) return null;
-                    
-                    const entry = payload[0];
-                    const value = entry.value as number;
-                    
-                    return (
-                      <div style={{
-                        backgroundColor: 'white',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        padding: '12px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                      }}>
-                        <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
-                          {categoryLabels[label as keyof typeof categoryLabels] || label}
-                        </p>
-                        <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
-                          R{Number(value).toFixed(2)}
-                        </p>
+            {selectedCategoryForGraph ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={categoryLineData} margin={{ left: 20, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                  <XAxis 
+                    dataKey="period" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                  />
+                  <YAxis 
+                    label={{ 
+                      value: 'Amount Spent', 
+                      angle: -90, 
+                      position: 'insideLeft',
+                      style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                    }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    labelStyle={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600',
+                      marginBottom: '8px'
+                    }}
+                    itemStyle={{ 
+                      fontSize: '14px',
+                      padding: '4px 0'
+                    }}
+                    formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke={categoryColors[selectedCategoryForGraph as keyof typeof categoryColors]}
+                    strokeWidth={2}
+                    dot={{ fill: categoryColors[selectedCategoryForGraph as keyof typeof categoryColors], r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={categoryData} onClick={handleBarClick} margin={{ left: 20, right: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                    <XAxis 
+                      dataKey="category" 
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                    />
+                    <YAxis 
+                      label={{ 
+                        value: 'Amount Spent', 
+                        angle: -90, 
+                        position: 'insideLeft',
+                        style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                      }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                    />
+                    <Tooltip 
+                      cursor={false}
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload || payload.length === 0) return null;
+                        
+                        const entry = payload[0];
+                        const value = entry.value as number;
+                        
+                        return (
+                          <div style={{
+                            backgroundColor: 'white',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                          }}>
+                            <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                              {categoryLabels[label as keyof typeof categoryLabels] || label}
+                            </p>
+                            <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
+                              R{Number(value).toFixed(2)}
+                            </p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Bar dataKey="amount" cursor="pointer" radius={[8, 8, 0, 0]}>
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+                
+                {/* See Legend Button */}
+                <div className="mt-4 flex justify-center">
+                  <Dialog open={legendDialogOpen} onOpenChange={setLegendDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Info className="h-4 w-4" />
+                        See Legend
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Category Legend</DialogTitle>
+                      </DialogHeader>
+                      <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-2 gap-x-8 gap-y-2 text-sm"}>
+                        {Object.keys(categoryColors).map((key) => (
+                          <div key={key} className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
+                            />
+                            <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
+                              {categoryLabels[key]}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    );
-                  }}
-                />
-                <Bar dataKey="amount" cursor="pointer" radius={[8, 8, 0, 0]}>
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            
-            {/* See Legend Button */}
-            <div className="mt-4 flex justify-center">
-              <Dialog open={legendDialogOpen} onOpenChange={setLegendDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Info className="h-4 w-4" />
-                    See Legend
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Category Legend</DialogTitle>
-                  </DialogHeader>
-                  <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-2 gap-x-8 gap-y-2 text-sm"}>
-                    {Object.keys(categoryColors).map((key) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: categoryColors[key as keyof typeof categoryColors] }}
-                        />
-                        <span style={{ color: categoryColors[key as keyof typeof categoryColors] }}>
-                          {categoryLabels[key]}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
