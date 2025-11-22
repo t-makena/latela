@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import latelaLogo from "@/assets/latela-logo.png";
+import { LatelaIcon } from "@/components/ui/latela-icon";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -139,7 +139,7 @@ export const Navbar = () => {
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="flex items-center justify-center hover:opacity-80 transition-opacity p-2"
               >
-                <img src={latelaLogo} alt="Latela" className="h-12 w-12" />
+                <LatelaIcon className="h-10 w-10" />
               </button>
             )}
           </div>
