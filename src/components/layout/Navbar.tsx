@@ -92,7 +92,7 @@ export const Navbar = () => {
       {isMobile ? (
         <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
           <div className="flex items-center justify-between p-4">
-            <h1 className="text-2xl font-bold">Latela</h1>
+            <LatelaIcon className="h-10 w-10" />
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
