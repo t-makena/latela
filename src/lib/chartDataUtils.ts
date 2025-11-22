@@ -1,4 +1,5 @@
 import { DateRange } from "./dateFilterUtils";
+import { categorizeTransaction as categorizeTxn } from "./transactionCategories";
 
 interface Transaction {
   id: string;
@@ -21,51 +22,12 @@ interface ChartDataPoint {
   topCategory?: string;
 }
 
-// Map transaction descriptions to categories
-const categoryMapping: { [key: string]: string } = {
-  'rent': 'Housing & Utilities',
-  'utilities': 'Housing & Utilities',
-  'electricity': 'Housing & Utilities',
-  'water': 'Housing & Utilities',
-  'savings': 'Savings & Investments',
-  'investment': 'Savings & Investments',
-  'groceries': 'Food & Groceries',
-  'food': 'Food & Groceries',
-  'supermarket': 'Food & Groceries',
-  'fuel': 'Transportation & Fuel',
-  'petrol': 'Transportation & Fuel',
-  'transport': 'Transportation & Fuel',
-  'uber': 'Transportation & Fuel',
-  'restaurant': 'Dining & Restaurants',
-  'dining': 'Dining & Restaurants',
-  'takeaway': 'Dining & Restaurants',
-  'shopping': 'Shopping & Retail',
-  'retail': 'Shopping & Retail',
-  'clothing': 'Shopping & Retail',
-  'entertainment': 'Entertainment & Recreation',
-  'movie': 'Entertainment & Recreation',
-  'gym': 'Entertainment & Recreation',
-  'health': 'Healthcare & Medical',
-  'medical': 'Healthcare & Medical',
-  'doctor': 'Healthcare & Medical',
-  'pharmacy': 'Healthcare & Medical',
-  'subscription': 'Bills & Subscriptions',
-  'netflix': 'Bills & Subscriptions',
-  'spotify': 'Bills & Subscriptions',
-  'insurance': 'Bills & Subscriptions',
+export const categorizeTransaction = (transaction: Transaction): string => {
+  return categorizeTxn(transaction.description);
 };
 
-export const categorizeTransaction = (transaction: Transaction): string => {
-  const description = transaction.description?.toLowerCase() || '';
-  
-  for (const [keyword, category] of Object.entries(categoryMapping)) {
-    if (description.includes(keyword)) {
-      return category;
-    }
-  }
-  
-  return 'Miscellaneous';
-};
+// Map transaction descriptions to categories (deprecated - use transactionCategories.ts)
+const categoryMapping: { [key: string]: string } = {};
 
 export const generateChartDataFromTransactions = (
   transactions: Transaction[],
