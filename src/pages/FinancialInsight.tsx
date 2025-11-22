@@ -19,7 +19,7 @@ import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown"
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
-import { getFilterDescription, DateRange } from "@/lib/dateFilterUtils";
+import { getFilterDescription, DateRange, getDateRangeForFilter } from "@/lib/dateFilterUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -108,20 +108,112 @@ const FinancialInsight = () => {
     "Misc": "Miscellaneous"
   };
 
-  // Generate category data based on filter - empty until real data is available
+  // Category mapping for transaction categorization
+  const categoryKeywordMapping: { [key: string]: string } = {
+    'woolworths': 'F&G',
+    'pick n pay': 'F&G',
+    'checkers': 'F&G',
+    'groceries': 'F&G',
+    'food': 'F&G',
+    'supermarket': 'F&G',
+    'uber': 'T/F',
+    'shell': 'T/F',
+    'engen': 'T/F',
+    'fuel': 'T/F',
+    'petrol': 'T/F',
+    'transport': 'T/F',
+    'mcdonalds': 'D&R',
+    'kfc': 'D&R',
+    'nandos': 'D&R',
+    'restaurant': 'D&R',
+    'dining': 'D&R',
+    'takeaway': 'D&R',
+    'takealot': 'S&R',
+    'mr price': 'S&R',
+    'edgars': 'S&R',
+    'game': 'S&R',
+    'shopping': 'S&R',
+    'retail': 'S&R',
+    'clothing': 'S&R',
+    'netflix': 'B&S',
+    'subscription': 'B&S',
+    'spotify': 'B&S',
+    'insurance': 'B&S',
+    'dischem': 'H&M',
+    'clicks': 'H&M',
+    'pharmacy': 'H&M',
+    'medical': 'H&M',
+    'doctor': 'H&M',
+    'health': 'H&M',
+    'rent': 'H&U',
+    'utilities': 'H&U',
+    'electricity': 'H&U',
+    'water': 'H&U',
+    'gym': 'E&R',
+    'entertainment': 'E&R',
+    'movie': 'E&R',
+    'savings': 'S&I',
+    'investment': 'S&I',
+  };
+
+  const categorizeTrans = (description: string): string => {
+    const desc = description?.toLowerCase() || '';
+    
+    for (const [keyword, category] of Object.entries(categoryKeywordMapping)) {
+      if (desc.includes(keyword)) {
+        return category;
+      }
+    }
+    
+    return 'Misc';
+  };
+
+  // Generate category data based on actual transactions and filter
   const getCategoryData = () => {
+    const dateRange = customCategoryRange || getDateRangeForFilter(categoryFilter);
+    
+    // Filter transactions by date range and type
+    const filteredTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.transaction_date);
+      return t.type === 'expense' && 
+             transactionDate >= dateRange.from && 
+             transactionDate <= dateRange.to;
+    });
+
+    // Initialize category totals
+    const categoryTotals: { [key: string]: number } = {
+      "F&G": 0,
+      "T/F": 0,
+      "D&R": 0,
+      "S&R": 0,
+      "E&R": 0,
+      "P&L": 0,
+      "H&U": 0,
+      "H&M": 0,
+      "B&S": 0,
+      "S&I": 0,
+      "Misc": 0
+    };
+
+    // Aggregate transactions by category
+    filteredTransactions.forEach(transaction => {
+      const category = categorizeTrans(transaction.description || '');
+      const amount = Math.abs(transaction.amount) / 100; // Convert from cents
+      categoryTotals[category] += amount;
+    });
+
     return [
-      { category: "F&G", amount: 0, color: categoryColors["F&G"] },
-      { category: "T/F", amount: 0, color: categoryColors["T/F"] },
-      { category: "D&R", amount: 0, color: categoryColors["D&R"] },
-      { category: "S&R", amount: 0, color: categoryColors["S&R"] },
-      { category: "E&R", amount: 0, color: categoryColors["E&R"] },
-      { category: "P&L", amount: 0, color: categoryColors["P&L"] },
-      { category: "H&U", amount: 0, color: categoryColors["H&U"] },
-      { category: "H&M", amount: 0, color: categoryColors["H&M"] },
-      { category: "B&S", amount: 0, color: categoryColors["B&S"] },
-      { category: "S&I", amount: 0, color: categoryColors["S&I"] },
-      { category: "Misc", amount: 0, color: categoryColors["Misc"] }
+      { category: "F&G", amount: categoryTotals["F&G"], color: categoryColors["F&G"] },
+      { category: "T/F", amount: categoryTotals["T/F"], color: categoryColors["T/F"] },
+      { category: "D&R", amount: categoryTotals["D&R"], color: categoryColors["D&R"] },
+      { category: "S&R", amount: categoryTotals["S&R"], color: categoryColors["S&R"] },
+      { category: "E&R", amount: categoryTotals["E&R"], color: categoryColors["E&R"] },
+      { category: "P&L", amount: categoryTotals["P&L"], color: categoryColors["P&L"] },
+      { category: "H&U", amount: categoryTotals["H&U"], color: categoryColors["H&U"] },
+      { category: "H&M", amount: categoryTotals["H&M"], color: categoryColors["H&M"] },
+      { category: "B&S", amount: categoryTotals["B&S"], color: categoryColors["B&S"] },
+      { category: "S&I", amount: categoryTotals["S&I"], color: categoryColors["S&I"] },
+      { category: "Misc", amount: categoryTotals["Misc"], color: categoryColors["Misc"] }
     ];
   };
 
@@ -442,20 +534,23 @@ const FinancialInsight = () => {
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'white',
+                      backgroundColor: 'hsl(var(--popover))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                       padding: '12px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      color: 'hsl(var(--popover-foreground))'
                     }}
                     labelStyle={{ 
                       fontSize: '14px', 
                       fontWeight: '600',
-                      marginBottom: '8px'
+                      marginBottom: '8px',
+                      color: 'hsl(var(--popover-foreground))'
                     }}
                     itemStyle={{ 
                       fontSize: '14px',
-                      padding: '4px 0'
+                      padding: '4px 0',
+                      color: 'hsl(var(--popover-foreground))'
                     }}
                     formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
                   />
@@ -503,13 +598,14 @@ const FinancialInsight = () => {
                         
                         return (
                           <div style={{
-                            backgroundColor: 'white',
+                            backgroundColor: 'hsl(var(--popover))',
                             border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                             padding: '12px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            color: 'hsl(var(--popover-foreground))'
                           }}>
-                            <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                            <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--popover-foreground))' }}>
                               {categoryLabels[label as keyof typeof categoryLabels] || label}
                             </p>
                             <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
@@ -616,20 +712,23 @@ const FinancialInsight = () => {
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'white',
+                      backgroundColor: 'hsl(var(--popover))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                       padding: '12px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      color: 'hsl(var(--popover-foreground))'
                     }}
                     labelStyle={{ 
                       fontSize: '14px', 
                       fontWeight: '600',
-                      marginBottom: '8px'
+                      marginBottom: '8px',
+                      color: 'hsl(var(--popover-foreground))'
                     }}
                     itemStyle={{ 
                       fontSize: '14px',
-                      padding: '4px 0'
+                      padding: '4px 0',
+                      color: 'hsl(var(--popover-foreground))'
                     }}
                     formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
                   />
@@ -673,13 +772,14 @@ const FinancialInsight = () => {
                         
                         return (
                           <div style={{
-                            backgroundColor: 'white',
+                            backgroundColor: 'hsl(var(--popover))',
                             border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                             padding: '12px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            color: 'hsl(var(--popover-foreground))'
                           }}>
-                            <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                            <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--popover-foreground))' }}>
                               {categoryLabels[label as keyof typeof categoryLabels] || label}
                             </p>
                             <p style={{ fontSize: '14px', padding: '4px 0', color: entry.color }}>
