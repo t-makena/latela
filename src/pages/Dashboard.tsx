@@ -29,6 +29,23 @@ const Dashboard = () => {
           </div>
         )}
         
+        {isMobile && (
+          <div className="mt-4 px-3">
+            <h3 className="text-sm font-semibold mb-2">Budget Insight</h3>
+            <BudgetBreakdown
+              availableBalance={availableBalance}
+              budgetBalance={budgetBalance}
+              spending={spending}
+              previousMonth={{
+                availableBalance: availableBalance * 0.9,
+                budgetBalance: budgetBalance * 0.9,
+                spending: spending * 0.9,
+              }}
+              showOnlyTable
+            />
+          </div>
+        )}
+
         {isMobile ? (
           <div className="mt-2 -mx-3">
             <div className="pb-2 mb-2 px-3">
@@ -48,23 +65,6 @@ const Dashboard = () => {
               <EnhancedSpendingChart />
             </CardContent>
           </Card>
-        )}
-
-        {isMobile && (
-          <div className="mt-4 px-3">
-            <h3 className="text-sm font-semibold mb-2">Budget Insight</h3>
-            <BudgetBreakdown
-              availableBalance={availableBalance}
-              budgetBalance={budgetBalance}
-              spending={spending}
-              previousMonth={{
-                availableBalance: availableBalance * 0.9,
-                budgetBalance: budgetBalance * 0.9,
-                spending: spending * 0.9,
-              }}
-              showOnlyTable
-            />
-          </div>
         )}
         
         {isMobile && (
