@@ -20,6 +20,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface EnhancedSpendingChartProps {
   accountSpecific?: boolean;
   accountId?: string;
+  title?: string;
+  showTitle?: boolean;
 }
 
 const categoryColors = {
@@ -38,7 +40,9 @@ const categoryColors = {
 
 export const EnhancedSpendingChart = ({ 
   accountSpecific = false, 
-  accountId
+  accountId,
+  title = "Spending Trend",
+  showTitle = true
 }: EnhancedSpendingChartProps) => {
   const { transactions } = useTransactions();
   const { monthlySpending, monthlyIncome, monthlySavings } = calculateFinancialMetrics(transactions);
@@ -105,10 +109,15 @@ export const EnhancedSpendingChart = ({
   return (
     <>
       <div className={isMobile ? "" : "p-6"}>
-        <div className={isMobile ? "flex flex-col gap-2 mb-3 px-3" : "flex items-center justify-between mb-4"}>
-          <div>
-            <p className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>{getFilterDescription(selectedPeriod)}</p>
+        {showTitle && (
+          <div className={isMobile ? "mb-3 px-3" : "mb-4"}>
+            <h3 className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>{title}</h3>
+            <p className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
+              {getFilterDescription(selectedPeriod)}
+            </p>
           </div>
+        )}
+        <div className={isMobile ? "flex flex-col gap-2 mb-3 px-3" : "flex items-center justify-end mb-4"}>
           <DateFilter 
             selectedFilter={selectedPeriod}
             onFilterChange={(filter, dateRange) => {

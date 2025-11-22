@@ -370,21 +370,11 @@ const FinancialInsight = () => {
       {/* Spending Trend Chart */}
       {isMobile ? (
         <div className="mt-4 -mx-3">
-          <div className="pb-2 mb-2 px-3">
-            <div className="text-base font-georama">Spending Trend</div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">for the past month</p>
-          </div>
-          <div>
-            <EnhancedSpendingChart />
-          </div>
+          <EnhancedSpendingChart />
         </div>
       ) : (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-georama">Spending Trend</CardTitle>
-            <p className="text-[10px] text-muted-foreground mt-0.5">for the past month</p>
-          </CardHeader>
-          <CardContent className="p-3">
+          <CardContent className="p-0">
             <EnhancedSpendingChart />
           </CardContent>
         </Card>
