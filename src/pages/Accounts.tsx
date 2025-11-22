@@ -307,19 +307,11 @@ const Accounts = () => {
         {/* Spending Trend Chart */}
         {isMobile ? (
           <div className="mt-2 -mx-6">
-            <div className="pb-2 mb-2 px-6">
-              <div className="font-georama">Spending Trend</div>
-            </div>
-            <div>
-              <EnhancedSpendingChart />
-            </div>
+            <EnhancedSpendingChart />
           </div>
         ) : (
           <Card className="mt-2">
-            <CardHeader>
-              <CardTitle className="font-georama">Spending Trend</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <EnhancedSpendingChart />
             </CardContent>
           </Card>

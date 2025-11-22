@@ -48,20 +48,11 @@ const Dashboard = () => {
 
         {isMobile ? (
           <div className="mt-2 -mx-3">
-            <div className="pb-2 mb-2 px-3">
-              <div className="text-base font-georama">Spending Trend</div>
-              <p className="text-[10px] text-muted-foreground mt-0.5">for the past month</p>
-            </div>
-            <div>
-              <EnhancedSpendingChart />
-            </div>
+            <EnhancedSpendingChart />
           </div>
         ) : (
           <Card className="mt-2">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-georama">Spending Trend</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3">
+            <CardContent className="p-0">
               <EnhancedSpendingChart />
             </CardContent>
           </Card>
