@@ -458,11 +458,6 @@ const Settings = () => {
           </div>
         </CardContent>
       </Card>
-      
-      <div className="flex justify-end">
-        <Button variant="outline" className="mr-2">Cancel</Button>
-        <Button onClick={handleSave}>Save Changes</Button>
-      </div>
     </div>
   );
 };
