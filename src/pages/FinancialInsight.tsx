@@ -241,6 +241,7 @@ const FinancialInsight = () => {
               spending: monthlyExpenses * 0.9
             }}
             showOnlyPieChart={true}
+            transactions={transactions}
           />
         </div>
       </div>
