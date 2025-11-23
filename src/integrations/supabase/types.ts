@@ -190,44 +190,6 @@ export type Database = {
           },
         ]
       }
-      category_rules: {
-        Row: {
-          category_id: string | null
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          priority: number | null
-          rule_type: string
-          rule_value: Json
-        }
-        Insert: {
-          category_id?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          priority?: number | null
-          rule_type: string
-          rule_value: Json
-        }
-        Update: {
-          category_id?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          priority?: number | null
-          rule_type?: string
-          rule_value?: Json
-        }
-        Relationships: [
-          {
-            foreignKeyName: "category_rules_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       goals: {
         Row: {
           created_at: string | null
