@@ -132,9 +132,9 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
       
       {showExplanations && (
         <div className="mt-6 space-y-2 md:space-y-0 md:flex md:gap-6 text-xs text-muted-foreground">
-          <p><sup>1</sup> <strong>Budget Balance:</strong> Available balance less budget savings</p>
-          <p><sup>2</sup> <strong>Spending limit for today:</strong> Target spending for the month: {formatCurrency(monthlyExpenses)}</p>
-          <p><sup>3</sup> <strong>Total expenses:</strong> Total spending this month</p>
+          <p><sup>1</sup> <strong>Budget Balance:</strong> Your available balance after allocating for savings goals</p>
+          <p><sup>2</sup> <strong>Spending limit for today:</strong> Daily allowance calculated from your monthly budget ({formatCurrency(monthlyExpenses)} ÷ 30 days)</p>
+          <p><sup>3</sup> <strong>Total expenses:</strong> All spending recorded this month</p>
         </div>
       )}
     </>
