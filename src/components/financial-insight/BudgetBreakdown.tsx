@@ -88,13 +88,20 @@ export const BudgetBreakdown = ({
       }
     });
 
-    return Object.entries(categoryTotals)
+    const detailedData = Object.entries(categoryTotals)
       .filter(([_, value]) => value > 0)
       .map(([name, value]) => ({
         name,
         value,
         color: categoryColors[name] || "#06B6D4"
       }));
+
+    // Add Available Balance and Budget Balance to detailed view
+    return [
+      { name: "Available Balance", value: availableBalance, color: "#9CA3AF" },
+      { name: "Budget Balance", value: budgetBalance, color: "#EF4444" },
+      ...detailedData
+    ];
   };
 
   // Simple pie chart data
@@ -112,7 +119,11 @@ export const BudgetBreakdown = ({
 
   const renderCustomLabel = (entry: any) => {
     const percent = ((entry.value / total) * 100).toFixed(2);
-    return `${percent}%`;
+    // Only show label if slice is large enough (>3% to avoid overlap)
+    if (parseFloat(percent) > 3) {
+      return `${percent}%`;
+    }
+    return '';
   };
 
   if (showOnlyPieChart) {
