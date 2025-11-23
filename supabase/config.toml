@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.generate-test-transactions]
 verify_jwt = true
+
+[functions.sync-categories]
+verify_jwt = true
