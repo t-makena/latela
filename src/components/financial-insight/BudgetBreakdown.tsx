@@ -133,49 +133,50 @@ export const BudgetBreakdown = ({
       <div>
         {viewMode === 'chart' ? (
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-end mb-3">
               <button 
                 onClick={() => setViewMode('table')}
-                className="flex items-center gap-1 text-sm font-semibold hover:opacity-70 transition-opacity"
+                className="hover:opacity-70 transition-opacity"
               >
-                Budget Allocation: Pie Chart
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-5 h-5" />
               </button>
             </div>
-            <ResponsiveContainer width="100%" height={isMobile ? 250 : 450}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={renderCustomLabel}
-                  outerRadius={isMobile ? 60 : 140}
-                  fill="#8884d8"
-                  dataKey="value"
+            <div className="relative">
+              <ResponsiveContainer width="100%" height={isMobile ? 250 : 450}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={renderCustomLabel}
+                    outerRadius={isMobile ? 60 : 140}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Legend 
+                    layout={isMobile ? "horizontal" : "vertical"}
+                    align={isMobile ? "center" : "right"}
+                    verticalAlign={isMobile ? "bottom" : "middle"}
+                    iconType="circle"
+                    formatter={(value) => <span className="text-xs">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className={isMobile ? "flex justify-center mt-2" : "absolute right-0 bottom-0 flex justify-end pr-4"}>
+                <Button
+                  variant={isDetailed ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setIsDetailed(!isDetailed)}
+                  className="text-xs"
                 >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Legend 
-                  layout={isMobile ? "horizontal" : "vertical"}
-                  align={isMobile ? "center" : "right"}
-                  verticalAlign={isMobile ? "bottom" : "middle"}
-                  iconType="circle"
-                  formatter={(value) => <span className="text-xs">{value}</span>}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex justify-center mt-2">
-              <Button
-                variant={isDetailed ? "default" : "outline"}
-                size="sm"
-                onClick={() => setIsDetailed(!isDetailed)}
-                className="text-xs"
-              >
-                {isDetailed ? "Simple" : "Detailed"}
-              </Button>
+                  {isDetailed ? "Simple" : "Detailed"}
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
@@ -183,10 +184,9 @@ export const BudgetBreakdown = ({
             <div className="flex items-center justify-between mb-3">
               <button 
                 onClick={() => setViewMode('chart')}
-                className="flex items-center gap-1 text-sm font-semibold hover:opacity-70 transition-opacity"
+                className="hover:opacity-70 transition-opacity"
               >
-                Budget Allocation: Table
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-5 h-5" />
               </button>
               <Button
                 variant={isDetailed ? "default" : "outline"}
