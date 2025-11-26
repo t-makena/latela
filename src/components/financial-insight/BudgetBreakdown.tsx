@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { categorizeTransaction } from "@/lib/transactionCategories";
-import { ChevronDown } from "lucide-react";
 
 interface Transaction {
   description: string;
@@ -38,7 +37,6 @@ export const BudgetBreakdown = ({
 }: BudgetBreakdownProps) => {
   const isMobile = useIsMobile();
   const [isDetailed, setIsDetailed] = useState(false);
-  const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
   
   // Calculate percentage changes
   const availableChange = previousMonth.availableBalance 
@@ -130,17 +128,10 @@ export const BudgetBreakdown = ({
 
   if (showOnlyPieChart) {
     return (
-      <div>
-        {viewMode === 'chart' ? (
-          <div>
-            <div className="flex items-center justify-end mb-3">
-              <button 
-                onClick={() => setViewMode('table')}
-                className="hover:opacity-70 transition-opacity"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            </div>
+      <div className="overflow-hidden">
+        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {/* Pie Chart View */}
+          <div className="min-w-full snap-center px-2">
             <div className="relative">
               <ResponsiveContainer width="100%" height={isMobile ? 250 : 450}>
                 <PieChart>
@@ -179,15 +170,10 @@ export const BudgetBreakdown = ({
               </div>
             </div>
           </div>
-        ) : (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <button 
-                onClick={() => setViewMode('chart')}
-                className="hover:opacity-70 transition-opacity"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
+
+          {/* Table View */}
+          <div className="min-w-full snap-center px-2">
+            <div className="flex items-center justify-end mb-3">
               <Button
                 variant={isDetailed ? "default" : "outline"}
                 size="sm"
@@ -219,7 +205,7 @@ export const BudgetBreakdown = ({
               </TableBody>
             </Table>
           </div>
-        )}
+        </div>
       </div>
     );
   }
