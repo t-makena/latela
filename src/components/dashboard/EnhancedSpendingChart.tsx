@@ -110,24 +110,39 @@ export const EnhancedSpendingChart = ({
     <>
       <div className={isMobile ? "" : "p-6"}>
         {showTitle && (
-          <div className={isMobile ? "mb-3 px-3" : "mb-4"}>
-            <h3 className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>{title}</h3>
-            <p className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
-              {getFilterDescription(selectedPeriod)}
-            </p>
+          <div className={isMobile ? "mb-3 px-3" : "mb-4 flex items-start justify-between"}>
+            <div>
+              <h3 className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>{title}</h3>
+              <p className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
+                {getFilterDescription(selectedPeriod)}
+              </p>
+            </div>
+            {!isMobile && (
+              <DateFilter 
+                selectedFilter={selectedPeriod}
+                onFilterChange={(filter, dateRange) => {
+                  setSelectedPeriod(filter);
+                  if (dateRange) {
+                    setCustomDateRange(dateRange);
+                  }
+                }}
+              />
+            )}
           </div>
         )}
-        <div className={isMobile ? "flex flex-col gap-2 mb-3 px-3" : "flex items-center justify-end mb-4"}>
-          <DateFilter 
-            selectedFilter={selectedPeriod}
-            onFilterChange={(filter, dateRange) => {
-              setSelectedPeriod(filter);
-              if (dateRange) {
-                setCustomDateRange(dateRange);
-              }
-            }}
-          />
-        </div>
+        {isMobile && (
+          <div className="flex flex-col gap-2 mb-3 px-3">
+            <DateFilter 
+              selectedFilter={selectedPeriod}
+              onFilterChange={(filter, dateRange) => {
+                setSelectedPeriod(filter);
+                if (dateRange) {
+                  setCustomDateRange(dateRange);
+                }
+              }}
+            />
+          </div>
+        )}
         <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
