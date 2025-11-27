@@ -481,63 +481,131 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <div className="pb-2 mb-2 px-3">
             <div className="flex flex-col gap-1">
               <div>
-                <div className="text-base font-georama">Spending by Category</div>
+                <div className="text-base font-georama">
+                  {selectedCategoryForGraph 
+                    ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
+                    : "Spending by Category"}
+                </div>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               </div>
-              <DateFilter 
-                selectedFilter={categoryFilter}
-                onFilterChange={(filter, dateRange) => {
-                  setCategoryFilter(filter);
-                  if (dateRange) {
-                    setCustomCategoryRange(dateRange);
-                  }
-                }}
-              />
+              <div className="flex items-center gap-2">
+                <DateFilter 
+                  selectedFilter={categoryFilter}
+                  onFilterChange={(filter, dateRange) => {
+                    setCategoryFilter(filter);
+                    if (dateRange) {
+                      setCustomCategoryRange(dateRange);
+                    }
+                  }}
+                />
+                {selectedCategoryForGraph && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedCategoryForGraph(null)}
+                    className="text-xs"
+                  >
+                    Back
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
           <div>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryData} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }} onClick={handleBarClick}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis 
-                  dataKey="category" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  width={45}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}
-                  labelStyle={{ 
-                    fontSize: '14px', 
-                    fontWeight: '600',
-                    marginBottom: '8px'
-                  }}
-                  itemStyle={{ 
-                    fontSize: '14px',
-                    padding: '4px 0'
-                  }}
-                  formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
-                  labelFormatter={(label: string) => categoryLabels[label] || label}
-                />
-                <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
+              {selectedCategoryForGraph ? (
+                <LineChart data={categoryLineData} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                  <XAxis 
+                    dataKey="period" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    width={45}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    labelStyle={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600',
+                      marginBottom: '8px',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    itemStyle={{ 
+                      fontSize: '14px',
+                      padding: '4px 0',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
+                    cursor={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke={categoryColors[selectedCategoryForGraph]} 
+                    strokeWidth={2}
+                    dot={{ fill: categoryColors[selectedCategoryForGraph], r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              ) : (
+                <BarChart data={categoryData} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }} onClick={handleBarClick}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                  <XAxis 
+                    dataKey="category" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    width={45}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    labelStyle={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600',
+                      marginBottom: '8px',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    itemStyle={{ 
+                      fontSize: '14px',
+                      padding: '4px 0',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
+                    labelFormatter={(label: string) => categoryLabels[label] || label}
+                    cursor={false}
+                  />
+                  <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              )}
             </ResponsiveContainer>
           </div>
         </div>
@@ -546,66 +614,137 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base font-georama">Spending by Category</CardTitle>
+                <CardTitle className="text-base font-georama">
+                  {selectedCategoryForGraph 
+                    ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
+                    : "Spending by Category"}
+                </CardTitle>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               </div>
-              <DateFilter 
-                selectedFilter={categoryFilter}
-                onFilterChange={(filter, dateRange) => {
-                  setCategoryFilter(filter);
-                  if (dateRange) {
-                    setCustomCategoryRange(dateRange);
-                  }
-                }}
-              />
+              <div className="flex items-center gap-2">
+                <DateFilter 
+                  selectedFilter={categoryFilter}
+                  onFilterChange={(filter, dateRange) => {
+                    setCategoryFilter(filter);
+                    if (dateRange) {
+                      setCustomCategoryRange(dateRange);
+                    }
+                  }}
+                />
+                {selectedCategoryForGraph && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedCategoryForGraph(null)}
+                    className="text-xs"
+                  >
+                    Back
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryData} margin={{ left: 20, right: 20 }} onClick={handleBarClick}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis 
-                  dataKey="category" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                />
-                <YAxis 
-                  label={{ 
-                    value: 'Amount (R)', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                  }}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  width={60}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}
-                  labelStyle={{ 
-                    fontSize: '14px', 
-                    fontWeight: '600',
-                    marginBottom: '8px'
-                  }}
-                  itemStyle={{ 
-                    fontSize: '14px',
-                    padding: '4px 0'
-                  }}
-                  formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
-                  labelFormatter={(label: string) => categoryLabels[label] || label}
-                />
-                <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
+              {selectedCategoryForGraph ? (
+                <LineChart data={categoryLineData} margin={{ left: 20, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                  <XAxis 
+                    dataKey="period" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                  />
+                  <YAxis 
+                    label={{ 
+                      value: 'Amount (R)', 
+                      angle: -90, 
+                      position: 'insideLeft',
+                      style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                    }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    width={60}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    labelStyle={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600',
+                      marginBottom: '8px',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    itemStyle={{ 
+                      fontSize: '14px',
+                      padding: '4px 0',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
+                    cursor={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke={categoryColors[selectedCategoryForGraph]} 
+                    strokeWidth={2}
+                    dot={{ fill: categoryColors[selectedCategoryForGraph], r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              ) : (
+                <BarChart data={categoryData} margin={{ left: 20, right: 20 }} onClick={handleBarClick}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                  <XAxis 
+                    dataKey="category" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                  />
+                  <YAxis 
+                    label={{ 
+                      value: 'Amount (R)', 
+                      angle: -90, 
+                      position: 'insideLeft',
+                      style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
+                    }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    width={60}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    labelStyle={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600',
+                      marginBottom: '8px',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    itemStyle={{ 
+                      fontSize: '14px',
+                      padding: '4px 0',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                    formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
+                    labelFormatter={(label: string) => categoryLabels[label] || label}
+                    cursor={false}
+                  />
+                  <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              )}
             </ResponsiveContainer>
           </CardContent>
         </Card>
