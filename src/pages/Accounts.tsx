@@ -14,6 +14,11 @@ const Accounts = () => {
 
   const currentAccount = accounts[currentAccountIndex];
 
+  // Safety check - should never happen due to guards above, but prevents crashes
+  if (!currentAccount) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background px-6 pb-20">
       <div className="space-y-6">
