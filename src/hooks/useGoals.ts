@@ -95,5 +95,73 @@ export const useGoals = () => {
     fetchGoals();
   }, []);
 
-  return { goals, loading, error };
+  const addGoal = async (goalData: {
+    name: string;
+    target: number;
+    currentSaved?: number;
+    monthsLeft: number;
+    priority?: number;
+  }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { error } = await supabase
+        .from('goals')
+        .insert({
+          user_id: user.id,
+          name: goalData.name,
+          target: goalData.target,
+          current_saved: goalData.currentSaved || 0,
+          months_left: goalData.monthsLeft,
+          priority: goalData.priority || null,
+        });
+
+      if (error) throw error;
+
+      // Refetch goals after adding
+      const { data } = await (supabase as any)
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false }) as { data: Goal[] | null; error: any };
+
+      if (data) {
+        const totalSaved = data.reduce((sum, goal) => sum + (goal.current_saved || 0), 0);
+        const transformedGoals: TransformedGoal[] = data.map((goal) => {
+          const progress = goal.target > 0 ? Math.round((goal.current_saved / goal.target) * 100) : 0;
+          const split = totalSaved > 0 ? ((goal.current_saved / totalSaved) * 100).toFixed(1) : '0.0';
+          const priority = goal.priority ? `${goal.priority.toFixed(2)}%` : '0.00%';
+          
+          const dueDate = new Date();
+          dueDate.setMonth(dueDate.getMonth() + (goal.months_left || 0));
+          const formattedDueDate = dueDate.toLocaleDateString('en-GB', { 
+            day: '2-digit', 
+            month: 'short', 
+            year: '2-digit' 
+          }).replace(/ /g, ' ');
+          
+          return {
+            id: goal.id,
+            name: goal.name,
+            progress,
+            dueDate: `Due: ${formattedDueDate}`,
+            priority,
+            split: `${split}%`,
+            amountSaved: goal.current_saved,
+            timeline: formattedDueDate,
+          };
+        });
+        setGoals(transformedGoals);
+      }
+    } catch (err) {
+      console.error('Error adding goal:', err);
+      throw err;
+    }
+  };
+
+  return { goals, loading, error, addGoal };
 };
