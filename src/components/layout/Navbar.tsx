@@ -16,7 +16,6 @@ import { useAccounts } from "@/hooks/useAccounts";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: Home },
-  { name: "Financial Insight", href: "/financial-insight", icon: TrendingUp },
   { name: "Budget", href: "/budget", icon: Calculator },
   { name: "Goals", href: "/goals", icon: Target },
   { name: "Calendar", href: "/calendar", icon: Calendar },
@@ -46,7 +45,7 @@ export const Navbar = () => {
     
     return (
       <div className={cn("flex flex-col gap-2", showLabels ? "px-2" : "")}>
-        {navItems.map((item) => {
+        {navItems.slice(0, 1).map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link to={item.href} key={item.name}>
@@ -132,6 +131,35 @@ export const Navbar = () => {
             </div>
           </Link>
         )}
+
+        {/* Remaining Nav Items */}
+        {navItems.slice(1).map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <Link to={item.href} key={item.name}>
+              {showLabels ? (
+                <Button
+                  variant={isActive ? "default" : "ghost"}
+                  size="lg"
+                  className={cn(
+                    "w-full gap-3 transition-all justify-start text-base h-12",
+                    isActive ? "bg-primary text-primary-foreground" : ""
+                  )}
+                >
+                  <item.icon size={22} className="shrink-0" />
+                  <span className="truncate">{item.name}</span>
+                </Button>
+              ) : (
+                <div className={cn(
+                  "w-full flex items-center justify-center py-4 transition-colors cursor-pointer rounded-md",
+                  isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
+                )}>
+                  <item.icon size={22} className="shrink-0" />
+                </div>
+              )}
+            </Link>
+          );
+        })}
 
         {showLabels ? (
           <Button
