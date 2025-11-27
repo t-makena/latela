@@ -31,7 +31,6 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
       target: undefined,
       currentSaved: undefined,
       dueDate: undefined,
-      priority: undefined,
     },
   });
 

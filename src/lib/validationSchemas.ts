@@ -32,8 +32,7 @@ export const goalSchema = z.object({
   currentSaved: z.number().min(0, "Current saved cannot be negative").max(999999999, "Amount too large").optional(),
   dueDate: z.date({
     required_error: "A due date is required.",
-  }),
-  priority: z.number().min(0).max(100).optional()
+  })
 });
 
 // Authentication validation schemas
