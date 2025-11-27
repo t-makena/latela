@@ -3,18 +3,19 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Wallet, Calendar, Settings, Menu, TrendingUp, Target, LogOut, PanelLeftClose, Calculator } from "lucide-react";
+import { Home, Wallet, Calendar, Settings, Menu, TrendingUp, Target, LogOut, PanelLeftClose, Calculator, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { LatelaIcon } from "@/components/ui/latela-icon";
+import { useAccounts } from "@/hooks/useAccounts";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: Home },
-  { name: "Accounts", href: "/accounts", icon: Wallet },
   { name: "Financial Insight", href: "/financial-insight", icon: TrendingUp },
   { name: "Budget", href: "/budget", icon: Calculator },
   { name: "Goals", href: "/goals", icon: Target },
@@ -27,6 +28,8 @@ export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [accountsOpen, setAccountsOpen] = useState(true);
+  const { accounts } = useAccounts();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -38,55 +41,119 @@ export const Navbar = () => {
     }
   };
   
-  const NavContent = ({ showLabels = true }: { showLabels?: boolean }) => (
-    <div className={cn("flex flex-col gap-2", showLabels ? "px-2" : "")}>
-      {navItems.map((item) => {
-        const isActive = location.pathname === item.href;
-        return (
-          <Link to={item.href} key={item.name}>
-            {showLabels ? (
+  const NavContent = ({ showLabels = true }: { showLabels?: boolean }) => {
+    const isAccountsPath = location.pathname.startsWith('/accounts');
+    
+    return (
+      <div className={cn("flex flex-col gap-2", showLabels ? "px-2" : "")}>
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <Link to={item.href} key={item.name}>
+              {showLabels ? (
+                <Button
+                  variant={isActive ? "default" : "ghost"}
+                  size="lg"
+                  className={cn(
+                    "w-full gap-3 transition-all justify-start text-base h-12",
+                    isActive ? "bg-primary text-primary-foreground" : ""
+                  )}
+                >
+                  <item.icon size={22} className="shrink-0" />
+                  <span className="truncate">{item.name}</span>
+                </Button>
+              ) : (
+                <div className={cn(
+                  "w-full flex items-center justify-center py-4 transition-colors cursor-pointer rounded-md",
+                  isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
+                )}>
+                  <item.icon size={22} className="shrink-0" />
+                </div>
+              )}
+            </Link>
+          );
+        })}
+
+        {/* Accounts Section with Subsections */}
+        {showLabels ? (
+          <Collapsible open={accountsOpen} onOpenChange={setAccountsOpen}>
+            <CollapsibleTrigger asChild>
               <Button
-                variant={isActive ? "default" : "ghost"}
+                variant={isAccountsPath && location.pathname === '/accounts' ? "default" : "ghost"}
                 size="lg"
                 className={cn(
                   "w-full gap-3 transition-all justify-start text-base h-12",
-                  isActive ? "bg-primary text-primary-foreground" : ""
+                  isAccountsPath && location.pathname === '/accounts' ? "bg-primary text-primary-foreground" : ""
                 )}
               >
-                <item.icon size={22} className="shrink-0" />
-                <span className="truncate">{item.name}</span>
+                <Wallet size={22} className="shrink-0" />
+                <span className="truncate flex-1 text-left">Accounts</span>
+                <ChevronDown className={cn("h-4 w-4 transition-transform", accountsOpen && "rotate-180")} />
               </Button>
-            ) : (
-              <div className={cn(
-                "w-full flex items-center justify-center py-4 transition-colors cursor-pointer rounded-md",
-                isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
-              )}>
-                <item.icon size={22} className="shrink-0" />
-              </div>
-            )}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-4 space-y-1 mt-1">
+              {accounts.length > 1 && (
+                <Link to="/accounts">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "w-full justify-start text-sm h-10",
+                      location.pathname === '/accounts' && "bg-accent"
+                    )}
+                  >
+                    All Accounts
+                  </Button>
+                </Link>
+              )}
+              {accounts.map((account) => (
+                <Link key={account.id} to={`/accounts/${account.id}`}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "w-full justify-start text-sm h-10",
+                      location.pathname === `/accounts/${account.id}` && "bg-accent"
+                    )}
+                  >
+                    {account.name}
+                  </Button>
+                </Link>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+        ) : (
+          <Link to="/accounts">
+            <div className={cn(
+              "w-full flex items-center justify-center py-4 transition-colors cursor-pointer rounded-md",
+              isAccountsPath ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
+            )}>
+              <Wallet size={22} className="shrink-0" />
+            </div>
           </Link>
-        );
-      })}
-      {showLabels ? (
-        <Button
-          variant="ghost"
-          size="lg"
-          onClick={handleLogout}
-          className="w-full gap-3 text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
-        >
-          <LogOut size={22} className="shrink-0" />
-          <span className="truncate">Log Out</span>
-        </Button>
-      ) : (
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center py-4 text-destructive hover:text-destructive/80 transition-colors mt-auto cursor-pointer"
-        >
-          <LogOut size={22} className="shrink-0" />
-        </button>
-      )}
-    </div>
-  );
+        )}
+
+        {showLabels ? (
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={handleLogout}
+            className="w-full gap-3 text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
+          >
+            <LogOut size={22} className="shrink-0" />
+            <span className="truncate">Log Out</span>
+          </Button>
+        ) : (
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center py-4 text-destructive hover:text-destructive/80 transition-colors mt-auto cursor-pointer"
+          >
+            <LogOut size={22} className="shrink-0" />
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
