@@ -30,7 +30,9 @@ export const goalSchema = z.object({
   name: z.string().trim().min(1, "Goal name is required").max(200, "Goal name too long"),
   target: z.number().positive("Target amount must be positive").max(999999999, "Target amount too large"),
   currentSaved: z.number().min(0, "Current saved cannot be negative").max(999999999, "Amount too large").optional(),
-  monthsLeft: z.number().int().positive("Months must be a positive number").max(600, "Timeline too long"),
+  dueDate: z.date({
+    required_error: "A due date is required.",
+  }),
   priority: z.number().min(0).max(100).optional()
 });
 

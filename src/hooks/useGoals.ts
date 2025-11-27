@@ -99,7 +99,7 @@ export const useGoals = () => {
     name: string;
     target: number;
     currentSaved?: number;
-    monthsLeft: number;
+    dueDate: Date;
     priority?: number;
   }) => {
     try {
@@ -109,6 +109,12 @@ export const useGoals = () => {
         throw new Error('User not authenticated');
       }
 
+      // Calculate months_left from due date
+      const now = new Date();
+      const dueDate = new Date(goalData.dueDate);
+      const monthsDiff = (dueDate.getFullYear() - now.getFullYear()) * 12 + (dueDate.getMonth() - now.getMonth());
+      const monthsLeft = Math.max(1, monthsDiff); // At least 1 month
+
       const { error } = await supabase
         .from('goals')
         .insert({
@@ -116,7 +122,7 @@ export const useGoals = () => {
           name: goalData.name,
           target: goalData.target,
           current_saved: goalData.currentSaved || 0,
-          months_left: goalData.monthsLeft,
+          months_left: monthsLeft,
           priority: goalData.priority || null,
         });
 
