@@ -9,7 +9,6 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Accounts from "./pages/Accounts";
 import AccountDetail from "./pages/AccountDetail";
-import FinancialInsight from "./pages/FinancialInsight";
 import Budget from "./pages/Budget";
 import Goals from "./pages/Goals";
 import Calendar from "./pages/Calendar";
@@ -48,13 +47,6 @@ const App = () => (
             <ProtectedRoute>
               <Layout>
                 <AccountDetail />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/financial-insight" element={
-            <ProtectedRoute>
-              <Layout>
-                <FinancialInsight />
               </Layout>
             </ProtectedRoute>
           } />
