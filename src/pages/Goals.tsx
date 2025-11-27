@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -5,10 +6,12 @@ import { Target, Edit2, Plus, Loader2 } from "lucide-react";
 import { useGoals } from "@/hooks/useGoals";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
 
 const Goals = () => {
-  const { goals, loading, error } = useGoals();
+  const { goals, loading, error, addGoal } = useGoals();
   const isMobile = useIsMobile();
+  const [dialogOpen, setDialogOpen] = useState(false);
   
   // Separate goals for the two sections
   const budgetGoals = goals.slice(0, 3);
@@ -131,6 +134,7 @@ const Goals = () => {
                 variant="outline" 
                 size="icon"
                 className="h-10 w-10 rounded-full border-2"
+                onClick={() => setDialogOpen(true)}
               >
                 <Plus className="h-5 w-5" />
               </Button>
@@ -204,6 +208,7 @@ const Goals = () => {
                 variant="outline" 
                 size="icon"
                 className="h-10 w-10 rounded-full border-2"
+                onClick={() => setDialogOpen(true)}
               >
                 <Plus className="h-5 w-5" />
               </Button>
@@ -220,6 +225,11 @@ const Goals = () => {
         </Card>
       )}
 
+      <AddGoalDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onAdd={addGoal}
+      />
     </div>
   );
 };
