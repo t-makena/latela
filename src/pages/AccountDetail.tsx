@@ -3,6 +3,7 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FinancialInsightContent } from "@/components/financial-insight/FinancialInsightContent";
+import { AccountCard } from "@/components/accounts/AccountCard";
 
 const AccountDetail = () => {
   const { accountId } = useParams<{ accountId: string }>();
@@ -45,14 +46,13 @@ const AccountDetail = () => {
 
   return (
     <div className="min-h-screen bg-background px-6 pb-20">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">{account.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          Balance: R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-        </p>
+      <div className="space-y-6">
+        {/* Account Card */}
+        <AccountCard account={account} />
+        
+        {/* Financial Insight Content */}
+        <FinancialInsightContent accountId={accountId} />
       </div>
-      
-      <FinancialInsightContent accountId={accountId} />
     </div>
   );
 };
