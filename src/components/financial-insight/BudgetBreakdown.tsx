@@ -21,6 +21,21 @@ interface BudgetBreakdownProps {
     budgetBalance: number;
     spending: number;
   };
+  threeMonthsAgo?: {
+    availableBalance: number;
+    budgetBalance: number;
+    spending: number;
+  };
+  sixMonthsAgo?: {
+    availableBalance: number;
+    budgetBalance: number;
+    spending: number;
+  };
+  oneYearAgo?: {
+    availableBalance: number;
+    budgetBalance: number;
+    spending: number;
+  };
   showOnlyPieChart?: boolean;
   showOnlyTable?: boolean;
   transactions?: Transaction[];
@@ -31,6 +46,9 @@ export const BudgetBreakdown = ({
   budgetBalance, 
   spending,
   previousMonth,
+  threeMonthsAgo,
+  sixMonthsAgo,
+  oneYearAgo,
   showOnlyPieChart = false,
   showOnlyTable = false,
   transactions = []
@@ -38,7 +56,7 @@ export const BudgetBreakdown = ({
   const isMobile = useIsMobile();
   const [isDetailed, setIsDetailed] = useState(false);
   
-  // Calculate percentage changes
+  // Calculate percentage changes for 1 month
   const availableChange = previousMonth.availableBalance 
     ? ((availableBalance - previousMonth.availableBalance) / previousMonth.availableBalance * 100).toFixed(0)
     : 0;
@@ -47,6 +65,39 @@ export const BudgetBreakdown = ({
     : 0;
   const spendingChange = previousMonth.spending
     ? ((spending - previousMonth.spending) / previousMonth.spending * 100).toFixed(0)
+    : 0;
+
+  // Calculate percentage changes for 3 months
+  const available3MChange = threeMonthsAgo?.availableBalance 
+    ? ((availableBalance - threeMonthsAgo.availableBalance) / threeMonthsAgo.availableBalance * 100).toFixed(0)
+    : 0;
+  const budget3MChange = threeMonthsAgo?.budgetBalance
+    ? ((budgetBalance - threeMonthsAgo.budgetBalance) / threeMonthsAgo.budgetBalance * 100).toFixed(0)
+    : 0;
+  const spending3MChange = threeMonthsAgo?.spending
+    ? ((spending - threeMonthsAgo.spending) / threeMonthsAgo.spending * 100).toFixed(0)
+    : 0;
+
+  // Calculate percentage changes for 6 months
+  const available6MChange = sixMonthsAgo?.availableBalance 
+    ? ((availableBalance - sixMonthsAgo.availableBalance) / sixMonthsAgo.availableBalance * 100).toFixed(0)
+    : 0;
+  const budget6MChange = sixMonthsAgo?.budgetBalance
+    ? ((budgetBalance - sixMonthsAgo.budgetBalance) / sixMonthsAgo.budgetBalance * 100).toFixed(0)
+    : 0;
+  const spending6MChange = sixMonthsAgo?.spending
+    ? ((spending - sixMonthsAgo.spending) / sixMonthsAgo.spending * 100).toFixed(0)
+    : 0;
+
+  // Calculate percentage changes for 1 year
+  const available1YChange = oneYearAgo?.availableBalance 
+    ? ((availableBalance - oneYearAgo.availableBalance) / oneYearAgo.availableBalance * 100).toFixed(0)
+    : 0;
+  const budget1YChange = oneYearAgo?.budgetBalance
+    ? ((budgetBalance - oneYearAgo.budgetBalance) / oneYearAgo.budgetBalance * 100).toFixed(0)
+    : 0;
+  const spending1YChange = oneYearAgo?.spending
+    ? ((spending - oneYearAgo.spending) / oneYearAgo.spending * 100).toFixed(0)
     : 0;
 
   // Category color mapping
@@ -218,6 +269,9 @@ export const BudgetBreakdown = ({
             <TableRow>
               <TableHead className="w-[200px]">Metric</TableHead>
               <TableHead className="text-right">1 Mth Chng</TableHead>
+              <TableHead className="text-right">3 Mth Chng</TableHead>
+              <TableHead className="text-right">6 Mth Chng</TableHead>
+              <TableHead className="text-right">1 Yr Chng</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -226,17 +280,44 @@ export const BudgetBreakdown = ({
               <TableCell className={`text-right font-semibold ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
               </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(available3MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(available3MChange) >= 0 ? '+' : ''}{available3MChange}%
+              </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(available6MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(available6MChange) >= 0 ? '+' : ''}{available6MChange}%
+              </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(available1YChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(available1YChange) >= 0 ? '+' : ''}{available1YChange}%
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">Budget Balance</TableCell>
               <TableCell className={`text-right font-semibold ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
               </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(budget3MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(budget3MChange) >= 0 ? '+' : ''}{budget3MChange}%
+              </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(budget6MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(budget6MChange) >= 0 ? '+' : ''}{budget6MChange}%
+              </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(budget1YChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(budget1YChange) >= 0 ? '+' : ''}{budget1YChange}%
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">Spending</TableCell>
               <TableCell className={`text-right font-semibold ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
+              </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(spending3MChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(spending3MChange) >= 0 ? '+' : ''}{spending3MChange}%
+              </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(spending6MChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(spending6MChange) >= 0 ? '+' : ''}{spending6MChange}%
+              </TableCell>
+              <TableCell className={`text-right font-semibold ${Number(spending1YChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(spending1YChange) >= 0 ? '+' : ''}{spending1YChange}%
               </TableCell>
             </TableRow>
           </TableBody>
