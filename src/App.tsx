@@ -8,6 +8,7 @@ import { Layout } from "./components/layout/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Accounts from "./pages/Accounts";
+import AccountDetail from "./pages/AccountDetail";
 import FinancialInsight from "./pages/FinancialInsight";
 import Budget from "./pages/Budget";
 import Goals from "./pages/Goals";
@@ -40,6 +41,13 @@ const App = () => (
             <ProtectedRoute>
               <Layout>
                 <Accounts />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/accounts/:accountId" element={
+            <ProtectedRoute>
+              <Layout>
+                <AccountDetail />
               </Layout>
             </ProtectedRoute>
           } />

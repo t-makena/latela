@@ -44,7 +44,13 @@ export const EnhancedSpendingChart = ({
   title = "Spending Trend",
   showTitle = true
 }: EnhancedSpendingChartProps) => {
-  const { transactions } = useTransactions();
+  const { transactions: allTransactions } = useTransactions();
+  
+  // Filter transactions by account if accountId is provided
+  const transactions = accountId 
+    ? allTransactions.filter(t => t.account_id === accountId)
+    : allTransactions;
+    
   const { monthlySpending, monthlyIncome, monthlySavings } = calculateFinancialMetrics(transactions);
   const [selectedPeriod, setSelectedPeriod] = useState<DateFilterOption>("1M");
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
