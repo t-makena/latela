@@ -2,12 +2,16 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { goalSchema } from '@/lib/validationSchemas';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 type GoalFormData = z.infer<typeof goalSchema>;
 
@@ -24,10 +28,10 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
     resolver: zodResolver(goalSchema),
     defaultValues: {
       name: '',
-      target: 0,
-      currentSaved: 0,
-      monthsLeft: 12,
-      priority: 0,
+      target: undefined,
+      currentSaved: undefined,
+      dueDate: undefined,
+      priority: undefined,
     },
   });
 
@@ -76,8 +80,8 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
                     <Input
                       type="number"
                       placeholder="10000"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -95,8 +99,8 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
                     <Input
                       type="number"
                       placeholder="0"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -106,18 +110,40 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
 
             <FormField
               control={form.control}
-              name="monthsLeft"
+              name="dueDate"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Months to Complete</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="12"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    />
-                  </FormControl>
+                <FormItem className="flex flex-col">
+                  <FormLabel>Due Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a due date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
