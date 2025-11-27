@@ -83,6 +83,39 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_items: {
+        Row: {
+          amount: number
+          created_at: string
+          days_per_week: number | null
+          frequency: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          days_per_week?: number | null
+          frequency: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          days_per_week?: number | null
+          frequency?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           actual_amount: number | null
