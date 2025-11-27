@@ -100,7 +100,6 @@ export const useGoals = () => {
     target: number;
     currentSaved?: number;
     dueDate: Date;
-    priority?: number;
   }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -123,7 +122,6 @@ export const useGoals = () => {
           target: goalData.target,
           current_saved: goalData.currentSaved || 0,
           months_left: monthsLeft,
-          priority: goalData.priority || null,
         });
 
       if (error) throw error;
