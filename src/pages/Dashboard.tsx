@@ -1,10 +1,10 @@
 
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
-import { AccountsOverview } from "@/components/dashboard/AccountsOverview";
-import { BudgetGoalsList } from "@/components/dashboard/BudgetGoalsList";
+import { BudgetItemsCard } from "@/components/dashboard/BudgetItemsCard";
+import { AvailableBalanceCard } from "@/components/dashboard/AvailableBalanceCard";
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
@@ -24,8 +24,8 @@ const Dashboard = () => {
         
         {!isMobile && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2">
-            <AccountsOverview />
-            <BudgetGoalsList />
+            <BudgetItemsCard />
+            <AvailableBalanceCard />
           </div>
         )}
         
