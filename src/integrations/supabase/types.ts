@@ -227,6 +227,7 @@ export type Database = {
         Row: {
           created_at: string | null
           current_saved: number | null
+          due_date: string | null
           id: string
           months_left: number
           name: string
@@ -238,6 +239,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           current_saved?: number | null
+          due_date?: string | null
           id?: string
           months_left: number
           name: string
@@ -249,6 +251,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           current_saved?: number | null
+          due_date?: string | null
           id?: string
           months_left?: number
           name?: string

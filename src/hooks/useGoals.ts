@@ -9,6 +9,7 @@ interface Goal {
   current_saved: number;
   priority: number | null;
   months_left: number;
+  due_date: string | null;
   created_at: string;
   updated_at?: string;
 }
@@ -62,14 +63,14 @@ export const useGoals = () => {
           const split = totalSaved > 0 ? ((goal.current_saved / totalSaved) * 100).toFixed(1) : '0.0';
           const priority = goal.priority ? `${goal.priority.toFixed(2)}%` : '0.00%';
           
-          // Calculate due date based on months_left
-          const dueDate = new Date();
-          dueDate.setMonth(dueDate.getMonth() + (goal.months_left || 0));
-          const formattedDueDate = dueDate.toLocaleDateString('en-GB', { 
-            day: '2-digit', 
-            month: 'short', 
-            year: '2-digit' 
-          }).replace(/ /g, ' ');
+          // Use the stored due_date directly
+          const formattedDueDate = goal.due_date 
+            ? new Date(goal.due_date).toLocaleDateString('en-GB', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: '2-digit' 
+              }).replace(/ /g, ' ')
+            : 'No date set';
           
           return {
             id: goal.id,
@@ -121,6 +122,7 @@ export const useGoals = () => {
           name: goalData.name,
           target: goalData.target,
           current_saved: goalData.currentSaved || 0,
+          due_date: goalData.dueDate.toISOString().split('T')[0],
           months_left: monthsLeft,
         });
 
@@ -140,13 +142,14 @@ export const useGoals = () => {
           const split = totalSaved > 0 ? ((goal.current_saved / totalSaved) * 100).toFixed(1) : '0.0';
           const priority = goal.priority ? `${goal.priority.toFixed(2)}%` : '0.00%';
           
-          const dueDate = new Date();
-          dueDate.setMonth(dueDate.getMonth() + (goal.months_left || 0));
-          const formattedDueDate = dueDate.toLocaleDateString('en-GB', { 
-            day: '2-digit', 
-            month: 'short', 
-            year: '2-digit' 
-          }).replace(/ /g, ' ');
+          // Use the stored due_date directly
+          const formattedDueDate = goal.due_date 
+            ? new Date(goal.due_date).toLocaleDateString('en-GB', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: '2-digit' 
+              }).replace(/ /g, ' ')
+            : 'No date set';
           
           return {
             id: goal.id,
