@@ -43,6 +43,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const [selectedCategoryForGraph, setSelectedCategoryForGraph] = useState<string | null>(null);
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   const [lastClickedCategory, setLastClickedCategory] = useState<string | null>(null);
+  const [isDetailed, setIsDetailed] = useState(false);
   const isMobile = useIsMobile();
 
   // Filter transactions by account if accountId is provided
@@ -225,53 +226,70 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
 
   return (
     <div className="space-y-6 relative z-10">
-      {/* Budget Insight Table */}
-      <div>
-        <h3 className={isMobile ? "text-base font-semibold mb-3" : "text-lg font-semibold mb-4"}>Budget Insight</h3>
-        <BudgetBreakdown 
-          availableBalance={availableBalance}
-          budgetBalance={budgetBalance}
-          spending={spending}
-          previousMonth={{
-            availableBalance: previousMonthData.netBalance,
-            budgetBalance: monthlyIncome * 0.3,
-            spending: monthlyExpenses * 0.9
-          }}
-          threeMonthsAgo={{
-            availableBalance: threeMonthsAgoData.netBalance,
-            budgetBalance: monthlyIncome * 0.3,
-            spending: monthlyExpenses * 0.85
-          }}
-          sixMonthsAgo={{
-            availableBalance: sixMonthsAgoData.netBalance,
-            budgetBalance: monthlyIncome * 0.3,
-            spending: monthlyExpenses * 0.8
-          }}
-          oneYearAgo={{
-            availableBalance: oneYearAgoData.netBalance,
-            budgetBalance: monthlyIncome * 0.3,
-            spending: monthlyExpenses * 0.75
-          }}
-          showOnlyTable={true}
-        />
-      </div>
+      {/* Budget Insight Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className={isMobile ? "text-base" : "text-lg"}>Budget Insight</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BudgetBreakdown 
+            availableBalance={availableBalance}
+            budgetBalance={budgetBalance}
+            spending={spending}
+            previousMonth={{
+              availableBalance: previousMonthData.netBalance,
+              budgetBalance: monthlyIncome * 0.3,
+              spending: monthlyExpenses * 0.9
+            }}
+            threeMonthsAgo={{
+              availableBalance: threeMonthsAgoData.netBalance,
+              budgetBalance: monthlyIncome * 0.3,
+              spending: monthlyExpenses * 0.85
+            }}
+            sixMonthsAgo={{
+              availableBalance: sixMonthsAgoData.netBalance,
+              budgetBalance: monthlyIncome * 0.3,
+              spending: monthlyExpenses * 0.8
+            }}
+            oneYearAgo={{
+              availableBalance: oneYearAgoData.netBalance,
+              budgetBalance: monthlyIncome * 0.3,
+              spending: monthlyExpenses * 0.75
+            }}
+            showOnlyTable={true}
+          />
+        </CardContent>
+      </Card>
 
-      {/* Budget Allocation */}
-      <div>
-        <h3 className={isMobile ? "text-base font-semibold mb-3" : "text-lg font-semibold mb-4"}>Budget Allocation</h3>
-        <BudgetBreakdown 
-          availableBalance={availableBalance}
-          budgetBalance={budgetBalance}
-          spending={spending}
-          previousMonth={{
-            availableBalance: previousMonthData.netBalance,
-            budgetBalance: monthlyIncome * 0.3,
-            spending: monthlyExpenses * 0.9
-          }}
-          showOnlyPieChart={true}
-          transactions={transactions}
-        />
-      </div>
+      {/* Budget Allocation Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className={isMobile ? "text-base" : "text-lg"}>Budget Allocation</CardTitle>
+          <Button
+            variant={isDetailed ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsDetailed(!isDetailed)}
+            className="text-xs"
+          >
+            {isDetailed ? "Simple" : "Detailed"}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <BudgetBreakdown 
+            availableBalance={availableBalance}
+            budgetBalance={budgetBalance}
+            spending={spending}
+            previousMonth={{
+              availableBalance: previousMonthData.netBalance,
+              budgetBalance: monthlyIncome * 0.3,
+              spending: monthlyExpenses * 0.9
+            }}
+            showOnlyPieChart={true}
+            transactions={transactions}
+            isDetailed={isDetailed}
+          />
+        </CardContent>
+      </Card>
 
       {/* Net Balance Over Time Chart */}
       {isMobile ? (

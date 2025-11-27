@@ -39,6 +39,7 @@ interface BudgetBreakdownProps {
   showOnlyPieChart?: boolean;
   showOnlyTable?: boolean;
   transactions?: Transaction[];
+  isDetailed?: boolean;
 }
 
 export const BudgetBreakdown = ({ 
@@ -51,10 +52,15 @@ export const BudgetBreakdown = ({
   oneYearAgo,
   showOnlyPieChart = false,
   showOnlyTable = false,
-  transactions = []
+  transactions = [],
+  isDetailed: externalIsDetailed
 }: BudgetBreakdownProps) => {
   const isMobile = useIsMobile();
-  const [isDetailed, setIsDetailed] = useState(false);
+  const [internalIsDetailed, setInternalIsDetailed] = useState(false);
+  
+  // Use external isDetailed if provided, otherwise use internal state
+  const isDetailed = externalIsDetailed !== undefined ? externalIsDetailed : internalIsDetailed;
+  const setIsDetailed = externalIsDetailed !== undefined ? () => {} : setInternalIsDetailed;
   
   // Calculate percentage changes for 1 month
   const availableChange = previousMonth.availableBalance 
@@ -179,83 +185,52 @@ export const BudgetBreakdown = ({
 
   if (showOnlyPieChart) {
     return (
-      <div className="overflow-hidden">
-        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {/* Pie Chart View */}
-          <div className="min-w-full snap-center px-2">
-            <div className="relative">
-              <ResponsiveContainer width="100%" height={isMobile ? 250 : 450}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderCustomLabel}
-                    outerRadius={isMobile ? 60 : 140}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Legend 
-                    layout={isMobile ? "horizontal" : "vertical"}
-                    align={isMobile ? "center" : "right"}
-                    verticalAlign={isMobile ? "bottom" : "middle"}
-                    iconType="circle"
-                    formatter={(value) => <span className="text-xs">{value}</span>}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className={isMobile ? "flex justify-center mt-2" : "absolute right-0 bottom-0 flex justify-end pr-4"}>
-                <Button
-                  variant={isDetailed ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIsDetailed(!isDetailed)}
-                  className="text-xs"
-                >
-                  {isDetailed ? "Simple" : "Detailed"}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Table View */}
-          <div className="min-w-full snap-center px-2">
-            <div className="flex items-center justify-end mb-3">
-              <Button
-                variant={isDetailed ? "default" : "outline"}
-                size="sm"
-                onClick={() => setIsDetailed(!isDetailed)}
-                className="text-xs"
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Pie Chart */}
+        <div className="flex-shrink-0 lg:w-[400px]">
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 350}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={renderCustomLabel}
+                outerRadius={isMobile ? 60 : 120}
+                fill="#8884d8"
+                dataKey="value"
               >
-                {isDetailed ? "Simple" : "Detailed"}
-              </Button>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">Category</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Percentage</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pieData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                      {item.name}
-                    </TableCell>
-                    <TableCell className="text-right">R{item.value.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{((item.value / total) * 100).toFixed(2)}%</TableCell>
-                  </TableRow>
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
-              </TableBody>
-            </Table>
-          </div>
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Category</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Percentage</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pieData.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    {item.name}
+                  </TableCell>
+                  <TableCell className="text-right">R{item.value.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{((item.value / total) * 100).toFixed(2)}%</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
     );
