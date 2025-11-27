@@ -91,7 +91,7 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
   // Add debug log before calculations
   console.log('About to calculate metrics with transactions:', transactions);
   
-  const { monthlyIncome, monthlyExpenses, netBalance } = calculateFinancialMetrics(transactions);
+  const { monthlyIncome, monthlyExpenses, netBalance, accountBalances } = calculateFinancialMetrics(transactions);
 
   // Debug log after calculations
   console.log('Calculated metrics:', { monthlyIncome, monthlyExpenses, netBalance });
@@ -99,47 +99,50 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
   // Calculate daily target spending (monthly expenses / 30 days)
   const dailyTargetSpending = monthlyExpenses / 30;
 
+  // Calculate available balance from account balances
+  const availableBalance = accountBalances.total;
+
   const content = (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="financial-metric">
           <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-            Budget Balance<sup className="text-xs ml-1">1</sup>
+            Available Balance
+          </div>
+          <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
+            {formatCurrency(availableBalance)}
+          </div>
+          {showExplanations && (
+            <p className="text-xs text-muted-foreground">
+              <strong>Available Balance:</strong> Total balance across all accounts
+            </p>
+          )}
+        </div>
+        
+        <div className="financial-metric">
+          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+            Budget Balance
           </div>
           <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
             {formatCurrency(netBalance)}
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              <sup>1</sup> <strong>Budget Balance:</strong> Available balance less budget savings
+              <strong>Budget Balance:</strong> Available balance less budget savings
             </p>
           )}
         </div>
         
         <div className="financial-metric">
           <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-            Spending limit for today<sup className="text-xs ml-1">2</sup>
+            Spending Limit for Today
           </div>
           <div className={isMobile ? "text-xl font-bold text-foreground font-georama mb-2" : "text-2xl font-bold text-foreground font-georama mb-2"}>
             {formatCurrency(dailyTargetSpending)}
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              <sup>2</sup> <strong>Spending limit for today:</strong> Target spending for the month: {formatCurrency(monthlyExpenses)}
-            </p>
-          )}
-        </div>
-        
-        <div className="financial-metric">
-          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-            Total expenses<sup className="text-xs ml-1">3</sup>
-          </div>
-          <div className={isMobile ? "text-xl font-bold text-budget-expense font-georama mb-2" : "text-2xl font-bold text-budget-expense font-georama mb-2"}>
-            {formatCurrency(monthlyExpenses)}
-          </div>
-          {showExplanations && (
-            <p className="text-xs text-muted-foreground">
-              <sup>3</sup> <strong>Total expenses:</strong> Total spending this month
+              <strong>Spending limit for today:</strong> Target spending for the month: {formatCurrency(monthlyExpenses)}
             </p>
           )}
         </div>
