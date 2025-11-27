@@ -82,9 +82,12 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
 
   const netBalanceData = getNetBalanceData();
 
-  // Calculate current and previous month data for breakdown
+  // Calculate current and historical data for breakdown
   const currentMonthData = monthlySpending[monthlySpending.length - 1] || { netBalance: 0 };
   const previousMonthData = monthlySpending[monthlySpending.length - 2] || { netBalance: 0 };
+  const threeMonthsAgoData = monthlySpending[monthlySpending.length - 4] || { netBalance: 0 };
+  const sixMonthsAgoData = monthlySpending[monthlySpending.length - 7] || { netBalance: 0 };
+  const oneYearAgoData = monthlySpending[monthlySpending.length - 13] || { netBalance: 0 };
   
   const availableBalance = currentMonthData.netBalance;
   const budgetBalance = monthlyIncome * 0.3; // 30% of income as budget
@@ -222,38 +225,52 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
 
   return (
     <div className="space-y-6 relative z-10">
-      {/* Two Column Layout: Budget Insight + Budget Allocation */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div>
-          <h3 className={isMobile ? "text-base font-semibold mb-3" : "text-lg font-semibold mb-4"}>Budget Insight</h3>
-          <BudgetBreakdown 
-            availableBalance={availableBalance}
-            budgetBalance={budgetBalance}
-            spending={spending}
-            previousMonth={{
-              availableBalance: previousMonthData.netBalance,
-              budgetBalance: monthlyIncome * 0.3,
-              spending: monthlyExpenses * 0.9
-            }}
-            showOnlyTable={true}
-          />
-        </div>
-        
-        <div>
-          <h3 className={isMobile ? "text-base font-semibold mb-3" : "text-lg font-semibold mb-4"}>Budget Allocation</h3>
-          <BudgetBreakdown 
-            availableBalance={availableBalance}
-            budgetBalance={budgetBalance}
-            spending={spending}
-            previousMonth={{
-              availableBalance: previousMonthData.netBalance,
-              budgetBalance: monthlyIncome * 0.3,
-              spending: monthlyExpenses * 0.9
-            }}
-            showOnlyPieChart={true}
-            transactions={transactions}
-          />
-        </div>
+      {/* Budget Insight Table */}
+      <div>
+        <h3 className={isMobile ? "text-base font-semibold mb-3" : "text-lg font-semibold mb-4"}>Budget Insight</h3>
+        <BudgetBreakdown 
+          availableBalance={availableBalance}
+          budgetBalance={budgetBalance}
+          spending={spending}
+          previousMonth={{
+            availableBalance: previousMonthData.netBalance,
+            budgetBalance: monthlyIncome * 0.3,
+            spending: monthlyExpenses * 0.9
+          }}
+          threeMonthsAgo={{
+            availableBalance: threeMonthsAgoData.netBalance,
+            budgetBalance: monthlyIncome * 0.3,
+            spending: monthlyExpenses * 0.85
+          }}
+          sixMonthsAgo={{
+            availableBalance: sixMonthsAgoData.netBalance,
+            budgetBalance: monthlyIncome * 0.3,
+            spending: monthlyExpenses * 0.8
+          }}
+          oneYearAgo={{
+            availableBalance: oneYearAgoData.netBalance,
+            budgetBalance: monthlyIncome * 0.3,
+            spending: monthlyExpenses * 0.75
+          }}
+          showOnlyTable={true}
+        />
+      </div>
+
+      {/* Budget Allocation */}
+      <div>
+        <h3 className={isMobile ? "text-base font-semibold mb-3" : "text-lg font-semibold mb-4"}>Budget Allocation</h3>
+        <BudgetBreakdown 
+          availableBalance={availableBalance}
+          budgetBalance={budgetBalance}
+          spending={spending}
+          previousMonth={{
+            availableBalance: previousMonthData.netBalance,
+            budgetBalance: monthlyIncome * 0.3,
+            spending: monthlyExpenses * 0.9
+          }}
+          showOnlyPieChart={true}
+          transactions={transactions}
+        />
       </div>
 
       {/* Net Balance Over Time Chart */}
