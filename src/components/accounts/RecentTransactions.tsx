@@ -187,31 +187,31 @@ export const RecentTransactions = ({ accountId, onSeeMore }: RecentTransactionsP
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {accountTransactions.map((transaction, index) => {
             const category = getCategoryFromDescription(transaction.description);
             return (
               <div 
                 key={`${transaction.account_id}-${transaction.created_at}-${index}`}
-                className="border-b last:border-0 pb-4 last:pb-0"
+                className="border-b last:border-0 pb-3 last:pb-0"
               >
                 <Badge 
                   variant="secondary" 
-                  className="cursor-pointer hover:bg-accent transition-colors mb-2"
+                  className="cursor-pointer hover:bg-accent transition-colors mb-1.5 text-xs"
                   onClick={() => handleCategoryClick(category)}
                 >
                   {categoryLabels[category]}
                 </Badge>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-lg font-georama">
+                    <h3 className="font-semibold text-sm font-georama">
                       {transaction.description}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {formatDate(transaction.created_at)}
                     </p>
                   </div>
-                  <span className={`font-semibold text-lg font-georama ${
+                  <span className={`font-semibold text-sm font-georama ${
                     transaction.amount < 0 ? 'text-destructive' : 'text-green-600'
                   }`}>
                     {formatCurrency(transaction.amount)}
@@ -224,7 +224,7 @@ export const RecentTransactions = ({ accountId, onSeeMore }: RecentTransactionsP
         {!selectedCategory && onSeeMore && (
           <Button 
             variant="outline" 
-            className="w-full mt-4"
+            className="w-full mt-4 text-sm"
             onClick={onSeeMore}
           >
             See more
