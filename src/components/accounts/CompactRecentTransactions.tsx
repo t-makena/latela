@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDown } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { formatCurrency, formatDate } from "@/lib/realData";
 
@@ -15,10 +14,13 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
   if (loading) {
     return (
       <Card className="rounded-3xl border border-border shadow-lg bg-card">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-georama">Recent Transactions</CardTitle>
+          <Button variant="ghost" className="text-sm h-auto p-0" disabled>
+            See More
+          </Button>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-1.5 py-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex justify-between items-center animate-pulse">
               <div className="flex-1">
@@ -36,10 +38,13 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
   if (error) {
     return (
       <Card className="rounded-3xl border border-border shadow-lg bg-card">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-georama">Recent Transactions</CardTitle>
+          <Button variant="ghost" className="text-sm h-auto p-0" disabled>
+            See More
+          </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="py-4">
           <p className="text-sm text-destructive">Error loading transactions</p>
         </CardContent>
       </Card>
@@ -55,10 +60,13 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
   if (accountTransactions.length === 0) {
     return (
       <Card className="rounded-3xl border border-border shadow-lg bg-card">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-georama">Recent Transactions</CardTitle>
+          <Button variant="ghost" className="text-sm h-auto p-0" disabled>
+            See More
+          </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="py-4">
           <p className="text-sm text-muted-foreground">No transactions found for this account.</p>
         </CardContent>
       </Card>
@@ -66,12 +74,19 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
   }
 
   return (
-    <Card className="rounded-3xl border border-border shadow-lg bg-card hover:shadow-xl transition-shadow flex flex-col">
-      <CardHeader className="pb-3">
+    <Card className="rounded-3xl border border-border shadow-lg bg-card hover:shadow-xl transition-shadow">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-georama">Recent Transactions</CardTitle>
+        <Button 
+          variant="ghost" 
+          className="text-sm h-auto p-0 hover:underline"
+          onClick={onSeeMore}
+        >
+          See More
+        </Button>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-between p-6 pt-0">
-        <div className="space-y-3 mb-4">
+      <CardContent className="py-4">
+        <div className="space-y-2">
           {accountTransactions.map((transaction, index) => (
             <div 
               key={`${transaction.account_id}-${transaction.created_at}-${index}`}
@@ -93,14 +108,6 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
             </div>
           ))}
         </div>
-        <Button 
-          variant="outline" 
-          className="w-full mt-auto"
-          onClick={onSeeMore}
-        >
-          See More
-          <ArrowDown className="ml-2 h-4 w-4" />
-        </Button>
       </CardContent>
     </Card>
   );
