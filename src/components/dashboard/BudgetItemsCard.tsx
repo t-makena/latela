@@ -27,7 +27,7 @@ export const BudgetItemsCard = () => {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between pt-4 pb-4">
           <CardTitle className="text-lg">Budget Items</CardTitle>
           <Button
             size="icon"
