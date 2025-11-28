@@ -31,7 +31,7 @@ export const AvailableBalanceCard = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
-        <CardTitle className="text-lg">Available Balance</CardTitle>
+        <CardTitle className="text-lg">Flexible balance calculation</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
