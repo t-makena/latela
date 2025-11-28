@@ -26,7 +26,7 @@ export const Layout = ({ children }: LayoutProps) => {
         className="absolute bottom-20 right-8 w-14 h-14 opacity-15 pointer-events-none z-0 hidden lg:block" 
       />
       
-      <div className={`container mx-auto flex h-full min-h-screen flex-col md:flex-row ${isMobile ? 'p-0' : 'p-2 md:p-4'} relative z-10 gap-4`}>
+      <div className={`container mx-auto flex h-full flex-col md:flex-row ${isMobile ? 'p-0' : 'p-2 md:p-4'} relative z-10 gap-4`}>
         {!isMobile && (
           <div className="sticky top-0 h-screen">
             <Navbar />
