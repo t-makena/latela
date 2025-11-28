@@ -96,15 +96,21 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
   // Debug log after calculations
   console.log('Calculated metrics:', { monthlyIncome, monthlyExpenses, netBalance });
 
-  // Calculate daily target spending (monthly expenses / 30 days)
-  const dailyTargetSpending = monthlyExpenses / 30;
-
   // Calculate available balance from account balances
   const availableBalance = accountBalances.total;
 
+  // Calculate flexible balance (available balance - budget balance)
+  const flexibleBalance = availableBalance - netBalance;
+
+  // Determine budget status
+  const budgetStatus = flexibleBalance >= 0 ? 'good' : 'bad';
+  const budgetStatusDescription = budgetStatus === 'good' 
+    ? "You're on track, keep going : )" 
+    : "You're at risk of spending your savings : (";
+
   const content = (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="financial-metric">
           <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
             Available Balance
@@ -128,21 +134,35 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              Available balance less budget savings
+              Savings Goals plus Upcoming Events
             </p>
           )}
         </div>
         
         <div className="financial-metric">
           <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
-            Spending Limit for Today
+            Flexible Balance
           </div>
-          <div className={isMobile ? "text-xl font-bold text-foreground font-georama mb-2" : "text-2xl font-bold text-foreground font-georama mb-2"}>
-            {formatCurrency(dailyTargetSpending)}
+          <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
+            {formatCurrency(flexibleBalance)}
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              Target spending for the month: {formatCurrency(monthlyExpenses)}
+              Available balance less budget balance
+            </p>
+          )}
+        </div>
+        
+        <div className="financial-metric">
+          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+            Budget Status
+          </div>
+          <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
+            {budgetStatus}
+          </div>
+          {showExplanations && (
+            <p className="text-xs text-muted-foreground">
+              {budgetStatusDescription}
             </p>
           )}
         </div>
