@@ -2,7 +2,7 @@
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { BudgetItemsCard } from "@/components/dashboard/BudgetItemsCard";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
@@ -26,17 +26,22 @@ const Dashboard = () => {
               <BudgetItemsCard />
             </div>
             <Card>
-              <BudgetBreakdown
-                availableBalance={availableBalance}
-                budgetBalance={budgetBalance}
-                spending={spending}
-                previousMonth={{
-                  availableBalance: availableBalance * 0.9,
-                  budgetBalance: budgetBalance * 0.9,
-                  spending: spending * 0.9,
-                }}
-                showOnlyTable
-              />
+              <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
+                <CardTitle className="text-lg">Budget Insight</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BudgetBreakdown
+                  availableBalance={availableBalance}
+                  budgetBalance={budgetBalance}
+                  spending={spending}
+                  previousMonth={{
+                    availableBalance: availableBalance * 0.9,
+                    budgetBalance: budgetBalance * 0.9,
+                    spending: spending * 0.9,
+                  }}
+                  showOnlyTable
+                />
+              </CardContent>
             </Card>
           </div>
         )}
