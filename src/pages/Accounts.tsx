@@ -5,6 +5,7 @@ import { StatementUploadDialog } from "@/components/accounts/StatementUploadDial
 import { Skeleton } from "@/components/ui/skeleton";
 import { AccountCard } from "@/components/accounts/AccountCard";
 import { FinancialInsightContent } from "@/components/financial-insight/FinancialInsightContent";
+import { CompactRecentTransactions } from "@/components/accounts/CompactRecentTransactions";
 
 const Accounts = () => {
   const [currentAccountIndex, setCurrentAccountIndex] = useState(0);
@@ -19,17 +20,28 @@ const Accounts = () => {
     return null;
   }
 
+  const scrollToTransactions = () => {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-background px-6 pb-20">
       <div className="space-y-6">
-        {/* Account Card with pagination */}
-        <AccountCard 
-          account={currentAccount}
-          accounts={accounts}
-          currentIndex={currentAccountIndex}
-          onIndexChange={setCurrentAccountIndex}
-          showPagination={true}
-        />
+        {/* Account Card and Recent Transactions side by side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <AccountCard 
+            account={currentAccount}
+            accounts={accounts}
+            currentIndex={currentAccountIndex}
+            onIndexChange={setCurrentAccountIndex}
+            showPagination={true}
+          />
+          
+          <CompactRecentTransactions 
+            accountId={currentAccount.id}
+            onSeeMore={scrollToTransactions}
+          />
+        </div>
 
         {/* Financial Insight Content */}
         <FinancialInsightContent />
