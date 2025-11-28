@@ -21,9 +21,9 @@ export const AccountCard = ({
   
   return (
     <Card className="rounded-3xl border border-border shadow-lg bg-card hover:shadow-xl transition-shadow">
-      <CardContent className="p-8">
+      <CardContent className="p-6">
         {/* Bank Name, Logo and Account Number */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-6">
           <div className="h-12 w-12 bg-foreground rounded-xl flex items-center justify-center flex-shrink-0">
             <span className="text-background font-bold text-xl">
               {account.name.charAt(0)}
