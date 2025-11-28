@@ -11,9 +11,10 @@ import { formatCurrency, formatDate } from "@/lib/realData";
 
 interface RecentTransactionsProps {
   accountId: string;
+  onSeeMore?: () => void;
 }
 
-export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
+export const RecentTransactions = ({ accountId, onSeeMore }: RecentTransactionsProps) => {
   const { transactions, loading, error } = useTransactions();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -220,6 +221,15 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
             );
           })}
         </div>
+        {!selectedCategory && onSeeMore && (
+          <Button 
+            variant="outline" 
+            className="w-full mt-4"
+            onClick={onSeeMore}
+          >
+            See more
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
