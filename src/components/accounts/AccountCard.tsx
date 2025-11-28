@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AccountType } from "@/lib/data";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AccountCardProps {
   account: AccountType;
@@ -16,6 +17,8 @@ export const AccountCard = ({
   onIndexChange,
   showPagination = false 
 }: AccountCardProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Card className="rounded-3xl border border-border shadow-lg bg-card hover:shadow-xl transition-shadow">
       <CardContent className="p-8">
@@ -36,12 +39,9 @@ export const AccountCard = ({
         {/* Balance Information and Card Logo */}
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-sm text-muted-foreground mb-2">Budget Balance</p>
-            <p className="text-5xl font-bold text-foreground leading-none mb-2">
+            <p className="text-sm text-muted-foreground mb-2">Available Balance</p>
+            <p className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-foreground leading-none font-georama`}>
               R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Available Balance: R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
 
