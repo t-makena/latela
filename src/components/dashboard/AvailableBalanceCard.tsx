@@ -31,7 +31,7 @@ export const AvailableBalanceCard = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Available Balance</CardTitle>
+        <CardTitle className="text-lg">Available Balance</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (

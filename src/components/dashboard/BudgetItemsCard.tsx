@@ -28,7 +28,7 @@ export const BudgetItemsCard = () => {
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Budget Items</CardTitle>
+          <CardTitle className="text-lg">Budget Items</CardTitle>
           <Button
             size="icon"
             onClick={() => setDialogOpen(true)}
