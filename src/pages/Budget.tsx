@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useBudgetItems } from '@/hooks/useBudgetItems';
 import { useGoals } from '@/hooks/useGoals';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useAccounts } from '@/hooks/useAccounts';
+import { useTransactions } from '@/hooks/useTransactions';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -29,6 +30,7 @@ const Budget = () => {
     month: currentDate.getMonth() + 1
   });
   const { accounts, loading: accountsLoading } = useAccounts();
+  const { transactions, loading: transactionsLoading } = useTransactions();
 
   const totalSavingGoals = goals.reduce((sum, goal) => sum + goal.amountSaved, 0);
   const totalBudgetExpenses = calculateTotalMonthly();
@@ -40,6 +42,32 @@ const Budget = () => {
   const formatCurrency = (amount: number) => {
     return `R${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
   };
+
+  // Calculate amount spent for each budget item by matching transaction descriptions
+  const calculateAmountSpent = useMemo(() => {
+    if (transactionsLoading || !transactions) return {};
+
+    const spentByItem: Record<string, number> = {};
+
+    budgetItems.forEach((item) => {
+      const matchingTransactions = transactions.filter((t) =>
+        t.description?.toLowerCase().includes(item.name.toLowerCase())
+      );
+      
+      const totalSpent = matchingTransactions.reduce((sum, t) => {
+        // Convert cents to rands and only count negative amounts (expenses)
+        return sum + (t.amount < 0 ? Math.abs(t.amount) / 100 : 0);
+      }, 0);
+      
+      spentByItem[item.id] = totalSpent;
+    });
+
+    return spentByItem;
+  }, [budgetItems, transactions, transactionsLoading]);
+
+  const totalAmountSpent = useMemo(() => {
+    return Object.values(calculateAmountSpent).reduce((sum, amount) => sum + amount, 0);
+  }, [calculateAmountSpent]);
 
   const isLoading = loading || goalsLoading || eventsLoading || accountsLoading;
 
@@ -79,6 +107,8 @@ const Budget = () => {
                         <TableHead>Category/Merchant</TableHead>
                         <TableHead>Frequency</TableHead>
                         <TableHead className="text-right">Budget</TableHead>
+                        <TableHead className="text-right">Freq x Budget</TableHead>
+                        <TableHead className="text-right">Amount Spent</TableHead>
                         <TableHead className="w-12"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -95,7 +125,13 @@ const Budget = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
+                            {formatCurrency(item.amount)}
+                          </TableCell>
+                          <TableCell className="text-right">
                             {formatCurrency(calculateMonthlyAmount(item))}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(calculateAmountSpent[item.id] || 0)}
                           </TableCell>
                           <TableCell>
                             <Button
@@ -110,9 +146,12 @@ const Budget = () => {
                         </TableRow>
                       ))}
                       <TableRow className="font-bold bg-muted/50">
-                        <TableCell colSpan={2}>Total</TableCell>
+                        <TableCell colSpan={3}>Total</TableCell>
                         <TableCell className="text-right">
                           {formatCurrency(totalBudgetExpenses)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(totalAmountSpent)}
                         </TableCell>
                         <TableCell></TableCell>
                       </TableRow>
