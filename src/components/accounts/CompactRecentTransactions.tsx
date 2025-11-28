@@ -19,7 +19,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
           <CardTitle className="text-lg font-georama">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="flex justify-between items-center animate-pulse">
               <div className="flex-1">
                 <div className="h-3 bg-muted rounded mb-1 w-3/4"></div>
@@ -46,11 +46,11 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
     );
   }
 
-  // Filter transactions for this specific account and get latest 5
+  // Filter transactions for this specific account and get latest 3
   const accountTransactions = transactions
     .filter(t => t.account_id === accountId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
+    .slice(0, 3);
 
   if (accountTransactions.length === 0) {
     return (
