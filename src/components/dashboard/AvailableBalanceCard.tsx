@@ -30,7 +30,7 @@ export const AvailableBalanceCard = () => {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center">
         <CardTitle className="text-lg">Available Balance</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
