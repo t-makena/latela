@@ -129,7 +129,7 @@ const Budget = () => {
           {/* Available Balance Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Available Balance</CardTitle>
+              <CardTitle className="text-xl">Flexible balance calculation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {isLoading ? (
