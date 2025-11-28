@@ -17,7 +17,7 @@ const Dashboard = () => {
   const spending = monthlyExpenses;
 
   return (
-    <div className="space-y-2 relative z-10">
+    <div className="space-y-2 relative z-10 pb-4">
         <FinancialSummary showExplanations={!isMobile} />
         
         {!isMobile && (
