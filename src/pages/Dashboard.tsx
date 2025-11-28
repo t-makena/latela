@@ -40,6 +40,7 @@ const Dashboard = () => {
                     spending: spending * 0.9,
                   }}
                   showOnlyTable
+                  showOnlyOneMonth
                 />
               </CardContent>
             </Card>
