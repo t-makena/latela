@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { Eye, EyeOff, Edit2, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Eye, EyeOff, Edit2, X, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTheme } from "next-themes";
@@ -244,43 +244,36 @@ const Settings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {/* Display connected accounts */}
             <div className="space-y-2">
-              <Label>Connected Accounts</Label>
-              <p className="text-sm text-muted-foreground mb-4">
-                Add or remove bank accounts to track your finances
-              </p>
-              
-              {/* Display connected accounts */}
-              <div className="space-y-2 mb-4">
-                {accounts.map((account) => (
-                  <div 
-                    key={account.id} 
-                    className="flex items-center justify-between p-3 border rounded-lg bg-card"
-                  >
-                    <div>
-                      <p className="font-medium">{account.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Balance: {account.currency} {account.balance.toLocaleString()}
-                      </p>
-                    </div>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      onClick={() => handleRemoveAccount(account.id)}
-                      disabled={isLoading}
-                      className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
-                      title="Remove account"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+              {accounts.map((account) => (
+                <div 
+                  key={account.id} 
+                  className="flex items-center justify-between p-3 rounded-lg bg-card"
+                >
+                  <div>
+                    <p className="font-medium">{account.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Balance: {account.currency} {account.balance.toLocaleString()}
+                    </p>
                   </div>
-                ))}
-              </div>
-              
-              <Button variant="outline" className="w-full">
-                Add Account
-              </Button>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={() => handleRemoveAccount(account.id)}
+                    disabled={isLoading}
+                    className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                    title="Remove account"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
+            
+            <Button size="icon" variant="outline">
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
