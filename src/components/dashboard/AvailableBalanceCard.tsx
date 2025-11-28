@@ -43,7 +43,7 @@ export const AvailableBalanceCard = () => {
         ) : (
           <>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Available Balance</span>
+              <span className="text-sm text-muted-foreground">Flexible balance calculation</span>
               <span className="font-semibold">{formatCurrency(availableBalance)}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -65,7 +65,7 @@ export const AvailableBalanceCard = () => {
               </span>
             </div>
             <div className="pt-3 border-t flex justify-between items-center">
-              <span className="font-bold">Budget Balance</span>
+              <span className="font-bold">Flexible balance</span>
               <span className={`font-bold text-lg ${budgetBalance >= 0 ? 'text-primary' : 'text-destructive'}`}>
                 {formatCurrency(budgetBalance)}
               </span>
