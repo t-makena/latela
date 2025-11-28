@@ -18,7 +18,7 @@ export const AccountCard = ({
   showPagination = false 
 }: AccountCardProps) => {
   return (
-    <div>
+    <div className="max-w-md">
       <AspectRatio ratio={85.6 / 53.98}>
         <Card className="rounded-3xl border border-border shadow-lg bg-card hover:shadow-xl transition-shadow h-full">
           <CardContent className="p-6 h-full flex flex-col justify-between">
