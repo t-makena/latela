@@ -2,14 +2,15 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Target, Edit2, Plus, Loader2 } from "lucide-react";
+import { Target, Edit2, Plus, Loader2, Trash2 } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 import { useGoals } from "@/hooks/useGoals";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
 
 const Goals = () => {
-  const { goals, loading, error, addGoal } = useGoals();
+  const { goals, loading, error, addGoal, deleteGoal } = useGoals();
   const isMobile = useIsMobile();
   const [dialogOpen, setDialogOpen] = useState(false);
   
@@ -23,6 +24,20 @@ const Goals = () => {
   // Format currency
   const formatCurrency = (amount: number) => {
     return `R${amount.toLocaleString()}`;
+  };
+
+  const handleDeleteGoal = async (goalId: string, goalName: string) => {
+    if (!confirm(`Are you sure you want to delete the goal "${goalName}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteGoal(goalId);
+      toast.success("Goal deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      toast.error("Failed to delete goal. Please try again.");
+    }
   };
 
   if (loading) {
@@ -93,19 +108,20 @@ const Goals = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-medium w-[28%] px-2">Goal</TableHead>
-                  <TableHead className="font-medium w-[14%] px-2">
+                  <TableHead className="font-medium w-[24%] px-2">Goal</TableHead>
+                  <TableHead className="font-medium w-[12%] px-2">
                     Priority<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[12%] px-2 pr-1">
+                  <TableHead className="font-medium w-[10%] px-2 pr-1">
                     Split<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-medium text-right w-[24%] pl-1 pr-2">
+                  <TableHead className="font-medium text-right w-[20%] pl-1 pr-2">
                     Amount Saved (R)<sup>3</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[22%] px-2">
+                  <TableHead className="font-medium w-[18%] px-2">
                     Timeline<sup>4</sup>
                   </TableHead>
+                  <TableHead className="w-[16%]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -117,11 +133,22 @@ const Goals = () => {
                       <TableCell className="px-2 py-4 pr-1">{row.split}</TableCell>
                       <TableCell className="text-right font-medium pl-1 pr-2 py-4">{formatCurrency(row.amountSaved)}</TableCell>
                       <TableCell className="px-2 py-4">{row.timeline}</TableCell>
+                      <TableCell className="px-2 py-4">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDeleteGoal(row.id, row.name)}
+                          className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                          title="Delete goal"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No goals found. Click below to add your first goal.
                     </TableCell>
                   </TableRow>
@@ -167,19 +194,20 @@ const Goals = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-medium w-[28%] px-6">Goal</TableHead>
-                  <TableHead className="font-medium w-[14%] px-6">
+                  <TableHead className="font-medium w-[24%] px-6">Goal</TableHead>
+                  <TableHead className="font-medium w-[12%] px-6">
                     Priority<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[12%] px-6 pr-1">
+                  <TableHead className="font-medium w-[10%] px-6 pr-1">
                     Split<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-medium text-right w-[24%] pl-1 pr-6">
+                  <TableHead className="font-medium text-right w-[20%] pl-1 pr-6">
                     Amount Saved (R)<sup>3</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[22%] px-6">
+                  <TableHead className="font-medium w-[18%] px-6">
                     Timeline<sup>4</sup>
                   </TableHead>
+                  <TableHead className="w-[16%]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,11 +219,22 @@ const Goals = () => {
                       <TableCell className="px-6 py-4 pr-1">{row.split}</TableCell>
                       <TableCell className="text-right font-medium pl-1 pr-6 py-4">{formatCurrency(row.amountSaved)}</TableCell>
                       <TableCell className="px-6 py-4">{row.timeline}</TableCell>
+                      <TableCell className="px-6 py-4">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDeleteGoal(row.id, row.name)}
+                          className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                          title="Delete goal"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No goals found. Click below to add your first goal.
                     </TableCell>
                   </TableRow>

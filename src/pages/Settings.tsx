@@ -11,6 +11,7 @@ import { Eye, EyeOff, Edit2, X, ChevronDown, ChevronUp, Plus } from "lucide-reac
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTheme } from "next-themes";
+import { AddAccountDialog } from "@/components/accounts/AddAccountDialog";
 
 const Settings = () => {
   const { accounts } = useAccounts();
@@ -36,6 +37,7 @@ const Settings = () => {
   // Collapsible states
   const [isUsernameOpen, setIsUsernameOpen] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
 
   const handleSave = () => {
     toast.success("Settings saved successfully!");
@@ -271,9 +273,15 @@ const Settings = () => {
               ))}
             </div>
             
-            <Button size="icon" variant="outline">
-              <Plus className="h-4 w-4" />
-            </Button>
+            <div className="flex justify-center pt-2">
+              <Button 
+                size="icon" 
+                variant="outline"
+                onClick={() => setAddAccountDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -451,6 +459,12 @@ const Settings = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AddAccountDialog
+        open={addAccountDialogOpen}
+        onOpenChange={setAddAccountDialogOpen}
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   );
 };
