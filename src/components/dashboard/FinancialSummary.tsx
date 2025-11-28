@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useBudgetItems } from "@/hooks/useBudgetItems";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 
 interface FinancialSummaryProps {
   showExplanations?: boolean;
@@ -11,12 +13,18 @@ interface FinancialSummaryProps {
 export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryProps) => {
   const { transactions, loading, error } = useTransactions();
   const isMobile = useIsMobile();
+  const { calculateTotalMonthly, loading: budgetLoading } = useBudgetItems();
+  const currentDate = new Date();
+  const { upcomingEvents, isLoading: eventsLoading } = useCalendarEvents({
+    year: currentDate.getFullYear(),
+    month: currentDate.getMonth() + 1
+  });
 
   console.log('FinancialSummary - transactions:', transactions);
   console.log('FinancialSummary - loading:', loading);
   console.log('FinancialSummary - error:', error);
 
-  if (loading) {
+  if (loading || budgetLoading || eventsLoading) {
     const content = (
       <>
         <div className={isMobile ? "pb-1" : "pb-2 pt-4"}>
@@ -99,8 +107,13 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
   // Calculate available balance from account balances
   const availableBalance = accountBalances.total;
 
+  // Calculate budget balance (budget expenses + upcoming events)
+  const totalBudgetExpenses = calculateTotalMonthly();
+  const totalUpcomingEvents = upcomingEvents.reduce((sum, event) => sum + event.budgetedAmount, 0);
+  const budgetBalance = totalBudgetExpenses + totalUpcomingEvents;
+
   // Calculate flexible balance (available balance - budget balance)
-  const flexibleBalance = availableBalance - netBalance;
+  const flexibleBalance = availableBalance - budgetBalance;
 
   // Determine budget status
   const budgetStatus = flexibleBalance >= 0 ? 'good' : 'bad';
@@ -130,11 +143,11 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
             Budget Balance
           </div>
           <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
-            {formatCurrency(netBalance)}
+            {formatCurrency(budgetBalance)}
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              Savings Goals plus Upcoming Events
+              Budget expenses plus upcoming events
             </p>
           )}
         </div>
