@@ -114,7 +114,7 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              <strong>Available Balance:</strong> Total balance across all accounts
+              Total balance across all accounts
             </p>
           )}
         </div>
@@ -128,7 +128,7 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              <strong>Budget Balance:</strong> Available balance less budget savings
+              Available balance less budget savings
             </p>
           )}
         </div>
