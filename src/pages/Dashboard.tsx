@@ -1,10 +1,8 @@
 
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { BudgetItemsCard } from "@/components/dashboard/BudgetItemsCard";
-import { AvailableBalanceCard } from "@/components/dashboard/AvailableBalanceCard";
-import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
@@ -27,7 +25,19 @@ const Dashboard = () => {
             <div className="lg:col-span-2">
               <BudgetItemsCard />
             </div>
-            <AvailableBalanceCard />
+            <Card>
+              <BudgetBreakdown
+                availableBalance={availableBalance}
+                budgetBalance={budgetBalance}
+                spending={spending}
+                previousMonth={{
+                  availableBalance: availableBalance * 0.9,
+                  budgetBalance: budgetBalance * 0.9,
+                  spending: spending * 0.9,
+                }}
+                showOnlyTable
+              />
+            </Card>
           </div>
         )}
         
@@ -48,18 +58,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {isMobile ? (
-          <div className="mt-2 -mx-3">
-            <EnhancedSpendingChart />
-          </div>
-        ) : (
-          <Card className="mt-2">
-            <CardContent className="p-0">
-              <EnhancedSpendingChart />
-            </CardContent>
-          </Card>
-        )}
-        
         {isMobile && (
           <div className="mt-6 space-y-2 text-xs text-muted-foreground px-3">
             <p><sup>1</sup> <strong>Budget Balance:</strong> Available balance less budget savings</p>
