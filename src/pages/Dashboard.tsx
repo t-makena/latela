@@ -23,8 +23,10 @@ const Dashboard = () => {
         <FinancialSummary showExplanations={!isMobile} />
         
         {!isMobile && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2">
-            <BudgetItemsCard />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-2">
+            <div className="lg:col-span-2">
+              <BudgetItemsCard />
+            </div>
             <AvailableBalanceCard />
           </div>
         )}
