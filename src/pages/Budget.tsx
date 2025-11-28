@@ -45,17 +45,12 @@ const Budget = () => {
 
   return (
     <div className="container mx-auto p-4 lg:p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Budget</h1>
-        <p className="text-muted-foreground">Manage your monthly budget items</p>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Budget Items Table */}
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Budget Items</CardTitle>
+              <CardTitle className="text-xl">Budget Items</CardTitle>
               <Button
                 size="icon"
                 onClick={() => setDialogOpen(true)}
@@ -134,7 +129,7 @@ const Budget = () => {
           {/* Available Balance Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Available Balance</CardTitle>
+              <CardTitle className="text-xl">Available Balance</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {isLoading ? (
@@ -181,7 +176,7 @@ const Budget = () => {
           {/* Calculation Explanation Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Calculation Explanation</CardTitle>
+              <CardTitle className="text-xl">Calculation Explanation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               <div>
