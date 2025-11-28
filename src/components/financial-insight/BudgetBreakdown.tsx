@@ -244,9 +244,6 @@ export const BudgetBreakdown = ({
             <TableRow>
               <TableHead className="w-[200px]">Metric</TableHead>
               <TableHead className="text-right">1 Mth Chng</TableHead>
-              <TableHead className="text-right">3 Mth Chng</TableHead>
-              <TableHead className="text-right">6 Mth Chng</TableHead>
-              <TableHead className="text-right">1 Yr Chng</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -255,44 +252,17 @@ export const BudgetBreakdown = ({
               <TableCell className={`text-right font-semibold ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
               </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(available3MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(available3MChange) >= 0 ? '+' : ''}{available3MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(available6MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(available6MChange) >= 0 ? '+' : ''}{available6MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(available1YChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(available1YChange) >= 0 ? '+' : ''}{available1YChange}%
-              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">Budget Balance</TableCell>
               <TableCell className={`text-right font-semibold ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
               </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(budget3MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budget3MChange) >= 0 ? '+' : ''}{budget3MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(budget6MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budget6MChange) >= 0 ? '+' : ''}{budget6MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(budget1YChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budget1YChange) >= 0 ? '+' : ''}{budget1YChange}%
-              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">Spending</TableCell>
               <TableCell className={`text-right font-semibold ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(spending3MChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spending3MChange) >= 0 ? '+' : ''}{spending3MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(spending6MChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spending6MChange) >= 0 ? '+' : ''}{spending6MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(spending1YChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spending1YChange) >= 0 ? '+' : ''}{spending1YChange}%
               </TableCell>
             </TableRow>
           </TableBody>
