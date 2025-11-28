@@ -170,5 +170,22 @@ export const useGoals = () => {
     }
   };
 
-  return { goals, loading, error, addGoal };
+  const deleteGoal = async (goalId: string) => {
+    try {
+      const { error } = await supabase
+        .from('goals')
+        .delete()
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      // Update local state by filtering out the deleted goal
+      setGoals((prevGoals) => prevGoals.filter((goal) => goal.id !== goalId));
+    } catch (err) {
+      console.error('Error deleting goal:', err);
+      throw err;
+    }
+  };
+
+  return { goals, loading, error, addGoal, deleteGoal };
 };
