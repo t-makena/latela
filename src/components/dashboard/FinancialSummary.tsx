@@ -142,7 +142,7 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              <strong>Spending limit for today:</strong> Target spending for the month: {formatCurrency(monthlyExpenses)}
+              Target spending for the month: {formatCurrency(monthlyExpenses)}
             </p>
           )}
         </div>
