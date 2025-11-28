@@ -17,42 +17,46 @@ export const AccountCard = ({
   showPagination = false 
 }: AccountCardProps) => {
   return (
-    <Card className="rounded-3xl border border-border shadow-lg bg-muted/30">
-      <CardContent className="p-6">
-        {/* Bank Name with Logo */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="h-9 w-12 bg-foreground rounded-lg flex items-center justify-center">
-            <span className="text-background font-bold text-lg">
+    <Card className="rounded-3xl border border-border shadow-lg bg-card hover:shadow-xl transition-shadow">
+      <CardContent className="p-8">
+        {/* Bank Name, Logo and Account Number */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="h-12 w-12 bg-foreground rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-background font-bold text-xl">
               {account.name.charAt(0)}
             </span>
           </div>
-          <h2 className="text-base font-bold text-foreground">{account.name}</h2>
+          <div>
+            <h2 className="text-lg font-bold text-foreground leading-tight">
+              {account.name}
+            </h2>
+          </div>
         </div>
 
-        {/* Budget Balance */}
-        <div className="flex items-end justify-between mb-4">
+        {/* Balance Information and Card Logo */}
+        <div className="flex items-end justify-between">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Budget Balance</p>
-            <p className="text-4xl font-bold text-foreground">
+            <p className="text-sm text-muted-foreground mb-2">Budget Balance</p>
+            <p className="text-5xl font-bold text-foreground leading-none mb-2">
               R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-xs text-muted-foreground/60 mt-1">
-              Available Balance: R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+            <p className="text-sm text-muted-foreground">
+              Available Balance: R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
 
-          {/* Payment Provider Logo */}
-          <div className="h-12 w-16 bg-foreground rounded-lg flex items-center justify-center">
-            <div className="flex gap-1">
-              <div className="h-8 w-8 rounded-full bg-destructive opacity-80"></div>
-              <div className="h-8 w-8 rounded-full bg-secondary -ml-4"></div>
+          {/* Card Network Logo (Mastercard style) */}
+          <div className="h-14 w-20 bg-foreground rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="flex items-center">
+              <div className="h-9 w-9 rounded-full bg-[#eb001b]"></div>
+              <div className="h-9 w-9 rounded-full bg-[#f79e1b] -ml-4"></div>
             </div>
           </div>
         </div>
 
         {/* Pagination Dots */}
         {showPagination && accounts.length > 1 && (
-          <div className="flex justify-center gap-1.5 mt-4">
+          <div className="flex justify-center gap-1.5 mt-6">
             {accounts.map((_, index) => (
               <button
                 key={index}
