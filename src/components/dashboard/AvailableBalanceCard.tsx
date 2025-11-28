@@ -43,7 +43,7 @@ export const AvailableBalanceCard = () => {
         ) : (
           <>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Flexible balance calculation</span>
+              <span className="text-sm text-muted-foreground">Available balance</span>
               <span className="font-semibold">{formatCurrency(availableBalance)}</span>
             </div>
             <div className="flex justify-between items-center">
