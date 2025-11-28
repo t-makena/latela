@@ -185,15 +185,15 @@ const Budget = () => {
               </div>
               <div>
                 <p className="font-semibold text-foreground mb-1">Weekly:</p>
-                <p>Amount × 4.33 (avg weeks/month)</p>
+                <p>Amount × 4</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground mb-1">Bi-weekly:</p>
-                <p>Amount × 2.17 (avg periods/month)</p>
+                <p>Amount × 2</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground mb-1">Daily:</p>
-                <p>Amount × Days/Week × 4.33</p>
+                <p>Amount × 4</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground mb-1">Once-off:</p>
