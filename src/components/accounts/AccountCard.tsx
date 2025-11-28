@@ -18,21 +18,36 @@ export const AccountCard = ({
   showPagination = false 
 }: AccountCardProps) => {
   return (
-    <div className="max-w-md">
+    <div className="max-w-md mx-auto">
       <AspectRatio ratio={85.6 / 53.98}>
         <Card className="rounded-3xl border border-border shadow-lg bg-card hover:shadow-xl transition-shadow h-full">
           <CardContent className="p-6 h-full flex flex-col justify-between">
-            {/* Bank Name, Logo and Account Number */}
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-foreground rounded-xl flex items-center justify-center flex-shrink-0">
-                <span className="text-background font-bold text-lg">
-                  {account.name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-foreground leading-tight">
-                  {account.name}
-                </h2>
+            {/* EMV Chip and Bank Name/Logo */}
+            <div className="flex items-start justify-between gap-3">
+              {/* Left side: EMV Chip and Bank info */}
+              <div className="flex items-center gap-3">
+                {/* EMV Chip Icon */}
+                <div className="h-10 w-12 bg-gradient-to-br from-yellow-200 via-yellow-100 to-yellow-300 rounded-md flex-shrink-0 relative overflow-hidden border border-yellow-400/50">
+                  <svg viewBox="0 0 48 40" className="w-full h-full p-1">
+                    <rect x="4" y="4" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-yellow-800/30" />
+                    <rect x="18" y="4" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-yellow-800/30" />
+                    <rect x="32" y="4" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-yellow-800/30" />
+                    <rect x="4" y="18" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-yellow-800/30" />
+                    <rect x="18" y="18" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-yellow-800/30" />
+                    <rect x="32" y="18" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-yellow-800/30" />
+                  </svg>
+                </div>
+                
+                <div className="h-10 w-10 bg-foreground rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-background font-bold text-lg">
+                    {account.name.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-foreground leading-tight">
+                    {account.name}
+                  </h2>
+                </div>
               </div>
             </div>
 
