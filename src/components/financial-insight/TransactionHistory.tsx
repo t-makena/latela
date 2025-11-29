@@ -59,7 +59,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
   const [selectedAccount, setSelectedAccount] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedMerchant, setSelectedMerchant] = useState<string>("all");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("1m");
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
