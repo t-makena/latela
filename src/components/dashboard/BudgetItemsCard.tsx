@@ -5,6 +5,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { AddBudgetItemDialog } from '@/components/budget/AddBudgetItemDialog';
 import { useBudgetItems } from '@/hooks/useBudgetItems';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useSubcategories } from '@/hooks/useSubcategories';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -21,6 +22,23 @@ export const BudgetItemsCard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { budgetItems, loading, calculateMonthlyAmount, calculateTotalMonthly, addBudgetItem, deleteBudgetItem } = useBudgetItems();
   const { transactions, loading: transactionsLoading } = useTransactions();
+  const { subcategories, loading: categoriesLoading } = useSubcategories();
+
+  // Function to get display name (custom name if category has been replaced)
+  const getDisplayName = (itemName: string) => {
+    // Check if this item name matches a replaced system category
+    const replacedCategory = subcategories.find(
+      (sub) => sub.is_custom && sub.replaces_category_id && 
+      // Find the original system category name by checking against other non-custom categories
+      subcategories.some((orig) => !orig.is_custom && orig.id === sub.replaces_category_id && orig.name === itemName)
+    );
+    
+    if (replacedCategory) {
+      return replacedCategory.name;
+    }
+    
+    return itemName;
+  };
 
   const formatCurrency = (amount: number) => {
     return `R${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
@@ -93,7 +111,7 @@ export const BudgetItemsCard = () => {
                 <TableBody>
                   {budgetItems.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
                       <TableCell>
                         {item.frequency}
                         {item.frequency === 'Daily' && item.days_per_week && (

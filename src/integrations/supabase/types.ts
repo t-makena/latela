@@ -307,9 +307,14 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          is_categorized: boolean
+          merchant_id: string | null
+          raw_description: string | null
           reference: string | null
+          subcategory_id: string | null
           transaction_code: string | null
           transaction_date: string
+          updated_at: string | null
           user_id: string | null
           user_verified: boolean | null
         }
@@ -324,9 +329,14 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_categorized?: boolean
+          merchant_id?: string | null
+          raw_description?: string | null
           reference?: string | null
+          subcategory_id?: string | null
           transaction_code?: string | null
           transaction_date: string
+          updated_at?: string | null
           user_id?: string | null
           user_verified?: boolean | null
         }
@@ -341,9 +351,14 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_categorized?: boolean
+          merchant_id?: string | null
+          raw_description?: string | null
           reference?: string | null
+          subcategory_id?: string | null
           transaction_code?: string | null
           transaction_date?: string
+          updated_at?: string | null
           user_id?: string | null
           user_verified?: boolean | null
         }
@@ -358,6 +373,20 @@ export type Database = {
           {
             foreignKeyName: "transactions_category_id_fkey"
             columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_subcategory_id_fkey"
+            columns: ["subcategory_id"]
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
@@ -485,6 +514,67 @@ export type Database = {
           user_id: string | null
         }
         Relationships: []
+      }
+      v_transactions_with_details: {
+        Row: {
+          account_id: string | null
+          amount: number | null
+          auto_categorized: boolean | null
+          balance: number | null
+          categorization_confidence: number | null
+          category_id: string | null
+          cleared: boolean | null
+          created_at: string | null
+          description: string | null
+          display_subcategory_color: string | null
+          display_subcategory_name: string | null
+          id: string | null
+          is_categorized: boolean | null
+          merchant_id: string | null
+          merchant_name: string | null
+          parent_category_color: string | null
+          parent_category_name: string | null
+          raw_description: string | null
+          reference: string | null
+          subcategory_color: string | null
+          subcategory_id: string | null
+          subcategory_name: string | null
+          transaction_code: string | null
+          transaction_date: string | null
+          updated_at: string | null
+          user_id: string | null
+          user_verified: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       v_user_available_subcategories: {
         Row: {
