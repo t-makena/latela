@@ -4,7 +4,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Edit } from "lucide-react";
 import { format } from "date-fns";
+import { EditTransactionDialog } from "./EditTransactionDialog";
 
 interface Transaction {
   id: string;
@@ -44,6 +47,9 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
   const [selectedAccount, setSelectedAccount] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("1m");
+  
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   // Update category filter when initialCategoryFilterName changes
   useEffect(() => {
@@ -148,6 +154,15 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
     return account ? `Account ${account.account_number}` : "Unknown";
   };
 
+  const handleEditTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    fetchData();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between">
@@ -223,6 +238,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
               <TableHead>Category</TableHead>
               <TableHead>Account</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -238,7 +254,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
               ))
             ) : transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No transactions found for the selected filters
                 </TableCell>
               </TableRow>
@@ -268,12 +284,31 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
                   }`}>
                     {transaction.transaction_code === 'DR' ? '-' : '+'}R{(transaction.amount / 100).toFixed(2)}
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditTransaction(transaction)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </div>
+
+      {selectedTransaction && (
+        <EditTransactionDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          transaction={selectedTransaction}
+          onSave={handleSaveEdit}
+        />
+      )}
     </div>
   );
 };

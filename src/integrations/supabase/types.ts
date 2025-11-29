@@ -188,10 +188,9 @@ export type Database = {
           color: string | null
           created_at: string | null
           description: string | null
-          icon: string | null
           id: string
           name: string
-          parent_category_id: string | null
+          parent_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -199,10 +198,9 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           description?: string | null
-          icon?: string | null
           id?: string
           name: string
-          parent_category_id?: string | null
+          parent_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -210,16 +208,15 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           description?: string | null
-          icon?: string | null
           id?: string
           name?: string
-          parent_category_id?: string | null
+          parent_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "categories_parent_category_id_fkey"
-            columns: ["parent_category_id"]
+            foreignKeyName: "fk_parent_category"
+            columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
@@ -367,6 +364,118 @@ export type Database = {
           },
         ]
       }
+      user_custom_categories: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          parent_category_id: string
+          replaces_category_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          parent_category_id: string
+          replaces_category_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          parent_category_id?: string
+          replaces_category_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_custom_categories_parent_fkey"
+            columns: ["parent_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_custom_categories_replaces_fkey"
+            columns: ["replaces_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_merchant_mappings: {
+        Row: {
+          category_id: string
+          created_at: string
+          custom_subcategory_id: string | null
+          id: string
+          is_active: boolean
+          merchant_name: string
+          notes: string | null
+          subcategory_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          custom_subcategory_id?: string | null
+          id?: string
+          is_active?: boolean
+          merchant_name: string
+          notes?: string | null
+          subcategory_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          custom_subcategory_id?: string | null
+          id?: string
+          is_active?: boolean
+          merchant_name?: string
+          notes?: string | null
+          subcategory_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_merchant_mappings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_merchant_mappings_custom_subcategory_fkey"
+            columns: ["custom_subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "user_custom_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_merchant_mappings_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       upcoming_events_summary: {
@@ -376,6 +485,59 @@ export type Database = {
           user_id: string | null
         }
         Relationships: []
+      }
+      v_user_available_subcategories: {
+        Row: {
+          color: string | null
+          custom_category_id: string | null
+          id: string | null
+          name: string | null
+          parent_category_id: string | null
+          source: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_user_merchant_mappings: {
+        Row: {
+          category_color: string | null
+          category_id: string | null
+          category_name: string | null
+          created_at: string | null
+          custom_subcategory_id: string | null
+          id: string | null
+          is_active: boolean | null
+          merchant_name: string | null
+          notes: string | null
+          subcategory_color: string | null
+          subcategory_id: string | null
+          subcategory_name: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_merchant_mappings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_merchant_mappings_custom_subcategory_fkey"
+            columns: ["custom_subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "user_custom_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_merchant_mappings_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
