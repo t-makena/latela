@@ -56,14 +56,11 @@ export const useBudgetItems = () => {
       case 'Monthly':
         return amount;
       case 'Weekly':
-        return amount * 4.33; // Average weeks per month
+        return amount * 4;
       case 'Bi-weekly':
-        return amount * 2.17; // Average bi-weekly periods per month
+        return amount * 2;
       case 'Daily':
-        if (item.days_per_week) {
-          return (amount * item.days_per_week * 4.33);
-        }
-        return amount * 30; // Default to 30 days if days_per_week not set
+        return amount * 4;
       case 'Once-off':
         return amount;
       default:
