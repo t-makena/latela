@@ -26,11 +26,9 @@ export const BudgetItemsCard = () => {
 
   // Function to get display name (custom name if category has been replaced)
   const getDisplayName = (itemName: string) => {
-    // Check if this item name matches a replaced system category
+    // Find a custom category that replaced a system category with this name
     const replacedCategory = subcategories.find(
-      (sub) => sub.is_custom && sub.replaces_category_id && 
-      // Find the original system category name by checking against other non-custom categories
-      subcategories.some((orig) => !orig.is_custom && orig.id === sub.replaces_category_id && orig.name === itemName)
+      (sub) => sub.is_custom && sub.original_name === itemName
     );
     
     if (replacedCategory) {
