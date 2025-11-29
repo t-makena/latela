@@ -9,6 +9,7 @@ export interface Subcategory {
   is_custom: boolean;
   replaces_category_id?: string;
   custom_category_id?: string;
+  original_name?: string;
 }
 
 export const useSubcategories = (parentCategoryId?: string) => {
@@ -81,7 +82,8 @@ export const useSubcategories = (parentCategoryId?: string) => {
             parent_category_id: system.parent_id,
             is_custom: true,
             replaces_category_id: system.id,
-            custom_category_id: replacement.id
+            custom_category_id: replacement.id,
+            original_name: system.name // Store original system name for lookup
           });
         } else {
           // Use system category as-is
