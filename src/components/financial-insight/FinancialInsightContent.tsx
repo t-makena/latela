@@ -607,6 +607,19 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 </BarChart>
               )}
             </ResponsiveContainer>
+            {!selectedCategoryForGraph && (
+              <div className="flex justify-center mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setLegendDialogOpen(true)}
+                  className="gap-2"
+                >
+                  <Info className="h-4 w-4" />
+                  See Legend
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -746,9 +759,44 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 </BarChart>
               )}
             </ResponsiveContainer>
+            {!selectedCategoryForGraph && (
+              <div className="flex justify-center mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setLegendDialogOpen(true)}
+                  className="gap-2"
+                >
+                  <Info className="h-4 w-4" />
+                  See Legend
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
+
+      {/* Category Legend Dialog */}
+      <Dialog open={legendDialogOpen} onOpenChange={setLegendDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Category Legend</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3 py-4">
+            {Object.entries(categoryColors).map(([key, color]) => (
+              <div key={key} className="flex items-center gap-3">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: color }}
+                />
+                <span style={{ color: color }} className="text-sm font-medium">
+                  {categoryLabels[key]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Transaction History */}
       <div id="transaction-history">
