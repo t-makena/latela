@@ -12,6 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTheme } from "next-themes";
 import { AddAccountDialog } from "@/components/accounts/AddAccountDialog";
+import { ManageCustomCategoriesSection } from "@/components/settings/ManageCustomCategoriesSection";
 
 const Settings = () => {
   const { accounts } = useAccounts();
@@ -459,6 +460,9 @@ const Settings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Custom Categories Management */}
+      <ManageCustomCategoriesSection />
 
       <AddAccountDialog
         open={addAccountDialogOpen}
