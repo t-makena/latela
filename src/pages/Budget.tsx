@@ -79,7 +79,7 @@ const Budget = () => {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xl">Budget Items</CardTitle>
+              <CardTitle className="text-xl">Budget Plan</CardTitle>
               <Button
                 size="icon"
                 onClick={() => setDialogOpen(true)}
@@ -240,7 +240,7 @@ const Budget = () => {
               </div>
               <div>
                 <p className="font-semibold text-foreground mb-1">Once-off:</p>
-                <p>Full amount added to current month</p>
+                <p>Amount × 1</p>
               </div>
             </CardContent>
           </Card>
