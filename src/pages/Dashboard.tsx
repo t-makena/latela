@@ -25,11 +25,11 @@ const Dashboard = () => {
             <div className="lg:col-span-2">
               <BudgetItemsCard />
             </div>
-            <Card>
+            <Card className="h-full">
               <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
                 <CardTitle className="text-lg">Budget Insight</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="h-[calc(100%-4rem)]">
                 <BudgetBreakdown
                   availableBalance={availableBalance}
                   budgetBalance={budgetBalance}
