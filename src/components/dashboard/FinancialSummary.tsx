@@ -1,10 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
-import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
+import { formatCurrency } from "@/lib/realData";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useBudgetItems } from "@/hooks/useBudgetItems";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import { useAccounts } from "@/hooks/useAccounts";
 
 interface FinancialSummaryProps {
   showExplanations?: boolean;
@@ -12,6 +13,7 @@ interface FinancialSummaryProps {
 
 export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryProps) => {
   const { transactions, loading, error } = useTransactions();
+  const { accounts, loading: accountsLoading } = useAccounts();
   const isMobile = useIsMobile();
   const { calculateTotalMonthly, loading: budgetLoading } = useBudgetItems();
   const currentDate = new Date();
@@ -24,7 +26,7 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
   console.log('FinancialSummary - loading:', loading);
   console.log('FinancialSummary - error:', error);
 
-  if (loading || budgetLoading || eventsLoading) {
+  if (loading || budgetLoading || eventsLoading || accountsLoading) {
     const content = (
       <>
         <div className={isMobile ? "pb-1" : "pb-2 pt-4"}>
@@ -96,16 +98,8 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
     );
   }
 
-  // Add debug log before calculations
-  console.log('About to calculate metrics with transactions:', transactions);
-  
-  const { monthlyIncome, monthlyExpenses, netBalance, accountBalances } = calculateFinancialMetrics(transactions);
-
-  // Debug log after calculations
-  console.log('Calculated metrics:', { monthlyIncome, monthlyExpenses, netBalance });
-
-  // Calculate available balance from account balances
-  const availableBalance = accountBalances.total;
+  // Calculate available balance from sum of all account balances
+  const availableBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
   // Calculate budget balance (budget expenses + upcoming events)
   const totalBudgetExpenses = calculateTotalMonthly();
