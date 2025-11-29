@@ -8,6 +8,7 @@ import { useGoals } from '@/hooks/useGoals';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useSubcategories } from '@/hooks/useSubcategories';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -31,6 +32,23 @@ const Budget = () => {
   });
   const { accounts, loading: accountsLoading } = useAccounts();
   const { transactions, loading: transactionsLoading } = useTransactions();
+  const { subcategories, loading: categoriesLoading } = useSubcategories();
+
+  // Function to get display name (custom name if category has been replaced)
+  const getDisplayName = (itemName: string) => {
+    // Check if this item name matches a replaced system category
+    const replacedCategory = subcategories.find(
+      (sub) => sub.is_custom && sub.replaces_category_id && 
+      // Find the original system category name by checking against other non-custom categories
+      subcategories.some((orig) => !orig.is_custom && orig.id === sub.replaces_category_id && orig.name === itemName)
+    );
+    
+    if (replacedCategory) {
+      return replacedCategory.name;
+    }
+    
+    return itemName;
+  };
 
   const totalSavingGoals = goals.reduce((sum, goal) => sum + goal.amountSaved, 0);
   const totalBudgetExpenses = calculateTotalMonthly();
@@ -116,7 +134,7 @@ const Budget = () => {
                     <TableBody>
                       {budgetItems.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
                           <TableCell>
                             {item.frequency}
                             {item.frequency === 'Daily' && item.days_per_week && (
