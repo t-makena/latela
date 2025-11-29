@@ -52,7 +52,7 @@ const Budget = () => {
   const totalBudgetExpenses = calculateTotalMonthly();
   const totalUpcomingEvents = upcomingEvents.reduce((sum, event) => sum + event.budgetedAmount, 0);
 
-  const availableBalance = accounts.reduce((sum, account) => sum + (account.balance / 100), 0);
+  const availableBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
   const budgetBalanceValue = totalBudgetExpenses + totalUpcomingEvents;
   const flexibleBalance = availableBalance - totalSavingGoals - budgetBalanceValue;
 
