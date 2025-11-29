@@ -132,7 +132,13 @@ const Budget = () => {
                             {formatCurrency(calculateMonthlyAmount(item))}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(calculateAmountSpent[item.id] || 0)}
+                            <span className={
+                              (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
+                                ? 'text-destructive font-semibold'
+                                : 'text-green-600 dark:text-green-500'
+                            }>
+                              {formatCurrency(calculateAmountSpent[item.id] || 0)}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <Button
