@@ -56,7 +56,7 @@ export const BudgetItemsCard = () => {
     <>
       <Card>
         <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
-          <CardTitle className="text-lg">Budget Items</CardTitle>
+          <CardTitle className="text-lg">Budget Plan</CardTitle>
           <Button
             size="icon"
             onClick={() => setDialogOpen(true)}
@@ -116,9 +116,9 @@ export const BudgetItemsCard = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => deleteBudgetItem(item.id)}
-                          className="h-8 w-8"
+                          className="h-8 w-8 hover:bg-destructive/10"
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
                         </Button>
                       </TableCell>
                     </TableRow>
