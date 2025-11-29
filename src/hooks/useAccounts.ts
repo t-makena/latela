@@ -31,7 +31,7 @@ export const useAccounts = () => {
             id: account.id,
             name: formattedName,
             type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
-            balance: account.balance || 0,
+            balance: (account.available_balance || 0) / 100,
             currency: 'ZAR',
             color: getAccountColor(index),
           };
