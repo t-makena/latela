@@ -21,6 +21,12 @@ interface Transaction {
   cleared: boolean;
   created_at: string;
   reference: string;
+  merchant_id: string | null;
+  merchant_name: string | null;
+  parent_category_name: string | null;
+  parent_category_color: string | null;
+  display_subcategory_name: string | null;
+  display_subcategory_color: string | null;
 }
 
 interface Account {
@@ -97,9 +103,9 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
         .order('merchant_name');
       setMerchants((merchantsData as any) || []);
 
-      // Build transaction query - cast to any to avoid deep type instantiation
+      // Build transaction query using the view with all related data
       let query: any = supabase
-        .from('transactions')
+        .from('v_transactions_with_details')
         .select('*')
         .order('transaction_date', { ascending: false })
         .limit(20);
@@ -154,16 +160,12 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
     }
   };
 
-  const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return "Uncategorized";
-    const category = categories.find(c => c.id === categoryId);
-    return category?.name || "Uncategorized";
+  const getCategoryName = (transaction: Transaction) => {
+    return transaction.display_subcategory_name || transaction.parent_category_name || "Uncategorized";
   };
 
-  const getCategoryColor = (categoryId: string | null) => {
-    if (!categoryId) return "#6B7280";
-    const category = categories.find(c => c.id === categoryId);
-    return category?.color || "#6B7280";
+  const getCategoryColor = (transaction: Transaction) => {
+    return transaction.display_subcategory_color || transaction.parent_category_color || "#6B7280";
   };
 
   const getAccountName = (accountId: string) => {
@@ -269,6 +271,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
+              <TableHead>Merchant</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Account</TableHead>
               <TableHead className="text-right">Amount</TableHead>
@@ -281,6 +284,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
                 <TableRow key={i}>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
@@ -301,22 +305,25 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
                   <TableCell className="max-w-[200px] truncate">
                     {transaction.description || "No description"}
                   </TableCell>
+                  <TableCell className="max-w-[150px] truncate">
+                    {transaction.merchant_name || "-"}
+                  </TableCell>
                   <TableCell>
                     <Badge 
                       style={{ 
-                        backgroundColor: `${getCategoryColor(transaction.category_id)}20`,
-                        color: getCategoryColor(transaction.category_id),
-                        border: `1px solid ${getCategoryColor(transaction.category_id)}`
+                        backgroundColor: `${getCategoryColor(transaction)}20`,
+                        color: getCategoryColor(transaction),
+                        border: `1px solid ${getCategoryColor(transaction)}`
                       }}
                     >
-                      {getCategoryName(transaction.category_id)}
+                      {getCategoryName(transaction)}
                     </Badge>
                   </TableCell>
                   <TableCell>{getAccountName(transaction.account_id)}</TableCell>
                   <TableCell className={`text-right font-semibold ${
                     transaction.transaction_code === 'DR' ? 'text-red-600' : 'text-green-600'
                   }`}>
-                    {transaction.transaction_code === 'DR' ? '-' : '+'}R{(transaction.amount / 100).toFixed(2)}
+                    {transaction.transaction_code === 'DR' ? '-' : '+'}R{Math.abs(transaction.amount).toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <Button
