@@ -86,6 +86,7 @@ export type Database = {
       budget_items: {
         Row: {
           amount: number
+          amount_spent: number | null
           created_at: string
           days_per_week: number | null
           frequency: string
@@ -96,6 +97,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          amount_spent?: number | null
           created_at?: string
           days_per_week?: number | null
           frequency: string
@@ -106,6 +108,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_spent?: number | null
           created_at?: string
           days_per_week?: number | null
           frequency?: string
