@@ -34,6 +34,11 @@ interface Category {
   color: string;
 }
 
+interface Merchant {
+  id: string;
+  merchant_name: string;
+}
+
 interface TransactionHistoryProps {
   initialCategoryFilterName?: string;
 }
@@ -42,10 +47,12 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [selectedAccount, setSelectedAccount] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedMerchant, setSelectedMerchant] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("1m");
   
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -63,7 +70,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
 
   useEffect(() => {
     fetchData();
-  }, [selectedAccount, selectedCategory, selectedPeriod]);
+  }, [selectedAccount, selectedCategory, selectedMerchant, selectedPeriod]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -83,6 +90,13 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
         setCategories(categoriesData);
       }
 
+      // Fetch merchants
+      const { data: merchantsData } = await supabase
+        .from('merchants')
+        .select('id, merchant_name')
+        .order('merchant_name');
+      setMerchants((merchantsData as any) || []);
+
       // Build transaction query - cast to any to avoid deep type instantiation
       let query: any = supabase
         .from('transactions')
@@ -96,6 +110,9 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
       }
       if (selectedCategory !== "all") {
         query = query.eq('category_id', selectedCategory);
+      }
+      if (selectedMerchant !== "all") {
+        query = query.eq('merchant_id', selectedMerchant);
       }
 
       // Apply period filter
@@ -175,7 +192,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Account</label>
           <Select value={selectedAccount} onValueChange={setSelectedAccount}>
@@ -204,6 +221,23 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
               {categories.map(category => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Merchant</label>
+          <Select value={selectedMerchant} onValueChange={setSelectedMerchant}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select merchant" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Merchants</SelectItem>
+              {merchants.map(merchant => (
+                <SelectItem key={merchant.id} value={merchant.id}>
+                  {merchant.merchant_name}
                 </SelectItem>
               ))}
             </SelectContent>
