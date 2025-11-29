@@ -19,7 +19,7 @@ export const AvailableBalanceCard = () => {
   const totalBudgetExpenses = calculateTotalMonthly();
   const totalUpcomingEvents = upcomingEvents.reduce((sum, event) => sum + event.budgetedAmount, 0);
 
-  const availableBalance = accounts.reduce((sum, account) => sum + (account.balance / 100), 0);
+  const availableBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
   const budgetBalance = availableBalance - totalSavingGoals - totalBudgetExpenses - totalUpcomingEvents;
 
   const formatCurrency = (amount: number) => {
