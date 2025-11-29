@@ -37,7 +37,8 @@ const Budget = () => {
   const totalUpcomingEvents = upcomingEvents.reduce((sum, event) => sum + event.budgetedAmount, 0);
 
   const availableBalance = accounts.reduce((sum, account) => sum + (account.balance / 100), 0);
-  const budgetBalance = availableBalance - totalSavingGoals - totalBudgetExpenses - totalUpcomingEvents;
+  const budgetBalanceValue = totalBudgetExpenses + totalUpcomingEvents;
+  const flexibleBalance = availableBalance - totalSavingGoals - budgetBalanceValue;
 
   const formatCurrency = (amount: number) => {
     return `R${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
@@ -165,47 +166,50 @@ const Budget = () => {
 
         {/* Right Sidebar Cards */}
         <div className="space-y-6">
-          {/* Available Balance Card */}
+          {/* Balance Calculations Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Flexible balance calculation</CardTitle>
+              <CardTitle className="text-xl">Balance calculations</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {isLoading ? (
                 <>
-                  {[1, 2, 3, 4].map((i) => (
+                  {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                     <Skeleton key={i} className="h-8 w-full" />
                   ))}
                 </>
               ) : (
                 <>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Available balance</span>
-                  <span className="font-semibold">{formatCurrency(availableBalance)}</span>
-                </div>
+                  {/* Budget Balance Calculation Section */}
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Saving Goals</span>
-                    <span className="font-semibold text-destructive">
-                      -{formatCurrency(totalSavingGoals)}
-                    </span>
+                    <span className="text-sm">Planned expenses</span>
+                    <span className="font-normal">{formatCurrency(totalBudgetExpenses)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Budget Expenses</span>
-                    <span className="font-semibold text-destructive">
-                      -{formatCurrency(totalBudgetExpenses)}
-                    </span>
+                    <span className="text-sm">Upcoming events</span>
+                    <span className="font-normal">{formatCurrency(totalUpcomingEvents)}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Upcoming Events</span>
-                    <span className="font-semibold text-destructive">
-                      -{formatCurrency(totalUpcomingEvents)}
-                    </span>
-                  </div>
-                  <div className="pt-3 border-t flex justify-between items-center">
+                  <div className="flex justify-between items-center mb-4">
                     <span className="font-bold">Budget Balance</span>
-                    <span className={`font-bold text-lg ${budgetBalance >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                      {formatCurrency(budgetBalance)}
-                    </span>
+                    <span className="font-bold">{formatCurrency(budgetBalanceValue)}</span>
+                  </div>
+
+                  {/* Flexible Balance Calculation Section */}
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <span className="text-sm">Available Balance</span>
+                    <span className="font-normal">{formatCurrency(availableBalance)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Savings Goals</span>
+                    <span className="font-normal">-{formatCurrency(totalSavingGoals)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Budget Balance</span>
+                    <span className="font-normal">-{formatCurrency(budgetBalanceValue)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold">Flexible Balance</span>
+                    <span className="font-bold">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
                   </div>
                 </>
               )}
