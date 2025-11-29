@@ -16,26 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useSubcategories } from '@/hooks/useSubcategories';
 
 interface AddBudgetItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (name: string, frequency: string, amount: number, daysPerWeek?: number) => void;
 }
-
-const CATEGORIES = [
-  'Bills & Subscriptions',
-  'Food & Groceries',
-  'Housing & Utilities',
-  'Transportation & Fuel',
-  'Healthcare & Medical',
-  'Personal & Lifestyle',
-  'Shopping & Retail',
-  'Dining & Restaurants',
-  'Entertainment & Recreation',
-  'Savings & Investments',
-  'Miscellaneous',
-];
 
 const FREQUENCIES = ['Monthly', 'Weekly', 'Bi-weekly', 'Daily', 'Once-off'];
 
@@ -49,6 +36,9 @@ export const AddBudgetItemDialog = ({
   const [amount, setAmount] = useState('');
   const [daysPerWeek, setDaysPerWeek] = useState('7');
   const [useCustomName, setUseCustomName] = useState(false);
+  
+  // Fetch all subcategories with custom replacements applied
+  const { subcategories, loading: categoriesLoading } = useSubcategories();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,11 +106,15 @@ export const AddBudgetItemDialog = ({
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
+                    {categoriesLoading ? (
+                      <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                    ) : (
+                      subcategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               )}
