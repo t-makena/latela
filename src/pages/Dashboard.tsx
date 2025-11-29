@@ -21,15 +21,15 @@ const Dashboard = () => {
         <FinancialSummary showExplanations={!isMobile} />
         
         {!isMobile && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-2 items-stretch">
             <div className="lg:col-span-2">
               <BudgetItemsCard />
             </div>
-            <Card className="h-full">
+            <Card className="flex flex-col">
               <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
                 <CardTitle className="text-lg">Budget Insight</CardTitle>
               </CardHeader>
-              <CardContent className="h-[calc(100%-4rem)]">
+              <CardContent className="flex-1 flex items-center pb-6">
                 <BudgetBreakdown
                   availableBalance={availableBalance}
                   budgetBalance={budgetBalance}

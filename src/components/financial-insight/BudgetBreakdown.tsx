@@ -241,36 +241,34 @@ export const BudgetBreakdown = ({
   if (showOnlyTable) {
     if (showOnlyOneMonth) {
       return (
-        <div className="h-full flex items-center">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px] h-12">Metric</TableHead>
-                <TableHead className="text-right h-12">1 Mth Chng</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium h-16">Available Balance</TableCell>
-                <TableCell className={`text-right font-semibold h-16 ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium h-16">Budget Balance</TableCell>
-                <TableCell className={`text-right font-semibold h-16 ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium h-16">Spending</TableCell>
-                <TableCell className={`text-right font-semibold h-16 ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">Metric</TableHead>
+              <TableHead className="text-right">1 Mth Chng</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium py-6">Available Balance</TableCell>
+              <TableCell className={`text-right font-semibold py-6 ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium py-6">Budget Balance</TableCell>
+              <TableCell className={`text-right font-semibold py-6 ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium py-6">Spending</TableCell>
+              <TableCell className={`text-right font-semibold py-6 ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       );
     }
 
