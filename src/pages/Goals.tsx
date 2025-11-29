@@ -108,20 +108,20 @@ const Goals = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-medium w-[24%] px-2">Goal</TableHead>
-                  <TableHead className="font-medium w-[12%] px-2">
+                  <TableHead className="font-medium w-[20%] px-2">Goal</TableHead>
+                  <TableHead className="font-medium w-[16%] px-2">
                     Priority<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[10%] px-2 pr-1">
+                  <TableHead className="font-medium w-[16%] px-2">
                     Split<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-medium text-right w-[20%] pl-1 pr-2">
+                  <TableHead className="font-medium text-right w-[20%] px-2">
                     Amount Saved (R)<sup>3</sup>
                   </TableHead>
                   <TableHead className="font-medium w-[18%] px-2">
                     Timeline<sup>4</sup>
                   </TableHead>
-                  <TableHead className="w-[16%]"></TableHead>
+                  <TableHead className="w-[10%]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -130,8 +130,8 @@ const Goals = () => {
                     <TableRow key={row.id}>
                       <TableCell className="font-medium px-2 py-4">{row.name}</TableCell>
                       <TableCell className="px-2 py-4">{row.priority}</TableCell>
-                      <TableCell className="px-2 py-4 pr-1">{row.split}</TableCell>
-                      <TableCell className="text-right font-medium pl-1 pr-2 py-4">{formatCurrency(row.amountSaved)}</TableCell>
+                      <TableCell className="px-2 py-4">{row.split}</TableCell>
+                      <TableCell className="text-right font-medium px-2 py-4">{formatCurrency(row.amountSaved)}</TableCell>
                       <TableCell className="px-2 py-4">{row.timeline}</TableCell>
                       <TableCell className="px-2 py-4">
                         <Button
@@ -194,20 +194,20 @@ const Goals = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-medium w-[24%] px-6">Goal</TableHead>
-                  <TableHead className="font-medium w-[12%] px-6">
+                  <TableHead className="font-medium w-[20%] px-6">Goal</TableHead>
+                  <TableHead className="font-medium w-[16%] px-6">
                     Priority<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[10%] px-6 pr-1">
+                  <TableHead className="font-medium w-[16%] px-6">
                     Split<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-medium text-right w-[20%] pl-1 pr-6">
+                  <TableHead className="font-medium text-right w-[20%] px-6">
                     Amount Saved (R)<sup>3</sup>
                   </TableHead>
                   <TableHead className="font-medium w-[18%] px-6">
                     Timeline<sup>4</sup>
                   </TableHead>
-                  <TableHead className="w-[16%]"></TableHead>
+                  <TableHead className="w-[10%]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -216,8 +216,8 @@ const Goals = () => {
                     <TableRow key={row.id}>
                       <TableCell className="font-medium px-6 py-4">{row.name}</TableCell>
                       <TableCell className="px-6 py-4">{row.priority}</TableCell>
-                      <TableCell className="px-6 py-4 pr-1">{row.split}</TableCell>
-                      <TableCell className="text-right font-medium pl-1 pr-6 py-4">{formatCurrency(row.amountSaved)}</TableCell>
+                      <TableCell className="px-6 py-4">{row.split}</TableCell>
+                      <TableCell className="text-right font-medium px-6 py-4">{formatCurrency(row.amountSaved)}</TableCell>
                       <TableCell className="px-6 py-4">{row.timeline}</TableCell>
                       <TableCell className="px-6 py-4">
                         <Button
