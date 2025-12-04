@@ -1,19 +1,24 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Transaction {
+export interface Transaction {
   id: string;
-  account_id: string;
+  account_id: string | null;
   amount: number;
-  description: string;
+  description: string | null;
   transaction_date: string;
   type: string;
-  status?: string;
-  category_id?: string;
-  user_id?: string;
-  created_at: string;
-  updated_at?: string;
+  transaction_code: string | null;
+  category_id: string | null;
+  subcategory_id: string | null;
+  user_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  // Category details from view
+  parent_category_name: string | null;
+  subcategory_name: string | null;
+  display_subcategory_name: string | null;
+  merchant_name: string | null;
 }
 
 export const useTransactions = () => {
@@ -25,10 +30,11 @@ export const useTransactions = () => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
+        // Use the detailed view to get category names
         const { data, error } = await supabase
-          .from('transactions')
+          .from('v_transactions_with_details')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('transaction_date', { ascending: false });
 
         if (error) {
           throw error;
