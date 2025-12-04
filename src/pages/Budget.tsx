@@ -60,20 +60,35 @@ const Budget = () => {
     return `R${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
   };
 
-  // Calculate amount spent for each budget item by matching transaction descriptions
+  // Calculate amount spent for each budget item by matching category or description
   const calculateAmountSpent = useMemo(() => {
     if (transactionsLoading || !transactions) return {};
 
     const spentByItem: Record<string, number> = {};
 
     budgetItems.forEach((item) => {
-      const matchingTransactions = transactions.filter((t) =>
-        t.description?.toLowerCase().includes(item.name.toLowerCase())
-      );
+      const itemNameLower = item.name.toLowerCase();
+      
+      const matchingTransactions = transactions.filter((t) => {
+        // Match by parent category name
+        if (t.parent_category_name?.toLowerCase() === itemNameLower) return true;
+        // Match by subcategory name
+        if (t.subcategory_name?.toLowerCase() === itemNameLower) return true;
+        // Match by display subcategory name (custom categories)
+        if (t.display_subcategory_name?.toLowerCase() === itemNameLower) return true;
+        // Match by merchant name
+        if (t.merchant_name?.toLowerCase().includes(itemNameLower)) return true;
+        // Fallback: match by description
+        if (t.description?.toLowerCase().includes(itemNameLower)) return true;
+        return false;
+      });
       
       const totalSpent = matchingTransactions.reduce((sum, t) => {
-        // Convert cents to rands and only count negative amounts (expenses)
-        return sum + (t.amount < 0 ? Math.abs(t.amount) / 100 : 0);
+        // Only count expenses (negative amounts or DR transaction code)
+        if (t.amount < 0 || t.transaction_code === 'DR') {
+          return sum + Math.abs(t.amount);
+        }
+        return sum;
       }, 0);
       
       spentByItem[item.id] = totalSpent;
