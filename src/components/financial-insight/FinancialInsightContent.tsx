@@ -286,6 +286,28 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const getCategoryLineData = () => {
     if (!selectedCategoryForGraph) return [];
 
+    const dateRange = customCategoryRange || getDateRangeForFilter(categoryFilter);
+    
+    // Filter transactions by date range, expense type, and selected category
+    const filteredTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.transaction_date);
+      if (t.amount >= 0) return false; // Only expenses
+      if (transactionDate < dateRange.from || transactionDate > dateRange.to) return false;
+      
+      // Match the category short code
+      const dbCategory = t.display_subcategory_name || t.subcategory_name || t.parent_category_name;
+      let shortCode = 'Misc';
+      if (dbCategory) {
+        shortCode = categoryToShortCode[dbCategory] || 'Misc';
+      } else {
+        const fullCategory = categorizeTransaction(t.description || '');
+        shortCode = categoryToShortCode[fullCategory] || 'Misc';
+      }
+      
+      return shortCode === selectedCategoryForGraph;
+    });
+
+    // Generate labels based on filter
     const labels = categoryFilter === '1W' ? 
       ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
       categoryFilter === '1M' ? 
@@ -294,9 +316,37 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
           ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-    return labels.map((label) => ({
+    // Initialize amounts for each period
+    const periodAmounts: { [key: string]: number } = {};
+    labels.forEach(label => { periodAmounts[label] = 0; });
+
+    // Aggregate transaction amounts by period
+    filteredTransactions.forEach(t => {
+      const date = new Date(t.transaction_date);
+      let periodKey: string;
+      
+      if (categoryFilter === '1W') {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        periodKey = days[date.getDay()];
+      } else if (categoryFilter === '1M') {
+        const weekNum = Math.min(Math.ceil(date.getDate() / 7), 4);
+        periodKey = `Week ${weekNum}`;
+      } else if (categoryFilter === '1Y') {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        periodKey = months[date.getMonth()];
+      } else {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        periodKey = days[date.getDay()];
+      }
+      
+      if (periodAmounts[periodKey] !== undefined) {
+        periodAmounts[periodKey] += Math.abs(t.amount);
+      }
+    });
+
+    return labels.map(label => ({
       period: label,
-      amount: 0
+      amount: periodAmounts[label]
     }));
   };
 
