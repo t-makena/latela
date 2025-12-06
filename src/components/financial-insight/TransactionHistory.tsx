@@ -56,6 +56,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
   const [categories, setCategories] = useState<Category[]>([]);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [selectedAccount, setSelectedAccount] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -80,7 +81,14 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
   }, [selectedAccount, selectedCategory, selectedMerchant, selectedPeriod]);
 
   const fetchData = async () => {
-    setLoading(true);
+    // Only show skeleton on initial load, use subtle refresh for filter changes
+    const isInitialLoad = transactions.length === 0;
+    if (isInitialLoad) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+    
     try {
       // Fetch accounts
       const { data: accountsData } = await supabase
@@ -96,13 +104,6 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
       if (!catError && categoriesData) {
         setCategories(categoriesData);
       }
-
-      // Fetch merchants
-      const { data: merchantsData } = await supabase
-        .from('merchants')
-        .select('id, merchant_name')
-        .order('merchant_name');
-      setMerchants((merchantsData as any) || []);
 
       // Build transaction query using the view with all related data
       let query: any = supabase
@@ -153,11 +154,24 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
       const { data: transactionsData } = await query;
       if (transactionsData) {
         setTransactions(transactionsData as any);
+        
+        // Extract unique merchants from user's transactions for the dropdown
+        const uniqueMerchants = (transactionsData as any[])
+          .filter(t => t.merchant_id && t.merchant_name)
+          .reduce((acc: Merchant[], t: any) => {
+            if (!acc.find(m => m.id === t.merchant_id)) {
+              acc.push({ id: t.merchant_id, merchant_name: t.merchant_name });
+            }
+            return acc;
+          }, [])
+          .sort((a: Merchant, b: Merchant) => a.merchant_name.localeCompare(b.merchant_name));
+        setMerchants(uniqueMerchants);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -187,7 +201,12 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
     <div className="space-y-4">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Transaction History</h2>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            Transaction History
+            {isRefreshing && (
+              <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            )}
+          </h2>
           <p className="text-xs text-muted-foreground">
             {loading ? "Loading..." : `Showing ${transactions.length} transactions`}
           </p>
