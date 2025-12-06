@@ -17,7 +17,7 @@ export interface DateRange {
   to: Date;
 }
 
-export type DateFilterOption = "1W" | "1M" | "1Y" | "custom";
+export type DateFilterOption = "1W" | "1M" | "3M" | "6M" | "1Y" | "custom";
 
 /**
  * Get the date range for 1W filter (past 7 days including today)
@@ -35,6 +35,24 @@ export const get1MDateRange = (): DateRange => {
   const to = new Date();
   const from = subWeeks(to, 3); // 3 weeks ago + current week = 4 weeks
   return { from: startOfWeek(from, { weekStartsOn: 1 }), to };
+};
+
+/**
+ * Get the date range for 3M filter (past 3 months including current month)
+ */
+export const get3MDateRange = (): DateRange => {
+  const to = new Date();
+  const from = subMonths(to, 2); // 2 months ago + current month = 3 months
+  return { from: startOfMonth(from), to };
+};
+
+/**
+ * Get the date range for 6M filter (past 6 months including current month)
+ */
+export const get6MDateRange = (): DateRange => {
+  const to = new Date();
+  const from = subMonths(to, 5); // 5 months ago + current month = 6 months
+  return { from: startOfMonth(from), to };
 };
 
 /**
@@ -71,6 +89,22 @@ export const get1MLabels = (dateRange: DateRange): string[] => {
 };
 
 /**
+ * Get x-axis labels for 3M filter (month names: Oct '25, Nov '25, Dec '25)
+ */
+export const get3MLabels = (dateRange: DateRange): string[] => {
+  const months = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
+  return months.map(month => format(month, "MMM ''yy"));
+};
+
+/**
+ * Get x-axis labels for 6M filter (month names: Jul '25, Aug '25, etc.)
+ */
+export const get6MLabels = (dateRange: DateRange): string[] => {
+  const months = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
+  return months.map(month => format(month, "MMM ''yy"));
+};
+
+/**
  * Get x-axis labels for 1Y filter (month names: Nov '24, Dec '24, etc.)
  */
 export const get1YLabels = (dateRange: DateRange): string[] => {
@@ -90,6 +124,10 @@ export const getDateRangeForFilter = (
       return get1WDateRange();
     case "1M":
       return get1MDateRange();
+    case "3M":
+      return get3MDateRange();
+    case "6M":
+      return get6MDateRange();
     case "1Y":
       return get1YDateRange();
     case "custom":
@@ -111,6 +149,10 @@ export const getLabelsForFilter = (
       return get1WLabels(dateRange);
     case "1M":
       return get1MLabels(dateRange);
+    case "3M":
+      return get3MLabels(dateRange);
+    case "6M":
+      return get6MLabels(dateRange);
     case "1Y":
       return get1YLabels(dateRange);
     case "custom":
@@ -139,6 +181,10 @@ export const getFilterDescription = (filter: DateFilterOption): string => {
       return "for the past week";
     case "1M":
       return "for the past month";
+    case "3M":
+      return "for the past 3 months";
+    case "6M":
+      return "for the past 6 months";
     case "1Y":
       return "for the past year";
     case "custom":
