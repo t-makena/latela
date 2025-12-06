@@ -20,7 +20,7 @@ import { TransactionHistory } from "@/components/financial-insight/TransactionHi
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
 import { getFilterDescription, DateRange, getDateRangeForFilter, getLabelsForFilter } from "@/lib/dateFilterUtils";
-import { format, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, startOfDay } from "date-fns";
+import { format, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, startOfDay, endOfDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -289,7 +289,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
 
     const dateRange = customCategoryRange || getDateRangeForFilter(categoryFilter);
     const rangeFrom = startOfDay(dateRange.from);
-    const rangeTo = startOfDay(dateRange.to);
+    const rangeTo = endOfDay(dateRange.to);
     
     // Filter transactions by date range, expense type, and selected category
     const filteredTransactions = transactions.filter(t => {
