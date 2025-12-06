@@ -80,10 +80,7 @@ const Goals = () => {
       {/* Budget Goals Section */}
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            <CardTitle className="font-georama text-xl">Budget Goals</CardTitle>
-          </div>
+          <CardTitle className="font-georama text-xl">Budget Goals</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {budgetGoals.length > 0 ? (
@@ -117,10 +114,7 @@ const Goals = () => {
       {isMobile ? (
         <div className="-mx-3">
           <div className="pb-2 mb-2 px-3">
-            <div className="flex items-center gap-2">
-              <Edit2 className="h-5 w-5" />
-              <h2 className="font-georama text-xl font-semibold">Goals Overview</h2>
-            </div>
+            <h2 className="font-georama text-xl font-semibold">Goals Overview</h2>
           </div>
           <div className="space-y-6 px-3">
             {/* Total Monthly Allocation and Total Amount Saved */}
@@ -235,10 +229,7 @@ const Goals = () => {
       ) : (
         <Card>
           <CardHeader className="pb-4">
-            <div className="flex items-center gap-2">
-              <Edit2 className="h-5 w-5" />
-              <CardTitle className="font-georama text-xl">Goals Overview</CardTitle>
-            </div>
+            <CardTitle className="font-georama text-xl">Goals Overview</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Total Monthly Allocation and Total Amount Saved */}
