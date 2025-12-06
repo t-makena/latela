@@ -229,6 +229,7 @@ export type Database = {
           current_saved: number | null
           due_date: string | null
           id: string
+          monthly_allocation: number | null
           months_left: number
           name: string
           priority: number | null
@@ -241,6 +242,7 @@ export type Database = {
           current_saved?: number | null
           due_date?: string | null
           id?: string
+          monthly_allocation?: number | null
           months_left: number
           name: string
           priority?: number | null
@@ -253,6 +255,7 @@ export type Database = {
           current_saved?: number | null
           due_date?: string | null
           id?: string
+          monthly_allocation?: number | null
           months_left?: number
           name?: string
           priority?: number | null
