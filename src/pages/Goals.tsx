@@ -127,16 +127,19 @@ const Goals = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="font-medium w-[22%] px-2">Goal</TableHead>
-                  <TableHead className="font-medium w-[20%] px-2">
+                  <TableHead className="font-medium w-[18%] px-2">
                     Allocation<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-medium text-right w-[20%] px-2">
+                  <TableHead className="font-medium text-right w-[18%] px-2">
                     Saved (R)<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[20%] px-2">
-                    Timeline<sup>3</sup>
+                  <TableHead className="font-medium w-[18%] px-2">
+                    Target<sup>3</sup>
                   </TableHead>
-                  <TableHead className="w-[8%]"></TableHead>
+                  <TableHead className="font-medium w-[18%] px-2">
+                    Timeline<sup>4</sup>
+                  </TableHead>
+                  <TableHead className="w-[6%]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -151,6 +154,7 @@ const Goals = () => {
                       </TableCell>
                       <TableCell className="px-2 py-4 font-medium">{formatCurrency(row.monthlyAllocation)}</TableCell>
                       <TableCell className="text-right font-medium px-2 py-4">{formatCurrency(row.amountSaved)}</TableCell>
+                      <TableCell className="px-2 py-4">{formatCurrency(row.target)}</TableCell>
                       <TableCell className="px-2 py-4">{row.timeline}</TableCell>
                       <TableCell className="px-2 py-4">
                         <Button
@@ -167,7 +171,7 @@ const Goals = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No goals found. Click below to add your first goal.
                     </TableCell>
                   </TableRow>
@@ -190,7 +194,8 @@ const Goals = () => {
             <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
               <p>1. Allocation shows the Rand amount to save this month for each goal.</p>
               <p>2. Saved shows the actual rand value saved for each goal so far.</p>
-              <p>3. Timeline indicates your target deadline for each goal.</p>
+              <p>3. Target shows the total amount you want to save for each goal.</p>
+              <p>4. Timeline indicates your target deadline for each goal.</p>
             </div>
           </div>
         </div>
@@ -225,14 +230,14 @@ const Goals = () => {
                   <TableHead className="font-medium w-[16%] px-6">
                     Allocation<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-medium text-right w-[18%] px-6">
+                  <TableHead className="font-medium text-right w-[16%] px-6">
                     Saved (R)<sup>2</sup>
                   </TableHead>
                   <TableHead className="font-medium w-[16%] px-6">
-                    Timeline<sup>3</sup>
+                    Target<sup>3</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[14%] px-6">
-                    Months Left
+                  <TableHead className="font-medium w-[16%] px-6">
+                    Timeline<sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[8%]"></TableHead>
                 </TableRow>
@@ -249,8 +254,8 @@ const Goals = () => {
                       </TableCell>
                       <TableCell className="px-6 py-4 font-medium text-primary">{formatCurrency(row.monthlyAllocation)}</TableCell>
                       <TableCell className="text-right font-medium px-6 py-4">{formatCurrency(row.amountSaved)}</TableCell>
+                      <TableCell className="px-6 py-4">{formatCurrency(row.target)}</TableCell>
                       <TableCell className="px-6 py-4">{row.timeline}</TableCell>
-                      <TableCell className="px-6 py-4">{row.isComplete ? '—' : row.monthsLeft}</TableCell>
                       <TableCell className="px-6 py-4">
                         <Button
                           size="icon"
@@ -289,7 +294,8 @@ const Goals = () => {
             <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
               <p>1. Allocation shows the Rand amount to save this month for each goal.</p>
               <p>2. Saved shows the actual rand value saved for each goal so far.</p>
-              <p>3. Timeline indicates your target deadline for each goal.</p>
+              <p>3. Target shows the total amount you want to save for each goal.</p>
+              <p>4. Timeline indicates your target deadline for each goal.</p>
             </div>
           </CardContent>
         </Card>
