@@ -19,7 +19,8 @@ import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown"
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
-import { getFilterDescription, DateRange, getDateRangeForFilter } from "@/lib/dateFilterUtils";
+import { getFilterDescription, DateRange, getDateRangeForFilter, getLabelsForFilter } from "@/lib/dateFilterUtils";
+import { format, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, startOfDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -287,12 +288,14 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     if (!selectedCategoryForGraph) return [];
 
     const dateRange = customCategoryRange || getDateRangeForFilter(categoryFilter);
+    const rangeFrom = startOfDay(dateRange.from);
+    const rangeTo = startOfDay(dateRange.to);
     
     // Filter transactions by date range, expense type, and selected category
     const filteredTransactions = transactions.filter(t => {
-      const transactionDate = new Date(t.transaction_date);
+      const transactionDate = startOfDay(new Date(t.transaction_date));
       if (t.amount >= 0) return false; // Only expenses
-      if (transactionDate < dateRange.from || transactionDate > dateRange.to) return false;
+      if (transactionDate < rangeFrom || transactionDate > rangeTo) return false;
       
       // Match the category short code
       const dbCategory = t.display_subcategory_name || t.subcategory_name || t.parent_category_name;
@@ -307,42 +310,54 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       return shortCode === selectedCategoryForGraph;
     });
 
-    // Generate labels based on filter
-    const labels = categoryFilter === '1W' ? 
-      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
-      categoryFilter === '1M' ? 
-        ["Week 1", "Week 2", "Week 3", "Week 4"] :
-        categoryFilter === '1Y' ?
-          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
-          ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    // Use dynamic labels from dateFilterUtils
+    const labels = getLabelsForFilter(categoryFilter, dateRange);
 
     // Initialize amounts for each period
     const periodAmounts: { [key: string]: number } = {};
     labels.forEach(label => { periodAmounts[label] = 0; });
 
-    // Aggregate transaction amounts by period
-    filteredTransactions.forEach(t => {
-      const date = new Date(t.transaction_date);
-      let periodKey: string;
+    // Create date-to-label mapping based on filter type
+    if (categoryFilter === '1W' || categoryFilter === 'custom') {
+      const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       
-      if (categoryFilter === '1W') {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        periodKey = days[date.getDay()];
-      } else if (categoryFilter === '1M') {
-        const weekNum = Math.min(Math.ceil(date.getDate() / 7), 4);
-        periodKey = `Week ${weekNum}`;
-      } else if (categoryFilter === '1Y') {
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        periodKey = months[date.getMonth()];
-      } else {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        periodKey = days[date.getDay()];
-      }
+      filteredTransactions.forEach(t => {
+        const transactionDate = format(new Date(t.transaction_date), 'yyyy-MM-dd');
+        const matchingIndex = days.findIndex(day => format(day, 'yyyy-MM-dd') === transactionDate);
+        
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          periodAmounts[labels[matchingIndex]] += Math.abs(t.amount);
+        }
+      });
+    } else if (categoryFilter === '1M') {
+      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
       
-      if (periodAmounts[periodKey] !== undefined) {
-        periodAmounts[periodKey] += Math.abs(t.amount);
-      }
-    });
+      filteredTransactions.forEach(t => {
+        const transactionDate = new Date(t.transaction_date);
+        const matchingIndex = weeks.findIndex((weekStart, i) => {
+          const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : dateRange.to;
+          return transactionDate >= weekStart && transactionDate < weekEnd;
+        });
+        
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          periodAmounts[labels[matchingIndex]] += Math.abs(t.amount);
+        }
+      });
+    } else {
+      // 3M, 6M, 1Y - group by month
+      const months = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
+      
+      filteredTransactions.forEach(t => {
+        const transactionDate = new Date(t.transaction_date);
+        const matchingIndex = months.findIndex(monthStart => 
+          format(monthStart, 'yyyy-MM') === format(transactionDate, 'yyyy-MM')
+        );
+        
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          periodAmounts[labels[matchingIndex]] += Math.abs(t.amount);
+        }
+      });
+    }
 
     return labels.map(label => ({
       period: label,
