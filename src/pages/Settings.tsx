@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +12,13 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { useTheme } from "next-themes";
 import { AddAccountDialog } from "@/components/accounts/AddAccountDialog";
 import { ManageCustomCategoriesSection } from "@/components/settings/ManageCustomCategoriesSection";
+import { useIncomeSettings, IncomeFrequency } from "@/hooks/useIncomeSettings";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Settings = () => {
   const { accounts } = useAccounts();
   const { theme, setTheme } = useTheme();
+  const { payday, frequency, updatePayday, updateFrequency } = useIncomeSettings();
   const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -39,6 +41,19 @@ const Settings = () => {
   const [isUsernameOpen, setIsUsernameOpen] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
+
+  const handlePaydayChange = (value: string) => {
+    const day = parseInt(value, 10);
+    if (!isNaN(day)) {
+      updatePayday(day);
+      toast.success("Payday updated successfully!");
+    }
+  };
+
+  const handleFrequencyChange = (value: IncomeFrequency) => {
+    updateFrequency(value);
+    toast.success("Income frequency updated successfully!");
+  };
 
   const handleSave = () => {
     toast.success("Settings saved successfully!");
@@ -436,6 +451,51 @@ const Settings = () => {
         </CardContent>
       </Card>
       
+      <Card>
+        <CardHeader>
+          <CardTitle>Income Settings</CardTitle>
+          <CardDescription>
+            Set your payday to help calculate goal timelines
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="payday">Payday (Day of Month)</Label>
+                <Input
+                  id="payday"
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={payday}
+                  onChange={(e) => handlePaydayChange(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  The day you typically receive your salary
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="frequency">Income Frequency</Label>
+                <Select value={frequency} onValueChange={handleFrequencyChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  How often you get paid
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Preferences</CardTitle>

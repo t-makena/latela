@@ -9,10 +9,10 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Calculator } from 'lucide-react';
-import { format, addMonths, differenceInMonths, differenceInDays } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { useIncomeSettings } from '@/hooks/useIncomeSettings';
 
 type GoalFormData = z.infer<typeof goalSchema>;
 
@@ -40,6 +40,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
   const [calculationMode, setCalculationMode] = useState<CalculationMode>('allocation');
   const [calculationMessage, setCalculationMessage] = useState<string>('');
   const isEditMode = !!goalToEdit;
+  const { getNthPayday, countPayPeriods, getNextPayday } = useIncomeSettings();
 
   const form = useForm<GoalFormData>({
     resolver: zodResolver(goalSchema),
@@ -62,6 +63,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
   const remainingAmount = (target || 0) - currentSaved;
 
   // Auto-calculate due date when allocation changes (allocation mode)
+  // Uses full pay periods - rounds up to the Nth payday
   useEffect(() => {
     if (calculationMode !== 'allocation') return;
     if (!target || !monthlyAllocation || monthlyAllocation <= 0) {
@@ -75,26 +77,22 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
       return;
     }
 
-    const monthsNeeded = remainingAmount / monthlyAllocation;
-    const fullMonths = Math.floor(monthsNeeded);
-    const remainingDays = Math.round((monthsNeeded - fullMonths) * 30);
+    // Calculate number of full pay periods needed (round up)
+    const payPeriodsNeeded = Math.ceil(remainingAmount / monthlyAllocation);
     
-    const calculatedDate = addMonths(new Date(), fullMonths);
-    calculatedDate.setDate(calculatedDate.getDate() + remainingDays);
+    // Get the Nth payday as the estimated completion date
+    const estimatedDate = getNthPayday(payPeriodsNeeded);
     
-    form.setValue('dueDate', calculatedDate);
+    form.setValue('dueDate', estimatedDate);
     
-    const formattedDate = format(calculatedDate, 'dd MMM yyyy');
-    if (fullMonths === 0 && remainingDays > 0) {
-      setCalculationMessage(`At R${monthlyAllocation.toLocaleString()}/month, you'll reach your goal in ${remainingDays} days (${formattedDate})`);
-    } else if (remainingDays > 0) {
-      setCalculationMessage(`At R${monthlyAllocation.toLocaleString()}/month, you'll reach your goal in ${fullMonths} months and ${remainingDays} days (${formattedDate})`);
-    } else {
-      setCalculationMessage(`At R${monthlyAllocation.toLocaleString()}/month, you'll reach your goal in ${fullMonths} months (${formattedDate})`);
-    }
-  }, [target, currentSaved, monthlyAllocation, calculationMode, remainingAmount, form]);
+    const formattedDate = format(estimatedDate, 'dd MMM yyyy');
+    setCalculationMessage(
+      `At R${monthlyAllocation.toLocaleString()}/month, you'll reach your goal in ${payPeriodsNeeded} month${payPeriodsNeeded !== 1 ? 's' : ''} (${formattedDate})`
+    );
+  }, [target, currentSaved, monthlyAllocation, calculationMode, remainingAmount, form, getNthPayday]);
 
   // Auto-calculate allocation when date changes (date mode)
+  // Uses pay periods between now and target date
   useEffect(() => {
     if (calculationMode !== 'date') return;
     if (!target || !dueDate) {
@@ -117,10 +115,22 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
     }
 
     const formattedDate = format(dueDate, 'dd MMM yyyy');
+    const nextPayday = getNextPayday(today);
 
-    // Handle short timeframes (less than a month)
-    if (totalDays < 30) {
-      // For less than a month, set allocation to the full remaining amount
+    // Handle short timeframes (before next payday)
+    if (dueDate < nextPayday) {
+      // Target date is before next payday - need to save full amount now
+      form.setValue('monthlyAllocation', remainingAmount);
+      setCalculationMessage(
+        `⚠️ Only ${totalDays} days until ${formattedDate}. You'll need to save the full R${remainingAmount.toLocaleString()} before your next payday.`
+      );
+      return;
+    }
+
+    // Count pay periods between now and target date
+    const payPeriods = countPayPeriods(dueDate);
+    
+    if (payPeriods === 0) {
       form.setValue('monthlyAllocation', remainingAmount);
       setCalculationMessage(
         `⚠️ Only ${totalDays} days until ${formattedDate}. You'll need to save the full R${remainingAmount.toLocaleString()} in this time.`
@@ -128,17 +138,14 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
       return;
     }
 
-    // Normal calculation for timeframes >= 1 month
-    const monthsDecimal = totalDays / 30;
-    const calculatedAllocation = Math.ceil(remainingAmount / monthsDecimal);
+    // Calculate allocation based on pay periods
+    const calculatedAllocation = Math.ceil(remainingAmount / payPeriods);
     
     form.setValue('monthlyAllocation', calculatedAllocation);
-    
-    const monthsUntilDue = differenceInMonths(dueDate, today);
     setCalculationMessage(
-      `To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/month (${monthsUntilDue} months)`
+      `To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/month (${payPeriods} month${payPeriods !== 1 ? 's' : ''})`
     );
-  }, [target, currentSaved, dueDate, calculationMode, remainingAmount, form]);
+  }, [target, currentSaved, dueDate, calculationMode, remainingAmount, form, countPayPeriods, getNextPayday]);
 
   // Populate form when editing
   useEffect(() => {
@@ -325,13 +332,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <FormLabel>Estimated Completion Date</FormLabel>
-                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                          <Calculator className="h-3 w-3" />
-                          Auto
-                        </Badge>
-                      </div>
+                      <FormLabel>Estimated Completion Date</FormLabel>
                       <div className={cn(
                         "flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm",
                         !field.value && "text-muted-foreground"
@@ -391,13 +392,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
                   name="monthlyAllocation"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center gap-2">
-                        <FormLabel>Required Monthly Allocation (R)</FormLabel>
-                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                          <Calculator className="h-3 w-3" />
-                          Auto
-                        </Badge>
-                      </div>
+                      <FormLabel>Required Monthly Allocation (R)</FormLabel>
                       <div className={cn(
                         "flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm",
                         !field.value && "text-muted-foreground"
