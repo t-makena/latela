@@ -9,7 +9,9 @@ import {
   eachWeekOfInterval,
   eachMonthOfInterval,
   startOfMonth,
-  endOfMonth
+  endOfMonth,
+  startOfDay,
+  endOfDay
 } from "date-fns";
 
 export interface DateRange {
@@ -23,8 +25,9 @@ export type DateFilterOption = "1W" | "1M" | "3M" | "6M" | "1Y" | "custom";
  * Get the date range for 1W filter (past 7 days including today)
  */
 export const get1WDateRange = (): DateRange => {
-  const to = new Date();
-  const from = subDays(to, 6); // 6 days ago + today = 7 days
+  const today = new Date();
+  const to = endOfDay(today);
+  const from = startOfDay(subDays(today, 6)); // 6 days ago + today = 7 days
   return { from, to };
 };
 
@@ -32,36 +35,40 @@ export const get1WDateRange = (): DateRange => {
  * Get the date range for 1M filter (past 4 weeks including current week)
  */
 export const get1MDateRange = (): DateRange => {
-  const to = new Date();
-  const from = subWeeks(to, 3); // 3 weeks ago + current week = 4 weeks
-  return { from: startOfWeek(from, { weekStartsOn: 1 }), to };
+  const today = new Date();
+  const to = endOfDay(today);
+  const from = startOfWeek(subWeeks(today, 3), { weekStartsOn: 1 }); // 3 weeks ago + current week = 4 weeks
+  return { from, to };
 };
 
 /**
  * Get the date range for 3M filter (past 3 months including current month)
  */
 export const get3MDateRange = (): DateRange => {
-  const to = new Date();
-  const from = subMonths(to, 2); // 2 months ago + current month = 3 months
-  return { from: startOfMonth(from), to };
+  const today = new Date();
+  const to = endOfDay(today);
+  const from = startOfMonth(subMonths(today, 2)); // 2 months ago + current month = 3 months
+  return { from, to };
 };
 
 /**
  * Get the date range for 6M filter (past 6 months including current month)
  */
 export const get6MDateRange = (): DateRange => {
-  const to = new Date();
-  const from = subMonths(to, 5); // 5 months ago + current month = 6 months
-  return { from: startOfMonth(from), to };
+  const today = new Date();
+  const to = endOfDay(today);
+  const from = startOfMonth(subMonths(today, 5)); // 5 months ago + current month = 6 months
+  return { from, to };
 };
 
 /**
  * Get the date range for 1Y filter (past 12 months including current month)
  */
 export const get1YDateRange = (): DateRange => {
-  const to = new Date();
-  const from = subMonths(to, 11); // 11 months ago + current month = 12 months
-  return { from: startOfMonth(from), to };
+  const today = new Date();
+  const to = endOfDay(today);
+  const from = startOfMonth(subMonths(today, 11)); // 11 months ago + current month = 12 months
+  return { from, to };
 };
 
 /**
