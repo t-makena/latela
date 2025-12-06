@@ -145,8 +145,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const budgetBalance = monthlyIncome * 0.3; // 30% of income as budget
   const spending = monthlyExpenses;
 
-  // Category colors and labels for all 11 categories
-  const categoryColors = {
+  // Category colors and labels for all categories
+  const categoryColors: Record<string, string> = {
     "H&U": "#3B82F6",        // Housing & Utilities - blue
     "S&I": "#10B981",        // Savings & Investments - green
     "P&L": "#8B5CF6",        // Personal & Lifestyle - purple
@@ -157,7 +157,11 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     "E&R": "#F97316",        // Entertainment & Recreation - orange
     "H&M": "#EF4444",        // Healthcare & Medical - red
     "B&S": "#6B7280",        // Bills & Subscriptions - gray
-    "Misc": "#06B6D4"        // Miscellaneous - cyan
+    "Misc": "#06B6D4",       // Miscellaneous - cyan
+    "A/L": "#14B8A6",        // Assistance/Lending - teal
+    "Fees": "#64748B",       // Fees - slate
+    "Inc": "#22C55E",        // Other Income - green
+    "R&R": "#0EA5E9"         // Refunds & Reimbursements - sky blue
   };
 
   const categoryLabels: Record<string, string> = {
@@ -171,10 +175,14 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     "E&R": "Entertainment & Recreation",
     "H&M": "Healthcare & Medical",
     "B&S": "Bills & Subscriptions",
-    "Misc": "Miscellaneous"
+    "Misc": "Miscellaneous",
+    "A/L": "Assistance/Lending",
+    "Fees": "Fees",
+    "Inc": "Other Income",
+    "R&R": "Refunds & Reimbursements"
   };
 
-  // Category short code mapping
+  // Category short code mapping - use subcategory names as keys
   const categoryToShortCode: { [key: string]: string } = {
     "Housing & Utilities": "H&U",
     "Savings & Investments": "S&I",
@@ -186,7 +194,14 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     "Entertainment & Recreation": "E&R",
     "Healthcare & Medical": "H&M",
     "Bills & Subscriptions": "B&S",
-    "Miscellaneous": "Misc"
+    "Miscellaneous": "Misc",
+    "Assistance/Lending": "A/L",
+    "Assisting/Lending": "A/L",
+    "Fees": "Fees",
+    "Bank Fees": "Fees",
+    "Other Income": "Inc",
+    "Refunds & Reimbursements": "R&R",
+    "Offertory/Charity": "P&L"
   };
 
   // Generate category data based on actual transactions and filter using DB categories
@@ -216,12 +231,12 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       "Misc": 0
     };
 
-    // Aggregate transactions by category - use database category first, then fallback to keyword matching
+    // Aggregate transactions by category - use subcategory first, then parent_category, then fallback to keyword matching
     filteredTransactions.forEach(transaction => {
-      // Use DB category first: parent_category_name from v_transactions_with_details
-      const dbCategory = transaction.parent_category_name || 
-                         transaction.display_subcategory_name || 
-                         transaction.subcategory_name;
+      // Use subcategory first (e.g., "Healthcare & Medical"), then display_subcategory, then parent_category
+      const dbCategory = transaction.display_subcategory_name || 
+                         transaction.subcategory_name || 
+                         transaction.parent_category_name;
       
       let shortCode = 'Misc';
       if (dbCategory) {
