@@ -14,6 +14,7 @@ import {
   Cell
 } from "recharts";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useGoals } from "@/hooks/useGoals";
 import { calculateFinancialMetrics } from "@/lib/realData";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
@@ -33,6 +34,7 @@ interface FinancialInsightContentProps {
 
 export const FinancialInsightContent = ({ accountId }: FinancialInsightContentProps) => {
   const { transactions: allTransactions, loading } = useTransactions();
+  const { goals } = useGoals();
   const location = useLocation();
   const [categoryFilter, setCategoryFilter] = useState<DateFilterOption>("1W");
   const [netBalanceFilter, setNetBalanceFilter] = useState<DateFilterOption>("1Y");
@@ -119,6 +121,9 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
           ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+    // Calculate total amount saved from goals
+    const totalAmountSaved = goals.reduce((total, goal) => total + goal.amountSaved, 0);
+
     // Fill in missing periods with previous balance
     let lastBalance = 0;
     return labels.map((label) => {
@@ -128,7 +133,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       return {
         month: label,
         netBalance: lastBalance,
-        budgetBalance: 0 // Can be calculated from budget items if needed
+        budgetBalance: totalAmountSaved // Connected to actual goals savings
       };
     });
   };
