@@ -2,18 +2,28 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Target, Edit2, Plus, Loader2, Trash2, CheckCircle2 } from "lucide-react";
+import { Target, Edit2, Plus, Loader2, Trash2, CheckCircle2, Pencil } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useGoals } from "@/hooks/useGoals";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
 
+interface GoalToEdit {
+  id: string;
+  name: string;
+  target: number;
+  amountSaved: number;
+  monthlyAllocation: number;
+  timeline: string;
+}
+
 const Goals = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [goalToEdit, setGoalToEdit] = useState<GoalToEdit | null>(null);
   const isMobile = useIsMobile();
 
-  const { goals, loading, error, addGoal, deleteGoal } = useGoals();
+  const { goals, loading, error, addGoal, updateGoal, deleteGoal } = useGoals();
   
   // Separate goals for the two sections
   const budgetGoals = goals.slice(0, 3);
@@ -42,6 +52,11 @@ const Goals = () => {
       console.error("Error deleting goal:", error);
       toast.error("Failed to delete goal. Please try again.");
     }
+  };
+
+  const handleEditGoal = (goal: GoalToEdit) => {
+    setGoalToEdit(goal);
+    setDialogOpen(true);
   };
 
   if (loading) {
@@ -157,15 +172,33 @@ const Goals = () => {
                       <TableCell className="px-2 py-4">{formatCurrency(row.target)}</TableCell>
                       <TableCell className="px-2 py-4">{row.timeline}</TableCell>
                       <TableCell className="px-2 py-4">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDeleteGoal(row.id, row.name)}
-                          className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                          title="Delete goal"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleEditGoal({
+                              id: row.id,
+                              name: row.name,
+                              target: row.target,
+                              amountSaved: row.amountSaved,
+                              monthlyAllocation: row.monthlyAllocation,
+                              timeline: row.timeline,
+                            })}
+                            className="h-8 w-8 hover:bg-muted"
+                            title="Edit goal"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDeleteGoal(row.id, row.name)}
+                            className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                            title="Delete goal"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -257,15 +290,33 @@ const Goals = () => {
                       <TableCell className="px-6 py-4">{formatCurrency(row.target)}</TableCell>
                       <TableCell className="px-6 py-4">{row.timeline}</TableCell>
                       <TableCell className="px-6 py-4">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDeleteGoal(row.id, row.name)}
-                          className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                          title="Delete goal"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleEditGoal({
+                              id: row.id,
+                              name: row.name,
+                              target: row.target,
+                              amountSaved: row.amountSaved,
+                              monthlyAllocation: row.monthlyAllocation,
+                              timeline: row.timeline,
+                            })}
+                            className="h-8 w-8 hover:bg-muted"
+                            title="Edit goal"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDeleteGoal(row.id, row.name)}
+                            className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                            title="Delete goal"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -303,8 +354,22 @@ const Goals = () => {
 
       <AddGoalDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setGoalToEdit(null);
+        }}
         onAdd={addGoal}
+        onEdit={async (id, data) => {
+          await updateGoal(id, {
+            name: data.name!,
+            target: data.target!,
+            currentSaved: data.currentSaved,
+            monthlyAllocation: data.monthlyAllocation,
+            dueDate: data.dueDate!,
+          });
+          toast.success("Goal updated successfully!");
+        }}
+        goalToEdit={goalToEdit}
       />
     </div>
   );
