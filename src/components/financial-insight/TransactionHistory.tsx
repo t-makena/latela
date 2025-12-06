@@ -38,6 +38,7 @@ interface Category {
   id: string;
   name: string;
   color: string;
+  parent_id: string | null;
 }
 
 interface Merchant {
@@ -90,7 +91,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
       // Fetch categories - bypass type checking
       const { data: categoriesData, error: catError } = await (supabase as any)
         .from('categories')
-        .select('id, name, color');
+        .select('id, name, color, parent_id');
       
       if (!catError && categoriesData) {
         setCategories(categoriesData);
@@ -114,7 +115,8 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
         query = query.eq('account_id', selectedAccount);
       }
       if (selectedCategory !== "all") {
-        query = query.eq('category_id', selectedCategory);
+        // Filter by either category_id (parent) or subcategory_id (child)
+        query = query.or(`category_id.eq.${selectedCategory},subcategory_id.eq.${selectedCategory}`);
       }
       if (selectedMerchant !== "all") {
         query = query.eq('merchant_id', selectedMerchant);
@@ -219,10 +221,18 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
+              {/* Show parent categories with their subcategories */}
+              {categories.filter(c => !c.parent_id).map(parent => (
+                <div key={parent.id}>
+                  <SelectItem value={parent.id} className="font-semibold">
+                    {parent.name}
+                  </SelectItem>
+                  {categories.filter(sub => sub.parent_id === parent.id).map(sub => (
+                    <SelectItem key={sub.id} value={sub.id} className="pl-6 text-muted-foreground">
+                      {sub.name}
+                    </SelectItem>
+                  ))}
+                </div>
               ))}
             </SelectContent>
           </Select>
