@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,14 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { CalendarIcon, Calculator } from 'lucide-react';
+import { format, addMonths, differenceInMonths, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 
 type GoalFormData = z.infer<typeof goalSchema>;
+
+type CalculationMode = 'allocation' | 'date';
 
 interface GoalToEdit {
   id: string;
@@ -35,6 +37,8 @@ interface AddGoalDialogProps {
 
 export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }: AddGoalDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [calculationMode, setCalculationMode] = useState<CalculationMode>('allocation');
+  const [calculationMessage, setCalculationMessage] = useState<string>('');
   const isEditMode = !!goalToEdit;
 
   const form = useForm<GoalFormData>({
@@ -48,16 +52,93 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
     },
   });
 
+  // Watch form values for calculations
+  const target = form.watch('target');
+  const currentSaved = form.watch('currentSaved') || 0;
+  const monthlyAllocation = form.watch('monthlyAllocation');
+  const dueDate = form.watch('dueDate');
+
+  // Calculate remaining amount
+  const remainingAmount = (target || 0) - currentSaved;
+
+  // Auto-calculate due date when allocation changes (allocation mode)
+  useEffect(() => {
+    if (calculationMode !== 'allocation') return;
+    if (!target || !monthlyAllocation || monthlyAllocation <= 0) {
+      setCalculationMessage('');
+      return;
+    }
+
+    if (remainingAmount <= 0) {
+      setCalculationMessage('🎉 Goal already achieved!');
+      form.setValue('dueDate', new Date());
+      return;
+    }
+
+    const monthsNeeded = remainingAmount / monthlyAllocation;
+    const fullMonths = Math.floor(monthsNeeded);
+    const remainingDays = Math.round((monthsNeeded - fullMonths) * 30);
+    
+    const calculatedDate = addMonths(new Date(), fullMonths);
+    calculatedDate.setDate(calculatedDate.getDate() + remainingDays);
+    
+    form.setValue('dueDate', calculatedDate);
+    
+    const formattedDate = format(calculatedDate, 'dd MMM yyyy');
+    if (fullMonths === 0 && remainingDays > 0) {
+      setCalculationMessage(`At R${monthlyAllocation.toLocaleString()}/month, you'll reach your goal in ${remainingDays} days (${formattedDate})`);
+    } else if (remainingDays > 0) {
+      setCalculationMessage(`At R${monthlyAllocation.toLocaleString()}/month, you'll reach your goal in ${fullMonths} months and ${remainingDays} days (${formattedDate})`);
+    } else {
+      setCalculationMessage(`At R${monthlyAllocation.toLocaleString()}/month, you'll reach your goal in ${fullMonths} months (${formattedDate})`);
+    }
+  }, [target, currentSaved, monthlyAllocation, calculationMode, remainingAmount, form]);
+
+  // Auto-calculate allocation when date changes (date mode)
+  useEffect(() => {
+    if (calculationMode !== 'date') return;
+    if (!target || !dueDate) {
+      setCalculationMessage('');
+      return;
+    }
+
+    if (remainingAmount <= 0) {
+      setCalculationMessage('🎉 Goal already achieved!');
+      form.setValue('monthlyAllocation', 0);
+      return;
+    }
+
+    const today = new Date();
+    const totalDays = differenceInDays(dueDate, today);
+    const monthsUntilDue = differenceInMonths(dueDate, today);
+    
+    if (totalDays <= 0) {
+      setCalculationMessage('⚠️ Please select a future date');
+      return;
+    }
+
+    // Calculate more precise allocation using days
+    const monthsDecimal = totalDays / 30;
+    const calculatedAllocation = Math.ceil(remainingAmount / monthsDecimal);
+    
+    form.setValue('monthlyAllocation', calculatedAllocation);
+    
+    const formattedDate = format(dueDate, 'dd MMM yyyy');
+    if (monthsUntilDue < 1) {
+      setCalculationMessage(`To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/month (${totalDays} days left)`);
+    } else {
+      setCalculationMessage(`To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/month`);
+    }
+  }, [target, currentSaved, dueDate, calculationMode, remainingAmount, form]);
+
   // Populate form when editing
   useEffect(() => {
     if (goalToEdit && open) {
       // Parse the timeline string to get the date
       const parseDate = (timeline: string): Date | undefined => {
         try {
-          // timeline is in format "dd Mon yy" e.g., "15 Dec 25"
           const parsed = new Date(timeline);
           if (!isNaN(parsed.getTime())) return parsed;
-          // Try parsing with full year assumption
           const parts = timeline.split(' ');
           if (parts.length === 3) {
             const day = parseInt(parts[0]);
@@ -80,6 +161,9 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
         monthlyAllocation: goalToEdit.monthlyAllocation,
         dueDate: parseDate(goalToEdit.timeline),
       });
+      
+      // Set mode based on what was previously set
+      setCalculationMode('allocation');
     } else if (!open) {
       form.reset({
         name: '',
@@ -88,6 +172,8 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
         monthlyAllocation: undefined,
         dueDate: undefined,
       });
+      setCalculationMessage('');
+      setCalculationMode('allocation');
     }
   }, [goalToEdit, open, form]);
 
@@ -105,6 +191,17 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
       console.error('Error saving goal:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleModeChange = (mode: CalculationMode) => {
+    setCalculationMode(mode);
+    setCalculationMessage('');
+    // Clear the calculated field when switching modes
+    if (mode === 'allocation') {
+      form.setValue('dueDate', undefined);
+    } else {
+      form.setValue('monthlyAllocation', undefined);
     }
   };
 
@@ -168,65 +265,149 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="monthlyAllocation"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Monthly Allocation (R)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={field.value ?? ''}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Calculation Mode Toggle */}
+            <div className="space-y-2">
+              <FormLabel>How would you like to set your goal?</FormLabel>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={calculationMode === 'allocation' ? 'default' : 'outline'}
+                  onClick={() => handleModeChange('allocation')}
+                  className="flex-1 text-xs sm:text-sm"
+                  size="sm"
+                >
+                  Set Monthly Amount
+                </Button>
+                <Button
+                  type="button"
+                  variant={calculationMode === 'date' ? 'default' : 'outline'}
+                  onClick={() => handleModeChange('date')}
+                  className="flex-1 text-xs sm:text-sm"
+                  size="sm"
+                >
+                  Set Target Date
+                </Button>
+              </div>
+            </div>
 
-            <FormField
-              control={form.control}
-              name="dueDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Due Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+            {calculationMode === 'allocation' ? (
+              <>
+                <FormField
+                  control={form.control}
+                  name="monthlyAllocation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Allocation (R)</FormLabel>
                       <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a due date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
+                        <Input
+                          type="number"
+                          placeholder="500"
+                          value={field.value ?? ''}
+                          onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                        />
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Estimated Completion Date</FormLabel>
+                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                          <Calculator className="h-3 w-3" />
+                          Auto
+                        </Badge>
+                      </div>
+                      <div className={cn(
+                        "flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm",
+                        !field.value && "text-muted-foreground"
+                      )}>
+                        {field.value ? format(field.value, "PPP") : "Enter allocation to calculate"}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            ) : (
+              <>
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Target Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a target date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="monthlyAllocation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Required Monthly Allocation (R)</FormLabel>
+                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                          <Calculator className="h-3 w-3" />
+                          Auto
+                        </Badge>
+                      </div>
+                      <div className={cn(
+                        "flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm",
+                        !field.value && "text-muted-foreground"
+                      )}>
+                        {field.value ? `R${field.value.toLocaleString()}` : "Select date to calculate"}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
+            {/* Calculation Message */}
+            {calculationMessage && (
+              <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                {calculationMessage}
+              </div>
+            )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
