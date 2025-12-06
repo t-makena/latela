@@ -185,6 +185,47 @@ export const useGoals = () => {
     }
   };
 
+  const updateGoal = async (goalId: string, goalData: {
+    name: string;
+    target: number;
+    currentSaved?: number;
+    monthlyAllocation?: number;
+    dueDate: Date;
+  }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Calculate months_left from due date
+      const now = new Date();
+      const dueDate = new Date(goalData.dueDate);
+      const monthsDiff = (dueDate.getFullYear() - now.getFullYear()) * 12 + (dueDate.getMonth() - now.getMonth());
+      const monthsLeft = Math.max(1, monthsDiff);
+
+      const { error } = await supabase
+        .from('goals')
+        .update({
+          name: goalData.name,
+          target: goalData.target,
+          current_saved: goalData.currentSaved || 0,
+          monthly_allocation: goalData.monthlyAllocation || 0,
+          due_date: goalData.dueDate.toISOString().split('T')[0],
+          months_left: monthsLeft,
+        })
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      await fetchGoals();
+    } catch (err) {
+      console.error('Error updating goal:', err);
+      throw err;
+    }
+  };
+
   const deleteGoal = async (goalId: string) => {
     try {
       const { error } = await supabase
@@ -194,7 +235,6 @@ export const useGoals = () => {
 
       if (error) throw error;
 
-      // Update local state by filtering out the deleted goal
       setGoals((prevGoals) => prevGoals.filter((goal) => goal.id !== goalId));
     } catch (err) {
       console.error('Error deleting goal:', err);
@@ -202,5 +242,5 @@ export const useGoals = () => {
     }
   };
 
-  return { goals, loading, error, addGoal, deleteGoal };
+  return { goals, loading, error, addGoal, updateGoal, deleteGoal };
 };
