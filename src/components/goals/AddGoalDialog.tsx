@@ -30,6 +30,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
       name: '',
       target: undefined,
       currentSaved: undefined,
+      monthlyAllocation: undefined,
       dueDate: undefined,
     },
   });
@@ -94,6 +95,25 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Current Saved (R)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="monthlyAllocation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Monthly Allocation (R)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
