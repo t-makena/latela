@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export type DateFilterOption = "1W" | "1M" | "1Y" | "custom";
+export type DateFilterOption = "1W" | "1M" | "3M" | "6M" | "1Y" | "custom";
 
 interface DateRange {
   from: Date;
@@ -63,6 +63,22 @@ export const DateFilter = ({ selectedFilter, onFilterChange, className }: DateFi
         className={isMobile ? "min-w-[48px] h-8 text-xs px-2" : "min-w-[60px]"}
       >
         1M
+      </Button>
+      <Button
+        variant={selectedFilter === "3M" ? "default" : "outline"}
+        size={isMobile ? "sm" : "sm"}
+        onClick={() => handleFilterClick("3M")}
+        className={isMobile ? "min-w-[48px] h-8 text-xs px-2" : "min-w-[60px]"}
+      >
+        3M
+      </Button>
+      <Button
+        variant={selectedFilter === "6M" ? "default" : "outline"}
+        size={isMobile ? "sm" : "sm"}
+        onClick={() => handleFilterClick("6M")}
+        className={isMobile ? "min-w-[48px] h-8 text-xs px-2" : "min-w-[60px]"}
+      >
+        6M
       </Button>
       <Button
         variant={selectedFilter === "1Y" ? "default" : "outline"}
