@@ -40,11 +40,7 @@ const Goals = () => {
     return `R${amount.toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
-  const handleDeleteGoal = async (goalId: string, goalName: string) => {
-    if (!confirm(`Are you sure you want to delete the goal "${goalName}"?`)) {
-      return;
-    }
-
+  const handleDeleteGoal = async (goalId: string) => {
     try {
       await deleteGoal(goalId);
       toast.success("Goal deleted successfully!");
@@ -186,7 +182,7 @@ const Goals = () => {
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => handleDeleteGoal(row.id, row.name)}
+                            onClick={() => handleDeleteGoal(row.id)}
                             className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
                             title="Delete goal"
                           >
@@ -301,7 +297,7 @@ const Goals = () => {
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => handleDeleteGoal(row.id, row.name)}
+                            onClick={() => handleDeleteGoal(row.id)}
                             className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
                             title="Delete goal"
                           >
