@@ -27,15 +27,15 @@ interface ChartDataPoint {
 }
 
 export const categorizeTransaction = (transaction: Transaction): string => {
-  // Use database category first, fallback to keyword matching
-  if (transaction.parent_category_name) {
-    return transaction.parent_category_name;
-  }
+  // Use subcategory first (e.g., "Healthcare & Medical"), then display_subcategory, then parent_category
   if (transaction.display_subcategory_name) {
     return transaction.display_subcategory_name;
   }
   if (transaction.subcategory_name) {
     return transaction.subcategory_name;
+  }
+  if (transaction.parent_category_name) {
+    return transaction.parent_category_name;
   }
   return categorizeTxn(transaction.description);
 };
