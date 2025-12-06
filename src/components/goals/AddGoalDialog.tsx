@@ -110,25 +110,34 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
 
     const today = new Date();
     const totalDays = differenceInDays(dueDate, today);
-    const monthsUntilDue = differenceInMonths(dueDate, today);
     
     if (totalDays <= 0) {
       setCalculationMessage('⚠️ Please select a future date');
       return;
     }
 
-    // Calculate more precise allocation using days
+    const formattedDate = format(dueDate, 'dd MMM yyyy');
+
+    // Handle short timeframes (less than a month)
+    if (totalDays < 30) {
+      // For less than a month, set allocation to the full remaining amount
+      form.setValue('monthlyAllocation', remainingAmount);
+      setCalculationMessage(
+        `⚠️ Only ${totalDays} days until ${formattedDate}. You'll need to save the full R${remainingAmount.toLocaleString()} in this time.`
+      );
+      return;
+    }
+
+    // Normal calculation for timeframes >= 1 month
     const monthsDecimal = totalDays / 30;
     const calculatedAllocation = Math.ceil(remainingAmount / monthsDecimal);
     
     form.setValue('monthlyAllocation', calculatedAllocation);
     
-    const formattedDate = format(dueDate, 'dd MMM yyyy');
-    if (monthsUntilDue < 1) {
-      setCalculationMessage(`To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/month (${totalDays} days left)`);
-    } else {
-      setCalculationMessage(`To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/month`);
-    }
+    const monthsUntilDue = differenceInMonths(dueDate, today);
+    setCalculationMessage(
+      `To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/month (${monthsUntilDue} months)`
+    );
   }, [target, currentSaved, dueDate, calculationMode, remainingAmount, form]);
 
   // Populate form when editing
