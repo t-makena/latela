@@ -7,6 +7,7 @@ interface Goal {
   name: string;
   target: number;
   current_saved: number;
+  monthly_allocation: number;
   priority: number | null;
   months_left: number;
   due_date: string | null;
@@ -46,18 +47,18 @@ const calculateWeight = (target: number, currentSaved: number, monthsLeft: numbe
   return remaining / Math.pow(monthsLeft, 2);
 };
 
-export const useGoals = (monthlySavings: number = 0) => {
+export const useGoals = () => {
   const [goals, setGoals] = useState<TransformedGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const transformGoals = useCallback((data: Goal[] | null, monthlySavingsAmount: number): TransformedGoal[] => {
+  const transformGoals = useCallback((data: Goal[] | null): TransformedGoal[] => {
     if (!data || data.length === 0) return [];
 
     // Calculate total saved across all goals for split calculation
     const totalSaved = data.reduce((sum, goal) => sum + (goal.current_saved || 0), 0);
 
-    // Calculate weights for active goals only
+    // Calculate weights for active goals only (used for priority percentage)
     const goalsWithWeights = data.map(goal => {
       const monthsLeft = calculateMonthsLeft(goal.due_date);
       const isComplete = goal.current_saved >= goal.target;
@@ -73,11 +74,11 @@ export const useGoals = (monthlySavings: number = 0) => {
       const progress = goal.target > 0 ? Math.round((goal.current_saved / goal.target) * 100) : 0;
       const split = totalSaved > 0 ? ((goal.current_saved / totalSaved) * 100).toFixed(1) : '0.0';
       
-      // Calculate priority percentage based on deadline-weighted formula
+      // Calculate priority percentage based on deadline-weighted formula (kept for internal use)
       const priorityPercentage = isComplete ? 0 : (totalWeight > 0 ? (weight / totalWeight) * 100 : 0);
       
-      // Calculate monthly allocation in Rands
-      const monthlyAllocation = isComplete ? 0 : (priorityPercentage / 100) * monthlySavingsAmount;
+      // Use user-specified monthly allocation from database
+      const monthlyAllocation = isComplete ? 0 : (goal.monthly_allocation || 0);
       
       // Format due date
       const formattedDueDate = goal.due_date 
@@ -105,7 +106,7 @@ export const useGoals = (monthlySavings: number = 0) => {
     });
   }, []);
 
-  const fetchGoals = useCallback(async (monthlySavingsAmount: number) => {
+  const fetchGoals = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -128,7 +129,7 @@ export const useGoals = (monthlySavings: number = 0) => {
         throw error;
       }
 
-      const transformedGoals = transformGoals(data, monthlySavingsAmount);
+      const transformedGoals = transformGoals(data);
       setGoals(transformedGoals);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -139,13 +140,14 @@ export const useGoals = (monthlySavings: number = 0) => {
   }, [transformGoals]);
 
   useEffect(() => {
-    fetchGoals(monthlySavings);
-  }, [monthlySavings, fetchGoals]);
+    fetchGoals();
+  }, [fetchGoals]);
 
   const addGoal = async (goalData: {
     name: string;
     target: number;
     currentSaved?: number;
+    monthlyAllocation?: number;
     dueDate: Date;
   }) => {
     try {
@@ -168,6 +170,7 @@ export const useGoals = (monthlySavings: number = 0) => {
           name: goalData.name,
           target: goalData.target,
           current_saved: goalData.currentSaved || 0,
+          monthly_allocation: goalData.monthlyAllocation || 0,
           due_date: goalData.dueDate.toISOString().split('T')[0],
           months_left: monthsLeft,
         });
@@ -175,7 +178,7 @@ export const useGoals = (monthlySavings: number = 0) => {
       if (error) throw error;
 
       // Refetch goals after adding
-      await fetchGoals(monthlySavings);
+      await fetchGoals();
     } catch (err) {
       console.error('Error adding goal:', err);
       throw err;
