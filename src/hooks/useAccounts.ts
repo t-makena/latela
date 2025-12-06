@@ -12,16 +12,38 @@ export const useAccounts = () => {
     const fetchAccounts = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        
+        // Fetch all accounts
+        const { data: accountsData, error: accountsError } = await supabase
           .from('accounts')
           .select('*');
 
-        if (error) {
-          throw error;
-        }
+        if (accountsError) throw accountsError;
+
+        // For each account, get the latest transaction balance
+        const accountsWithBalances = await Promise.all(
+          (accountsData || []).map(async (account) => {
+            // Get the latest transaction for this account (by date, then by created_at)
+            const { data: latestTransaction } = await supabase
+              .from('transactions')
+              .select('balance')
+              .eq('account_id', account.id)
+              .order('transaction_date', { ascending: false })
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            return {
+              ...account,
+              // Use latest transaction balance (in Rands) as primary source
+              // Fall back to account.available_balance / 100 if no transactions exist
+              calculatedBalance: latestTransaction?.balance ?? (account.available_balance || 0) / 100
+            };
+          })
+        );
 
         // Transform Supabase data to match our AccountType interface
-        const transformedAccounts: AccountType[] = data.map((account, index) => {
+        const transformedAccounts: AccountType[] = accountsWithBalances.map((account, index) => {
           // Format account name as "Bank Name ****1234"
           const last4Digits = account.account_number?.slice(-4) || '0000';
           const bankName = account.bank_name || 'Account';
@@ -31,7 +53,7 @@ export const useAccounts = () => {
             id: account.id,
             name: formattedName,
             type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
-            balance: (account.available_balance || 0) / 100,
+            balance: account.calculatedBalance, // Already in Rands from transaction
             currency: 'ZAR',
             color: getAccountColor(index),
           };
