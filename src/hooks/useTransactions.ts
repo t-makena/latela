@@ -43,7 +43,7 @@ export const useTransactions = () => {
         // Transform Supabase data to match our Transaction interface
         const transformedTransactions: Transaction[] = (data || []).map(transaction => ({
           ...transaction,
-          type: transaction.transaction_code === 'DR' ? 'expense' : 'income'
+          type: (transaction.amount ?? 0) < 0 ? 'expense' : 'income'
         }));
         
         setTransactions(transformedTransactions);
