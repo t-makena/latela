@@ -479,7 +479,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'white',
+                    backgroundColor: 'hsl(var(--background))',
+                    color: 'hsl(var(--foreground))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
                     padding: '12px',
@@ -488,14 +489,16 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                   labelStyle={{ 
                     fontSize: '14px', 
                     fontWeight: '600',
-                    marginBottom: '8px'
+                    marginBottom: '8px',
+                    color: 'hsl(var(--foreground))'
                   }}
                   itemStyle={{ 
                     fontSize: '14px',
-                    padding: '4px 0'
+                    padding: '4px 0',
+                    color: 'hsl(var(--foreground))'
                   }}
                   formatter={(value: number, name: string) => {
-                    const label = name === 'netBalance' ? 'Net Balance' : 'Budget Balance';
+                    const label = name === 'netBalance' ? 'Available Balance' : 'Savings Balance';
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
@@ -563,7 +566,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'white',
+                    backgroundColor: 'hsl(var(--background))',
+                    color: 'hsl(var(--foreground))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
                     padding: '12px',
@@ -572,14 +576,16 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                   labelStyle={{ 
                     fontSize: '14px', 
                     fontWeight: '600',
-                    marginBottom: '8px'
+                    marginBottom: '8px',
+                    color: 'hsl(var(--foreground))'
                   }}
                   itemStyle={{ 
                     fontSize: '14px',
-                    padding: '4px 0'
+                    padding: '4px 0',
+                    color: 'hsl(var(--foreground))'
                   }}
                   formatter={(value: number, name: string) => {
-                    const label = name === 'netBalance' ? 'Net Balance' : 'Budget Balance';
+                    const label = name === 'netBalance' ? 'Available Balance' : 'Savings Balance';
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
