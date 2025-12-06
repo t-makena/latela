@@ -64,8 +64,52 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     }
   }, [location.state]);
 
-  // Generate net balance data based on filter - empty until real data is available
+  // Generate net balance data from real transaction data
   const getNetBalanceData = () => {
+    const dateRange = customNetBalanceRange || getDateRangeForFilter(netBalanceFilter);
+    
+    // Filter transactions within the date range
+    const filteredTransactions = transactions
+      .filter(t => {
+        const date = new Date(t.transaction_date);
+        return date >= dateRange.from && date <= dateRange.to;
+      })
+      .sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
+    if (filteredTransactions.length === 0) {
+      const labels = netBalanceFilter === '1W' ? 
+        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
+        netBalanceFilter === '1M' ? 
+          ["Week 1", "Week 2", "Week 3", "Week 4"] :
+          netBalanceFilter === '1Y' ?
+            ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
+            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      return labels.map((label) => ({ month: label, netBalance: 0, budgetBalance: 0 }));
+    }
+
+    // Group transactions by period and get the last balance for each period
+    const balanceByPeriod: { [key: string]: number } = {};
+    
+    filteredTransactions.forEach(t => {
+      const date = new Date(t.transaction_date);
+      let periodKey: string;
+      
+      if (netBalanceFilter === '1W') {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        periodKey = days[date.getDay()];
+      } else if (netBalanceFilter === '1M') {
+        const weekNum = Math.ceil(date.getDate() / 7);
+        periodKey = `Week ${Math.min(weekNum, 4)}`;
+      } else {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        periodKey = months[date.getMonth()];
+      }
+      
+      // Use the transaction's balance (last one for each period wins)
+      balanceByPeriod[periodKey] = t.balance ?? 0;
+    });
+
+    // Generate labels based on filter
     const labels = netBalanceFilter === '1W' ? 
       ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
       netBalanceFilter === '1M' ? 
@@ -74,11 +118,18 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
           ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-    return labels.map((label) => ({
-      month: label,
-      netBalance: 0,
-      budgetBalance: 0
-    }));
+    // Fill in missing periods with previous balance
+    let lastBalance = 0;
+    return labels.map((label) => {
+      if (balanceByPeriod[label] !== undefined) {
+        lastBalance = balanceByPeriod[label];
+      }
+      return {
+        month: label,
+        netBalance: lastBalance,
+        budgetBalance: 0 // Can be calculated from budget items if needed
+      };
+    });
   };
 
   const netBalanceData = getNetBalanceData();
@@ -138,14 +189,14 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     "Miscellaneous": "Misc"
   };
 
-  // Generate category data based on actual transactions and filter
+  // Generate category data based on actual transactions and filter using DB categories
   const getCategoryData = () => {
     const dateRange = customCategoryRange || getDateRangeForFilter(categoryFilter);
     
-    // Filter transactions by date range and type
+    // Filter transactions by date range and type (expenses only - amount < 0)
     const filteredTransactions = transactions.filter(t => {
       const transactionDate = new Date(t.transaction_date);
-      return t.type === 'expense' && 
+      return t.amount < 0 && 
              transactionDate >= dateRange.from && 
              transactionDate <= dateRange.to;
     });
@@ -165,11 +216,23 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       "Misc": 0
     };
 
-    // Aggregate transactions by category
+    // Aggregate transactions by category - use database category first, then fallback to keyword matching
     filteredTransactions.forEach(transaction => {
-      const fullCategory = categorizeTransaction(transaction.description || '');
-      const shortCode = categoryToShortCode[fullCategory] || 'Misc';
-      const amount = Math.abs(transaction.amount) / 100; // Convert from cents
+      // Use DB category first: parent_category_name from v_transactions_with_details
+      const dbCategory = transaction.parent_category_name || 
+                         transaction.display_subcategory_name || 
+                         transaction.subcategory_name;
+      
+      let shortCode = 'Misc';
+      if (dbCategory) {
+        shortCode = categoryToShortCode[dbCategory] || 'Misc';
+      } else {
+        // Fallback to keyword matching only if no DB category
+        const fullCategory = categorizeTransaction(transaction.description || '');
+        shortCode = categoryToShortCode[fullCategory] || 'Misc';
+      }
+      
+      const amount = Math.abs(transaction.amount); // Already in Rands
       categoryTotals[shortCode] += amount;
     });
 
