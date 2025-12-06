@@ -86,7 +86,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
   // Filter transactions for this specific account and apply category filter
   let accountTransactions = transactions
     .filter(t => t.account_id === accountId)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime());
 
   // Apply category filter if selected
   if (selectedCategory) {
@@ -207,7 +207,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
                       {transaction.description}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {formatDate(transaction.created_at)}
+                      {formatDate(transaction.transaction_date)}
                     </p>
                   </div>
                   <span className={`font-semibold text-lg font-georama ${
