@@ -82,14 +82,16 @@ export const generateChartDataFromTransactions = (
       );
       labelIndex = weeksDiff;
     } else if (periodType === 'month') {
-      // Find which month label this transaction belongs to
-      const monthName = transactionDate.toLocaleDateString('en-US', { month: 'short' });
-      labelIndex = labels.indexOf(monthName);
+      // Find which month label this transaction belongs to (format: "Apr '25")
+      const month = transactionDate.toLocaleDateString('en-US', { month: 'short' });
+      const year = transactionDate.getFullYear().toString().slice(-2);
+      const monthLabel = `${month} '${year}`;
+      labelIndex = labels.indexOf(monthLabel);
     }
 
     if (labelIndex >= 0 && labelIndex < chartData.length) {
       const category = categorizeTransaction(transaction);
-      const amount = Math.abs(transaction.amount) / 100; // Convert from cents to Rands
+      const amount = Math.abs(transaction.amount); // Already in Rands
       
       chartData[labelIndex][category] = (chartData[labelIndex][category] || 0) + amount;
       chartData[labelIndex].total += amount;
