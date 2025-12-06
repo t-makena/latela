@@ -40,7 +40,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
   const [calculationMode, setCalculationMode] = useState<CalculationMode>('allocation');
   const [calculationMessage, setCalculationMessage] = useState<string>('');
   const isEditMode = !!goalToEdit;
-  const { getNthPayday, countPayPeriods, getNextPayday } = useIncomeSettings();
+  const { getNthPayday, countPayPeriods, getNextPayday, frequency, getFrequencyLabel, getPeriodTerm, weekdayNames, weeklyPayday } = useIncomeSettings();
 
   const form = useForm<GoalFormData>({
     resolver: zodResolver(goalSchema),
@@ -61,6 +61,24 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
 
   // Calculate remaining amount
   const remainingAmount = (target || 0) - currentSaved;
+
+  // Get allocation label based on frequency
+  const getAllocationLabel = () => {
+    switch (frequency) {
+      case 'weekly': return 'Weekly Allocation (R)';
+      case 'bi-weekly': return 'Bi-weekly Allocation (R)';
+      default: return 'Monthly Allocation (R)';
+    }
+  };
+
+  // Get button text based on frequency
+  const getSetAmountButtonText = () => {
+    switch (frequency) {
+      case 'weekly': return 'Set Weekly Amount';
+      case 'bi-weekly': return 'Set Bi-weekly Amount';
+      default: return 'Set Monthly Amount';
+    }
+  };
 
   // Auto-calculate due date when allocation changes (allocation mode)
   // Uses full pay periods - rounds up to the Nth payday
@@ -86,10 +104,20 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
     form.setValue('dueDate', estimatedDate);
     
     const formattedDate = format(estimatedDate, 'dd MMM yyyy');
+    const periodTerm = getPeriodTerm(payPeriodsNeeded);
+    const freqLabel = frequency === 'weekly' ? 'week' : frequency === 'bi-weekly' ? 'pay period' : 'month';
+    
+    // For weekly, show the day name
+    let dateDisplay = formattedDate;
+    if (frequency === 'weekly') {
+      const dayName = weekdayNames[estimatedDate.getDay()];
+      dateDisplay = `${dayName}, ${formattedDate}`;
+    }
+    
     setCalculationMessage(
-      `At R${monthlyAllocation.toLocaleString()}/month, you'll reach your goal in ${payPeriodsNeeded} month${payPeriodsNeeded !== 1 ? 's' : ''} (${formattedDate})`
+      `At R${monthlyAllocation.toLocaleString()}/${freqLabel}, you'll reach your goal in ${payPeriodsNeeded} ${periodTerm} (${dateDisplay})`
     );
-  }, [target, currentSaved, monthlyAllocation, calculationMode, remainingAmount, form, getNthPayday]);
+  }, [target, currentSaved, monthlyAllocation, calculationMode, remainingAmount, form, getNthPayday, frequency, getPeriodTerm, weekdayNames]);
 
   // Auto-calculate allocation when date changes (date mode)
   // Uses pay periods between now and target date
@@ -140,12 +168,14 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
 
     // Calculate allocation based on pay periods
     const calculatedAllocation = Math.ceil(remainingAmount / payPeriods);
+    const periodTerm = getPeriodTerm(payPeriods);
+    const freqLabel = frequency === 'weekly' ? 'week' : frequency === 'bi-weekly' ? 'pay period' : 'month';
     
     form.setValue('monthlyAllocation', calculatedAllocation);
     setCalculationMessage(
-      `To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/month (${payPeriods} month${payPeriods !== 1 ? 's' : ''})`
+      `To reach your goal by ${formattedDate}, save R${calculatedAllocation.toLocaleString()}/${freqLabel} (${payPeriods} ${periodTerm})`
     );
-  }, [target, currentSaved, dueDate, calculationMode, remainingAmount, form, countPayPeriods, getNextPayday]);
+  }, [target, currentSaved, dueDate, calculationMode, remainingAmount, form, countPayPeriods, getNextPayday, frequency, getPeriodTerm]);
 
   // Populate form when editing
   useEffect(() => {
@@ -292,7 +322,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
                   className="flex-1 text-xs sm:text-sm"
                   size="sm"
                 >
-                  Set Monthly Amount
+                  {getSetAmountButtonText()}
                 </Button>
                 <Button
                   type="button"
@@ -313,7 +343,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
                   name="monthlyAllocation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Monthly Allocation (R)</FormLabel>
+                      <FormLabel>{getAllocationLabel()}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -392,7 +422,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }:
                   name="monthlyAllocation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Required Monthly Allocation (R)</FormLabel>
+                      <FormLabel>Required {getAllocationLabel()}</FormLabel>
                       <div className={cn(
                         "flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm",
                         !field.value && "text-muted-foreground"

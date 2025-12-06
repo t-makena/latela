@@ -8,7 +8,7 @@ import { useGoals } from "@/hooks/useGoals";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
-
+import { useIncomeSettings } from "@/hooks/useIncomeSettings";
 interface GoalToEdit {
   id: string;
   name: string;
@@ -22,8 +22,27 @@ const Goals = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [goalToEdit, setGoalToEdit] = useState<GoalToEdit | null>(null);
   const isMobile = useIsMobile();
+  const { frequency, getFrequencyLabel, getPeriodTerm } = useIncomeSettings();
 
   const { goals, loading, error, addGoal, updateGoal, deleteGoal } = useGoals();
+  
+  // Get target saving label based on frequency
+  const getTargetSavingLabel = () => {
+    switch (frequency) {
+      case 'weekly': return 'Target Weekly Saving';
+      case 'bi-weekly': return 'Target Bi-weekly Saving';
+      default: return 'Target Monthly Saving';
+    }
+  };
+  
+  // Get allocation footnote based on frequency
+  const getAllocationFootnote = () => {
+    switch (frequency) {
+      case 'weekly': return 'Allocation shows the Rand amount to save this week for each goal.';
+      case 'bi-weekly': return 'Allocation shows the Rand amount to save this pay period for each goal.';
+      default: return 'Allocation shows the Rand amount to save this month for each goal.';
+    }
+  };
   
   // Separate goals for the two sections
   const budgetGoals = goals.slice(0, 3);
@@ -113,11 +132,11 @@ const Goals = () => {
             <h2 className="font-georama text-xl font-semibold">Goals Overview</h2>
           </div>
           <div className="space-y-6 px-3">
-            {/* Total Monthly Allocation and Total Amount Saved */}
+            {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-4">
-              {/* Total Monthly Allocation - Left */}
+              {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Total Monthly Allocation</p>
+                <p className="text-sm text-muted-foreground mb-1">{getTargetSavingLabel()}</p>
                 <p className="text-2xl font-bold font-georama">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
@@ -215,7 +234,7 @@ const Goals = () => {
             </div>
 
             <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
-              <p>1. Allocation shows the Rand amount to save this month for each goal.</p>
+              <p>1. {getAllocationFootnote()}</p>
               <p>2. Saved shows the actual rand value saved for each goal so far.</p>
               <p>3. Target shows the total amount you want to save for each goal.</p>
               <p>4. Timeline indicates your target deadline for each goal.</p>
@@ -228,11 +247,11 @@ const Goals = () => {
             <CardTitle className="font-georama text-xl">Goals Overview</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Total Monthly Allocation and Total Amount Saved */}
+            {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-8">
-              {/* Total Monthly Allocation - Left */}
+              {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Total Monthly Allocation</p>
+                <p className="text-sm text-muted-foreground mb-1">{getTargetSavingLabel()}</p>
                 <p className="text-3xl font-bold font-georama">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
@@ -330,7 +349,7 @@ const Goals = () => {
             </div>
 
             <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
-              <p>1. Allocation shows the Rand amount to save this month for each goal.</p>
+              <p>1. {getAllocationFootnote()}</p>
               <p>2. Saved shows the actual rand value saved for each goal so far.</p>
               <p>3. Target shows the total amount you want to save for each goal.</p>
               <p>4. Timeline indicates your target deadline for each goal.</p>
