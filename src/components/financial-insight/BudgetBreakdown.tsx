@@ -3,13 +3,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import { categorizeTransaction } from "@/lib/transactionCategories";
 
 interface Transaction {
   description: string;
   amount: number;
   transaction_date: string;
   type: string;
+  category_id?: string | null;
+  subcategory_id?: string | null;
+  parent_category_name?: string | null;
+  subcategory_name?: string | null;
+  display_subcategory_name?: string | null;
+  display_subcategory_color?: string | null;
+  subcategory_color?: string | null;
+  parent_category_color?: string | null;
 }
 
 interface BudgetBreakdownProps {
@@ -108,52 +115,110 @@ export const BudgetBreakdown = ({
     ? ((spending - oneYearAgo.spending) / oneYearAgo.spending * 100).toFixed(0)
     : 0;
 
-  // Category color mapping
-  const categoryColors: Record<string, string> = {
+  // Parent category colors (for simple view)
+  const parentCategoryColors: Record<string, string> = {
+    "Income": "#10B981",        // Green
+    "Necessities": "#3B82F6",   // Blue
+    "Discretionary": "#F97316", // Orange
+    "Savings": "#8B5CF6"        // Purple
+  };
+
+  // Subcategory colors (for detailed view)
+  const subcategoryColors: Record<string, string> = {
+    // Income subcategories
+    "Salary & Wages": "#10B981",
+    "Bonuses & Commissions": "#34D399",
+    "Refunds & Reimbursements": "#6EE7B7",
+    "Other Income": "#A7F3D0",
+    // Necessities subcategories
     "Housing & Utilities": "#3B82F6",
-    "Savings & Investments": "#10B981",
-    "Personal & Lifestyle": "#8B5CF6",
     "Food & Groceries": "#84CC16",
     "Transportation & Fuel": "#F59E0B",
+    "Healthcare & Medical": "#EF4444",
+    "Bills & Subscriptions": "#6B7280",
+    "Fees": "#9CA3AF",
+    // Discretionary subcategories
+    "Personal & Lifestyle": "#8B5CF6",
     "Dining & Restaurants": "#EC4899",
     "Shopping & Retail": "#A855F7",
     "Entertainment & Recreation": "#F97316",
-    "Healthcare & Medical": "#EF4444",
-    "Bills & Subscriptions": "#6B7280",
-    "Miscellaneous": "#06B6D4"
+    "Assistance/Lending": "#FB923C",
+    "Offertory/Charity": "#FBBF24",
+    "Miscellaneous": "#06B6D4",
+    // Savings subcategories
+    "Savings & Investments": "#8B5CF6"
   };
 
-  // Calculate detailed category breakdown from transactions
-  const getDetailedCategoryData = () => {
-    const categoryTotals: Record<string, number> = {
-      "Housing & Utilities": 0,
-      "Food & Groceries": 0,
-      "Bills & Subscriptions": 0,
-      "Healthcare & Medical": 0,
-      "Personal & Lifestyle": 0,
-      "Transportation & Fuel": 0,
-      "Shopping & Retail": 0,
-      "Dining & Restaurants": 0,
-      "Entertainment & Recreation": 0,
-      "Savings & Investments": 0,
-      "Miscellaneous": 0
+  // Calculate simple category breakdown (parent categories) from transactions
+  const getSimpleCategoryData = () => {
+    const parentCategoryTotals: Record<string, number> = {
+      "Income": 0,
+      "Necessities": 0,
+      "Discretionary": 0,
+      "Savings": 0
     };
 
     transactions.forEach(transaction => {
-      if (transaction.type === 'expense') {
-        const category = categorizeTransaction(transaction.description || '');
-        const amount = Math.abs(transaction.amount) / 100;
-        categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+      // Only count expenses for spending allocation (excluding income)
+      if (transaction.type === 'expense' && transaction.parent_category_name) {
+        const amount = Math.abs(transaction.amount);
+        const parentCategory = transaction.parent_category_name;
+        if (parentCategoryTotals.hasOwnProperty(parentCategory)) {
+          parentCategoryTotals[parentCategory] += amount;
+        }
       }
     });
 
-    const detailedData = Object.entries(categoryTotals)
+    const categoryData = Object.entries(parentCategoryTotals)
       .filter(([_, value]) => value > 0)
       .map(([name, value]) => ({
         name,
         value,
-        color: categoryColors[name] || "#06B6D4"
+        color: parentCategoryColors[name] || "#06B6D4"
       }));
+
+    // Add Available Balance and Budget Balance
+    return [
+      { name: "Available Balance", value: availableBalance, color: "#9CA3AF" },
+      { name: "Budget Balance", value: budgetBalance, color: "#EF4444" },
+      ...categoryData
+    ];
+  };
+
+  // Calculate detailed category breakdown (subcategories) from transactions
+  const getDetailedCategoryData = () => {
+    const subcategoryTotals: Record<string, { value: number; color: string }> = {};
+
+    transactions.forEach(transaction => {
+      if (transaction.type === 'expense') {
+        // Use display_subcategory_name first (which includes custom categories), 
+        // then fall back to subcategory_name
+        const subcategoryName = transaction.display_subcategory_name || 
+                                transaction.subcategory_name || 
+                                'Miscellaneous';
+        const amount = Math.abs(transaction.amount);
+        
+        // Get color from transaction data or use default from our mapping
+        const color = transaction.display_subcategory_color || 
+                      transaction.subcategory_color || 
+                      subcategoryColors[subcategoryName] || 
+                      "#06B6D4";
+
+        if (!subcategoryTotals[subcategoryName]) {
+          subcategoryTotals[subcategoryName] = { value: 0, color };
+        }
+        subcategoryTotals[subcategoryName].value += amount;
+      }
+    });
+
+    const detailedData = Object.entries(subcategoryTotals)
+      .filter(([_, data]) => data.value > 0)
+      .map(([name, data]) => ({
+        name,
+        value: data.value,
+        color: data.color
+      }))
+      .sort((a, b) => b.value - a.value); // Sort by value descending
 
     // Add Available Balance and Budget Balance to detailed view
     return [
@@ -163,15 +228,7 @@ export const BudgetBreakdown = ({
     ];
   };
 
-  // Simple pie chart data
-  const simplePieData = [
-    { name: "Available Balance", value: availableBalance, color: "#9CA3AF" },
-    { name: "Budget Balance", value: budgetBalance, color: "#EF4444" },
-    { name: "Necessities", value: spending * 0.4055, color: "#3B82F6" },
-    { name: "Discretionary", value: spending * 0.2845, color: "#F97316" },
-    { name: "Savings", value: spending * 0.20, color: "#10B981" }
-  ];
-
+  const simplePieData = getSimpleCategoryData();
   const detailedPieData = getDetailedCategoryData();
   const pieData = isDetailed ? detailedPieData : simplePieData;
   const total = pieData.reduce((sum, item) => sum + item.value, 0);
