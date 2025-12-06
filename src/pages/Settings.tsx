@@ -18,7 +18,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const Settings = () => {
   const { accounts } = useAccounts();
   const { theme, setTheme } = useTheme();
-  const { payday, frequency, updatePayday, updateFrequency } = useIncomeSettings();
+  const { 
+    payday, 
+    frequency, 
+    weeklyPayday,
+    biweeklyPayday1,
+    biweeklyPayday2,
+    updatePayday, 
+    updateFrequency,
+    updateWeeklyPayday,
+    updateBiweeklyPayday1,
+    updateBiweeklyPayday2,
+    weekdayNames,
+  } = useIncomeSettings();
   const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -460,7 +472,25 @@ const Settings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="frequency">Income Frequency</Label>
+              <Select value={frequency} onValueChange={handleFrequencyChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                How often you get paid
+              </p>
+            </div>
+
+            {/* Dynamic payday input based on frequency */}
+            {frequency === 'monthly' && (
               <div className="space-y-2">
                 <Label htmlFor="payday">Payday (Day of Month)</Label>
                 <Input
@@ -472,26 +502,82 @@ const Settings = () => {
                   onChange={(e) => handlePaydayChange(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  The day you typically receive your salary
+                  The day you typically receive your salary (1-31)
                 </p>
               </div>
+            )}
+
+            {frequency === 'weekly' && (
               <div className="space-y-2">
-                <Label htmlFor="frequency">Income Frequency</Label>
-                <Select value={frequency} onValueChange={handleFrequencyChange}>
+                <Label htmlFor="weeklyPayday">Payday (Day of Week)</Label>
+                <Select 
+                  value={weeklyPayday.toString()} 
+                  onValueChange={(val) => {
+                    updateWeeklyPayday(parseInt(val, 10));
+                    toast.success("Weekly payday updated!");
+                  }}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select frequency" />
+                    <SelectValue placeholder="Select day of week" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
+                    {weekdayNames.map((name, index) => (
+                      <SelectItem key={index} value={index.toString()}>
+                        {name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  How often you get paid
+                  The day of the week you get paid
                 </p>
               </div>
-            </div>
+            )}
+
+            {frequency === 'bi-weekly' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="biweeklyPayday1">First Payday</Label>
+                  <Input
+                    id="biweeklyPayday1"
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={biweeklyPayday1}
+                    onChange={(e) => {
+                      const day = parseInt(e.target.value, 10);
+                      if (!isNaN(day)) {
+                        updateBiweeklyPayday1(day);
+                        toast.success("First payday updated!");
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    First pay date each month
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="biweeklyPayday2">Second Payday</Label>
+                  <Input
+                    id="biweeklyPayday2"
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={biweeklyPayday2}
+                    onChange={(e) => {
+                      const day = parseInt(e.target.value, 10);
+                      if (!isNaN(day)) {
+                        updateBiweeklyPayday2(day);
+                        toast.success("Second payday updated!");
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Second pay date each month
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
