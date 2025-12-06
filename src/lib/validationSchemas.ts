@@ -31,10 +31,14 @@ export const goalSchema = z.object({
   target: z.number().positive("Target amount must be positive").max(999999999, "Target amount too large"),
   currentSaved: z.number().min(0, "Current saved cannot be negative").max(999999999, "Amount too large").optional(),
   monthlyAllocation: z.number().min(0, "Monthly allocation cannot be negative").max(999999999, "Amount too large").optional(),
-  dueDate: z.date({
-    required_error: "A due date is required.",
-  })
-});
+  dueDate: z.date().optional()
+}).refine(
+  (data) => data.dueDate || (data.monthlyAllocation && data.monthlyAllocation > 0),
+  {
+    message: "Either set a monthly allocation or a target date",
+    path: ["monthlyAllocation"],
+  }
+);
 
 // Authentication validation schemas
 export const emailSchema = z.string().email("Invalid email address").max(255, "Email too long");
