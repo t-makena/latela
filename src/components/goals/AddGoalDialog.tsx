@@ -12,17 +12,30 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useEffect } from 'react';
 
 type GoalFormData = z.infer<typeof goalSchema>;
+
+interface GoalToEdit {
+  id: string;
+  name: string;
+  target: number;
+  amountSaved: number;
+  monthlyAllocation: number;
+  timeline: string;
+}
 
 interface AddGoalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (data: GoalFormData) => Promise<void>;
+  onEdit?: (id: string, data: GoalFormData) => Promise<void>;
+  goalToEdit?: GoalToEdit | null;
 }
 
-export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps) => {
+export const AddGoalDialog = ({ open, onOpenChange, onAdd, onEdit, goalToEdit }: AddGoalDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditMode = !!goalToEdit;
 
   const form = useForm<GoalFormData>({
     resolver: zodResolver(goalSchema),
@@ -35,14 +48,61 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
     },
   });
 
+  // Populate form when editing
+  useEffect(() => {
+    if (goalToEdit && open) {
+      // Parse the timeline string to get the date
+      const parseDate = (timeline: string): Date | undefined => {
+        try {
+          // timeline is in format "dd Mon yy" e.g., "15 Dec 25"
+          const parsed = new Date(timeline);
+          if (!isNaN(parsed.getTime())) return parsed;
+          // Try parsing with full year assumption
+          const parts = timeline.split(' ');
+          if (parts.length === 3) {
+            const day = parseInt(parts[0]);
+            const month = parts[1];
+            const year = parseInt(parts[2]) + 2000;
+            const dateStr = `${month} ${day}, ${year}`;
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) return date;
+          }
+        } catch {
+          return undefined;
+        }
+        return undefined;
+      };
+
+      form.reset({
+        name: goalToEdit.name,
+        target: goalToEdit.target,
+        currentSaved: goalToEdit.amountSaved,
+        monthlyAllocation: goalToEdit.monthlyAllocation,
+        dueDate: parseDate(goalToEdit.timeline),
+      });
+    } else if (!open) {
+      form.reset({
+        name: '',
+        target: undefined,
+        currentSaved: undefined,
+        monthlyAllocation: undefined,
+        dueDate: undefined,
+      });
+    }
+  }, [goalToEdit, open, form]);
+
   const handleSubmit = async (data: GoalFormData) => {
     try {
       setIsSubmitting(true);
-      await onAdd(data);
+      if (isEditMode && onEdit && goalToEdit) {
+        await onEdit(goalToEdit.id, data);
+      } else {
+        await onAdd(data);
+      }
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error adding goal:', error);
+      console.error('Error saving goal:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -52,7 +112,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Goal</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Goal' : 'Add New Goal'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -173,7 +233,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Adding...' : 'Add Goal'}
+                {isSubmitting ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Goal')}
               </Button>
             </DialogFooter>
           </form>
