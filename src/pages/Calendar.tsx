@@ -256,9 +256,11 @@ const Calendar = () => {
               <div className="flex-1 space-y-6">
                 {displayedEvents.map((event) => (
                   <div key={event.id} className="space-y-2 pb-4 border-b border-border last:border-b-0 last:pb-0">
-                    <h3 className="text-sm font-semibold text-foreground underline">
-                      {formatEventDate(event.eventDate)}
-                    </h3>
+                    {!selectedDateForFilter && (
+                      <h3 className="text-sm font-semibold text-foreground underline">
+                        {formatEventDate(event.eventDate)}
+                      </h3>
+                    )}
                     <div className="space-y-1">
                       <div className="flex items-start justify-between gap-2">
                         <button 
