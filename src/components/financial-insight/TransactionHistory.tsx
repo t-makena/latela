@@ -107,8 +107,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
       let query: any = supabase
         .from('v_transactions_with_details')
         .select('*')
-        .order('transaction_date', { ascending: false })
-        .limit(20);
+        .order('transaction_date', { ascending: false });
 
       // Apply filters
       if (selectedAccount !== "all") {
