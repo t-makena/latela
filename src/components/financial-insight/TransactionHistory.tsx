@@ -317,9 +317,9 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
                   </TableCell>
                   <TableCell>{getAccountName(transaction.account_id)}</TableCell>
                   <TableCell className={`text-right font-semibold ${
-                    transaction.transaction_code === 'DR' ? 'text-red-600' : 'text-green-600'
+                    transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
                   }`}>
-                    {transaction.transaction_code === 'DR' ? '-' : '+'}R{Math.abs(transaction.amount).toFixed(2)}
+                    {transaction.amount < 0 ? '-' : '+'}R{Math.abs(transaction.amount).toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <Button
