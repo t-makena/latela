@@ -177,12 +177,7 @@ export const BudgetBreakdown = ({
         color: parentCategoryColors[name] || "#06B6D4"
       }));
 
-    // Add Available Balance and Budget Balance
-    return [
-      { name: "Available Balance", value: availableBalance, color: "#9CA3AF" },
-      { name: "Budget Balance", value: budgetBalance, color: "#EF4444" },
-      ...categoryData
-    ];
+    return categoryData;
   };
 
   // Calculate detailed category breakdown (subcategories) from transactions
@@ -220,12 +215,7 @@ export const BudgetBreakdown = ({
       }))
       .sort((a, b) => b.value - a.value); // Sort by value descending
 
-    // Add Available Balance and Budget Balance to detailed view
-    return [
-      { name: "Available Balance", value: availableBalance, color: "#9CA3AF" },
-      { name: "Budget Balance", value: budgetBalance, color: "#EF4444" },
-      ...detailedData
-    ];
+    return detailedData;
   };
 
   const simplePieData = getSimpleCategoryData();
