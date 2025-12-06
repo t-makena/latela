@@ -13,6 +13,10 @@ interface Transaction {
   user_id?: string;
   created_at: string;
   updated_at?: string;
+  // Category details from view
+  parent_category_name?: string | null;
+  subcategory_name?: string | null;
+  display_subcategory_name?: string | null;
 }
 
 interface ChartDataPoint {
@@ -23,6 +27,16 @@ interface ChartDataPoint {
 }
 
 export const categorizeTransaction = (transaction: Transaction): string => {
+  // Use database category first, fallback to keyword matching
+  if (transaction.parent_category_name) {
+    return transaction.parent_category_name;
+  }
+  if (transaction.display_subcategory_name) {
+    return transaction.display_subcategory_name;
+  }
+  if (transaction.subcategory_name) {
+    return transaction.subcategory_name;
+  }
   return categorizeTxn(transaction.description);
 };
 
@@ -35,10 +49,10 @@ export const generateChartDataFromTransactions = (
   dateRange: DateRange,
   periodType: 'day' | 'week' | 'month'
 ): ChartDataPoint[] => {
-  // Filter transactions to date range and only expenses
+  // Filter transactions to date range and only expenses (amount < 0)
   const filteredTransactions = transactions.filter(t => {
     const transactionDate = new Date(t.transaction_date);
-    return t.type === 'expense' && 
+    return t.amount < 0 && 
            transactionDate >= dateRange.from && 
            transactionDate <= dateRange.to;
   });

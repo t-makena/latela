@@ -5,6 +5,7 @@ export interface Transaction {
   id: string;
   account_id: string | null;
   amount: number;
+  balance: number | null;
   description: string | null;
   transaction_date: string;
   type: string;
@@ -16,8 +17,11 @@ export interface Transaction {
   updated_at: string | null;
   // Category details from view
   parent_category_name: string | null;
+  parent_category_color: string | null;
   subcategory_name: string | null;
+  subcategory_color: string | null;
   display_subcategory_name: string | null;
+  display_subcategory_color: string | null;
   merchant_name: string | null;
 }
 
