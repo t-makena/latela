@@ -198,7 +198,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
   };
 
   return (
-    <div className="space-y-4">
+    <div id="transaction-history" className="space-y-4">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
