@@ -21,7 +21,7 @@ const Accounts = () => {
   }
 
   const scrollToTransactions = () => {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    document.getElementById('transaction-history')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
