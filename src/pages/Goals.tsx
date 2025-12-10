@@ -93,7 +93,7 @@ const Goals = () => {
   return (
     <div className="space-y-6 relative z-10">
       {/* Budget Goals Section */}
-      <Card>
+      <Card className="bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
         <CardHeader className="pb-4">
           <CardTitle className="font-georama text-xl">Budget Goals</CardTitle>
         </CardHeader>
@@ -242,7 +242,7 @@ const Goals = () => {
           </div>
         </div>
       ) : (
-        <Card>
+        <Card className="bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
           <CardHeader className="pb-4">
             <CardTitle className="font-georama text-xl">Goals Overview</CardTitle>
           </CardHeader>
