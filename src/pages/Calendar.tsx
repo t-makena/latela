@@ -173,7 +173,10 @@ const Calendar = () => {
       {/* Main Content: Calendar Grid + Events Sidebar */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
         {/* Calendar Grid */}
-        <Card className={`flex-1 ${isMobile ? 'p-4' : 'p-8'} shadow-md`}>
+        <Card 
+          className={`flex-1 ${isMobile ? 'p-4' : 'p-8'} bg-white border border-black`}
+          style={{ boxShadow: '3px 3px 0px #000000' }}
+        >
           {/* Day Labels */}
           <div className={`grid grid-cols-7 ${isMobile ? 'gap-1 mb-2' : 'gap-4 mb-6'}`}>
             {dayLabels.map((day, index) => (
@@ -215,7 +218,10 @@ const Calendar = () => {
 
         {/* Events Sidebar */}
         <div className="w-full lg:w-80">
-          <Card className={`${isMobile ? 'p-4' : 'p-6'} space-y-6 shadow-md h-full flex flex-col`}>
+          <Card 
+            className={`${isMobile ? 'p-4' : 'p-6'} space-y-6 h-full flex flex-col bg-white border border-black`}
+            style={{ boxShadow: '3px 3px 0px #000000' }}
+          >
             <div className="flex items-center justify-between">
               <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-foreground`}>
                 {getEventsSectionTitle()}
