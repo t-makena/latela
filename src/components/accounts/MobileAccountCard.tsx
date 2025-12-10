@@ -13,8 +13,8 @@ export const MobileAccountCard = ({ account }: MobileAccountCardProps) => {
       >
         {/* Left Side Content */}
         <div>
-          <p className="font-bold text-base text-black">{account.name}</p>
-          <p className="text-xs text-[#999999] mt-1">Available balance</p>
+          <p className="font-bold text-xs text-black">{account.name}</p>
+          <p className="text-[10px] text-[#999999] mt-1">Available balance</p>
           <p className="text-xl text-black mt-1 font-georama">
             R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
