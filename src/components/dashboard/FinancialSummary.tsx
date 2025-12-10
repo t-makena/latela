@@ -162,13 +162,13 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex-1">
-            <p className="text-sm text-[#666666] mb-1">Budget balance</p>
-            <p className="text-lg font-normal text-black font-georama">{formatCurrency(budgetBalance)}</p>
+            <p className="text-sm text-[#999999] mb-1">Budget balance</p>
+            <p className="text-lg font-light text-black">{formatCurrency(budgetBalance)}</p>
           </div>
           <div className="w-px bg-gray-300 self-stretch mx-4" />
           <div className="flex-1 text-right">
-            <p className="text-sm text-[#666666] mb-1">Flexible balance</p>
-            <p className="text-lg font-normal text-black font-georama">{formatCurrency(flexibleBalance)}</p>
+            <p className="text-sm text-[#999999] mb-1">Flexible balance</p>
+            <p className="text-lg font-light text-black">{formatCurrency(flexibleBalance)}</p>
           </div>
         </div>
       </div>
@@ -177,12 +177,12 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
 
   const content = (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="financial-metric">
-          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+          <div className="text-sm font-medium text-muted-foreground mb-1">
             Available Balance
           </div>
-          <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
+          <div className={isMobile ? "text-xl font-bold mb-1" : "text-2xl font-bold mb-1"}>
             {formatCurrency(availableBalance)}
           </div>
           {showExplanations && (
@@ -193,10 +193,10 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
         </div>
         
         <div className="financial-metric">
-          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+          <div className="text-sm font-light text-muted-foreground mb-1">
             Budget Balance
           </div>
-          <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
+          <div className={isMobile ? "text-xl font-light mb-1" : "text-2xl font-light mb-1"}>
             {formatCurrency(budgetBalance)}
           </div>
           {showExplanations && (
@@ -207,10 +207,10 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
         </div>
         
         <div className="financial-metric">
-          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+          <div className="text-sm font-light text-muted-foreground mb-1">
             Flexible Balance
           </div>
-          <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
+          <div className={isMobile ? "text-xl font-light mb-1" : "text-2xl font-light mb-1"}>
             {formatCurrency(flexibleBalance)}
           </div>
           {showExplanations && (
@@ -221,10 +221,10 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
         </div>
         
         <div className="financial-metric">
-          <div className="text-sm font-medium text-muted-foreground mb-1 font-georama">
+          <div className="text-sm font-medium text-muted-foreground mb-1">
             Budget Status
           </div>
-          <div className={isMobile ? "text-xl font-bold font-georama mb-2" : "text-2xl font-bold font-georama mb-2"}>
+          <div className={isMobile ? "text-xl font-bold mb-1" : "text-2xl font-bold mb-1"}>
             {budgetStatus}
           </div>
           {showExplanations && (
@@ -240,7 +240,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   return isMobile ? (
     <div className="animate-fade-in mb-4">
       <div className="pb-1 mb-3">
-        <div className="text-base font-medium text-foreground font-georama">
+        <div className="text-base font-medium text-foreground">
           Financial Overview
           {transactions.length === 0 && (
             <span className="text-xs text-orange-500 ml-2">(No transaction data found)</span>
@@ -251,8 +251,8 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     </div>
   ) : (
     <Card className="stat-card animate-fade-in">
-      <CardHeader className="pb-2 pt-4">
-        <CardTitle className="text-lg font-medium text-foreground font-georama">
+      <CardHeader className="pb-1 pt-2">
+        <CardTitle className="text-lg font-medium text-foreground">
           Financial Overview
           {transactions.length === 0 && (
             <span className="text-sm text-orange-500 ml-2">(No transaction data found)</span>
