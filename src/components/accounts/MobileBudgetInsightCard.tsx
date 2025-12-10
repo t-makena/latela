@@ -145,8 +145,7 @@ export const MobileBudgetInsightCard = () => {
           <tbody>
             <tr className="border-b border-[#E0E0E0]">
               <td className="py-4">
-                <p className="text-sm font-light text-[#999999]">Available Balance</p>
-                <p className="text-base font-medium text-black">{formatCurrency(metrics.availableBalance)}</p>
+                <p className="text-sm font-light text-black">Available Balance</p>
               </td>
               <td className="py-4 text-right">
                 <p className="text-sm text-[#999999]">—</p>
@@ -154,8 +153,7 @@ export const MobileBudgetInsightCard = () => {
             </tr>
             <tr className="border-b border-[#E0E0E0]">
               <td className="py-4">
-                <p className="text-sm font-light text-[#999999]">Budget Balance</p>
-                <p className="text-base font-medium text-black">{formatCurrency(metrics.budgetBalance)}</p>
+                <p className="text-sm font-light text-black">Budget Balance</p>
               </td>
               <td className="py-4 text-right">
                 <p className="text-sm text-[#999999]">—</p>
@@ -163,8 +161,7 @@ export const MobileBudgetInsightCard = () => {
             </tr>
             <tr>
               <td className="py-4">
-                <p className="text-sm font-light text-[#999999]">Spending</p>
-                <p className="text-base font-medium text-black">{formatCurrency(metrics.spending)}</p>
+                <p className="text-sm font-light text-black">Spending</p>
               </td>
               <td className="py-4 text-right">
                 <p className={`text-sm font-medium ${metrics.spendingChange > 0 ? 'text-red-500' : metrics.spendingChange < 0 ? 'text-green-500' : 'text-[#999999]'}`}>
