@@ -47,7 +47,7 @@ export const useAccounts = () => {
           // Format account name as "Bank Name ****1234"
           const last4Digits = account.account_number?.slice(-4) || '0000';
           const bankName = account.bank_name || 'Account';
-          const formattedName = `${bankName} ****${last4Digits}`;
+          const formattedName = `${bankName} ${last4Digits}`;
           
           return {
             id: account.id,
