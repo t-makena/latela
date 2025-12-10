@@ -20,7 +20,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'georama': ['Georama', 'sans-serif'],
+				'cooper': ['Cooper BT', 'serif'],
 			},
 			colors: {
 				border: "hsl(var(--border))",
