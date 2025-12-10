@@ -9,9 +9,10 @@ import { useAccounts } from "@/hooks/useAccounts";
 
 interface FinancialSummaryProps {
   showExplanations?: boolean;
+  minimal?: boolean;
 }
 
-export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryProps) => {
+export const FinancialSummary = ({ showExplanations = true, minimal = false }: FinancialSummaryProps) => {
   const { transactions, loading, error } = useTransactions();
   const { accounts, loading: accountsLoading } = useAccounts();
   const isMobile = useIsMobile();
@@ -27,6 +28,25 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
   console.log('FinancialSummary - error:', error);
 
   if (loading || budgetLoading || eventsLoading || accountsLoading) {
+    if (minimal) {
+      return (
+        <div className="bg-white rounded-2xl shadow-sm p-5 animate-pulse">
+          <div className="h-5 bg-gray-200 rounded w-32 mb-4"></div>
+          <div className="bg-[#F8F9FA] rounded-xl p-4 flex">
+            <div className="flex-1">
+              <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
+              <div className="h-6 bg-gray-200 rounded w-24"></div>
+            </div>
+            <div className="w-px bg-gray-300 mx-4" />
+            <div className="flex-1">
+              <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
+              <div className="h-6 bg-gray-200 rounded w-24"></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     const content = (
       <>
         <div className={isMobile ? "pb-1" : "pb-2 pt-4"}>
@@ -73,6 +93,15 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
   }
 
   if (error) {
+    if (minimal) {
+      return (
+        <div className="bg-white rounded-2xl shadow-sm p-5">
+          <h2 className="text-base font-semibold mb-4 font-georama">Financial Overview</h2>
+          <p className="text-destructive text-sm">Error loading data</p>
+        </div>
+      );
+    }
+
     return isMobile ? (
       <div className="animate-fade-in mb-4">
         <div className="pb-1">
@@ -114,6 +143,26 @@ export const FinancialSummary = ({ showExplanations = true }: FinancialSummaryPr
   const budgetStatusDescription = budgetStatus === 'good' 
     ? "You're on track, keep going : )" 
     : "You're at risk of spending your savings : (";
+
+  // Minimal view for mobile redesign
+  if (minimal) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-5 animate-fade-in">
+        <h2 className="text-base font-semibold mb-4 font-georama">Financial Overview</h2>
+        <div className="bg-[#F8F9FA] rounded-xl p-4 flex items-center">
+          <div className="flex-1">
+            <p className="text-[13px] text-muted-foreground mb-1">Budget balance</p>
+            <p className="text-xl font-bold font-georama">{formatCurrency(budgetBalance)}</p>
+          </div>
+          <div className="w-px bg-gray-300 self-stretch mx-4" />
+          <div className="flex-1">
+            <p className="text-[13px] text-muted-foreground mb-1">Flexible balance</p>
+            <p className="text-xl font-bold font-georama">{formatCurrency(flexibleBalance)}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const content = (
     <>
