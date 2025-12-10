@@ -162,12 +162,12 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex-1">
-            <p className="text-sm text-[#999999] mb-1">Budget balance</p>
+            <p className="text-sm font-light text-[#999999] mb-1">Budget balance</p>
             <p className="text-lg font-light text-black">{formatCurrency(budgetBalance)}</p>
           </div>
           <div className="w-px bg-gray-300 self-stretch mx-4" />
           <div className="flex-1 text-right">
-            <p className="text-sm text-[#999999] mb-1">Flexible balance</p>
+            <p className="text-sm font-light text-[#999999] mb-1">Flexible balance</p>
             <p className="text-lg font-light text-black">{formatCurrency(flexibleBalance)}</p>
           </div>
         </div>
