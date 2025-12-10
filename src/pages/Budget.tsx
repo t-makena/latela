@@ -108,7 +108,7 @@ const Budget = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Budget Items Table */}
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-xl">Budget Plan</CardTitle>
               <Button
@@ -204,7 +204,7 @@ const Budget = () => {
         {/* Right Sidebar Cards */}
         <div className="space-y-6">
           {/* Balance Calculations Card */}
-          <Card>
+          <Card className="bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
             <CardHeader>
               <CardTitle className="text-xl">Balance calculations</CardTitle>
             </CardHeader>
@@ -254,7 +254,7 @@ const Budget = () => {
           </Card>
 
           {/* Calculation Explanation Card */}
-          <Card>
+          <Card className="bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
             <CardHeader>
               <CardTitle className="text-xl">Calculation Explanation</CardTitle>
             </CardHeader>
