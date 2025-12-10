@@ -156,18 +156,18 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   if (minimal) {
     return (
       <div className="animate-fade-in">
-        <h2 className="text-xs font-bold mb-4 font-georama text-black">Financial Overview</h2>
+        <h2 className="text-base font-bold mb-4 font-georama text-black">Financial Overview</h2>
         <div 
           className="bg-white rounded-full border border-black px-6 py-5 flex items-center"
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex-1">
-            <p className="text-[10px] font-light text-[#999999] mb-1">Budget balance</p>
+            <p className="text-sm font-light text-[#999999] mb-1">Budget balance</p>
             <p className="text-lg font-light text-black">{formatCurrency(budgetBalance)}</p>
           </div>
           <div className="w-px bg-gray-300 self-stretch mx-4" />
           <div className="flex-1 text-right">
-            <p className="text-[10px] font-light text-[#999999] mb-1">Flexible balance</p>
+            <p className="text-sm font-light text-[#999999] mb-1">Flexible balance</p>
             <p className="text-lg font-light text-black">{formatCurrency(flexibleBalance)}</p>
           </div>
         </div>
