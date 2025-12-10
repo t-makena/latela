@@ -136,13 +136,13 @@ const Goals = () => {
             <div className="flex justify-between items-start gap-4">
               {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">{getTargetSavingLabel()}</p>
+                <p className="text-sm font-light text-muted-foreground mb-1">{getTargetSavingLabel()}</p>
                 <p className="text-2xl font-bold font-georama">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
               {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
-                <p className="text-sm text-muted-foreground mb-1">Total Amount Saved</p>
+                <p className="text-sm font-light text-muted-foreground mb-1">Total Amount Saved</p>
                 <p className="text-2xl font-bold font-georama">{formatCurrency(totalAmountSaved)}</p>
               </div>
             </div>
@@ -150,17 +150,17 @@ const Goals = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-medium w-[22%] px-2">Goal</TableHead>
-                  <TableHead className="font-medium w-[18%] px-2">
+                  <TableHead className="font-light w-[22%] px-2">Goal</TableHead>
+                  <TableHead className="font-light w-[18%] px-2">
                     Allocation<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-medium text-right w-[18%] px-2">
+                  <TableHead className="font-light text-right w-[18%] px-2">
                     Saved (R)<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[18%] px-2">
+                  <TableHead className="font-light w-[18%] px-2">
                     Target<sup>3</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[18%] px-2">
+                  <TableHead className="font-light w-[18%] px-2">
                     Timeline<sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[6%]"></TableHead>
@@ -251,13 +251,13 @@ const Goals = () => {
             <div className="flex justify-between items-start gap-8">
               {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">{getTargetSavingLabel()}</p>
+                <p className="text-sm font-light text-muted-foreground mb-1">{getTargetSavingLabel()}</p>
                 <p className="text-3xl font-bold font-georama">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
               {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
-                <p className="text-sm text-muted-foreground mb-1">Total Amount Saved</p>
+                <p className="text-sm font-light text-muted-foreground mb-1">Total Amount Saved</p>
                 <p className="text-3xl font-bold font-georama">{formatCurrency(totalAmountSaved)}</p>
               </div>
             </div>
@@ -265,17 +265,17 @@ const Goals = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-medium w-[22%] px-6">Goal</TableHead>
-                  <TableHead className="font-medium w-[16%] px-6">
+                  <TableHead className="font-light w-[22%] px-6">Goal</TableHead>
+                  <TableHead className="font-light w-[16%] px-6">
                     Allocation<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-medium text-right w-[16%] px-6">
+                  <TableHead className="font-light text-right w-[16%] px-6">
                     Saved (R)<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[16%] px-6">
+                  <TableHead className="font-light w-[16%] px-6">
                     Target<sup>3</sup>
                   </TableHead>
-                  <TableHead className="font-medium w-[16%] px-6">
+                  <TableHead className="font-light w-[16%] px-6">
                     Timeline<sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[8%]"></TableHead>
