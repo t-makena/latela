@@ -1,7 +1,7 @@
 export const MobileBudgetInsightCard = () => {
   return (
     <div className="animate-fade-in">
-      <h2 className="text-base font-bold mb-3 font-georama text-black">Budget insight</h2>
+      <h2 className="text-lg font-bold mb-3 font-georama text-black">Budget insight</h2>
       
       <div 
         className="bg-white rounded-3xl border border-black p-4 min-h-[400px]"
