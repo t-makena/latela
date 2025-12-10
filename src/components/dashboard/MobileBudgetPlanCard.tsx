@@ -32,48 +32,53 @@ export const MobileBudgetPlanCard = () => {
 
   if (budgetLoading) {
     return (
-      <div className="bg-white rounded-2xl border-2 border-[#E0E0E0] p-4 animate-pulse">
-        <div className="h-5 bg-gray-200 rounded w-24 mb-4"></div>
-        <div className="h-8 bg-gray-200 rounded"></div>
+      <div className="animate-pulse">
+        <div className="h-5 bg-gray-200 rounded w-24 mb-3"></div>
+        <div 
+          className="bg-white rounded-3xl border border-black p-5 min-h-[400px]"
+          style={{ boxShadow: '4px 4px 0px #000000' }}
+        >
+          <div className="flex justify-between mb-4">
+            <div className="h-4 bg-gray-200 rounded w-20"></div>
+            <div className="h-4 bg-gray-200 rounded w-24"></div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-[#E0E0E0] p-4">
-      <h2 className="text-base font-semibold mb-4 font-georama">Budget plan</h2>
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left font-semibold text-sm pb-3 text-foreground">Category:</th>
-            <th className="text-right font-semibold text-sm pb-3 text-foreground">Amount Spent:</th>
-          </tr>
-        </thead>
-        <tbody>
-          {budgetItems.length === 0 ? (
+    <div className="animate-fade-in">
+      <h2 className="text-lg font-bold mb-3 font-georama text-black">Budget plan</h2>
+      <div 
+        className="bg-white rounded-3xl border border-black p-5 min-h-[400px]"
+        style={{ boxShadow: '4px 4px 0px #000000' }}
+      >
+        <table className="w-full">
+          <thead>
             <tr>
-              <td colSpan={2} className="py-4 text-center text-sm text-muted-foreground">
-                No budget items yet
-              </td>
+              <th className="text-left font-bold text-base pb-4 text-black">Category:</th>
+              <th className="text-right font-bold text-base pb-4 text-black">Amount Spent:</th>
             </tr>
-          ) : (
-            budgetItems.map((item) => {
+          </thead>
+          <tbody>
+            {budgetItems.map((item) => {
               const amountSpent = getAmountSpent(item.name);
               const monthlyBudget = calculateMonthlyAmount(item);
               const isOverBudget = amountSpent > monthlyBudget;
               
               return (
-                <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                  <td className="py-3 text-sm text-foreground">{item.name}</td>
+                <tr key={item.id}>
+                  <td className="py-3 text-sm text-black">{item.name}</td>
                   <td className={`py-3 text-sm text-right font-medium ${isOverBudget ? 'text-red-500' : 'text-green-600'}`}>
                     {formatCurrency(amountSpent)}
                   </td>
                 </tr>
               );
-            })
-          )}
-        </tbody>
-      </table>
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

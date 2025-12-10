@@ -30,14 +30,17 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   if (loading || budgetLoading || eventsLoading || accountsLoading) {
     if (minimal) {
       return (
-        <div className="bg-white rounded-2xl shadow-sm p-5 animate-pulse">
+        <div className="animate-pulse">
           <div className="h-5 bg-gray-200 rounded w-32 mb-4"></div>
-          <div className="bg-[#F8F9FA] rounded-xl p-4 flex">
+          <div 
+            className="bg-white rounded-full border border-black px-6 py-5 flex items-center"
+            style={{ boxShadow: '4px 4px 0px #000000' }}
+          >
             <div className="flex-1">
               <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
               <div className="h-6 bg-gray-200 rounded w-24"></div>
             </div>
-            <div className="w-px bg-gray-300 mx-4" />
+            <div className="w-px bg-gray-300 self-stretch mx-4" />
             <div className="flex-1">
               <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
               <div className="h-6 bg-gray-200 rounded w-24"></div>
@@ -95,9 +98,14 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   if (error) {
     if (minimal) {
       return (
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <h2 className="text-base font-semibold mb-4 font-georama">Financial Overview</h2>
-          <p className="text-destructive text-sm">Error loading data</p>
+        <div className="animate-fade-in">
+          <h2 className="text-lg font-bold mb-4 font-georama text-black">Financial Overview</h2>
+          <div 
+            className="bg-white rounded-full border border-black px-6 py-5"
+            style={{ boxShadow: '4px 4px 0px #000000' }}
+          >
+            <p className="text-destructive text-sm">Error loading data</p>
+          </div>
         </div>
       );
     }
@@ -144,20 +152,23 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     ? "You're on track, keep going : )" 
     : "You're at risk of spending your savings : (";
 
-  // Minimal view for mobile redesign
+  // Minimal view for mobile redesign - Neo-brutalist style
   if (minimal) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-5 animate-fade-in">
-        <h2 className="text-base font-semibold mb-4 font-georama">Financial Overview</h2>
-        <div className="bg-[#F8F9FA] rounded-xl p-4 flex items-center">
+      <div className="animate-fade-in">
+        <h2 className="text-lg font-bold mb-4 font-georama text-black">Financial Overview</h2>
+        <div 
+          className="bg-white rounded-full border border-black px-6 py-5 flex items-center"
+          style={{ boxShadow: '4px 4px 0px #000000' }}
+        >
           <div className="flex-1">
-            <p className="text-[13px] text-muted-foreground mb-1">Budget balance</p>
-            <p className="text-xl font-bold font-georama">{formatCurrency(budgetBalance)}</p>
+            <p className="text-sm text-[#666666] mb-1">Budget balance</p>
+            <p className="text-lg font-normal text-black font-georama">{formatCurrency(budgetBalance)}</p>
           </div>
           <div className="w-px bg-gray-300 self-stretch mx-4" />
-          <div className="flex-1">
-            <p className="text-[13px] text-muted-foreground mb-1">Flexible balance</p>
-            <p className="text-xl font-bold font-georama">{formatCurrency(flexibleBalance)}</p>
+          <div className="flex-1 text-right">
+            <p className="text-sm text-[#666666] mb-1">Flexible balance</p>
+            <p className="text-lg font-normal text-black font-georama">{formatCurrency(flexibleBalance)}</p>
           </div>
         </div>
       </div>
