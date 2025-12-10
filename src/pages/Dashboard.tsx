@@ -3,6 +3,7 @@ import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { BudgetItemsCard } from "@/components/dashboard/BudgetItemsCard";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
 import { MobileBudgetPlanCard } from "@/components/dashboard/MobileBudgetPlanCard";
+import { MobileBudgetInsightCard } from "@/components/accounts/MobileBudgetInsightCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -23,6 +24,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-white px-6 py-6 space-y-5 animate-fade-in">
         <FinancialSummary showExplanations={false} minimal={true} />
         <MobileBudgetPlanCard />
+        <MobileBudgetInsightCard />
       </div>
     );
   }
