@@ -1,5 +1,40 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Georama:wght@100;200;300;400;500;600;700;800;900&display=swap');
+/* Cooper BT Font Family */
+@font-face {
+  font-family: 'Cooper BT';
+  src: url('/fonts/CooperLtBT-Regular.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cooper BT';
+  src: url('/fonts/CooperLtBT-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cooper BT';
+  src: url('/fonts/CooperLtBT-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Cooper BT';
+  src: url('/fonts/CooperMdBT-Regular.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cooper BT';
+  src: url('/fonts/CooperBlkBT-Regular.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -75,7 +110,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Georama', sans-serif;
+    font-family: 'Cooper BT', serif;
   }
 }
 
