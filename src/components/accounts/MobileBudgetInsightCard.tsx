@@ -1,7 +1,7 @@
 export const MobileBudgetInsightCard = () => {
   return (
     <div className="animate-fade-in">
-      <h2 className="text-xs font-bold mb-3 font-georama text-black">Budget insight</h2>
+      <h2 className="text-base font-bold mb-3 font-georama text-black">Budget insight</h2>
       
       <div 
         className="bg-white rounded-3xl border border-black p-4 min-h-[400px]"
@@ -10,8 +10,8 @@ export const MobileBudgetInsightCard = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#E0E0E0]">
-              <th className="text-left font-normal text-[10px] text-[#999999] pb-4">Metric</th>
-              <th className="text-right font-normal text-[10px] text-[#999999] pb-4">
+              <th className="text-left font-normal text-sm text-[#999999] pb-4">Metric</th>
+              <th className="text-right font-normal text-sm text-[#999999] pb-4">
                 1 Mth Chng ▼
               </th>
             </tr>
