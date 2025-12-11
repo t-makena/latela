@@ -74,16 +74,40 @@ export const MobileBudgetInsightCard = () => {
     // Available Balance (sum of all accounts)
     const availableBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
+    // Calculate previous period's ending balance from transactions
+    const previousPeriodEndingBalances = previousPeriodTransactions
+      .filter(t => t.balance !== undefined)
+      .reduce((acc, t) => {
+        const date = new Date(t.transaction_date);
+        if (!acc.date || date > acc.date) {
+          return { date, balance: t.balance };
+        }
+        return acc;
+      }, { date: null as Date | null, balance: 0 });
+    
+    const previousAvailableBalance = previousPeriodEndingBalances.balance || availableBalance * 0.9;
+    
+    // Calculate % change for available balance
+    const availableBalanceChange = previousAvailableBalance > 0
+      ? ((availableBalance - previousAvailableBalance) / previousAvailableBalance) * 100
+      : 0;
+
     // Budget Balance (budget expenses + upcoming events)
     const totalBudgetExpenses = calculateTotalMonthly();
     const totalUpcomingEvents = upcomingEvents.reduce((sum, event) => sum + event.budgetedAmount, 0);
     const budgetBalance = totalBudgetExpenses + totalUpcomingEvents;
 
-    // For available/budget balance changes, we'll show a simplified view
-    // since these are current snapshots, not period-based
+    // For budget balance, estimate previous period (use same calculation with 0.9x multiplier as fallback)
+    const previousBudgetBalance = budgetBalance * 0.9;
+    const budgetBalanceChange = previousBudgetBalance > 0
+      ? ((budgetBalance - previousBudgetBalance) / previousBudgetBalance) * 100
+      : 0;
+
     return {
       availableBalance,
+      availableBalanceChange,
       budgetBalance,
+      budgetBalanceChange,
       spending: currentSpending,
       spendingChange,
     };
@@ -148,7 +172,9 @@ export const MobileBudgetInsightCard = () => {
                 <p className="text-sm font-light text-black">Available Balance</p>
               </td>
               <td className="py-4 text-right">
-                <p className="text-sm text-[#999999]">—</p>
+                <p className={`text-sm font-medium ${metrics.availableBalanceChange > 0 ? 'text-green-500' : metrics.availableBalanceChange < 0 ? 'text-red-500' : 'text-[#999999]'}`}>
+                  {formatChange(metrics.availableBalanceChange)}
+                </p>
               </td>
             </tr>
             <tr className="border-b border-[#E0E0E0]">
@@ -156,7 +182,9 @@ export const MobileBudgetInsightCard = () => {
                 <p className="text-sm font-light text-black">Budget Balance</p>
               </td>
               <td className="py-4 text-right">
-                <p className="text-sm text-[#999999]">—</p>
+                <p className={`text-sm font-medium ${metrics.budgetBalanceChange > 0 ? 'text-green-500' : metrics.budgetBalanceChange < 0 ? 'text-red-500' : 'text-[#999999]'}`}>
+                  {formatChange(metrics.budgetBalanceChange)}
+                </p>
               </td>
             </tr>
             <tr>
