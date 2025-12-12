@@ -188,7 +188,7 @@ const Settings = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Profile</CardTitle>
           <CardDescription>
@@ -265,7 +265,7 @@ const Settings = () => {
         </CardContent>
       </Card>
       
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Account Management</CardTitle>
           <CardDescription>
@@ -314,7 +314,7 @@ const Settings = () => {
         </CardContent>
       </Card>
       
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Account Security</CardTitle>
           <CardDescription>
@@ -463,7 +463,7 @@ const Settings = () => {
         </CardContent>
       </Card>
       
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Income Settings</CardTitle>
           <CardDescription>
@@ -582,7 +582,7 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Preferences</CardTitle>
           <CardDescription>

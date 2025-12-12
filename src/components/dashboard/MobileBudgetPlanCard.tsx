@@ -48,10 +48,10 @@ export const MobileBudgetPlanCard = () => {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in w-full">
       <h2 className="text-lg font-bold mb-3 font-georama text-black">Budget plan</h2>
       <div 
-        className="bg-white rounded-3xl border border-black p-5 min-h-[400px]"
+        className="bg-white rounded-3xl border border-black p-5 min-h-[400px] w-full"
         style={{ boxShadow: '4px 4px 0px #000000' }}
       >
         <table className="w-full">

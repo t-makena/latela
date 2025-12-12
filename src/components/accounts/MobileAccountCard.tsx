@@ -6,7 +6,7 @@ interface MobileAccountCardProps {
 
 export const MobileAccountCard = ({ account }: MobileAccountCardProps) => {
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in w-full">
       <div 
         className="bg-white rounded-2xl border border-black p-4 flex justify-between items-start"
         style={{ boxShadow: '3px 3px 0px #000000' }}
