@@ -70,15 +70,12 @@ export const ManageCustomCategoriesSection = () => {
                       style={{ backgroundColor: category.color }}
                     />
                     <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">{category.name}</span>
+                      <span className="font-medium">
+                        {category.name}
                         {category.replaces_category_id && (
-                          <Badge variant="secondary" className="text-xs gap-1">
-                            <RefreshCw className="h-3 w-3" />
-                            Replaces: {category.replaces_category_name}
-                          </Badge>
+                          <span className="font-normal text-muted-foreground"> - {category.replaces_category_name}</span>
                         )}
-                      </div>
+                      </span>
                       <p className="text-sm text-muted-foreground">
                         Parent: {category.parent_category_name}
                       </p>
