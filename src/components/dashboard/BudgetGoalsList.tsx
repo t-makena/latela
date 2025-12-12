@@ -29,7 +29,7 @@ export const BudgetGoalsList = () => {
     return isMobile ? (
       <div className="mb-4">{content}</div>
     ) : (
-      <Card className="stat-card">
+      <Card className="stat-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
         </CardHeader>
@@ -58,7 +58,7 @@ export const BudgetGoalsList = () => {
     return isMobile ? (
       <div className="mb-4">{emptyContent}</div>
     ) : (
-      <Card className="stat-card">
+      <Card className="stat-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
         </CardHeader>
@@ -109,7 +109,7 @@ export const BudgetGoalsList = () => {
       {goalsContent}
     </div>
   ) : (
-    <Card className="stat-card">
+    <Card className="stat-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
       </CardHeader>
