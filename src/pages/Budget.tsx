@@ -227,7 +227,7 @@ const Budget = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Budget Items Table */}
         <div className="lg:col-span-2 w-full">
-          <Card className="w-full bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
+          <Card className="w-full bg-white border border-black" style={{ boxShadow: '4px 4px 0px #000000' }}>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-xl">{t('finance.budgetPlan')}</CardTitle>
               <Button
@@ -321,7 +321,7 @@ const Budget = () => {
         {/* Right Sidebar Cards */}
         <div className="space-y-6 w-full">
           {/* Balance Calculations Card */}
-          <Card className="w-full bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
+          <Card className="w-full bg-white border border-black" style={{ boxShadow: '4px 4px 0px #000000' }}>
             <CardHeader>
               <CardTitle className="text-xl">{t('budget.balanceCalculations')}</CardTitle>
             </CardHeader>
@@ -371,7 +371,7 @@ const Budget = () => {
           </Card>
 
           {/* Calculation Explanation Card */}
-          <Card className="w-full bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
+          <Card className="w-full bg-white border border-black" style={{ boxShadow: '4px 4px 0px #000000' }}>
             <CardHeader>
               <CardTitle className="text-xl">Calculation Explanation</CardTitle>
             </CardHeader>
