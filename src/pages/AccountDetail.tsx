@@ -19,12 +19,12 @@ const AccountDetail = () => {
         <div className="min-h-screen bg-white py-6 space-y-5">
           <Skeleton 
             className="h-24 rounded-2xl border border-black" 
-            style={{ boxShadow: '3px 3px 0px #000000' }}
+            style={{ boxShadow: '4px 4px 0px #000000' }}
           />
           <Skeleton className="h-6 w-32" />
           <Skeleton 
             className="h-[400px] rounded-3xl border-2 border-black" 
-            style={{ boxShadow: '3px 3px 0px #000000' }}
+            style={{ boxShadow: '4px 4px 0px #000000' }}
           />
         </div>
       );
