@@ -62,7 +62,7 @@ export const ManageCustomCategoriesSection = () => {
               {customCategories.map((category) => (
                 <div
                   key={category.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between py-2 hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <div
