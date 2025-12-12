@@ -163,47 +163,17 @@
   background: hsl(var(--primary));
 }
 
-/* 3D Card Style */
+/* Neo-brutalist Card Style */
 .card {
   position: relative;
   background: hsl(var(--card));
+  box-shadow: 3px 3px 0px #000000;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 1px 1px rgba(255, 255, 255, 0.9) inset,
-    0 -1px 1px rgba(0, 0, 0, 0.05) inset,
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
-}
-
-/* Mobile flat cards */
-@media (max-width: 768px) {
-  .card {
-    box-shadow: none;
-    transform: none;
-  }
-  
-  .card:hover {
-    box-shadow: none;
-    transform: none;
-  }
-  
-  .card::before {
-    display: none;
-  }
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #000000;
 }
 
 /* Hover effect for financial metric items */
