@@ -1,4 +1,3 @@
-
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { BudgetItemsCard } from "@/components/dashboard/BudgetItemsCard";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
@@ -8,11 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
   const { transactions } = useTransactions();
   const { monthlyIncome, monthlyExpenses, netBalance } = calculateFinancialMetrics(transactions);
+  const { t } = useLanguage();
 
   const availableBalance = netBalance;
   const budgetBalance = monthlyIncome * 0.3;
@@ -40,7 +41,7 @@ const Dashboard = () => {
         </div>
         <Card className="w-full flex flex-col">
           <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
-            <CardTitle className="text-lg">Budget Insight</CardTitle>
+            <CardTitle className="text-lg">{t('finance.budgetInsight')}</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 flex items-center pb-6">
             <BudgetBreakdown
