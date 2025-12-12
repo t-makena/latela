@@ -125,11 +125,11 @@ export const MobileBudgetInsightCard = () => {
   const periodOptions: PeriodOption[] = ["1 Mth", "3 Mth", "6 Mth", "1 Yr"];
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in w-full">
       <h2 className="text-lg font-bold mb-3 font-georama text-black">Budget insight</h2>
       
       <div 
-        className="bg-white rounded-3xl border border-black p-4"
+        className="bg-white rounded-3xl border border-black p-4 w-full"
         style={{ boxShadow: '3px 3px 0px #000000' }}
       >
         <table className="w-full">

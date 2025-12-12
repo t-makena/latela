@@ -155,10 +155,10 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   // Minimal view for mobile redesign - Neo-brutalist style
   if (minimal) {
     return (
-      <div className="animate-fade-in">
+      <div className="animate-fade-in w-full">
         <h2 className="text-lg font-bold mb-4 font-georama text-black">Financial Overview</h2>
         <div 
-          className="bg-white rounded-full border border-black px-6 py-[10px] flex items-center"
+          className="bg-white rounded-full border border-black px-6 py-[10px] flex items-center w-full"
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex-1">
