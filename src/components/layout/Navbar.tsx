@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -13,14 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { LatelaIcon } from "@/components/ui/latela-icon";
 import { useAccounts } from "@/hooks/useAccounts";
-
-const navItems = [
-  { name: "Dashboard", href: "/", icon: Home },
-  { name: "Budget", href: "/budget", icon: Calculator },
-  { name: "Goals", href: "/goals", icon: Target },
-  { name: "Calendar", href: "/calendar", icon: Calendar },
-  { name: "Settings", href: "/settings", icon: Settings },
-];
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Navbar = () => {
   const isMobile = useIsMobile();
@@ -29,6 +21,15 @@ export const Navbar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(true);
   const { accounts } = useAccounts();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { name: t('nav.dashboard'), href: "/", icon: Home },
+    { name: t('nav.budget'), href: "/budget", icon: Calculator },
+    { name: t('nav.goals'), href: "/goals", icon: Target },
+    { name: t('nav.calendar'), href: "/calendar", icon: Calendar },
+    { name: t('nav.settings'), href: "/settings", icon: Settings },
+  ];
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -86,7 +87,7 @@ export const Navbar = () => {
                 )}
               >
                 <Wallet size={22} className="shrink-0" />
-                <span className="truncate flex-1 text-left">Accounts</span>
+                <span className="truncate flex-1 text-left">{t('nav.accounts')}</span>
                 <ChevronDown className={cn("h-4 w-4 transition-transform", accountsOpen && "rotate-180")} />
               </Button>
             </CollapsibleTrigger>
@@ -101,7 +102,7 @@ export const Navbar = () => {
                       location.pathname === '/accounts' && "bg-accent"
                     )}
                   >
-                    All Accounts
+                    {t('nav.allAccounts')}
                   </Button>
                 </Link>
               )}
@@ -169,7 +170,7 @@ export const Navbar = () => {
             className="w-full gap-3 text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
           >
             <LogOut size={22} className="shrink-0" />
-            <span className="truncate">Log Out</span>
+            <span className="truncate">{t('nav.logout')}</span>
           </Button>
         ) : (
           <button
