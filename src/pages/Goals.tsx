@@ -95,7 +95,7 @@ const Goals = () => {
   return (
     <div className="space-y-6 relative z-10">
       {/* Budget Goals Section */}
-      <Card className="bg-white border border-black w-full" style={{ boxShadow: '3px 3px 0px #000000' }}>
+      <Card className="bg-white border border-black w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-4">
           <CardTitle className="font-georama text-xl">{t('goals.budgetGoals')}</CardTitle>
         </CardHeader>
@@ -130,8 +130,8 @@ const Goals = () => {
       {/* Goals Overview Table */}
       {isMobile ? (
         <div 
-          className="bg-white rounded-2xl border border-black p-4 w-full"
-          style={{ boxShadow: '3px 3px 0px #000000' }}
+          className="bg-white rounded-3xl border border-black p-5 w-full"
+          style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="pb-2 mb-2">
             <h2 className="font-georama text-xl font-semibold">{t('goals.goalsOverview')}</h2>
@@ -247,7 +247,7 @@ const Goals = () => {
           </div>
         </div>
       ) : (
-        <Card className="bg-white border border-black w-full" style={{ boxShadow: '3px 3px 0px #000000' }}>
+        <Card className="bg-white border border-black w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
           <CardHeader className="pb-4">
             <CardTitle className="font-georama text-xl">{t('goals.goalsOverview')}</CardTitle>
           </CardHeader>
