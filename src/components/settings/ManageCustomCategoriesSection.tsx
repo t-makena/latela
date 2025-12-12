@@ -17,16 +17,16 @@ export const ManageCustomCategoriesSection = () => {
 
   return (
     <>
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle>Custom Categories</CardTitle>
               <CardDescription>
                 Create custom subcategories or replace system categories with your own names
               </CardDescription>
             </div>
-            <Button onClick={() => setAddDialogOpen(true)} size="sm">
+            <Button onClick={() => setAddDialogOpen(true)} size="sm" className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Custom Category
             </Button>
@@ -46,11 +46,16 @@ export const ManageCustomCategoriesSection = () => {
               ))}
             </div>
           ) : customCategories.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No custom categories yet.</p>
-              <p className="text-sm mt-1">
-                Create custom subcategories or replace system categories with your own names.
-              </p>
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => setAddDialogOpen(true)}
+                className="h-12 w-12 rounded-full mb-3"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+              <p className="text-sm">Add custom (sub)categories</p>
             </div>
           ) : (
             <div className="space-y-3">
