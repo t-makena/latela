@@ -135,7 +135,7 @@ const Calendar = () => {
   const dayLabels = ["m", "t", "w", "t", "f", "s", "s"];
 
   return (
-    <div className={`min-h-screen bg-background ${isMobile ? 'p-4' : 'p-8'}`}>
+    <div className={`min-h-screen bg-background ${isMobile ? 'px-3 py-4' : 'p-8'}`}>
       {/* Header with Month/Year and Navigation */}
       <div className={`flex items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'}`}>
         <h1 className={`${isMobile ? 'text-2xl' : 'text-xl'} font-bold text-foreground`}>
