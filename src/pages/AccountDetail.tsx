@@ -16,7 +16,7 @@ const AccountDetail = () => {
   if (loading) {
     if (isMobile) {
       return (
-        <div className="min-h-screen bg-white px-6 py-6 space-y-5">
+        <div className="min-h-screen bg-white py-6 space-y-5">
           <Skeleton 
             className="h-24 rounded-2xl border border-black" 
             style={{ boxShadow: '3px 3px 0px #000000' }}
@@ -66,7 +66,7 @@ const AccountDetail = () => {
   // Mobile neo-brutalist layout
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-white px-6 py-6 space-y-5 animate-fade-in">
+      <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
         <MobileAccountCard account={account} />
         <MobileBudgetInsightCard />
       </div>
