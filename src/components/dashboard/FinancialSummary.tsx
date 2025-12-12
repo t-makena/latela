@@ -74,7 +74,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     return isMobile ? (
       <div className="animate-fade-in mb-4">{content}</div>
     ) : (
-      <Card className="stat-card animate-fade-in">
+      <Card className="animate-fade-in">
         <CardHeader className="pb-2 pt-4">
           <CardTitle className="text-lg font-medium text-foreground font-georama">
             Financial Overview
@@ -122,7 +122,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
         </div>
       </div>
     ) : (
-      <Card className="stat-card animate-fade-in">
+      <Card className="animate-fade-in">
         <CardHeader className="pb-2 pt-4">
           <CardTitle className="text-lg font-medium text-foreground font-georama">
             Financial Overview
@@ -249,7 +249,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
       <div>{content}</div>
     </div>
   ) : (
-    <Card className="stat-card animate-fade-in">
+    <Card className="animate-fade-in">
       <CardHeader className="pb-1 pt-2">
         <CardTitle className="text-lg font-medium text-foreground">
           Financial Overview
