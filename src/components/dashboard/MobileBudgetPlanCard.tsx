@@ -35,7 +35,7 @@ export const MobileBudgetPlanCard = () => {
       <div className="animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-24 mb-3"></div>
         <div 
-          className="bg-white rounded-3xl border border-black p-5 min-h-[400px]"
+          className="bg-white rounded-3xl border border-black p-5"
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex justify-between mb-4">
@@ -49,11 +49,11 @@ export const MobileBudgetPlanCard = () => {
 
   return (
     <div className="animate-fade-in w-full">
-      <h2 className="text-lg font-bold mb-3 font-georama text-black">Budget plan</h2>
       <div 
-        className="bg-white rounded-3xl border border-black p-5 min-h-[400px] w-full"
+        className="bg-white rounded-3xl border border-black p-5 w-full"
         style={{ boxShadow: '4px 4px 0px #000000' }}
       >
+        <h2 className="text-lg font-bold mb-4 font-georama text-black">Budget plan</h2>
         <table className="w-full">
           <thead>
             <tr>
@@ -78,7 +78,7 @@ export const MobileBudgetPlanCard = () => {
             })}
           </tbody>
         </table>
-      </div>
+        </div>
     </div>
   );
 };

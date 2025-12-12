@@ -136,63 +136,91 @@ const Budget = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Category/Merchant</TableHead>
-                        <TableHead>Frequency</TableHead>
-                        <TableHead className="text-right">Budget</TableHead>
-                        <TableHead className="text-right">Freq x Budget</TableHead>
-                        <TableHead className="text-right">Amount Spent</TableHead>
-                        <TableHead className="w-12"></TableHead>
+                        {isMobile ? (
+                          <>
+                            <TableHead className="font-light">Category:</TableHead>
+                            <TableHead className="text-right font-light">Amount Spent:</TableHead>
+                          </>
+                        ) : (
+                          <>
+                            <TableHead>Category/Merchant</TableHead>
+                            <TableHead>Frequency</TableHead>
+                            <TableHead className="text-right">Budget</TableHead>
+                            <TableHead className="text-right">Freq x Budget</TableHead>
+                            <TableHead className="text-right">Amount Spent</TableHead>
+                            <TableHead className="w-12"></TableHead>
+                          </>
+                        )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {budgetItems.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
-                          <TableCell>
-                            {item.frequency}
-                            {item.frequency === 'Daily' && item.days_per_week && (
-                              <span className="text-xs text-muted-foreground ml-1">
-                                ({item.days_per_week}x/week)
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(item.amount)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(calculateMonthlyAmount(item))}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <span className={
-                              (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
-                                ? 'text-destructive font-semibold'
-                                : 'text-green-600 dark:text-green-500'
-                            }>
-                              {formatCurrency(calculateAmountSpent[item.id] || 0)}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteBudgetItem(item.id)}
-                              className="h-8 w-8"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </TableCell>
+                          {isMobile ? (
+                            <>
+                              <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
+                              <TableCell className="text-right">
+                                <span className={
+                                  (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
+                                    ? 'text-destructive font-semibold'
+                                    : 'text-green-600 dark:text-green-500'
+                                }>
+                                  {formatCurrency(calculateAmountSpent[item.id] || 0)}
+                                </span>
+                              </TableCell>
+                            </>
+                          ) : (
+                            <>
+                              <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
+                              <TableCell>
+                                {item.frequency}
+                                {item.frequency === 'Daily' && item.days_per_week && (
+                                  <span className="text-xs text-muted-foreground ml-1">
+                                    ({item.days_per_week}x/week)
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatCurrency(item.amount)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatCurrency(calculateMonthlyAmount(item))}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <span className={
+                                  (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
+                                    ? 'text-destructive font-semibold'
+                                    : 'text-green-600 dark:text-green-500'
+                                }>
+                                  {formatCurrency(calculateAmountSpent[item.id] || 0)}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => deleteBudgetItem(item.id)}
+                                  className="h-8 w-8"
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </TableCell>
+                            </>
+                          )}
                         </TableRow>
                       ))}
-                      <TableRow className="font-bold bg-muted/50">
-                        <TableCell colSpan={3}>Total</TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(totalBudgetExpenses)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(totalAmountSpent)}
-                        </TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
+                      {!isMobile && (
+                        <TableRow className="font-bold bg-muted/50">
+                          <TableCell colSpan={3}>Total</TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(totalBudgetExpenses)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(totalAmountSpent)}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>

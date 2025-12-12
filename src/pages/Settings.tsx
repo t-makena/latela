@@ -283,9 +283,6 @@ const Settings = () => {
                 >
                   <div>
                     <p className="font-medium">{account.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Balance: {account.currency} {account.balance.toLocaleString()}
-                    </p>
                   </div>
                   <Button 
                     size="icon" 
