@@ -103,8 +103,125 @@ const Budget = () => {
 
   const isLoading = loading || goalsLoading || eventsLoading || accountsLoading;
 
+  // Mobile layout - separate path without container wrapper
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
+        {/* Budget Plan Card */}
+        <div 
+          className="bg-white rounded-3xl border border-black p-5 w-full"
+          style={{ boxShadow: '4px 4px 0px #000000' }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-black">Budget plan</h2>
+            <Button
+              size="icon"
+              onClick={() => setDialogOpen(true)}
+              className="rounded-full h-8 w-8"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : budgetItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No budget items yet</p>
+              <p className="text-sm mt-2">Tap + to add your first item</p>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-black/10">
+                  <th className="text-left py-2 text-sm font-light text-muted-foreground">Category:</th>
+                  <th className="text-right py-2 text-sm font-light text-muted-foreground">Amount Spent:</th>
+                </tr>
+              </thead>
+              <tbody>
+                {budgetItems.map((item) => (
+                  <tr key={item.id} className="border-b border-black/5">
+                    <td className="py-3 text-sm font-medium">{getDisplayName(item.name)}</td>
+                    <td className="py-3 text-sm text-right">
+                      <span className={
+                        (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
+                          ? 'text-destructive font-semibold'
+                          : 'text-green-600'
+                      }>
+                        {formatCurrency(calculateAmountSpent[item.id] || 0)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Balance Calculations Card */}
+        <div 
+          className="bg-white rounded-3xl border border-black p-5 w-full"
+          style={{ boxShadow: '4px 4px 0px #000000' }}
+        >
+          <h2 className="text-lg font-bold mb-4 text-black">Balance calculations</h2>
+          
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-6 w-full" />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="font-light">Planned expenses</span>
+                <span>{formatCurrency(totalBudgetExpenses)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-light">Upcoming events</span>
+                <span>{formatCurrency(totalUpcomingEvents)}</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-black/10">
+                <span className="font-bold">Budget Balance</span>
+                <span className="font-bold">{formatCurrency(budgetBalanceValue)}</span>
+              </div>
+              
+              <div className="flex justify-between items-center pt-2">
+                <span className="font-light">Available Balance</span>
+                <span>{formatCurrency(availableBalance)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-light">Savings Goals</span>
+                <span>-{formatCurrency(totalSavingGoals)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-light">Budget Balance</span>
+                <span>-{formatCurrency(budgetBalanceValue)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-black/10">
+                <span className="font-bold">Flexible Balance</span>
+                <span className="font-bold">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <AddBudgetItemDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onAdd={addBudgetItem}
+        />
+      </div>
+    );
+  }
+
+  // Desktop layout
   return (
-    <div className={`container mx-auto ${isMobile ? 'py-4' : 'p-6'}`}>
+    <div className="container mx-auto p-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Budget Items Table */}
         <div className="lg:col-span-2 w-full">
@@ -132,98 +249,68 @@ const Budget = () => {
                   <p className="text-sm mt-2">Click the + button to add your first budget item</p>
                 </div>
               ) : (
-                <div className={isMobile ? "overflow-x-auto" : ""}>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        {isMobile ? (
-                          <>
-                            <TableHead className="font-light">Category:</TableHead>
-                            <TableHead className="text-right font-light">Amount Spent:</TableHead>
-                          </>
-                        ) : (
-                          <>
-                            <TableHead>Category/Merchant</TableHead>
-                            <TableHead>Frequency</TableHead>
-                            <TableHead className="text-right">Budget</TableHead>
-                            <TableHead className="text-right">Freq x Budget</TableHead>
-                            <TableHead className="text-right">Amount Spent</TableHead>
-                            <TableHead className="w-12"></TableHead>
-                          </>
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {budgetItems.map((item) => (
-                        <TableRow key={item.id}>
-                          {isMobile ? (
-                            <>
-                              <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
-                              <TableCell className="text-right">
-                                <span className={
-                                  (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
-                                    ? 'text-destructive font-semibold'
-                                    : 'text-green-600 dark:text-green-500'
-                                }>
-                                  {formatCurrency(calculateAmountSpent[item.id] || 0)}
-                                </span>
-                              </TableCell>
-                            </>
-                          ) : (
-                            <>
-                              <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
-                              <TableCell>
-                                {item.frequency}
-                                {item.frequency === 'Daily' && item.days_per_week && (
-                                  <span className="text-xs text-muted-foreground ml-1">
-                                    ({item.days_per_week}x/week)
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {formatCurrency(item.amount)}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {formatCurrency(calculateMonthlyAmount(item))}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <span className={
-                                  (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
-                                    ? 'text-destructive font-semibold'
-                                    : 'text-green-600 dark:text-green-500'
-                                }>
-                                  {formatCurrency(calculateAmountSpent[item.id] || 0)}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => deleteBudgetItem(item.id)}
-                                  className="h-8 w-8"
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </TableCell>
-                            </>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Category/Merchant</TableHead>
+                      <TableHead>Frequency</TableHead>
+                      <TableHead className="text-right">Budget</TableHead>
+                      <TableHead className="text-right">Freq x Budget</TableHead>
+                      <TableHead className="text-right">Amount Spent</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {budgetItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
+                        <TableCell>
+                          {item.frequency}
+                          {item.frequency === 'Daily' && item.days_per_week && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              ({item.days_per_week}x/week)
+                            </span>
                           )}
-                        </TableRow>
-                      ))}
-                      {!isMobile && (
-                        <TableRow className="font-bold bg-muted/50">
-                          <TableCell colSpan={3}>Total</TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(totalBudgetExpenses)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(totalAmountSpent)}
-                          </TableCell>
-                          <TableCell></TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(item.amount)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(calculateMonthlyAmount(item))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={
+                            (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
+                              ? 'text-destructive font-semibold'
+                              : 'text-green-600 dark:text-green-500'
+                          }>
+                            {formatCurrency(calculateAmountSpent[item.id] || 0)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteBudgetItem(item.id)}
+                            className="h-8 w-8"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="font-bold bg-muted/50">
+                      <TableCell colSpan={3}>Total</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(totalBudgetExpenses)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(totalAmountSpent)}
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
