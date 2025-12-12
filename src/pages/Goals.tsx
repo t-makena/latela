@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
 import { useIncomeSettings } from "@/hooks/useIncomeSettings";
+import { useLanguage } from "@/hooks/useLanguage";
 interface GoalToEdit {
   id: string;
   name: string;
@@ -23,6 +24,7 @@ const Goals = () => {
   const [goalToEdit, setGoalToEdit] = useState<GoalToEdit | null>(null);
   const isMobile = useIsMobile();
   const { frequency, getFrequencyLabel, getPeriodTerm } = useIncomeSettings();
+  const { t } = useLanguage();
 
   const { goals, loading, error, addGoal, updateGoal, deleteGoal } = useGoals();
   
@@ -95,7 +97,7 @@ const Goals = () => {
       {/* Budget Goals Section */}
       <Card className="bg-white border border-black w-full" style={{ boxShadow: '3px 3px 0px #000000' }}>
         <CardHeader className="pb-4">
-          <CardTitle className="font-georama text-xl">Budget Goals</CardTitle>
+          <CardTitle className="font-georama text-xl">{t('goals.budgetGoals')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {budgetGoals.length > 0 ? (
@@ -120,7 +122,7 @@ const Goals = () => {
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">No goals yet. Add your first goal below!</p>
+            <p className="text-sm text-muted-foreground text-center py-4">{t('goals.noGoalsYet')}</p>
           )}
         </CardContent>
       </Card>
@@ -132,20 +134,20 @@ const Goals = () => {
           style={{ boxShadow: '3px 3px 0px #000000' }}
         >
           <div className="pb-2 mb-2">
-            <h2 className="font-georama text-xl font-semibold">Goals Overview</h2>
+            <h2 className="font-georama text-xl font-semibold">{t('goals.goalsOverview')}</h2>
           </div>
           <div className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-4">
               {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="text-sm font-light text-muted-foreground mb-1">{getTargetSavingLabel()}</p>
+                <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.targetMonthlySaving')}</p>
                 <p className="text-2xl font-bold font-georama">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
               {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
-                <p className="text-sm font-light text-muted-foreground mb-1">Total Amount Saved</p>
+                <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.totalAmountSaved')}</p>
                 <p className="text-2xl font-bold font-georama">{formatCurrency(totalAmountSaved)}</p>
               </div>
             </div>
@@ -153,18 +155,18 @@ const Goals = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-light w-[22%] px-2">Goal</TableHead>
+                  <TableHead className="font-light w-[22%] px-2">{t('goals.goal')}</TableHead>
                   <TableHead className="font-light w-[18%] px-2">
-                    Allocation<sup>1</sup>
+                    {t('goals.allocation')}<sup>1</sup>
                   </TableHead>
                   <TableHead className="font-light text-right w-[18%] px-2">
-                    Saved (R)<sup>2</sup>
+                    {t('goals.saved')} (R)<sup>2</sup>
                   </TableHead>
                   <TableHead className="font-light w-[18%] px-2">
-                    Target<sup>3</sup>
+                    {t('goals.target')}<sup>3</sup>
                   </TableHead>
                   <TableHead className="font-light w-[18%] px-2">
-                    Timeline<sup>4</sup>
+                    {t('goals.timeline')}<sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[6%]"></TableHead>
                 </TableRow>
@@ -233,7 +235,7 @@ const Goals = () => {
               >
                 <Plus className="h-5 w-5" />
               </Button>
-              <p className="text-sm text-muted-foreground">Add a new goal</p>
+              <p className="text-sm text-muted-foreground">{t('goals.addNewGoal')}</p>
             </div>
 
             <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
@@ -247,20 +249,20 @@ const Goals = () => {
       ) : (
         <Card className="bg-white border border-black w-full" style={{ boxShadow: '3px 3px 0px #000000' }}>
           <CardHeader className="pb-4">
-            <CardTitle className="font-georama text-xl">Goals Overview</CardTitle>
+            <CardTitle className="font-georama text-xl">{t('goals.goalsOverview')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-8">
               {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="text-sm font-light text-muted-foreground mb-1">{getTargetSavingLabel()}</p>
+                <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.targetMonthlySaving')}</p>
                 <p className="text-3xl font-bold font-georama">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
               {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
-                <p className="text-sm font-light text-muted-foreground mb-1">Total Amount Saved</p>
+                <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.totalAmountSaved')}</p>
                 <p className="text-3xl font-bold font-georama">{formatCurrency(totalAmountSaved)}</p>
               </div>
             </div>
@@ -268,18 +270,18 @@ const Goals = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-light w-[22%] px-6">Goal</TableHead>
+                  <TableHead className="font-light w-[22%] px-6">{t('goals.goal')}</TableHead>
                   <TableHead className="font-light w-[16%] px-6">
-                    Allocation<sup>1</sup>
+                    {t('goals.allocation')}<sup>1</sup>
                   </TableHead>
                   <TableHead className="font-light text-right w-[16%] px-6">
-                    Saved (R)<sup>2</sup>
+                    {t('goals.saved')} (R)<sup>2</sup>
                   </TableHead>
                   <TableHead className="font-light w-[16%] px-6">
-                    Target<sup>3</sup>
+                    {t('goals.target')}<sup>3</sup>
                   </TableHead>
                   <TableHead className="font-light w-[16%] px-6">
-                    Timeline<sup>4</sup>
+                    {t('goals.timeline')}<sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[8%]"></TableHead>
                 </TableRow>
@@ -348,7 +350,7 @@ const Goals = () => {
               >
                 <Plus className="h-5 w-5" />
               </Button>
-              <p className="text-sm text-muted-foreground">Add a new goal</p>
+              <p className="text-sm text-muted-foreground">{t('goals.addNewGoal')}</p>
             </div>
 
             <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">

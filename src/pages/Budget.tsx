@@ -19,11 +19,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const Budget = () => {
   const isMobile = useIsMobile();
   const [dialogOpen, setDialogOpen] = useState(false);
   const currentDate = new Date();
+  const { t } = useLanguage();
   const { budgetItems, loading, calculateMonthlyAmount, calculateTotalMonthly, addBudgetItem, deleteBudgetItem } = useBudgetItems();
   const { goals, loading: goalsLoading } = useGoals();
   const { upcomingEvents, isLoading: eventsLoading } = useCalendarEvents({
@@ -113,7 +115,7 @@ const Budget = () => {
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-black">Budget plan</h2>
+            <h2 className="text-lg font-bold text-black">{t('finance.budgetPlan')}</h2>
             <Button
               size="icon"
               onClick={() => setDialogOpen(true)}
@@ -138,8 +140,8 @@ const Budget = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-black/10">
-                  <th className="text-left py-2 text-sm font-light text-muted-foreground">Category:</th>
-                  <th className="text-right py-2 text-sm font-light text-muted-foreground">Amount Spent:</th>
+                  <th className="text-left py-2 text-sm font-light text-muted-foreground">{t('finance.category')}:</th>
+                  <th className="text-right py-2 text-sm font-light text-muted-foreground">{t('finance.amountSpent')}:</th>
                 </tr>
               </thead>
               <tbody>
@@ -167,7 +169,7 @@ const Budget = () => {
           className="bg-white rounded-3xl border border-black p-5 w-full"
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
-          <h2 className="text-lg font-bold mb-4 text-black">Balance calculations</h2>
+          <h2 className="text-lg font-bold mb-4 text-black">{t('budget.balanceCalculations')}</h2>
           
           {isLoading ? (
             <div className="space-y-2">
@@ -178,32 +180,32 @@ const Budget = () => {
           ) : (
             <div className="space-y-3 text-sm">
               <div className="flex justify-between items-center">
-                <span className="font-light">Planned expenses</span>
+                <span className="font-light">{t('budget.plannedExpenses')}</span>
                 <span>{formatCurrency(totalBudgetExpenses)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-light">Upcoming events</span>
+                <span className="font-light">{t('budget.upcomingEvents')}</span>
                 <span>{formatCurrency(totalUpcomingEvents)}</span>
               </div>
               <div className="flex justify-between items-center pb-3 border-b border-black/10">
-                <span className="font-bold">Budget Balance</span>
+                <span className="font-bold">{t('finance.budgetBalance')}</span>
                 <span className="font-bold">{formatCurrency(budgetBalanceValue)}</span>
               </div>
               
               <div className="flex justify-between items-center pt-2">
-                <span className="font-light">Available Balance</span>
+                <span className="font-light">{t('finance.availableBalance')}</span>
                 <span>{formatCurrency(availableBalance)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-light">Savings Goals</span>
+                <span className="font-light">{t('budget.savingsGoals')}</span>
                 <span>-{formatCurrency(totalSavingGoals)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-light">Budget Balance</span>
+                <span className="font-light">{t('finance.budgetBalance')}</span>
                 <span>-{formatCurrency(budgetBalanceValue)}</span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-black/10">
-                <span className="font-bold">Flexible Balance</span>
+                <span className="font-bold">{t('finance.flexibleBalance')}</span>
                 <span className="font-bold">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
               </div>
             </div>
@@ -227,7 +229,7 @@ const Budget = () => {
         <div className="lg:col-span-2 w-full">
           <Card className="w-full bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xl">Budget Plan</CardTitle>
+              <CardTitle className="text-xl">{t('finance.budgetPlan')}</CardTitle>
               <Button
                 size="icon"
                 onClick={() => setDialogOpen(true)}
@@ -321,7 +323,7 @@ const Budget = () => {
           {/* Balance Calculations Card */}
           <Card className="w-full bg-white border border-black" style={{ boxShadow: '3px 3px 0px #000000' }}>
             <CardHeader>
-              <CardTitle className="text-xl">Balance calculations</CardTitle>
+              <CardTitle className="text-xl">{t('budget.balanceCalculations')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {isLoading ? (

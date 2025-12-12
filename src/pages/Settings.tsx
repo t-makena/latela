@@ -14,6 +14,8 @@ import { AddAccountDialog } from "@/components/accounts/AddAccountDialog";
 import { ManageCustomCategoriesSection } from "@/components/settings/ManageCustomCategoriesSection";
 import { useIncomeSettings, IncomeFrequency } from "@/hooks/useIncomeSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LanguageSettings } from "@/components/settings/LanguageSettings";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Settings = () => {
   const { accounts } = useAccounts();
@@ -603,6 +605,9 @@ const Settings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Language Settings */}
+      <LanguageSettings />
 
       {/* Custom Categories Management */}
       <ManageCustomCategoriesSection />
