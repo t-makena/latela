@@ -20,7 +20,7 @@ export const AccountCard = ({
   const isMobile = useIsMobile();
   
   return (
-    <Card className="rounded-3xl border border-border shadow-lg bg-card hover:shadow-xl transition-shadow">
+    <Card className="rounded-3xl bg-card">
       <CardContent className="p-6">
         {/* Bank Name, Logo and Account Number */}
         <div className="flex items-center gap-3 mb-6">
