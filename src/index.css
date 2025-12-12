@@ -167,13 +167,13 @@
 .card {
   position: relative;
   background: hsl(var(--card));
-  box-shadow: 3px 3px 0px #000000;
+  box-shadow: 4px 4px 0px #000000;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px #000000;
+  box-shadow: 5px 5px 0px #000000;
 }
 
 /* Hover effect for financial metric items */
