@@ -39,7 +39,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <BudgetItemsCard />
         </div>
-        <Card className="w-full flex flex-col">
+        <Card className="w-full flex flex-col" style={{ boxShadow: '4px 4px 0px #000000' }}>
           <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
             <CardTitle className="text-lg">{t('finance.budgetInsight')}</CardTitle>
           </CardHeader>
