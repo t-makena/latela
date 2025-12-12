@@ -38,7 +38,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <BudgetItemsCard />
         </div>
-        <Card className="flex flex-col">
+        <Card className="w-full flex flex-col">
           <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
             <CardTitle className="text-lg">Budget Insight</CardTitle>
           </CardHeader>
