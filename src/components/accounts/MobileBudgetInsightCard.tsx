@@ -126,12 +126,11 @@ export const MobileBudgetInsightCard = () => {
 
   return (
     <div className="animate-fade-in w-full">
-      <h2 className="text-lg font-bold mb-3 font-georama text-black">Budget insight</h2>
-      
       <div 
         className="bg-white rounded-3xl border border-black p-4 w-full"
         style={{ boxShadow: '3px 3px 0px #000000' }}
       >
+        <h2 className="text-lg font-bold mb-4 font-georama text-black">Budget insight</h2>
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#E0E0E0]">
