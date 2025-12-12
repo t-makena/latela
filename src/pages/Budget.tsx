@@ -104,7 +104,7 @@ const Budget = () => {
   const isLoading = loading || goalsLoading || eventsLoading || accountsLoading;
 
   return (
-    <div className={`container mx-auto ${isMobile ? 'px-3 py-4' : 'p-6'}`}>
+    <div className={`container mx-auto ${isMobile ? 'py-4' : 'p-6'}`}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Budget Items Table */}
         <div className="lg:col-span-2 w-full">
