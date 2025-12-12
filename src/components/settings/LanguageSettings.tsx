@@ -6,7 +6,7 @@ export const LanguageSettings = () => {
   const { t, currentLanguage, changeLanguage, languages } = useLanguage();
 
   return (
-    <Card>
+    <Card style={{ boxShadow: '4px 4px 0px #000000' }}>
       <CardHeader>
         <CardTitle>{t('settings.language')}</CardTitle>
         <CardDescription>{t('settings.chooseLanguage')}</CardDescription>
