@@ -127,11 +127,11 @@ const Goals = () => {
 
       {/* Goals Overview Table */}
       {isMobile ? (
-        <div className="-mx-3">
-          <div className="pb-2 mb-2 px-3">
+        <div>
+          <div className="pb-2 mb-2">
             <h2 className="font-georama text-xl font-semibold">Goals Overview</h2>
           </div>
-          <div className="space-y-6 px-3">
+          <div className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-4">
               {/* Target Saving - Left */}
