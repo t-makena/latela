@@ -211,7 +211,7 @@ export const Navbar = () => {
         <div 
           className={cn(
             "h-full transition-all duration-300 ease-in-out relative",
-            isExpanded ? "w-64 p-2" : "w-16 py-2"
+            isExpanded ? "w-64 pt-6 px-2 pb-2" : "w-16 pt-6 pb-2"
           )}
         >
           {/* Toggle Button / Logo */}
