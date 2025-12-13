@@ -7,6 +7,7 @@ import { EventDialog } from "@/components/calendar/EventDialog";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, getDay, startOfWeek, endOfWeek } from "date-fns";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -17,6 +18,7 @@ const Calendar = () => {
   const [lastTapTime, setLastTapTime] = useState<number>(0);
   const [lastTapDate, setLastTapDate] = useState<Date | null>(null);
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
   
   const currentMonth = format(currentDate, "MMMM");
   const currentYear = format(currentDate, "yyyy");
@@ -90,28 +92,28 @@ const Calendar = () => {
     try {
       if (event.id) {
         await updateEvent(event);
-        toast.success("Event updated successfully!");
+        toast.success(t('calendar.eventUpdated'));
       } else {
         await createEvent(event);
-        toast.success("Event created successfully!");
+        toast.success(t('calendar.eventCreated'));
       }
       setSelectedEvent(undefined);
     } catch (error) {
-      toast.error(event.id ? "Failed to update event" : "Failed to create event");
+      toast.error(event.id ? t('calendar.failedToUpdate') : t('calendar.failedToCreate'));
     }
   };
 
   const handleDeleteEvent = async (eventId: string, eventName: string) => {
     try {
       await deleteEvent(eventId);
-      toast.success(`"${eventName}" deleted successfully`);
+      toast.success(`"${eventName}" ${t('calendar.deletedSuccessfully')}`);
     } catch (error) {
-      toast.error("Failed to delete event");
+      toast.error(t('calendar.failedToDelete'));
     }
   };
 
   const formatEventDate = (date: Date) => {
-    if (isToday(date)) return "Today";
+    if (isToday(date)) return t('calendar.today');
     return format(date, "dd MMM");
   };
 
@@ -125,11 +127,9 @@ const Calendar = () => {
     : totalUpcomingBudget;
 
   const getEventsSectionTitle = () => {
-    if (!selectedDateForFilter) return "Upcoming Events";
-    if (isToday(selectedDateForFilter)) return "Today's Events";
-    const isPast = selectedDateForFilter < new Date();
-    if (isPast) return `Events on ${format(selectedDateForFilter, "dd MMM yyyy")}`;
-    return `Events on ${format(selectedDateForFilter, "dd MMM yyyy")}`;
+    if (!selectedDateForFilter) return t('calendar.upcomingEvents');
+    if (isToday(selectedDateForFilter)) return t('calendar.todaysEvents');
+    return `${t('calendar.eventsOn')} ${format(selectedDateForFilter, "dd MMM yyyy")}`;
   };
 
   const dayLabels = ["m", "t", "w", "t", "f", "s", "s"];
@@ -146,10 +146,10 @@ const Calendar = () => {
           {!isMobile && (
             <>
               <Button variant="outline" size="default" className="font-normal">
-                Month
+                {t('calendar.month')}
               </Button>
               <Button variant="outline" size="default" className="font-normal" onClick={handleToday}>
-                Today
+                {t('calendar.today')}
               </Button>
             </>
           )}
@@ -164,7 +164,7 @@ const Calendar = () => {
           {!isMobile && (
             <Button onClick={handleAddEvent} className="ml-4">
               <Plus className="h-4 w-4 mr-2" />
-              Add Event
+              {t('calendar.addEvent')}
             </Button>
           )}
         </div>
@@ -233,7 +233,7 @@ const Calendar = () => {
                   className="text-xs"
                 >
                   <Plus className="h-3 w-3 mr-1" />
-                  Add
+                  {t('common.add')}
                 </Button>
               ) : (
                 selectedDateForFilter && (
@@ -243,19 +243,19 @@ const Calendar = () => {
                     onClick={() => setSelectedDateForFilter(undefined)}
                     className="text-xs"
                   >
-                    Clear
+                    {t('calendar.clear')}
                   </Button>
                 )
               )}
             </div>
             
             {isLoading ? (
-              <p className="text-muted-foreground">Loading events...</p>
+              <p className="text-muted-foreground">{t('calendar.loadingEvents')}</p>
             ) : displayedEvents.length === 0 ? (
               <p className="text-muted-foreground">
                 {selectedDateForFilter 
-                  ? `No events on ${format(selectedDateForFilter, "dd MMM yyyy")}`
-                  : "No upcoming events in the next 30 days"
+                  ? `${t('calendar.noEventsOn')} ${format(selectedDateForFilter, "dd MMM yyyy")}`
+                  : t('calendar.noUpcomingEventsNext30Days')
                 }
               </p>
             ) : (
@@ -279,13 +279,13 @@ const Calendar = () => {
                         <button
                           onClick={() => handleDeleteEvent(event.id, event.eventName)}
                           className="text-muted-foreground hover:text-destructive active:text-destructive transition-colors p-1"
-                          aria-label="Delete event"
+                          aria-label={t('common.delete')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Budget: R{event.budgetedAmount.toLocaleString()}
+                        {t('calendar.budget')}: R{event.budgetedAmount.toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -297,8 +297,8 @@ const Calendar = () => {
             <div className="pt-4 border-t border-border mt-auto">
               <p className="text-sm font-medium text-foreground">
                 {selectedDateForFilter 
-                  ? `Total for ${format(selectedDateForFilter, "dd MMM")}`
-                  : "Total budget (next 30 days)"
+                  ? `${t('calendar.totalFor')} ${format(selectedDateForFilter, "dd MMM")}`
+                  : t('calendar.totalBudgetNext30Days')
                 }
               </p>
               <p className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-foreground mt-1`}>
