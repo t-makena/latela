@@ -4,6 +4,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useBudgetItems } from "@/hooks/useBudgetItems";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import { useLanguage } from "@/hooks/useLanguage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,7 @@ type PeriodOption = "1 Mth" | "3 Mth" | "6 Mth" | "1 Yr";
 
 export const MobileBudgetInsightCard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("1 Mth");
+  const { t } = useLanguage();
   
   const { transactions } = useTransactions();
   const { accounts } = useAccounts();
@@ -34,6 +36,16 @@ export const MobileBudgetInsightCard = () => {
       case "6 Mth": return 6;
       case "1 Yr": return 12;
       default: return 1;
+    }
+  };
+
+  const getPeriodLabel = (period: PeriodOption): string => {
+    switch (period) {
+      case "1 Mth": return t('budget.oneMonthChange');
+      case "3 Mth": return t('budget.threeMonthChange');
+      case "6 Mth": return t('budget.sixMonthChange');
+      case "1 Yr": return t('budget.oneYearChange');
+      default: return t('budget.oneMonthChange');
     }
   };
 
@@ -130,11 +142,11 @@ export const MobileBudgetInsightCard = () => {
         className="bg-white rounded-3xl border border-black p-5 w-full"
         style={{ boxShadow: '4px 4px 0px #000000' }}
       >
-        <h2 className="text-lg font-bold mb-4 font-georama text-black">Budget insight</h2>
+        <h2 className="text-lg font-bold mb-4 font-georama text-black">{t('finance.budgetInsight')}</h2>
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#E0E0E0]">
-              <th className="text-left font-normal text-sm text-[#999999] pb-4">Metric</th>
+              <th className="text-left font-normal text-sm text-[#999999] pb-4">{t('finance.metric')}</th>
               <th className="text-right font-normal text-sm text-[#999999] pb-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -142,7 +154,7 @@ export const MobileBudgetInsightCard = () => {
                       variant="ghost" 
                       className="h-auto p-0 font-normal text-sm text-[#999999] hover:bg-transparent hover:text-black"
                     >
-                      {selectedPeriod} Chng
+                      {selectedPeriod}
                       <ChevronDown className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -168,7 +180,7 @@ export const MobileBudgetInsightCard = () => {
           <tbody>
             <tr className="border-b border-[#E0E0E0]">
               <td className="py-4">
-                <p className="text-sm font-light text-black">Available Balance</p>
+                <p className="text-sm font-light text-black">{t('finance.availableBalance')}</p>
               </td>
               <td className="py-4 text-right">
                 <p className={`text-sm font-medium ${metrics.availableBalanceChange > 0 ? 'text-green-500' : metrics.availableBalanceChange < 0 ? 'text-red-500' : 'text-[#999999]'}`}>
@@ -178,7 +190,7 @@ export const MobileBudgetInsightCard = () => {
             </tr>
             <tr className="border-b border-[#E0E0E0]">
               <td className="py-4">
-                <p className="text-sm font-light text-black">Budget Balance</p>
+                <p className="text-sm font-light text-black">{t('finance.budgetBalance')}</p>
               </td>
               <td className="py-4 text-right">
                 <p className={`text-sm font-medium ${metrics.budgetBalanceChange > 0 ? 'text-green-500' : metrics.budgetBalanceChange < 0 ? 'text-red-500' : 'text-[#999999]'}`}>
@@ -188,7 +200,7 @@ export const MobileBudgetInsightCard = () => {
             </tr>
             <tr>
               <td className="py-4">
-                <p className="text-sm font-light text-black">Spending</p>
+                <p className="text-sm font-light text-black">{t('finance.spending')}</p>
               </td>
               <td className="py-4 text-right">
                 <p className={`text-sm font-medium ${metrics.spendingChange > 0 ? 'text-red-500' : metrics.spendingChange < 0 ? 'text-green-500' : 'text-[#999999]'}`}>

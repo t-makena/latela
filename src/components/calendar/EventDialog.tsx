@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarEvent } from "@/hooks/useCalendarEvents";
 import { format } from "date-fns";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface EventDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface EventDialogProps {
 }
 
 export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }: EventDialogProps) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     eventName: "",
     eventDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
@@ -92,11 +94,11 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{event ? "Edit Event" : "Add New Event"}</DialogTitle>
+          <DialogTitle>{event ? t('calendar.editEvent') : t('calendar.addNewEvent')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="eventName">Event Name *</Label>
+            <Label htmlFor="eventName">{t('calendar.eventName')} *</Label>
             <Input
               id="eventName"
               value={formData.eventName}
@@ -107,7 +109,7 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }:
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="eventDate">Date *</Label>
+              <Label htmlFor="eventDate">{t('calendar.eventDate')} *</Label>
               <Input
                 id="eventDate"
                 type="date"
@@ -117,7 +119,7 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }:
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="eventTime">Time</Label>
+              <Label htmlFor="eventTime">{t('common.time')}</Label>
               <Input
                 id="eventTime"
                 type="time"
@@ -128,7 +130,7 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }:
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="budgetedAmount">Budget Amount (R) *</Label>
+            <Label htmlFor="budgetedAmount">{t('calendar.budgetAmount')} *</Label>
             <Input
               id="budgetedAmount"
               type="number"
@@ -141,7 +143,7 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }:
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="location">{t('calendar.location')}</Label>
             <Input
               id="location"
               value={formData.location}
@@ -151,7 +153,7 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }:
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category">{t('finance.category')}</Label>
             <Input
               id="category"
               value={formData.category}
@@ -161,7 +163,7 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }:
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="eventDescription">Description</Label>
+            <Label htmlFor="eventDescription">{t('common.description')}</Label>
             <Textarea
               id="eventDescription"
               value={formData.eventDescription}
@@ -172,10 +174,10 @@ export const EventDialog = ({ open, onOpenChange, onSave, selectedDate, event }:
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : event ? "Update Event" : "Save Event"}
+              {isSubmitting ? t('calendar.saving') : event ? t('calendar.updateEvent') : t('calendar.saveEvent')}
             </Button>
           </DialogFooter>
         </form>
