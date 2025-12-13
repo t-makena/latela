@@ -16,9 +16,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export const BudgetItemsCard = () => {
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
   const [dialogOpen, setDialogOpen] = useState(false);
   const { budgetItems, loading, calculateMonthlyAmount, calculateTotalMonthly, addBudgetItem, deleteBudgetItem } = useBudgetItems();
   const { transactions, loading: transactionsLoading } = useTransactions();
@@ -87,7 +89,7 @@ export const BudgetItemsCard = () => {
     <>
       <Card style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
-          <CardTitle className="text-lg">Budget Plan</CardTitle>
+          <CardTitle className="text-lg">{t('budget.budgetPlan')}</CardTitle>
           <Button
             size="icon"
             onClick={() => setDialogOpen(true)}
@@ -105,19 +107,19 @@ export const BudgetItemsCard = () => {
             </div>
           ) : budgetItems.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <p>No budget items yet</p>
-              <p className="text-sm mt-2">Click the + button to add your first budget item</p>
+              <p>{t('finance.noBudgetItemsYet')}</p>
+              <p className="text-sm mt-2">{t('finance.clickPlusToAdd')}</p>
             </div>
           ) : (
             <div className={isMobile ? "overflow-x-auto" : ""}>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Category/Merchant</TableHead>
-                    <TableHead>Frequency</TableHead>
-                    <TableHead className="text-right">Budget</TableHead>
-                    <TableHead className="text-right">Freq x Budget</TableHead>
-                    <TableHead className="text-right">Amount Spent</TableHead>
+                    <TableHead>{t('finance.categoryMerchant')}</TableHead>
+                    <TableHead>{t('budget.frequency')}</TableHead>
+                    <TableHead className="text-right">{t('budget.amount')}</TableHead>
+                    <TableHead className="text-right">{t('budget.freqBudget')}</TableHead>
+                    <TableHead className="text-right">{t('finance.amountSpent')}</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -126,10 +128,10 @@ export const BudgetItemsCard = () => {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
                       <TableCell>
-                        {item.frequency}
+                        {t(`budget.${item.frequency.toLowerCase().replace('-', '')}`)}
                         {item.frequency === 'Daily' && item.days_per_week && (
                           <span className="text-xs text-muted-foreground ml-1">
-                            ({item.days_per_week}x/week)
+                            ({item.days_per_week}x/{t('budget.weekly').toLowerCase().slice(0, 4)})
                           </span>
                         )}
                       </TableCell>
@@ -155,7 +157,7 @@ export const BudgetItemsCard = () => {
                     </TableRow>
                   ))}
                   <TableRow className="font-bold bg-muted/50">
-                    <TableCell colSpan={3}>Total</TableCell>
+                    <TableCell colSpan={3}>{t('common.total')}</TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(calculateTotalMonthly())}
                     </TableCell>

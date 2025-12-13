@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useBudgetItems } from "@/hooks/useBudgetItems";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useAccounts } from "@/hooks/useAccounts";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface FinancialSummaryProps {
   showExplanations?: boolean;
@@ -17,6 +18,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   const { accounts, loading: accountsLoading } = useAccounts();
   const isMobile = useIsMobile();
   const { calculateTotalMonthly, loading: budgetLoading } = useBudgetItems();
+  const { t } = useLanguage();
   const currentDate = new Date();
   const { upcomingEvents, isLoading: eventsLoading } = useCalendarEvents({
     year: currentDate.getFullYear(),
@@ -54,7 +56,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
       <>
         <div className={isMobile ? "pb-1" : "pb-2 pt-4"}>
           <div className={isMobile ? "text-base font-medium text-foreground font-georama" : "text-lg font-medium text-foreground font-georama"}>
-            Financial Overview
+            {t('finance.financialOverview')}
           </div>
         </div>
         <div>
@@ -77,7 +79,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
       <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2 pt-4">
           <CardTitle className="text-lg font-medium text-foreground font-georama">
-            Financial Overview
+            {t('finance.financialOverview')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -99,12 +101,12 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     if (minimal) {
       return (
         <div className="animate-fade-in">
-          <h2 className="text-lg font-bold mb-4 font-georama text-black">Financial Overview</h2>
+          <h2 className="text-lg font-bold mb-4 font-georama text-black">{t('finance.financialOverview')}</h2>
           <div 
             className="bg-white rounded-full border border-black px-6 py-5"
             style={{ boxShadow: '4px 4px 0px #000000' }}
           >
-            <p className="text-destructive text-sm">Error loading data</p>
+            <p className="text-destructive text-sm">{t('common.error')}</p>
           </div>
         </div>
       );
@@ -114,22 +116,22 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
       <div className="animate-fade-in mb-4">
         <div className="pb-1">
           <div className="text-base font-medium text-foreground font-georama">
-            Financial Overview
+            {t('finance.financialOverview')}
           </div>
         </div>
         <div>
-          <p className="text-destructive">Error loading financial data: {error}</p>
+          <p className="text-destructive">{t('common.error')}: {error}</p>
         </div>
       </div>
     ) : (
       <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2 pt-4">
           <CardTitle className="text-lg font-medium text-foreground font-georama">
-            Financial Overview
+            {t('finance.financialOverview')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-destructive">Error loading financial data: {error}</p>
+          <p className="text-destructive">{t('common.error')}: {error}</p>
         </CardContent>
       </Card>
     );
@@ -149,8 +151,8 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   // Determine budget status
   const budgetStatus = flexibleBalance >= 0 ? 'good' : 'bad';
   const budgetStatusDescription = budgetStatus === 'good' 
-    ? "You're on track, keep going : )" 
-    : "You're at risk of spending your savings : (";
+    ? t('finance.onTrack')
+    : t('finance.atRisk');
 
   // Minimal view for mobile redesign - Neo-brutalist style
   if (minimal) {
@@ -160,14 +162,14 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           className="bg-white rounded-3xl border border-black p-5 w-full"
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
-          <h2 className="text-lg font-bold mb-4 font-georama text-black">Financial Overview</h2>
+          <h2 className="text-lg font-bold mb-4 font-georama text-black">{t('finance.financialOverview')}</h2>
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-light text-muted-foreground mb-1">Budget balance</p>
+              <p className="text-sm font-light text-muted-foreground mb-1">{t('finance.budgetBalance')}</p>
               <p className="text-lg font-light text-black">{formatCurrency(budgetBalance)}</p>
             </div>
             <div className="flex-1 text-right">
-              <p className="text-sm font-light text-muted-foreground mb-1">Flexible balance</p>
+              <p className="text-sm font-light text-muted-foreground mb-1">{t('finance.flexibleBalance')}</p>
               <p className="text-lg font-light text-black">{formatCurrency(flexibleBalance)}</p>
             </div>
           </div>
@@ -181,52 +183,52 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="financial-metric">
           <div className="text-sm font-medium text-muted-foreground mb-1">
-            Available Balance
+            {t('finance.availableBalance')}
           </div>
           <div className={isMobile ? "text-xl font-bold mb-1" : "text-2xl font-bold mb-1"}>
             {formatCurrency(availableBalance)}
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              Total balance across all accounts
+              {t('finance.totalBalanceAllAccounts')}
             </p>
           )}
         </div>
         
         <div className="financial-metric">
           <div className="text-sm font-light text-muted-foreground mb-1">
-            Budget Balance
+            {t('finance.budgetBalance')}
           </div>
           <div className={isMobile ? "text-xl font-light mb-1" : "text-2xl font-light mb-1"}>
             {formatCurrency(budgetBalance)}
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              Budget expenses plus upcoming events
+              {t('finance.budgetExpensesPlusEvents')}
             </p>
           )}
         </div>
         
         <div className="financial-metric">
           <div className="text-sm font-light text-muted-foreground mb-1">
-            Flexible Balance
+            {t('finance.flexibleBalance')}
           </div>
           <div className={isMobile ? "text-xl font-light mb-1" : "text-2xl font-light mb-1"}>
             {formatCurrency(flexibleBalance)}
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
-              Available balance less budget balance
+              {t('finance.availableLessBudget')}
             </p>
           )}
         </div>
         
         <div className="financial-metric">
           <div className="text-sm font-medium text-muted-foreground mb-1">
-            Budget Status
+            {t('finance.budgetStatus')}
           </div>
           <div className={isMobile ? "text-xl font-bold mb-1" : "text-2xl font-bold mb-1"}>
-            {budgetStatus}
+            {t(`finance.${budgetStatus}`)}
           </div>
           {showExplanations && (
             <p className="text-xs text-muted-foreground">
@@ -242,9 +244,9 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     <div className="animate-fade-in mb-4">
       <div className="pb-1 mb-3">
         <div className="text-base font-medium text-foreground">
-          Financial Overview
+          {t('finance.financialOverview')}
           {transactions.length === 0 && (
-            <span className="text-xs text-orange-500 ml-2">(No transaction data found)</span>
+            <span className="text-xs text-orange-500 ml-2">({t('finance.noTransactionData')})</span>
           )}
         </div>
       </div>
@@ -254,9 +256,9 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
       <CardHeader className="pb-1 pt-2">
         <CardTitle className="text-lg font-medium text-foreground">
-          Financial Overview
+          {t('finance.financialOverview')}
           {transactions.length === 0 && (
-            <span className="text-sm text-orange-500 ml-2">(No transaction data found)</span>
+            <span className="text-sm text-orange-500 ml-2">({t('finance.noTransactionData')})</span>
           )}
         </CardTitle>
       </CardHeader>

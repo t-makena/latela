@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Transaction {
   description: string;
@@ -65,6 +66,7 @@ export const BudgetBreakdown = ({
   isDetailed: externalIsDetailed
 }: BudgetBreakdownProps) => {
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
   const [internalIsDetailed, setInternalIsDetailed] = useState(false);
   
   // Use external isDetailed if provided, otherwise use internal state
@@ -262,9 +264,9 @@ export const BudgetBreakdown = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Percentage</TableHead>
+                <TableHead>{t('finance.category')}</TableHead>
+                <TableHead className="text-right">{t('budget.amount')}</TableHead>
+                <TableHead className="text-right">{t('finance.percentage')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -291,25 +293,25 @@ export const BudgetBreakdown = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Metric</TableHead>
-              <TableHead className="text-right">1 Mth Chng</TableHead>
+              <TableHead className="w-[200px]">{t('finance.metric')}</TableHead>
+              <TableHead className="text-right">{t('budget.oneMonthChange')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="font-medium py-6">Available Balance</TableCell>
+              <TableCell className="font-medium py-6">{t('finance.availableBalance')}</TableCell>
               <TableCell className={`text-right font-semibold py-6 ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium py-6">Budget Balance</TableCell>
+              <TableCell className="font-medium py-6">{t('finance.budgetBalance')}</TableCell>
               <TableCell className={`text-right font-semibold py-6 ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium py-6">Spending</TableCell>
+              <TableCell className="font-medium py-6">{t('finance.spending')}</TableCell>
               <TableCell className={`text-right font-semibold py-6 ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
               </TableCell>
@@ -324,16 +326,16 @@ export const BudgetBreakdown = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Metric</TableHead>
-              <TableHead className="text-right">1 Mth Chng</TableHead>
-              <TableHead className="text-right">3 Mth Chng</TableHead>
-              <TableHead className="text-right">6 Mth Chng</TableHead>
-              <TableHead className="text-right">1 Yr Chng</TableHead>
+              <TableHead className="w-[200px]">{t('finance.metric')}</TableHead>
+              <TableHead className="text-right">{t('budget.oneMonthChange')}</TableHead>
+              <TableHead className="text-right">{t('budget.threeMonthChange')}</TableHead>
+              <TableHead className="text-right">{t('budget.sixMonthChange')}</TableHead>
+              <TableHead className="text-right">{t('budget.oneYearChange')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="font-medium">Available Balance</TableCell>
+              <TableCell className="font-medium">{t('finance.availableBalance')}</TableCell>
               <TableCell className={`text-right font-semibold ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
               </TableCell>
@@ -348,7 +350,7 @@ export const BudgetBreakdown = ({
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">Budget Balance</TableCell>
+              <TableCell className="font-medium">{t('finance.budgetBalance')}</TableCell>
               <TableCell className={`text-right font-semibold ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
               </TableCell>
@@ -363,7 +365,7 @@ export const BudgetBreakdown = ({
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">Spending</TableCell>
+              <TableCell className="font-medium">{t('finance.spending')}</TableCell>
               <TableCell className={`text-right font-semibold ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
               </TableCell>
@@ -387,29 +389,29 @@ export const BudgetBreakdown = ({
     <div className="space-y-6">
       {/* Budget Insight Table */}
       <div>
-        <h3 className="text-sm font-semibold mb-3">Budget Insight</h3>
+        <h3 className="text-sm font-semibold mb-3">{t('finance.budgetInsight')}</h3>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Metric</TableHead>
-              <TableHead className="text-right">1 Mth Chng</TableHead>
+              <TableHead className="w-[200px]">{t('finance.metric')}</TableHead>
+              <TableHead className="text-right">{t('budget.oneMonthChange')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="font-medium">Available Balance</TableCell>
+              <TableCell className="font-medium">{t('finance.availableBalance')}</TableCell>
               <TableCell className={`text-right font-semibold ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">Budget Balance</TableCell>
+              <TableCell className="font-medium">{t('finance.budgetBalance')}</TableCell>
               <TableCell className={`text-right font-semibold ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">Spending</TableCell>
+              <TableCell className="font-medium">{t('finance.spending')}</TableCell>
               <TableCell className={`text-right font-semibold ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
               </TableCell>
@@ -420,7 +422,7 @@ export const BudgetBreakdown = ({
 
       {/* Budget Pie Chart */}
       <div>
-        <h3 className="text-sm font-semibold mb-3">Budget Allocation</h3>
+        <h3 className="text-sm font-semibold mb-3">{t('finance.budgetAllocation')}</h3>
         <ResponsiveContainer width="100%" height={isMobile ? 250 : 450}>
           <PieChart>
             <Pie
@@ -440,12 +442,19 @@ export const BudgetBreakdown = ({
             <Legend 
               layout={isMobile ? "horizontal" : "vertical"}
               align={isMobile ? "center" : "left"}
-              verticalAlign={isMobile ? "bottom" : "top"}
-              iconType="circle"
-              formatter={(value) => <span className="text-xs">{value}</span>}
+              verticalAlign={isMobile ? "bottom" : "middle"}
             />
           </PieChart>
         </ResponsiveContainer>
+        <div className="flex justify-center mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDetailed(!isDetailed)}
+          >
+            {isDetailed ? t('finance.simple') : t('finance.detailed')}
+          </Button>
+        </div>
       </div>
     </div>
   );
