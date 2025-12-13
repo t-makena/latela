@@ -4,6 +4,7 @@ import { AccountType } from "@/lib/data";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { RecentTransactions } from "./RecentTransactions";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface AccountDetailProps {
   account: AccountType;
@@ -12,6 +13,7 @@ interface AccountDetailProps {
 export const AccountDetail = ({ account }: AccountDetailProps) => {
   const { transactions } = useTransactions();
   const { accountBalances } = calculateFinancialMetrics(transactions);
+  const { t } = useLanguage();
   
   const accountBalance = accountBalances[parseInt(account.id)] || 0;
 
@@ -41,24 +43,24 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
             </div>
             <div>
               <h2 className="text-xl font-semibold font-georama">{cleanedAccountName}</h2>
-              <p className="text-muted-foreground capitalize">{account.type} Account</p>
+              <p className="text-muted-foreground capitalize">{account.type} {t('nav.accounts').slice(0, -1)}</p>
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground font-georama">Current Balance</p>
+              <p className="text-sm text-muted-foreground font-georama">{t('finance.currentBalance')}</p>
               <p className={`text-2xl font-bold font-georama ${accountBalance < 0 ? 'text-destructive' : 'text-green-600'}`}>
                 {formatCurrency(accountBalance)}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground font-georama">Account Type</p>
+              <p className="text-sm text-muted-foreground font-georama">{t('finance.accountType')}</p>
               <p className="text-lg font-semibold capitalize font-georama">{account.type}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground font-georama">Currency</p>
+              <p className="text-sm text-muted-foreground font-georama">{t('finance.currency')}</p>
               <p className="text-lg font-semibold font-georama">{account.currency}</p>
             </div>
           </div>

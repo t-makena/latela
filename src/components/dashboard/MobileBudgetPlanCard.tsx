@@ -1,10 +1,12 @@
 import { useBudgetItems } from "@/hooks/useBudgetItems";
 import { useTransactions } from "@/hooks/useTransactions";
 import { formatCurrency } from "@/lib/realData";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const MobileBudgetPlanCard = () => {
   const { budgetItems, loading: budgetLoading, calculateMonthlyAmount } = useBudgetItems();
   const { transactions } = useTransactions();
+  const { t } = useLanguage();
 
   // Calculate amount spent per budget item based on transaction matching
   const getAmountSpent = (itemName: string): number => {
@@ -53,12 +55,12 @@ export const MobileBudgetPlanCard = () => {
         className="bg-white rounded-3xl border border-black p-5 w-full"
         style={{ boxShadow: '4px 4px 0px #000000' }}
       >
-        <h2 className="text-lg font-bold mb-4 font-georama text-black">Budget plan</h2>
+        <h2 className="text-lg font-bold mb-4 font-georama text-black">{t('budget.budgetPlan')}</h2>
         <table className="w-full">
           <thead>
             <tr>
-              <th className="text-left font-normal text-sm pb-4 text-black">Category:</th>
-              <th className="text-right font-normal text-sm pb-4 text-black">Amount Spent:</th>
+              <th className="text-left font-normal text-sm pb-4 text-black">{t('finance.category')}:</th>
+              <th className="text-right font-normal text-sm pb-4 text-black">{t('finance.amountSpent')}:</th>
             </tr>
           </thead>
           <tbody>
