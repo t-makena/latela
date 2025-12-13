@@ -189,7 +189,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-6 px-6">
+    <div className="space-y-6 pt-6 px-6">
       <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
