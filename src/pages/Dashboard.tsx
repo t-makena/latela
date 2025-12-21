@@ -9,7 +9,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { GoalsSavingsBalanceChart } from "@/components/goals/GoalsSavingsBalanceChart";
-import { SavingsAdjustmentCard } from "@/components/goals/SavingsAdjustmentCard";
+
 import { MonthEndReviewDialog } from "@/components/goals/MonthEndReviewDialog";
 
 const Dashboard = () => {
@@ -29,13 +29,9 @@ const Dashboard = () => {
         <FinancialSummary showExplanations={false} minimal={true} />
         <MobileBudgetPlanCard />
         <MobileBudgetInsightCard />
-        {/* Compact Savings Balance Chart */}
+        {/* Combined Savings Balance Chart with Status */}
         <div className="px-4">
           <GoalsSavingsBalanceChart compact />
-        </div>
-        {/* Compact Savings Status */}
-        <div className="px-4">
-          <SavingsAdjustmentCard compact />
         </div>
       </div>
     );
@@ -73,10 +69,9 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* New Row: Savings Balance Chart and Savings Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+      {/* Savings Balance Chart with Status */}
+      <div className="mt-4">
         <GoalsSavingsBalanceChart />
-        <SavingsAdjustmentCard />
       </div>
     </div>
   );
