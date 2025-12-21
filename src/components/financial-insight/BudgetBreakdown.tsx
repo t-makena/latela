@@ -299,20 +299,20 @@ export const BudgetBreakdown = ({
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="font-medium py-6">{t('finance.availableBalance')}</TableCell>
-              <TableCell className={`text-right font-semibold py-6 ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <TableCell className="font-medium py-3">{t('finance.availableBalance')}</TableCell>
+              <TableCell className={`text-right font-semibold py-3 ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium py-6">{t('finance.budgetBalance')}</TableCell>
-              <TableCell className={`text-right font-semibold py-6 ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <TableCell className="font-medium py-3">{t('finance.budgetBalance')}</TableCell>
+              <TableCell className={`text-right font-semibold py-3 ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium py-6">{t('finance.spending')}</TableCell>
-              <TableCell className={`text-right font-semibold py-6 ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <TableCell className="font-medium py-3">{t('finance.spending')}</TableCell>
+              <TableCell className={`text-right font-semibold py-3 ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
               </TableCell>
             </TableRow>
