@@ -11,7 +11,6 @@ import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
 import { useIncomeSettings } from "@/hooks/useIncomeSettings";
 import { useLanguage } from "@/hooks/useLanguage";
 import { GoalsSavingsBalanceChart } from "@/components/goals/GoalsSavingsBalanceChart";
-import { SavingsAdjustmentCard } from "@/components/goals/SavingsAdjustmentCard";
 import { MonthEndReviewDialog } from "@/components/goals/MonthEndReviewDialog";
 
 interface GoalToEdit {
@@ -134,11 +133,8 @@ const Goals = () => {
         </CardContent>
       </Card>
 
-      {/* Savings Balance Chart - NEW */}
+      {/* Combined Savings Balance Chart with Status */}
       <GoalsSavingsBalanceChart />
-
-      {/* Savings Status Card - NEW */}
-      <SavingsAdjustmentCard />
 
       {/* Goals Overview Table */}
       {isMobile ? (
