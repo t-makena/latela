@@ -54,6 +54,7 @@ serve(async (req) => {
           success: true, 
           categorized: 0,
           cached: 0,
+          userMappings: 0,
           aiCalls: 0 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -62,49 +63,82 @@ serve(async (req) => {
 
     let categorizedCount = 0;
     let cachedCount = 0;
+    let userMappingsCount = 0;
     let aiCallsCount = 0;
 
     // Process each transaction
     for (const transaction of transactions) {
       const merchantName = extractMerchantName(transaction.description);
       
-      // Check cache first
+      // PRIORITY 1: Check user_merchant_mappings first (user's custom settings)
+      const { data: userMapping } = await supabase
+        .from('user_merchant_mappings')
+        .select('category_id, subcategory_id, custom_subcategory_id')
+        .eq('user_id', user.id)
+        .ilike('merchant_name', merchantName)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (userMapping) {
+        // Apply user's custom mapping with full category chain
+        const updateData: Record<string, unknown> = {
+          category_id: userMapping.category_id,
+          subcategory_id: userMapping.subcategory_id || userMapping.custom_subcategory_id || null,
+          auto_categorized: false,
+          user_verified: true,
+          categorization_confidence: 1.0,
+          is_categorized: true
+        };
+
+        await supabase
+          .from('transactions')
+          .update(updateData)
+          .eq('id', transaction.id);
+
+        userMappingsCount++;
+        categorizedCount++;
+        console.log(`✓ User mapping: ${merchantName} → category_id: ${userMapping.category_id}`);
+        continue;
+      }
+
+      // PRIORITY 2: Check merchants table (cached AI categorizations)
       const { data: cachedCategory } = await supabase
-        .from('merchant_categories')
+        .from('merchants')
         .select('category')
         .eq('merchant_name', merchantName)
         .or(`user_id.eq.${user.id},user_id.is.null`)
-        .order('user_id', { ascending: false }) // Prefer user-specific over global
+        .order('user_id', { ascending: false, nullsFirst: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      let category: string;
+      let categoryName: string;
 
       if (cachedCategory) {
-        // Use cached category
-        category = cachedCategory.category;
+        categoryName = cachedCategory.category;
         cachedCount++;
-        console.log(`✓ Cached: ${merchantName} → ${category}`);
+        console.log(`✓ Cached: ${merchantName} → ${categoryName}`);
       } else {
-        // Call AI for new merchant
-        category = await categorizeMerchantWithAI(merchantName, transaction.description);
+        // PRIORITY 3: Call AI for new merchant
+        categoryName = await categorizeMerchantWithAI(merchantName, transaction.description);
         aiCallsCount++;
-        console.log(`💰 AI Call: ${merchantName} → ${category}`);
+        console.log(`💰 AI Call: ${merchantName} → ${categoryName}`);
 
-        // Save to cache
+        // Save to merchants cache
         await supabase
-          .from('merchant_categories')
+          .from('merchants')
           .upsert({
             merchant_name: merchantName,
-            category: category,
+            category: categoryName,
             user_id: user.id,
             frequency: 1,
             confidence: 0.9,
+          }, {
+            onConflict: 'merchant_name,user_id'
           });
       }
 
-      // Get or create category_id
-      const categoryId = await getOrCreateCategory(supabase, category);
+      // Get or create category_id from category name
+      const categoryId = await getOrCreateCategory(supabase, categoryName);
 
       // Update transaction with category
       await supabase
@@ -112,7 +146,8 @@ serve(async (req) => {
         .update({ 
           category_id: categoryId,
           auto_categorized: true,
-          categorization_confidence: cachedCategory ? 1.0 : 0.9
+          categorization_confidence: cachedCategory ? 1.0 : 0.9,
+          is_categorized: true
         })
         .eq('id', transaction.id);
 
@@ -124,6 +159,7 @@ serve(async (req) => {
         success: true, 
         categorized: categorizedCount,
         cached: cachedCount,
+        userMappings: userMappingsCount,
         aiCalls: aiCallsCount,
         cost: (aiCallsCount * 0.00015).toFixed(4)
       }),
@@ -145,12 +181,26 @@ serve(async (req) => {
   }
 });
 
+/**
+ * Extracts and normalizes merchant name from transaction description.
+ * Must match the logic in src/lib/merchantUtils.ts for consistency.
+ */
 function extractMerchantName(description: string): string {
+  if (!description) return '';
+  
   let merchant = description
-    .replace(/\bPURCHASE\b|\bDEBIT\b|\bCREDIT\b|\bPAYMENT\b|\bTRANSFER\b/gi, '')
+    .replace(/\bPURCHASE\b|\bDEBIT\b|\bCREDIT\b|\bPAYMENT\b|\bTRANSFER\b|\bPOS\b|\bATM\b|\bEFT\b/gi, '')
     .replace(/\bCARD\s+\d+/gi, '')
+    .replace(/\*+\d+/g, '')
     .replace(/\d{2}\/\d{2}\/\d{4}/g, '')
     .replace(/\d{4}-\d{2}-\d{2}/g, '')
+    .replace(/\d{2}-\d{2}-\d{4}/g, '')
+    .replace(/\d{2}\.\d{2}\.\d{4}/g, '')
+    .replace(/\d{2}:\d{2}(:\d{2})?/g, '')
+    .replace(/REF\s*[:.]?\s*\d+/gi, '')
+    .replace(/\bTXN\s*[:.]?\s*\d+/gi, '')
+    .replace(/R?\d+[.,]\d{2}/g, '')
+    .replace(/\s+\d{6,}$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
   
@@ -215,19 +265,20 @@ Respond with ONLY the category name.`
   return category;
 }
 
-async function getOrCreateCategory(supabase: any, categoryName: string): Promise<string> {
+async function getOrCreateCategory(supabase: ReturnType<typeof createClient>, categoryName: string): Promise<string> {
   // Try to find existing category
   const { data: existing } = await supabase
     .from('categories')
     .select('id')
     .ilike('name', categoryName)
-    .single();
+    .is('parent_id', null)
+    .maybeSingle();
 
   if (existing) {
     return existing.id;
   }
 
-  // Create new category
+  // Create new category (this requires appropriate permissions)
   const { data: newCategory, error } = await supabase
     .from('categories')
     .insert({ name: categoryName })
@@ -235,6 +286,17 @@ async function getOrCreateCategory(supabase: any, categoryName: string): Promise
     .single();
 
   if (error) {
+    // If we can't create, try to find "Other" category as fallback
+    const { data: otherCategory } = await supabase
+      .from('categories')
+      .select('id')
+      .ilike('name', 'Other')
+      .is('parent_id', null)
+      .maybeSingle();
+    
+    if (otherCategory) {
+      return otherCategory.id;
+    }
     throw error;
   }
 
