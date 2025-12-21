@@ -8,6 +8,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { useLanguage } from "@/hooks/useLanguage";
+import { GoalsSavingsBalanceChart } from "@/components/goals/GoalsSavingsBalanceChart";
+import { SavingsAdjustmentCard } from "@/components/goals/SavingsAdjustmentCard";
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -22,10 +24,18 @@ const Dashboard = () => {
   // Minimal mobile view
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
+      <div className="min-h-screen bg-background py-6 space-y-5 animate-fade-in">
         <FinancialSummary showExplanations={false} minimal={true} />
         <MobileBudgetPlanCard />
         <MobileBudgetInsightCard />
+        {/* Compact Savings Balance Chart */}
+        <div className="px-4">
+          <GoalsSavingsBalanceChart compact />
+        </div>
+        {/* Compact Savings Status */}
+        <div className="px-4">
+          <SavingsAdjustmentCard compact />
+        </div>
       </div>
     );
   }
@@ -39,7 +49,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <BudgetItemsCard />
         </div>
-        <Card className="w-full flex flex-col" style={{ boxShadow: '4px 4px 0px #000000' }}>
+        <Card className="w-full flex flex-col" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
           <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
             <CardTitle className="text-lg">{t('finance.budgetInsight')}</CardTitle>
           </CardHeader>
@@ -58,6 +68,12 @@ const Dashboard = () => {
             />
           </CardContent>
         </Card>
+      </div>
+
+      {/* New Row: Savings Balance Chart and Savings Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+        <GoalsSavingsBalanceChart />
+        <SavingsAdjustmentCard />
       </div>
     </div>
   );

@@ -105,7 +105,16 @@
     "allocationFootnoteBiweekly": "Allocation shows the Rand amount to save this pay period for each goal.",
     "savedFootnote": "Saved shows the actual rand value saved for each goal so far.",
     "targetFootnote": "Target shows the total amount you want to save for each goal.",
-    "timelineFootnote": "Timeline indicates your target deadline for each goal."
+    "timelineFootnote": "Timeline indicates your target deadline for each goal.",
+    "savingsBalance": "Savings Balance",
+    "savingsStatus": "Savings Status",
+    "expectedBalance": "Expected Balance",
+    "shortfall": "Shortfall",
+    "shortfallWarning": "Shortfall detected",
+    "adjustmentPreview": "Adjustment Preview",
+    "applyAdjustments": "Apply Adjustments",
+    "adjustmentsApplied": "Adjustments applied successfully!",
+    "usingStrategy": "Using strategy"
   },
   "budget": {
     "addBudgetItem": "Add Budget Item",
@@ -169,7 +178,15 @@
     "secondPayday": "Second Payday",
     "firstPayDateMonth": "First pay date each month",
     "secondPayDateMonth": "Second pay date each month",
-    "removeAccount": "Remove account"
+    "removeAccount": "Remove account",
+    "savingsStrategy": "Savings Adjustment Strategy",
+    "savingsStrategyDescription": "When your available balance falls short of your savings goals, how should we adjust?",
+    "inversePriority": "Prioritize important goals",
+    "inversePriorityDesc": "Reduce lower-priority goals more",
+    "proportional": "Reduce proportionally",
+    "proportionalDesc": "Reduce each goal based on its allocation",
+    "evenDistribution": "Reduce equally",
+    "evenDistributionDesc": "Reduce all goals by the same amount"
   },
   "common": {
     "save": "Save",
