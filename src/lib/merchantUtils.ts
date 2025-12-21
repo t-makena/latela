@@ -4,15 +4,20 @@
  */
 
 /**
- * Common South African merchant aliases - maps abbreviations to full names
+ * Common South African merchant aliases - maps abbreviations to full names.
+ * Each brand is distinct for fuzzy matching - no cross-brand aliases.
  */
 export const MERCHANT_ALIASES: Record<string, string[]> = {
   'MCD': ['MCDONALDS', 'MCDONALD', "MCDONALD'S", 'MCDS'],
   'MCDONALDS': ['MCD', 'MCDS', "MCDONALD'S"],
   'PNP': ['PICK N PAY', 'PICKNPAY', 'PICK-N-PAY', 'PICKPAY'],
   'PICK': ['PNP', 'PICKNPAY'],
-  'SHOPRITE': ['CHECKERS', 'USAVE', 'SHOPRITE CHECKERS'],
-  'CHECKERS': ['SHOPRITE', 'SHOPRITE CHECKERS'],
+  // Shoprite brand - distinct from Checkers
+  'SHOPRITE': ['SHOPRITE HYPER'],
+  // USave brand - distinct display but grouped with Shoprite for analytics
+  'USAVE': ['U-SAVE', 'U SAVE'],
+  // Checkers brand - completely separate from Shoprite
+  'CHECKERS': ['CHECKERS HYPER', 'CHECKERS SIXTY60', 'CHECKERS LIQUOR', 'CHECKERS LIQ'],
   'SPAR': ['SUPERSPAR', 'KWIKSPAR', 'SPAR EXPRESS'],
   'SUPERSPAR': ['SPAR', 'KWIKSPAR'],
   'WOOLWORTHS': ['WOOLIES', 'W/WORTHS'],
@@ -30,6 +35,46 @@ export const MERCHANT_ALIASES: Record<string, string[]> = {
   'UBER': ['UBER EATS', 'UBEREATS'],
   'MR': ['MRPRICE', 'MR PRICE', 'MRP'],
   'MRPRICE': ['MR PRICE', 'MRP', 'MR'],
+};
+
+/**
+ * Merchant groups for backend analytics - groups related brands under same parent company.
+ * Use getMerchantGroup() to find which group a merchant belongs to.
+ */
+export const MERCHANT_GROUPS: Record<string, string[]> = {
+  'SHOPRITE_GROUP': ['SHOPRITE', 'USAVE', 'U-SAVE'],
+  'PICK_N_PAY_GROUP': ['PNP', 'PICK N PAY', 'PICKNPAY', 'BOXER'],
+  'SPAR_GROUP': ['SPAR', 'SUPERSPAR', 'KWIKSPAR', 'SPAR EXPRESS'],
+  'WOOLWORTHS_GROUP': ['WOOLWORTHS', 'WOOLIES'],
+  'CHECKERS_GROUP': ['CHECKERS', 'CHECKERS HYPER', 'CHECKERS SIXTY60'],
+  'CLICKS_GROUP': ['CLICKS', 'CLICKS PHARMACY'],
+  'DISCHEM_GROUP': ['DISCHEM', 'DIS-CHEM'],
+  'ENGEN_GROUP': ['ENGEN'],
+  'SHELL_GROUP': ['SHELL'],
+  'BP_GROUP': ['BP'],
+  'MCDONALDS_GROUP': ['MCD', 'MCDONALDS', "MCDONALD'S"],
+  'KFC_GROUP': ['KFC', 'KENTUCKY'],
+};
+
+/**
+ * Gets the analytics group for a merchant name.
+ * Used for backend reporting to group related brands (e.g., Shoprite + USave).
+ * 
+ * @param merchantName - The merchant name to look up
+ * @returns Group name or null if not in any group
+ */
+export const getMerchantGroup = (merchantName: string): string | null => {
+  if (!merchantName) return null;
+  
+  const core = extractMerchantCore(merchantName);
+  
+  for (const [group, members] of Object.entries(MERCHANT_GROUPS)) {
+    if (members.some(m => m === core || core.startsWith(m) || m.startsWith(core))) {
+      return group;
+    }
+  }
+  
+  return null;
 };
 
 /**
