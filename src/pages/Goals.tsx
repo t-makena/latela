@@ -12,6 +12,7 @@ import { useIncomeSettings } from "@/hooks/useIncomeSettings";
 import { useLanguage } from "@/hooks/useLanguage";
 import { GoalsSavingsBalanceChart } from "@/components/goals/GoalsSavingsBalanceChart";
 import { SavingsAdjustmentCard } from "@/components/goals/SavingsAdjustmentCard";
+import { MonthEndReviewDialog } from "@/components/goals/MonthEndReviewDialog";
 
 interface GoalToEdit {
   id: string;
@@ -97,6 +98,9 @@ const Goals = () => {
 
   return (
     <div className="space-y-6 relative z-10 pt-6 px-6">
+      {/* Month-End Review Dialog */}
+      <MonthEndReviewDialog />
+      
       {/* Budget Goals Section */}
       <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
         <CardHeader className="pb-4">
