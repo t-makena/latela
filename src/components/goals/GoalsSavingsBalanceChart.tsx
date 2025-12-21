@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend, ReferenceLine
+  CartesianGrid, Tooltip, Legend
 } from "recharts";
 import { useGoals } from "@/hooks/useGoals";
 import { useTransactions } from "@/hooks/useTransactions";
-import { calculateFinancialMetrics } from "@/lib/realData";
+import { useSavingsAdjustment } from "@/hooks/useSavingsAdjustment";
+import { useUserSettings, SavingsAdjustmentStrategy } from "@/hooks/useUserSettings";
 import { useLanguage } from "@/hooks/useLanguage";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle, ArrowRight, TrendingDown } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 interface GoalsSavingsBalanceChartProps {
   compact?: boolean;
@@ -17,11 +19,12 @@ interface GoalsSavingsBalanceChartProps {
 
 export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanceChartProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'1M' | '3M' | '6M' | '1Y'>('6M');
-  const { goals } = useGoals();
+  const [isApplying, setIsApplying] = useState(false);
+  const { goals, updateGoal } = useGoals();
   const { transactions } = useTransactions();
+  const { savingsStatus } = useSavingsAdjustment();
+  const { savingsAdjustmentStrategy } = useUserSettings();
   const { t } = useLanguage();
-  
-  const { monthlySpending, netBalance } = calculateFinancialMetrics(transactions);
   
   // Calculate expected monthly savings (sum of all goal allocations)
   const expectedMonthlySavings = useMemo(() => {
@@ -34,11 +37,17 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
   }, [goals]);
   
   // Generate chart data based on period
+  // Logic: 
+  // - Expected Balance (orange): Shows the cumulative expected savings for each month
+  // - Savings Balance (green): If available balance >= expected for that month, show expected; else show actual
   const chartData = useMemo(() => {
     const now = new Date();
     const periods: Record<string, number> = { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 };
     const monthCount = periods[selectedPeriod];
     const data = [];
+    
+    // Track cumulative expected savings
+    let cumulativeExpected = 0;
     
     for (let i = monthCount - 1; i >= 0; i--) {
       const date = new Date(now);
@@ -52,33 +61,44 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                txDate.getFullYear() === date.getFullYear();
       });
       
-      // Calculate balance at end of month
-      const monthBalance = monthTransactions.length > 0
-        ? monthTransactions[monthTransactions.length - 1]?.balance || 0
+      // Calculate available balance at end of month
+      const monthAvailableBalance = monthTransactions.length > 0
+        ? Math.abs(monthTransactions[monthTransactions.length - 1]?.balance || 0)
         : 0;
       
-      // Expected balance: accumulating expected savings
-      const monthsFromStart = monthCount - i;
-      const expectedAtPoint = expectedMonthlySavings * monthsFromStart;
+      // Expected balance: accumulating expected savings each month
+      cumulativeExpected += expectedMonthlySavings;
       
-      // Savings balance: interpolate from current saved
-      const savingsAtPoint = totalSaved * (monthsFromStart / monthCount);
+      // KEY LOGIC: Savings balance
+      // If available balance >= expected for this month, show expected (target met)
+      // Otherwise, show what we can calculate from actual savings progression
+      const isCurrentMonth = i === 0;
+      const monthsFromStart = monthCount - i;
+      const progressRatio = monthsFromStart / monthCount;
+      const actualSavingsAtPoint = totalSaved * progressRatio;
+      
+      // For current month: use actual available balance comparison
+      // For past months: interpolate savings progression
+      let savingsBalance: number;
+      if (isCurrentMonth) {
+        // Current month: if available >= expected, show expected; else show actual saved
+        savingsBalance = monthAvailableBalance >= expectedMonthlySavings 
+          ? cumulativeExpected 
+          : actualSavingsAtPoint;
+      } else {
+        // Past months: interpolate from total saved
+        savingsBalance = actualSavingsAtPoint;
+      }
       
       data.push({
         month: monthName,
-        available: Math.round(Math.abs(monthBalance)),
-        expected: Math.round(expectedAtPoint),
-        savings: Math.round(savingsAtPoint),
+        expected: Math.round(cumulativeExpected),
+        savings: Math.round(savingsBalance),
       });
     }
     
     return data;
   }, [selectedPeriod, transactions, expectedMonthlySavings, totalSaved]);
-  
-  // Check for shortfall (available < expected)
-  const currentData = chartData[chartData.length - 1];
-  const hasShortfall = currentData && currentData.available < currentData.expected;
-  const shortfallAmount = currentData ? Math.max(0, currentData.expected - currentData.available) : 0;
   
   const periods = [
     { key: '1M' as const, label: '1M' },
@@ -87,7 +107,52 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
     { key: '1Y' as const, label: '1Y' },
   ];
   
-  const formatCurrency = (value: number) => `R${value.toLocaleString()}`;
+  const formatCurrency = (amount: number) => {
+    return `R${amount.toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  };
+  
+  const getStrategyLabel = (strategy: SavingsAdjustmentStrategy) => {
+    switch (strategy) {
+      case 'inverse_priority':
+        return t('settings.inversePriority') || 'Prioritize important goals';
+      case 'proportional':
+        return t('settings.proportional') || 'Reduce proportionally';
+      case 'even_distribution':
+        return t('settings.evenDistribution') || 'Reduce equally';
+    }
+  };
+  
+  const handleApplyAdjustments = async () => {
+    if (!savingsStatus.hasShortfall || savingsStatus.adjustments.length === 0) return;
+    
+    setIsApplying(true);
+    try {
+      for (const adjustment of savingsStatus.adjustments) {
+        const goal = goals.find(g => g.id === adjustment.goalId);
+        if (!goal) continue;
+        
+        const dueDate = new Date();
+        if (adjustment.timelineExtensionMonths > 0 && adjustment.timelineExtensionMonths !== Infinity) {
+          dueDate.setMonth(dueDate.getMonth() + adjustment.timelineExtensionMonths);
+        }
+        
+        await updateGoal(adjustment.goalId, {
+          name: goal.name,
+          target: goal.target,
+          currentSaved: goal.amountSaved,
+          monthlyAllocation: adjustment.newAllocation,
+          dueDate: dueDate,
+        });
+      }
+      
+      toast.success(t('goals.adjustmentsApplied') || 'Adjustments applied successfully!');
+    } catch (error) {
+      console.error('Error applying adjustments:', error);
+      toast.error(t('common.error') || 'Failed to apply adjustments');
+    } finally {
+      setIsApplying(false);
+    }
+  };
   
   return (
     <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
@@ -108,17 +173,10 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
             ))}
           </div>
         </div>
-        {hasShortfall && (
-          <div className="flex items-center gap-2 mt-2 p-2 bg-destructive/10 rounded-md">
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-            <span className="text-sm text-destructive">
-              {t('goals.shortfallWarning') || 'Shortfall'}: {formatCurrency(shortfallAmount)}
-            </span>
-          </div>
-        )}
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={compact ? 200 : 280}>
+      <CardContent className="space-y-4">
+        {/* Chart */}
+        <ResponsiveContainer width="100%" height={compact ? 200 : 250}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
@@ -134,9 +192,8 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
             <Tooltip 
               formatter={(value: number, name: string) => [
                 formatCurrency(value), 
-                name === 'available' ? (t('finance.availableBalance') || 'Available') : 
-                name === 'expected' ? (t('goals.expectedBalance') || 'Expected') : 
-                (t('goals.totalAmountSaved') || 'Savings')
+                name === 'expected' ? (t('goals.expectedBalance') || 'Expected Balance') : 
+                (t('goals.totalAmountSaved') || 'Total Amount Saved')
               ]}
               contentStyle={{ 
                 backgroundColor: 'hsl(var(--card))', 
@@ -145,33 +202,118 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
               }}
             />
             <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="available" 
-              stroke="hsl(var(--primary))" 
-              strokeWidth={2} 
-              name={t('finance.availableBalance') || 'Available'}
-              dot={{ fill: 'hsl(var(--primary))' }}
-            />
+            {/* Expected Balance - Orange dashed line */}
             <Line 
               type="monotone" 
               dataKey="expected" 
               stroke="hsl(var(--secondary))" 
               strokeWidth={2} 
               strokeDasharray="5 5"
-              name={t('goals.expectedBalance') || 'Expected'}
+              name={t('goals.expectedBalance') || 'Expected Balance'}
               dot={{ fill: 'hsl(var(--secondary))' }}
             />
+            {/* Total Amount Saved - Green solid line */}
             <Line 
               type="monotone" 
               dataKey="savings" 
               stroke="#41b883" 
               strokeWidth={2} 
-              name={t('goals.totalAmountSaved') || 'Savings'}
+              name={t('goals.totalAmountSaved') || 'Total Amount Saved'}
               dot={{ fill: '#41b883' }}
             />
           </LineChart>
         </ResponsiveContainer>
+        
+        {/* Savings Status Section */}
+        <div className="border-t pt-4">
+          <div className="flex items-center gap-2 mb-3">
+            {savingsStatus.hasShortfall ? (
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+            ) : (
+              <CheckCircle className="h-5 w-5 text-green-500" />
+            )}
+            <span className="font-medium">{t('goals.savingsStatus') || 'Savings Status'}</span>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">{t('goals.expectedBalance') || 'Expected Balance'}</span>
+              <span className="font-medium">{formatCurrency(savingsStatus.expectedBalance)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">{t('finance.availableBalance') || 'Available Balance'}</span>
+              <span className={`font-medium ${savingsStatus.hasShortfall ? '' : 'text-green-600'}`}>
+                {formatCurrency(savingsStatus.availableBalance)}
+              </span>
+            </div>
+            
+            {savingsStatus.hasShortfall && (
+              <div className="flex justify-between items-center border-t pt-2 mt-2">
+                <span className="text-destructive font-medium">{t('goals.shortfall') || 'Shortfall'}</span>
+                <span className="font-bold text-destructive">{formatCurrency(savingsStatus.shortfall)}</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Success message when on track */}
+          {!savingsStatus.hasShortfall && (
+            <p className="text-sm text-green-600 pt-3">
+              {t('finance.onTrack') || "You're on track, keep going :)"}
+            </p>
+          )}
+          
+          {/* Shortfall details when not on track */}
+          {savingsStatus.hasShortfall && (
+            <div className="space-y-3 pt-3">
+              {/* Strategy Info */}
+              <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                {t('goals.usingStrategy') || 'Strategy'}: <span className="font-medium">{getStrategyLabel(savingsAdjustmentStrategy)}</span>
+              </div>
+              
+              {/* Adjustment Preview */}
+              {!compact && savingsStatus.adjustments.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium flex items-center gap-1">
+                    <TrendingDown className="h-4 w-4" />
+                    {t('goals.adjustmentPreview') || 'Adjustment Preview'}
+                  </h4>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {savingsStatus.adjustments.map((adj) => (
+                      <div key={adj.goalId} className="text-sm flex items-center justify-between bg-muted/30 p-2 rounded">
+                        <div className="flex-1">
+                          <span className="font-medium">{adj.goalName}</span>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <span>{formatCurrency(adj.currentAllocation)}</span>
+                            <ArrowRight className="h-3 w-3" />
+                            <span className="text-destructive">{formatCurrency(adj.newAllocation)}</span>
+                            <span className="ml-2">(-{formatCurrency(adj.reduction)})</span>
+                          </div>
+                        </div>
+                        {adj.timelineExtensionMonths > 0 && adj.timelineExtensionMonths !== Infinity && (
+                          <span className="text-xs text-muted-foreground">
+                            +{adj.timelineExtensionMonths} {t('budget.monthly') || 'months'}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Apply Button */}
+              <Button 
+                onClick={handleApplyAdjustments}
+                disabled={isApplying || savingsStatus.adjustments.length === 0}
+                className="w-full"
+                variant="destructive"
+              >
+                {isApplying 
+                  ? (t('common.saving') || 'Applying...') 
+                  : (t('goals.applyAdjustments') || 'Apply Adjustments')}
+              </Button>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
