@@ -114,7 +114,12 @@
     "adjustmentPreview": "Adjustment Preview",
     "applyAdjustments": "Apply Adjustments",
     "adjustmentsApplied": "Adjustments applied successfully!",
-    "usingStrategy": "Using strategy"
+    "usingStrategy": "Using strategy",
+    "monthEndReview": "Month-End Savings Review",
+    "lastDayOfMonth": "It's the last day of the month!",
+    "daysUntilMonthEnd": "days until month end",
+    "adjustmentExplanation": "Based on your savings strategy",
+    "hereAreRecommendedAdjustments": "here are the recommended adjustments:"
   },
   "budget": {
     "addBudgetItem": "Add Budget Item",
@@ -211,7 +216,9 @@
     "status": "Status",
     "actions": "Actions",
     "clear": "Clear",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "remindLater": "Remind Later",
+    "dismiss": "Dismiss"
   },
   "calendar": {
     "title": "Calendar",
