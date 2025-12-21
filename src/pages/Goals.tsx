@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Target, Edit2, Plus, Loader2, Trash2, CheckCircle2, Pencil } from "lucide-react";
+import { Plus, Loader2, Trash2, CheckCircle2, Pencil } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useGoals } from "@/hooks/useGoals";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,6 +10,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
 import { useIncomeSettings } from "@/hooks/useIncomeSettings";
 import { useLanguage } from "@/hooks/useLanguage";
+import { GoalsSavingsBalanceChart } from "@/components/goals/GoalsSavingsBalanceChart";
+import { SavingsAdjustmentCard } from "@/components/goals/SavingsAdjustmentCard";
+
 interface GoalToEdit {
   id: string;
   name: string;
@@ -95,7 +98,7 @@ const Goals = () => {
   return (
     <div className="space-y-6 relative z-10 pt-6 px-6">
       {/* Budget Goals Section */}
-      <Card className="bg-white border border-black w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
         <CardHeader className="pb-4">
           <CardTitle className="font-georama text-xl">{t('goals.budgetGoals')}</CardTitle>
         </CardHeader>
@@ -127,11 +130,17 @@ const Goals = () => {
         </CardContent>
       </Card>
 
+      {/* Savings Balance Chart - NEW */}
+      <GoalsSavingsBalanceChart />
+
+      {/* Savings Status Card - NEW */}
+      <SavingsAdjustmentCard />
+
       {/* Goals Overview Table */}
       {isMobile ? (
         <div 
-          className="bg-white rounded-3xl border border-black p-5 w-full"
-          style={{ boxShadow: '4px 4px 0px #000000' }}
+          className="bg-card rounded-3xl border border-border p-5 w-full"
+          style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}
         >
           <div className="pb-2 mb-2">
             <h2 className="font-georama text-xl font-semibold">{t('goals.goalsOverview')}</h2>
@@ -247,7 +256,7 @@ const Goals = () => {
           </div>
         </div>
       ) : (
-        <Card className="bg-white border border-black w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+        <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
           <CardHeader className="pb-4">
             <CardTitle className="font-georama text-xl">{t('goals.goalsOverview')}</CardTitle>
           </CardHeader>

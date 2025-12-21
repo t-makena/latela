@@ -16,10 +16,13 @@ import { useIncomeSettings, IncomeFrequency } from "@/hooks/useIncomeSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LanguageSettings } from "@/components/settings/LanguageSettings";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useUserSettings, SavingsAdjustmentStrategy } from "@/hooks/useUserSettings";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const Settings = () => {
   const { accounts } = useAccounts();
   const { theme, setTheme } = useTheme();
+  const { savingsAdjustmentStrategy, updateSavingsStrategy } = useUserSettings();
   const { 
     payday, 
     frequency, 
@@ -33,6 +36,7 @@ const Settings = () => {
     updateBiweeklyPayday2,
     weekdayNames,
   } = useIncomeSettings();
+  const { t } = useLanguage();
   const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -606,7 +610,64 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      {/* Language Settings */}
+      {/* Savings Adjustment Strategy */}
+      <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+        <CardHeader>
+          <CardTitle>{t('settings.savingsStrategy') || 'Savings Adjustment Strategy'}</CardTitle>
+          <CardDescription>
+            {t('settings.savingsStrategyDescription') || 'When your available balance falls short of your savings goals, how should we adjust?'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup
+            value={savingsAdjustmentStrategy}
+            onValueChange={async (value) => {
+              try {
+                await updateSavingsStrategy(value as SavingsAdjustmentStrategy);
+                toast.success("Strategy updated successfully!");
+              } catch (error) {
+                toast.error("Failed to update strategy");
+              }
+            }}
+            className="space-y-4"
+          >
+            <div className="flex items-start space-x-3">
+              <RadioGroupItem value="inverse_priority" id="inverse" className="mt-1" />
+              <div>
+                <Label htmlFor="inverse" className="font-medium cursor-pointer">
+                  {t('settings.inversePriority') || 'Prioritize important goals'}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.inversePriorityDesc') || 'Reduce lower-priority goals more'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <RadioGroupItem value="proportional" id="proportional" className="mt-1" />
+              <div>
+                <Label htmlFor="proportional" className="font-medium cursor-pointer">
+                  {t('settings.proportional') || 'Reduce proportionally'}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.proportionalDesc') || 'Reduce each goal based on its allocation'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <RadioGroupItem value="even_distribution" id="even" className="mt-1" />
+              <div>
+                <Label htmlFor="even" className="font-medium cursor-pointer">
+                  {t('settings.evenDistribution') || 'Reduce equally'}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.evenDistributionDesc') || 'Reduce all goals by the same amount'}
+                </p>
+              </div>
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
+
       <LanguageSettings />
 
       {/* Custom Categories Management */}
