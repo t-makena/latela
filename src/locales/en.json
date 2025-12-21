@@ -218,7 +218,9 @@
     "clear": "Clear",
     "saving": "Saving...",
     "remindLater": "Remind Later",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "transactionsUpdated": "Updated {{count}} transactions with this merchant",
+    "merchantMappingSaved": "Merchant mapping saved successfully"
   },
   "calendar": {
     "title": "Calendar",

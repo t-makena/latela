@@ -668,6 +668,10 @@ export type Database = {
           priority_weight: number
         }[]
       }
+      normalize_merchant_name: {
+        Args: { description: string }
+        Returns: string
+      }
       recalculate_goal_priorities: {
         Args: { user_uuid: string }
         Returns: undefined
