@@ -44,8 +44,8 @@ const Dashboard = () => {
       <MonthEndReviewDialog />
       <FinancialSummary showExplanations={true} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4 items-start">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4 items-stretch">
+        <div className="lg:col-span-2 h-full">
           <BudgetItemsCard />
         </div>
         <Card className="w-full flex flex-col" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
