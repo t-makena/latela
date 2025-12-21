@@ -57,6 +57,12 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3);
 
+  // Helper to get display name for transaction
+  const getDisplayMerchantName = (transaction: typeof transactions[0]) => {
+    // Use display_merchant_name if available, otherwise fallback to description
+    return (transaction as any).display_merchant_name || transaction.description;
+  };
+
   if (accountTransactions.length === 0) {
     return (
       <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
@@ -94,7 +100,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
             >
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm font-georama truncate">
-                  {transaction.description}
+                  {getDisplayMerchantName(transaction)}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   {formatDate(transaction.created_at)}

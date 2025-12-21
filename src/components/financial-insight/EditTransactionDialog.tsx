@@ -7,7 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { useSubcategories } from '@/hooks/useSubcategories';
-import { normalizeMerchantName } from '@/lib/merchantUtils';
+import { 
+  normalizeMerchantName, 
+  extractMerchantCore, 
+  extractDisplayMerchantName,
+  isFuzzyMerchantMatch 
+} from '@/lib/merchantUtils';
 
 interface EditTransactionDialogProps {
   open: boolean;
@@ -32,6 +37,7 @@ export const EditTransactionDialog = ({
   onSave
 }: EditTransactionDialogProps) => {
   const [merchantName, setMerchantName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [selectedParentCategory, setSelectedParentCategory] = useState<string>('');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [parentCategories, setParentCategories] = useState<ParentCategory[]>([]);
@@ -42,6 +48,8 @@ export const EditTransactionDialog = ({
   useEffect(() => {
     if (open) {
       setMerchantName(transaction.description || '');
+      // Suggest a display name based on the description
+      setDisplayName(extractDisplayMerchantName(transaction.description || ''));
       fetchParentCategories();
     }
   }, [open, transaction]);
@@ -78,6 +86,8 @@ export const EditTransactionDialog = ({
       if (!user) throw new Error('User not authenticated');
 
       const normalizedMerchantName = normalizeMerchantName(merchantName);
+      const merchantPattern = extractMerchantCore(merchantName);
+      const finalDisplayName = displayName.trim() || extractDisplayMerchantName(merchantName);
 
       // Check if mapping already exists
       const { data: existing } = await supabase
@@ -102,6 +112,8 @@ export const EditTransactionDialog = ({
       const mappingData = {
         user_id: user.id,
         merchant_name: normalizedMerchantName,
+        merchant_pattern: merchantPattern,
+        display_name: finalDisplayName,
         category_id: selectedParentCategory,
         subcategory_id: subcategoryId,
         custom_subcategory_id: customSubcategoryId,
@@ -125,17 +137,19 @@ export const EditTransactionDialog = ({
         if (error) throw error;
       }
 
-      // Retroactively update ALL existing transactions with matching merchant name
+      // Retroactively update ALL existing transactions with fuzzy matching merchant names
       const updatedCount = await updateMatchingTransactions(
         user.id,
         normalizedMerchantName,
+        merchantPattern,
         selectedParentCategory,
-        subcategoryId || customSubcategoryId
+        subcategoryId || customSubcategoryId,
+        finalDisplayName
       );
 
       toast.success(
         updatedCount > 1 
-          ? `Updated ${updatedCount} transactions with this merchant` 
+          ? `Updated ${updatedCount} transactions with similar merchants` 
           : 'Merchant mapping saved successfully'
       );
       onSave();
@@ -150,14 +164,16 @@ export const EditTransactionDialog = ({
   };
 
   /**
-   * Updates all existing transactions that match the merchant name
-   * with the new category settings.
+   * Updates all existing transactions that fuzzy-match the merchant name
+   * with the new category settings and display name.
    */
   const updateMatchingTransactions = async (
     userId: string,
     normalizedMerchantName: string,
+    merchantPattern: string,
     categoryId: string,
-    subcategoryId: string | null
+    subcategoryId: string | null,
+    displayMerchantName: string
   ): Promise<number> => {
     try {
       // Fetch all user's transactions
@@ -169,23 +185,26 @@ export const EditTransactionDialog = ({
       if (fetchError) throw fetchError;
       if (!allTransactions || allTransactions.length === 0) return 0;
 
-      // Find transactions with matching normalized merchant names
+      // Find transactions with fuzzy-matching merchant names
       const matchingTransactionIds: string[] = [];
       for (const tx of allTransactions) {
-        const txNormalizedName = normalizeMerchantName(tx.description || '');
-        if (txNormalizedName === normalizedMerchantName) {
+        const txDescription = tx.description || '';
+        
+        // Use fuzzy matching to find similar merchants
+        if (isFuzzyMerchantMatch(txDescription, normalizedMerchantName, 0.7)) {
           matchingTransactionIds.push(tx.id);
         }
       }
 
       if (matchingTransactionIds.length === 0) return 0;
 
-      // Update all matching transactions
+      // Update all matching transactions with category and display name
       const { error: updateError } = await supabase
         .from('transactions')
         .update({
           category_id: categoryId,
           subcategory_id: subcategoryId,
+          display_merchant_name: displayMerchantName,
           user_verified: true,
           auto_categorized: false,
           categorization_confidence: 1.0,
@@ -218,6 +237,22 @@ export const EditTransactionDialog = ({
               onChange={(e) => setMerchantName(e.target.value)}
               placeholder="Enter merchant name"
             />
+            <p className="text-xs text-muted-foreground">
+              Similar merchants will be matched automatically
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="display-name">Display As</Label>
+            <Input
+              id="display-name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="How should this merchant be displayed?"
+            />
+            <p className="text-xs text-muted-foreground">
+              This name will be shown for all matching transactions
+            </p>
           </div>
 
           <div className="space-y-2">

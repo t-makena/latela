@@ -1,9 +1,7 @@
-
 import { useState } from "react";
 import { X, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -58,10 +56,10 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex justify-between items-center p-2 animate-pulse">
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded mb-1"></div>
-                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-muted rounded mb-1"></div>
+                  <div className="h-3 bg-muted rounded w-3/4"></div>
                 </div>
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-muted rounded w-16"></div>
               </div>
             ))}
           </div>
@@ -112,6 +110,12 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
       const categoryName = categoryLabels[selectedCategory];
       navigate('/financial-insight', { state: { categoryFilterName: categoryName } });
     }
+  };
+
+  // Helper to get display name for transaction
+  const getDisplayMerchantName = (transaction: typeof transactions[0]) => {
+    // Use display_merchant_name if available, otherwise fallback to description
+    return (transaction as any).display_merchant_name || transaction.description;
   };
 
   if (accountTransactions.length === 0) {
@@ -204,7 +208,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-semibold text-lg font-georama">
-                      {transaction.description}
+                      {getDisplayMerchantName(transaction)}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {formatDate(transaction.transaction_date)}
