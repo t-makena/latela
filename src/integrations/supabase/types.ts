@@ -309,6 +309,7 @@ export type Database = {
           cleared: boolean | null
           created_at: string | null
           description: string | null
+          display_merchant_name: string | null
           id: string
           is_categorized: boolean
           merchant_id: string | null
@@ -331,6 +332,7 @@ export type Database = {
           cleared?: boolean | null
           created_at?: string | null
           description?: string | null
+          display_merchant_name?: string | null
           id?: string
           is_categorized?: boolean
           merchant_id?: string | null
@@ -353,6 +355,7 @@ export type Database = {
           cleared?: boolean | null
           created_at?: string | null
           description?: string | null
+          display_merchant_name?: string | null
           id?: string
           is_categorized?: boolean
           merchant_id?: string | null
@@ -452,9 +455,11 @@ export type Database = {
           category_id: string
           created_at: string
           custom_subcategory_id: string | null
+          display_name: string | null
           id: string
           is_active: boolean
           merchant_name: string
+          merchant_pattern: string | null
           notes: string | null
           subcategory_id: string | null
           updated_at: string
@@ -464,9 +469,11 @@ export type Database = {
           category_id: string
           created_at?: string
           custom_subcategory_id?: string | null
+          display_name?: string | null
           id?: string
           is_active?: boolean
           merchant_name: string
+          merchant_pattern?: string | null
           notes?: string | null
           subcategory_id?: string | null
           updated_at?: string
@@ -476,9 +483,11 @@ export type Database = {
           category_id?: string
           created_at?: string
           custom_subcategory_id?: string | null
+          display_name?: string | null
           id?: string
           is_active?: boolean
           merchant_name?: string
+          merchant_pattern?: string | null
           notes?: string | null
           subcategory_id?: string | null
           updated_at?: string
@@ -553,6 +562,7 @@ export type Database = {
           cleared: boolean | null
           created_at: string | null
           description: string | null
+          display_merchant_name: string | null
           display_subcategory_color: string | null
           display_subcategory_name: string | null
           id: string | null
@@ -667,6 +677,11 @@ export type Database = {
           priority_percentage: number
           priority_weight: number
         }[]
+      }
+      extract_merchant_core: { Args: { description: string }; Returns: string }
+      fuzzy_match_merchant: {
+        Args: { merchant_name: string; pattern: string }
+        Returns: boolean
       }
       normalize_merchant_name: {
         Args: { description: string }

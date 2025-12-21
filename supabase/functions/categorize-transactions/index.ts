@@ -6,6 +6,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * Common South African merchant aliases for fuzzy matching
+ */
+const MERCHANT_ALIASES: Record<string, string[]> = {
+  'MCD': ['MCDONALDS', 'MCDONALD', "MCDONALD'S", 'MCDS'],
+  'MCDONALDS': ['MCD', 'MCDS', "MCDONALD'S"],
+  'PNP': ['PICK N PAY', 'PICKNPAY', 'PICK-N-PAY', 'PICKPAY'],
+  'PICK': ['PNP', 'PICKNPAY'],
+  'SHOPRITE': ['CHECKERS', 'USAVE', 'SHOPRITE CHECKERS'],
+  'CHECKERS': ['SHOPRITE', 'SHOPRITE CHECKERS'],
+  'SPAR': ['SUPERSPAR', 'KWIKSPAR', 'SPAR EXPRESS'],
+  'SUPERSPAR': ['SPAR', 'KWIKSPAR'],
+  'WOOLWORTHS': ['WOOLIES', 'W/WORTHS'],
+  'WOOLIES': ['WOOLWORTHS', 'W/WORTHS'],
+  'KFC': ['KENTUCKY', 'KENTUCKY FRIED'],
+  'KENTUCKY': ['KFC'],
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -61,6 +79,13 @@ serve(async (req) => {
       );
     }
 
+    // Fetch ALL user merchant mappings upfront for fuzzy matching
+    const { data: userMappings } = await supabase
+      .from('user_merchant_mappings')
+      .select('merchant_name, merchant_pattern, display_name, category_id, subcategory_id, custom_subcategory_id')
+      .eq('user_id', user.id)
+      .eq('is_active', true);
+
     let categorizedCount = 0;
     let cachedCount = 0;
     let userMappingsCount = 0;
@@ -69,26 +94,26 @@ serve(async (req) => {
     // Process each transaction
     for (const transaction of transactions) {
       const merchantName = extractMerchantName(transaction.description);
+      const merchantCore = extractMerchantCore(transaction.description);
       
-      // PRIORITY 1: Check user_merchant_mappings first (user's custom settings)
-      const { data: userMapping } = await supabase
-        .from('user_merchant_mappings')
-        .select('category_id, subcategory_id, custom_subcategory_id')
-        .eq('user_id', user.id)
-        .ilike('merchant_name', merchantName)
-        .eq('is_active', true)
-        .maybeSingle();
+      // PRIORITY 1: Check user_merchant_mappings with fuzzy matching
+      const userMapping = findBestUserMapping(merchantName, merchantCore, userMappings || []);
 
       if (userMapping) {
-        // Apply user's custom mapping with full category chain
+        // Apply user's custom mapping with full category chain and display name
         const updateData: Record<string, unknown> = {
           category_id: userMapping.category_id,
           subcategory_id: userMapping.subcategory_id || userMapping.custom_subcategory_id || null,
           auto_categorized: false,
           user_verified: true,
-          categorization_confidence: 1.0,
+          categorization_confidence: userMapping.score,
           is_categorized: true
         };
+
+        // Apply display name if set
+        if (userMapping.display_name) {
+          updateData.display_merchant_name = userMapping.display_name;
+        }
 
         await supabase
           .from('transactions')
@@ -97,7 +122,7 @@ serve(async (req) => {
 
         userMappingsCount++;
         categorizedCount++;
-        console.log(`✓ User mapping: ${merchantName} → category_id: ${userMapping.category_id}`);
+        console.log(`✓ User mapping (score: ${userMapping.score.toFixed(2)}): ${merchantName} → category_id: ${userMapping.category_id}`);
         continue;
       }
 
@@ -208,6 +233,142 @@ function extractMerchantName(description: string): string {
   merchant = parts[0] || merchant;
   
   return merchant.substring(0, 100).toUpperCase();
+}
+
+/**
+ * Extracts the core identifier from a merchant name (first significant word).
+ */
+function extractMerchantCore(description: string): string {
+  if (!description) return '';
+  
+  const normalized = extractMerchantName(description);
+  
+  // Skip common prefixes
+  let cleaned = normalized.replace(/^(THE|A|AN)\s+/i, '');
+  
+  // Get the first word
+  const firstWord = cleaned.split(' ')[0] || cleaned;
+  
+  return firstWord.length >= 2 ? firstWord : cleaned;
+}
+
+/**
+ * Calculates similarity between two merchant names.
+ */
+function calculateMerchantSimilarity(name1: string, name2: string): number {
+  if (!name1 || !name2) return 0;
+  
+  const normalized1 = extractMerchantName(name1);
+  const normalized2 = extractMerchantName(name2);
+  
+  // Exact match
+  if (normalized1 === normalized2) return 1.0;
+  
+  const core1 = extractMerchantCore(name1);
+  const core2 = extractMerchantCore(name2);
+  
+  // Core match
+  if (core1 === core2 && core1.length >= 2) return 0.95;
+  
+  // Check alias match
+  const aliases1 = MERCHANT_ALIASES[core1] || [];
+  const aliases2 = MERCHANT_ALIASES[core2] || [];
+  if (aliases1.includes(core2) || aliases2.includes(core1)) return 0.9;
+  
+  // Prefix match
+  if (normalized1.startsWith(normalized2) || normalized2.startsWith(normalized1)) {
+    return 0.85;
+  }
+  
+  // Core prefix match
+  if (core1.length >= 3 && core2.length >= 3) {
+    if (core1.startsWith(core2) || core2.startsWith(core1)) {
+      return 0.8;
+    }
+  }
+  
+  // Contains match
+  if (core1.length >= 4 && core2.length >= 4) {
+    if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
+      return 0.75;
+    }
+  }
+  
+  return 0;
+}
+
+interface UserMappingMatch {
+  category_id: string;
+  subcategory_id: string | null;
+  custom_subcategory_id: string | null;
+  display_name: string | null;
+  score: number;
+}
+
+/**
+ * Finds the best matching user mapping using fuzzy matching.
+ */
+function findBestUserMapping(
+  merchantName: string, 
+  merchantCore: string, 
+  mappings: Array<{
+    merchant_name: string;
+    merchant_pattern: string | null;
+    display_name: string | null;
+    category_id: string;
+    subcategory_id: string | null;
+    custom_subcategory_id: string | null;
+  }>
+): UserMappingMatch | null {
+  if (!mappings.length) return null;
+  
+  let bestMatch: UserMappingMatch | null = null;
+  
+  for (const mapping of mappings) {
+    // Try exact match first
+    const mappingNormalized = extractMerchantName(mapping.merchant_name);
+    if (mappingNormalized === merchantName) {
+      return {
+        category_id: mapping.category_id,
+        subcategory_id: mapping.subcategory_id,
+        custom_subcategory_id: mapping.custom_subcategory_id,
+        display_name: mapping.display_name,
+        score: 1.0
+      };
+    }
+    
+    // Try pattern match if available
+    if (mapping.merchant_pattern) {
+      const patternCore = mapping.merchant_pattern.toUpperCase();
+      if (patternCore === merchantCore) {
+        const score = 0.95;
+        if (!bestMatch || score > bestMatch.score) {
+          bestMatch = {
+            category_id: mapping.category_id,
+            subcategory_id: mapping.subcategory_id,
+            custom_subcategory_id: mapping.custom_subcategory_id,
+            display_name: mapping.display_name,
+            score
+          };
+        }
+        continue;
+      }
+    }
+    
+    // Calculate fuzzy similarity
+    const score = calculateMerchantSimilarity(mapping.merchant_name, merchantName);
+    if (score >= 0.7 && (!bestMatch || score > bestMatch.score)) {
+      bestMatch = {
+        category_id: mapping.category_id,
+        subcategory_id: mapping.subcategory_id,
+        custom_subcategory_id: mapping.custom_subcategory_id,
+        display_name: mapping.display_name,
+        score
+      };
+    }
+  }
+  
+  return bestMatch;
 }
 
 async function categorizeMerchantWithAI(merchantName: string, description: string): Promise<string> {
