@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { useSubcategories } from '@/hooks/useSubcategories';
+import { normalizeMerchantName } from '@/lib/merchantUtils';
 
 interface EditTransactionDialogProps {
   open: boolean;
@@ -76,12 +77,14 @@ export const EditTransactionDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      const normalizedMerchantName = normalizeMerchantName(merchantName);
+
       // Check if mapping already exists
       const { data: existing } = await supabase
         .from('user_merchant_mappings')
         .select('id')
         .eq('user_id', user.id)
-        .eq('merchant_name', merchantName.trim())
+        .ilike('merchant_name', normalizedMerchantName)
         .eq('is_active', true)
         .maybeSingle();
 
@@ -89,12 +92,19 @@ export const EditTransactionDialog = ({
         s.id === selectedSubcategory || s.custom_category_id === selectedSubcategory
       );
 
+      const subcategoryId = selectedSubcategory === 'none' ? null : (
+        subcategory?.is_custom ? null : (selectedSubcategory || null)
+      );
+      const customSubcategoryId = selectedSubcategory === 'none' ? null : (
+        subcategory?.is_custom ? (subcategory.custom_category_id || selectedSubcategory) : null
+      );
+
       const mappingData = {
         user_id: user.id,
-        merchant_name: merchantName.trim(),
+        merchant_name: normalizedMerchantName,
         category_id: selectedParentCategory,
-        subcategory_id: subcategory?.is_custom ? null : (selectedSubcategory || null),
-        custom_subcategory_id: subcategory?.is_custom ? (subcategory.custom_category_id || selectedSubcategory) : null,
+        subcategory_id: subcategoryId,
+        custom_subcategory_id: customSubcategoryId,
         is_active: true
       };
 
@@ -115,14 +125,80 @@ export const EditTransactionDialog = ({
         if (error) throw error;
       }
 
-      toast.success('Merchant mapping saved successfully');
+      // Retroactively update ALL existing transactions with matching merchant name
+      const updatedCount = await updateMatchingTransactions(
+        user.id,
+        normalizedMerchantName,
+        selectedParentCategory,
+        subcategoryId || customSubcategoryId
+      );
+
+      toast.success(
+        updatedCount > 1 
+          ? `Updated ${updatedCount} transactions with this merchant` 
+          : 'Merchant mapping saved successfully'
+      );
       onSave();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving merchant mapping:', error);
-      toast.error(error.message || 'Failed to save merchant mapping');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save merchant mapping';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Updates all existing transactions that match the merchant name
+   * with the new category settings.
+   */
+  const updateMatchingTransactions = async (
+    userId: string,
+    normalizedMerchantName: string,
+    categoryId: string,
+    subcategoryId: string | null
+  ): Promise<number> => {
+    try {
+      // Fetch all user's transactions
+      const { data: allTransactions, error: fetchError } = await supabase
+        .from('transactions')
+        .select('id, description')
+        .eq('user_id', userId);
+
+      if (fetchError) throw fetchError;
+      if (!allTransactions || allTransactions.length === 0) return 0;
+
+      // Find transactions with matching normalized merchant names
+      const matchingTransactionIds: string[] = [];
+      for (const tx of allTransactions) {
+        const txNormalizedName = normalizeMerchantName(tx.description || '');
+        if (txNormalizedName === normalizedMerchantName) {
+          matchingTransactionIds.push(tx.id);
+        }
+      }
+
+      if (matchingTransactionIds.length === 0) return 0;
+
+      // Update all matching transactions
+      const { error: updateError } = await supabase
+        .from('transactions')
+        .update({
+          category_id: categoryId,
+          subcategory_id: subcategoryId,
+          user_verified: true,
+          auto_categorized: false,
+          categorization_confidence: 1.0,
+          is_categorized: true
+        })
+        .in('id', matchingTransactionIds);
+
+      if (updateError) throw updateError;
+
+      return matchingTransactionIds.length;
+    } catch (error) {
+      console.error('Error updating matching transactions:', error);
+      return 0;
     }
   };
 
