@@ -87,7 +87,7 @@ export const BudgetItemsCard = () => {
 
   return (
     <>
-      <Card style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="h-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
           <CardTitle className="text-lg">{t('budget.budgetPlan')}</CardTitle>
           <Button
