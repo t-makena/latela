@@ -10,6 +10,7 @@ import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { GoalsSavingsBalanceChart } from "@/components/goals/GoalsSavingsBalanceChart";
 import { SavingsAdjustmentCard } from "@/components/goals/SavingsAdjustmentCard";
+import { MonthEndReviewDialog } from "@/components/goals/MonthEndReviewDialog";
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -43,6 +44,8 @@ const Dashboard = () => {
   // Desktop view
   return (
     <div className="space-y-6 relative z-10 pt-6 pb-4 px-6">
+      {/* Month-End Review Dialog */}
+      <MonthEndReviewDialog />
       <FinancialSummary showExplanations={true} />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4 items-start">
