@@ -330,7 +330,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
                     {format(new Date(transaction.transaction_date), 'dd MMM yyyy')}
                   </TableCell>
                   <TableCell className="max-w-[150px] truncate">
-                    {transaction.merchant_name || "-"}
+                    {(transaction as any).display_merchant_name || transaction.merchant_name || "-"}
                   </TableCell>
                   <TableCell>
                     <Badge 
