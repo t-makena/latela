@@ -49,7 +49,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="font-georama">Recent Transactions</CardTitle>
+          <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -72,7 +72,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="font-georama">Recent Transactions</CardTitle>
+          <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-destructive">Error loading transactions: {error}</p>
@@ -124,7 +124,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CardTitle className="font-georama">Recent Transactions</CardTitle>
+              <CardTitle>Recent Transactions</CardTitle>
               {selectedCategory && (
                 <div className="flex items-center gap-1">
                   <Badge 
@@ -160,7 +160,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CardTitle className="font-georama">Recent Transactions</CardTitle>
+            <CardTitle>Recent Transactions</CardTitle>
             {selectedCategory && (
               <div className="flex items-center gap-1">
                 <Badge 
@@ -207,14 +207,14 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
                 </Badge>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-lg font-georama">
+                    <h3 className="font-semibold text-lg">
                       {getDisplayMerchantName(transaction)}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {formatDate(transaction.transaction_date)}
                     </p>
                   </div>
-                  <span className={`font-semibold text-lg font-georama ${
+                  <span className={`font-semibold text-lg ${
                     transaction.amount < 0 ? 'text-destructive' : 'text-green-600'
                   }`}>
                     {formatCurrency(transaction.amount)}

@@ -17,7 +17,7 @@ export const BudgetGoalsList = () => {
     const content = (
       <>
         <div className="pb-2">
-          <div className={isMobile ? "text-base font-georama font-medium" : "text-lg font-georama font-medium"}>Budget Goals</div>
+          <div className={isMobile ? "text-base font-medium" : "text-lg font-bold"}>Budget Goals</div>
         </div>
         <div className="space-y-4">
           <Skeleton className="h-16 w-full" />
@@ -31,7 +31,7 @@ export const BudgetGoalsList = () => {
     ) : (
       <Card className="stat-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
+          <CardTitle className="text-lg font-bold">Budget Goals</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Skeleton className="h-16 w-full" />
@@ -45,7 +45,7 @@ export const BudgetGoalsList = () => {
     const emptyContent = (
       <>
         <div className="pb-2">
-          <div className={isMobile ? "text-base font-georama font-medium" : "text-lg font-georama font-medium"}>Budget Goals</div>
+          <div className={isMobile ? "text-base font-medium" : "text-lg font-bold"}>Budget Goals</div>
         </div>
         <div>
           <p className="text-sm text-muted-foreground text-center py-4">
@@ -60,7 +60,7 @@ export const BudgetGoalsList = () => {
     ) : (
       <Card className="stat-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
+          <CardTitle className="text-lg font-bold">Budget Goals</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
@@ -79,7 +79,7 @@ export const BudgetGoalsList = () => {
         return (
           <div key={goal.id} className="space-y-2">
             <div className="flex justify-between items-center">
-              <h3 className="font-medium font-georama">{goal.name}</h3>
+              <h3 className="font-medium">{goal.name}</h3>
               <span className="text-sm text-muted-foreground">
                 {percentage}% saved
               </span>
@@ -104,14 +104,14 @@ export const BudgetGoalsList = () => {
   return isMobile ? (
     <div className="mb-4">
       <div className="pb-2 mb-3">
-        <div className="text-base font-georama font-medium">Budget Goals</div>
+        <div className="text-base font-medium">Budget Goals</div>
       </div>
       {goalsContent}
     </div>
   ) : (
     <Card className="stat-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-georama font-medium">Budget Goals</CardTitle>
+        <CardTitle className="text-lg font-bold">Budget Goals</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {goalsContent}

@@ -149,7 +149,7 @@ const Onboarding = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold font-georama">latela</h1>
+          <h1 className="text-3xl font-bold">latela</h1>
         </div>
 
         {/* Screen 1: Welcome */}
