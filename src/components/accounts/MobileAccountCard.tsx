@@ -15,7 +15,7 @@ export const MobileAccountCard = ({ account }: MobileAccountCardProps) => {
         <div>
           <p className="font-bold text-lg text-black">{account.name}</p>
           <p className="text-sm font-light text-[#999999] mt-1">Available balance</p>
-          <p className="text-xl text-black mt-1 font-georama">
+          <p className="text-xl text-black mt-1">
             R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>

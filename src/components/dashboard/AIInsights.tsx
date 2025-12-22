@@ -32,7 +32,7 @@ export const AIInsights = () => {
       <div className="pb-2 mb-3">
         <div className="flex items-center gap-2">
           <Lightbulb className="text-primary" size={16} />
-          <span className="text-base font-georama font-medium">Financial Insights</span>
+          <span className="text-base font-medium">Financial Insights</span>
         </div>
       </div>
       {content}
@@ -42,7 +42,7 @@ export const AIInsights = () => {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="text-primary" size={18} />
-          <span className="text-lg font-georama font-medium">Financial Insights</span>
+          <span className="text-lg font-bold">Financial Insights</span>
         </CardTitle>
       </CardHeader>
       <CardContent>

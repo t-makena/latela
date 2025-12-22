@@ -55,7 +55,7 @@ export const MobileBudgetPlanCard = () => {
         className="bg-white rounded-3xl border border-black p-5 w-full"
         style={{ boxShadow: '4px 4px 0px #000000' }}
       >
-        <h2 className="text-lg font-bold mb-4 font-georama text-black">{t('budget.budgetPlan')}</h2>
+        <h2 className="text-lg font-medium mb-4 text-black">{t('budget.budgetPlan')}</h2>
         <table className="w-full">
           <thead>
             <tr>

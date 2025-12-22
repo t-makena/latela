@@ -445,7 +445,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <div className="pb-2 mb-2 px-3">
             <div className="flex flex-col gap-1">
               <div>
-                <div className="text-base font-georama">Balance</div>
+                <div className="text-base font-medium">Balance</div>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
               </div>
               <DateFilter 
@@ -532,7 +532,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <CardHeader className={isMobile ? "pb-2" : ""}>
             <div className={isMobile ? "flex flex-col gap-2" : "flex items-center justify-between"}>
               <div>
-                <CardTitle className="text-base font-georama">Balance</CardTitle>
+                <CardTitle className="text-base">Balance</CardTitle>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
               </div>
               <DateFilter 
@@ -635,7 +635,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <div className="pb-2 mb-2 px-3">
             <div className="flex flex-col gap-1">
               <div>
-                <div className="text-base font-georama">
+                <div className="text-base font-medium">
                   {selectedCategoryForGraph 
                     ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
                     : "Spending by Category"}
@@ -781,7 +781,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base font-georama">
+                <CardTitle className="text-base">
                   {selectedCategoryForGraph 
                     ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
                     : "Spending by Category"}
