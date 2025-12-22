@@ -55,9 +55,9 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     const content = (
       <>
         <div className={isMobile ? "pb-1" : "pb-2 pt-4"}>
-          <div className={isMobile ? "text-base font-medium text-foreground font-georama" : "text-lg font-medium text-foreground font-georama"}>
-            {t('finance.financialOverview')}
-          </div>
+        <div className={isMobile ? "text-base font-medium text-foreground" : "text-lg font-bold text-foreground"}>
+          {t('finance.financialOverview')}
+        </div>
         </div>
         <div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -78,9 +78,9 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     ) : (
       <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2 pt-4">
-          <CardTitle className="text-lg font-medium text-foreground font-georama">
-            {t('finance.financialOverview')}
-          </CardTitle>
+        <CardTitle className="text-lg font-bold text-foreground">
+          {t('finance.financialOverview')}
+        </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -101,7 +101,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     if (minimal) {
       return (
         <div className="animate-fade-in">
-          <h2 className="text-lg font-bold mb-4 font-georama text-black">{t('finance.financialOverview')}</h2>
+          <h2 className="text-lg font-bold mb-4 text-black">{t('finance.financialOverview')}</h2>
           <div 
             className="bg-white rounded-full border border-black px-6 py-5"
             style={{ boxShadow: '4px 4px 0px #000000' }}
@@ -115,7 +115,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     return isMobile ? (
       <div className="animate-fade-in mb-4">
         <div className="pb-1">
-          <div className="text-base font-medium text-foreground font-georama">
+          <div className="text-base font-medium text-foreground">
             {t('finance.financialOverview')}
           </div>
         </div>
@@ -126,9 +126,9 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     ) : (
       <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2 pt-4">
-          <CardTitle className="text-lg font-medium text-foreground font-georama">
-            {t('finance.financialOverview')}
-          </CardTitle>
+        <CardTitle className="text-lg font-bold text-foreground">
+          {t('finance.financialOverview')}
+        </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-destructive">{t('common.error')}: {error}</p>
@@ -162,7 +162,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           className="bg-white rounded-3xl border border-black p-5 w-full"
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
-          <h2 className="text-lg font-bold mb-4 font-georama text-black">{t('finance.financialOverview')}</h2>
+          <h2 className="text-lg font-medium mb-4 text-black">{t('finance.financialOverview')}</h2>
           <div className="flex items-center">
             <div className="flex-1">
               <p className="text-sm font-light text-muted-foreground mb-1">{t('finance.budgetBalance')}</p>
@@ -255,7 +255,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   ) : (
     <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
       <CardHeader className="pb-1 pt-2">
-        <CardTitle className="text-lg font-medium text-foreground">
+        <CardTitle className="text-lg font-bold text-foreground">
           {t('finance.financialOverview')}
           {transactions.length === 0 && (
             <span className="text-sm text-orange-500 ml-2">({t('finance.noTransactionData')})</span>
