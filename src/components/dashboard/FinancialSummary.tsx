@@ -166,11 +166,11 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           <div className="flex items-center">
             <div className="flex-1">
               <p className="text-sm font-light text-muted-foreground mb-1">{t('finance.budgetBalance')}</p>
-              <p className="text-lg font-light text-black">{formatCurrency(budgetBalance)}</p>
+              <p className="text-lg font-normal text-black">{formatCurrency(budgetBalance)}</p>
             </div>
             <div className="flex-1 text-right">
               <p className="text-sm font-light text-muted-foreground mb-1">{t('finance.flexibleBalance')}</p>
-              <p className="text-lg font-light text-black">{formatCurrency(flexibleBalance)}</p>
+              <p className="text-lg font-normal text-black">{formatCurrency(flexibleBalance)}</p>
             </div>
           </div>
         </div>
@@ -182,14 +182,14 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="financial-metric">
-          <div className="text-sm font-medium text-muted-foreground mb-1">
+          <div className="text-sm font-light text-muted-foreground mb-1">
             {t('finance.availableBalance')}
           </div>
-          <div className={isMobile ? "text-xl font-bold mb-1" : "text-2xl font-bold mb-1"}>
+          <div className={isMobile ? "text-xl font-normal mb-1" : "text-2xl font-normal mb-1"}>
             {formatCurrency(availableBalance)}
           </div>
           {showExplanations && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs font-light text-muted-foreground">
               {t('finance.totalBalanceAllAccounts')}
             </p>
           )}
@@ -199,11 +199,11 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           <div className="text-sm font-light text-muted-foreground mb-1">
             {t('finance.budgetBalance')}
           </div>
-          <div className={isMobile ? "text-xl font-light mb-1" : "text-2xl font-light mb-1"}>
+          <div className={isMobile ? "text-xl font-normal mb-1" : "text-2xl font-normal mb-1"}>
             {formatCurrency(budgetBalance)}
           </div>
           {showExplanations && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs font-light text-muted-foreground">
               {t('finance.budgetExpensesPlusEvents')}
             </p>
           )}
@@ -213,25 +213,25 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           <div className="text-sm font-light text-muted-foreground mb-1">
             {t('finance.flexibleBalance')}
           </div>
-          <div className={isMobile ? "text-xl font-light mb-1" : "text-2xl font-light mb-1"}>
+          <div className={isMobile ? "text-xl font-normal mb-1" : "text-2xl font-normal mb-1"}>
             {formatCurrency(flexibleBalance)}
           </div>
           {showExplanations && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs font-light text-muted-foreground">
               {t('finance.availableLessBudget')}
             </p>
           )}
         </div>
         
         <div className="financial-metric">
-          <div className="text-sm font-medium text-muted-foreground mb-1">
+          <div className="text-sm font-light text-muted-foreground mb-1">
             {t('finance.budgetStatus')}
           </div>
-          <div className={isMobile ? "text-xl font-bold mb-1" : "text-2xl font-bold mb-1"}>
+          <div className={isMobile ? "text-xl font-normal mb-1" : "text-2xl font-normal mb-1"}>
             {t(`finance.${budgetStatus}`)}
           </div>
           {showExplanations && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs font-light text-muted-foreground">
               {budgetStatusDescription}
             </p>
           )}
