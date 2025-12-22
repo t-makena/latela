@@ -40,7 +40,7 @@ export const AccountCard = ({
         <div className="flex items-end justify-between">
           <div>
             <p className="text-sm text-muted-foreground mb-2">Available Balance</p>
-            <p className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-foreground leading-none font-georama`}>
+            <p className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-foreground leading-none`}>
               R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>

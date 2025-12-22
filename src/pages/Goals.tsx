@@ -103,7 +103,7 @@ const Goals = () => {
       {/* Budget Goals Section */}
       <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
         <CardHeader className="pb-4">
-          <CardTitle className="font-georama text-xl">{t('goals.budgetGoals')}</CardTitle>
+          <CardTitle className="text-xl">{t('goals.budgetGoals')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {budgetGoals.length > 0 ? (
@@ -111,7 +111,7 @@ const Goals = () => {
               <div key={goal.id} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-medium font-georama">{goal.name}</h3>
+                    <h3 className="font-medium">{goal.name}</h3>
                     {goal.isComplete && (
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                     )}
@@ -143,7 +143,7 @@ const Goals = () => {
           style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}
         >
           <div className="pb-2 mb-2">
-            <h2 className="font-georama text-xl font-semibold">{t('goals.goalsOverview')}</h2>
+            <h2 className="text-xl font-medium">{t('goals.goalsOverview')}</h2>
           </div>
           <div className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
@@ -151,13 +151,13 @@ const Goals = () => {
               {/* Target Saving - Left */}
               <div className="flex-1">
                 <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.targetMonthlySaving')}</p>
-                <p className="text-2xl font-bold font-georama">{formatCurrency(totalMonthlyAllocation)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
               {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
                 <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.totalAmountSaved')}</p>
-                <p className="text-2xl font-bold font-georama">{formatCurrency(totalAmountSaved)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalAmountSaved)}</p>
               </div>
             </div>
             
@@ -258,7 +258,7 @@ const Goals = () => {
       ) : (
         <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
           <CardHeader className="pb-4">
-            <CardTitle className="font-georama text-xl">{t('goals.goalsOverview')}</CardTitle>
+            <CardTitle className="text-xl">{t('goals.goalsOverview')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
@@ -266,13 +266,13 @@ const Goals = () => {
               {/* Target Saving - Left */}
               <div className="flex-1">
                 <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.targetMonthlySaving')}</p>
-                <p className="text-3xl font-bold font-georama">{formatCurrency(totalMonthlyAllocation)}</p>
+                <p className="text-3xl font-bold">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
               {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
                 <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.totalAmountSaved')}</p>
-                <p className="text-3xl font-bold font-georama">{formatCurrency(totalAmountSaved)}</p>
+                <p className="text-3xl font-bold">{formatCurrency(totalAmountSaved)}</p>
               </div>
             </div>
             

@@ -24,7 +24,7 @@ export const AccountsOverview = () => {
     const content = (
       <>
         <div className="pb-2">
-          <div className={isMobile ? "text-base font-georama font-medium" : "text-lg font-georama font-medium"}>Accounts</div>
+          <div className={isMobile ? "text-base font-medium" : "text-lg font-bold"}>Accounts</div>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -42,7 +42,7 @@ export const AccountsOverview = () => {
     ) : (
       <Card className="stat-card">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-georama font-medium">Accounts</CardTitle>
+          <CardTitle className="text-lg font-bold">Accounts</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -60,7 +60,7 @@ export const AccountsOverview = () => {
     return isMobile ? (
       <div className="mb-4">
         <div className="pb-2">
-          <div className="text-base font-georama font-medium">Accounts</div>
+          <div className="text-base font-medium">Accounts</div>
         </div>
         <div>
           <p className="text-destructive">Error loading accounts: {accountsError}</p>
@@ -69,7 +69,7 @@ export const AccountsOverview = () => {
     ) : (
       <Card className="stat-card">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-georama font-medium">Accounts</CardTitle>
+          <CardTitle className="text-lg font-bold">Accounts</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-destructive">Error loading accounts: {accountsError}</p>
@@ -96,12 +96,12 @@ export const AccountsOverview = () => {
                 </span>
               </div>
               <div>
-                <p className="font-medium font-georama">{cleanedName}</p>
+                <p className="font-medium">{cleanedName}</p>
                 <p className="text-sm text-muted-foreground capitalize">{account.type}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className={`font-semibold font-georama ${balance < 0 ? 'text-destructive' : 'text-green-600'}`}>
+              <p className={`font-semibold ${balance < 0 ? 'text-destructive' : 'text-green-600'}`}>
                 {formatCurrency(balance)}
               </p>
               <p className="text-xs text-muted-foreground">{account.currency}</p>
@@ -115,14 +115,14 @@ export const AccountsOverview = () => {
   return isMobile ? (
     <div className="mb-4">
       <div className="pb-2 mb-3">
-        <div className="text-base font-georama font-medium">Accounts</div>
+        <div className="text-base font-medium">Accounts</div>
       </div>
       {accountsList}
     </div>
   ) : (
     <Card className="stat-card">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-georama font-medium">Accounts</CardTitle>
+        <CardTitle className="text-lg font-bold">Accounts</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {accountsList}
