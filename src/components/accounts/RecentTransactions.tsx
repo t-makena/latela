@@ -49,7 +49,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="heading-main">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -72,7 +72,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="heading-main">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-destructive">Error loading transactions: {error}</p>
@@ -123,10 +123,10 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle>Recent Transactions</CardTitle>
-              {selectedCategory && (
-                <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            <CardTitle className="heading-main">Recent Transactions</CardTitle>
+            {selectedCategory && (
+              <div className="flex items-center gap-1">
                   <Badge 
                     variant="secondary" 
                     className="flex items-center gap-1 cursor-default"
@@ -160,7 +160,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CardTitle>Recent Transactions</CardTitle>
+            <CardTitle className="heading-main">Recent Transactions</CardTitle>
             {selectedCategory && (
               <div className="flex items-center gap-1">
                 <Badge 
@@ -207,15 +207,15 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
                 </Badge>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-lg">
+                    <h3 className="transaction-description">
                       {getDisplayMerchantName(transaction)}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="transaction-date">
                       {formatDate(transaction.transaction_date)}
                     </p>
                   </div>
-                  <span className={`font-semibold text-lg ${
-                    transaction.amount < 0 ? 'text-destructive' : 'text-green-600'
+                  <span className={`transaction-amount ${
+                    transaction.amount < 0 ? 'text-negative' : 'text-positive'
                   }`}>
                     {formatCurrency(transaction.amount)}
                   </span>
