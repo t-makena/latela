@@ -377,7 +377,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       {/* Budget Insight Card */}
       <Card>
         <CardHeader>
-          <CardTitle className={isMobile ? "text-base" : "text-lg"}>Budget Insight</CardTitle>
+          <CardTitle className="heading-main">Budget Insight</CardTitle>
         </CardHeader>
         <CardContent>
           <BudgetBreakdown 
@@ -412,7 +412,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       {/* Budget Allocation Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className={isMobile ? "text-base" : "text-lg"}>Budget Allocation</CardTitle>
+          <CardTitle className="heading-main">Budget Allocation</CardTitle>
           <Button
             variant={isDetailed ? "default" : "outline"}
             size="sm"

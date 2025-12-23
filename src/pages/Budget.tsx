@@ -111,11 +111,11 @@ const Budget = () => {
       <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
         {/* Budget Plan Card */}
         <div 
-          className="bg-white rounded-3xl border border-black p-5 w-full"
+          className="bg-card rounded-3xl border border-foreground p-5 w-full"
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-black">{t('finance.budgetPlan')}</h2>
+            <h2 className="heading-main">{t('finance.budgetPlan')}</h2>
             <Button
               size="icon"
               onClick={() => setDialogOpen(true)}
@@ -139,21 +139,21 @@ const Budget = () => {
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-black/10">
-                  <th className="text-left py-2 text-sm font-light text-muted-foreground">{t('finance.category')}:</th>
-                  <th className="text-right py-2 text-sm font-light text-muted-foreground">{t('finance.amountSpent')}:</th>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 table-header-text">{t('finance.category')}:</th>
+                  <th className="text-right py-2 table-header-text">{t('finance.amountSpent')}:</th>
                 </tr>
               </thead>
               <tbody>
                 {budgetItems.map((item) => (
-                  <tr key={item.id} className="border-b border-black/5">
-                    <td className="py-3 text-sm font-medium">{getDisplayName(item.name)}</td>
-                    <td className="py-3 text-sm text-right">
-                      <span className={
+                  <tr key={item.id} className="border-b border-border/50">
+                    <td className="py-3 table-body-text font-medium">{getDisplayName(item.name)}</td>
+                    <td className="py-3 table-body-text text-right">
+                      <span className={`currency ${
                         (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
-                          ? 'text-destructive font-semibold'
-                          : 'text-green-600'
-                      }>
+                          ? 'text-negative font-semibold'
+                          : 'text-positive'
+                      }`}>
                         {formatCurrency(calculateAmountSpent[item.id] || 0)}
                       </span>
                     </td>
@@ -166,10 +166,10 @@ const Budget = () => {
 
         {/* Balance Calculations Card */}
         <div 
-          className="bg-white rounded-3xl border border-black p-5 w-full"
+          className="bg-card rounded-3xl border border-foreground p-5 w-full"
           style={{ boxShadow: '4px 4px 0px #000000' }}
         >
-          <h2 className="text-lg font-bold mb-4 text-black">{t('budget.balanceCalculations')}</h2>
+          <h2 className="heading-main mb-4">{t('budget.balanceCalculations')}</h2>
           
           {isLoading ? (
             <div className="space-y-2">
@@ -178,35 +178,35 @@ const Budget = () => {
               ))}
             </div>
           ) : (
-            <div className="space-y-3 text-sm">
+            <div className="space-y-3 table-body-text">
               <div className="flex justify-between items-center">
-                <span className="font-light">{t('budget.plannedExpenses')}</span>
-                <span>{formatCurrency(totalBudgetExpenses)}</span>
+                <span className="label-text">{t('budget.plannedExpenses')}</span>
+                <span className="currency">{formatCurrency(totalBudgetExpenses)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-light">{t('budget.upcomingEvents')}</span>
-                <span>{formatCurrency(totalUpcomingEvents)}</span>
+                <span className="label-text">{t('budget.upcomingEvents')}</span>
+                <span className="currency">{formatCurrency(totalUpcomingEvents)}</span>
               </div>
-              <div className="flex justify-between items-center pb-3 border-b border-black/10">
+              <div className="flex justify-between items-center pb-3 border-b border-border">
                 <span className="font-bold">{t('finance.budgetBalance')}</span>
-                <span className="font-bold">{formatCurrency(budgetBalanceValue)}</span>
+                <span className="font-bold currency">{formatCurrency(budgetBalanceValue)}</span>
               </div>
               
               <div className="flex justify-between items-center pt-2">
-                <span className="font-light">{t('finance.availableBalance')}</span>
-                <span>{formatCurrency(availableBalance)}</span>
+                <span className="label-text">{t('finance.availableBalance')}</span>
+                <span className="currency">{formatCurrency(availableBalance)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-light">{t('budget.savingsGoals')}</span>
-                <span>-{formatCurrency(totalSavingGoals)}</span>
+                <span className="label-text">{t('budget.savingsGoals')}</span>
+                <span className="currency">-{formatCurrency(totalSavingGoals)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-light">{t('finance.budgetBalance')}</span>
-                <span>-{formatCurrency(budgetBalanceValue)}</span>
+                <span className="label-text">{t('finance.budgetBalance')}</span>
+                <span className="currency">-{formatCurrency(budgetBalanceValue)}</span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-black/10">
+              <div className="flex justify-between items-center pt-2 border-t border-border">
                 <span className="font-bold">{t('finance.flexibleBalance')}</span>
-                <span className="font-bold">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
+                <span className="font-bold currency">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
               </div>
             </div>
           )}
@@ -227,9 +227,9 @@ const Budget = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Budget Items Table */}
         <div className="lg:col-span-2 w-full">
-          <Card className="w-full bg-white border border-black" style={{ boxShadow: '4px 4px 0px #000000' }}>
+          <Card className="w-full bg-card border border-foreground" style={{ boxShadow: '4px 4px 0px #000000' }}>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xl">{t('finance.budgetPlan')}</CardTitle>
+              <CardTitle className="heading-main">{t('finance.budgetPlan')}</CardTitle>
               <Button
                 size="icon"
                 onClick={() => setDialogOpen(true)}
@@ -254,38 +254,38 @@ const Budget = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Category/Merchant</TableHead>
-                      <TableHead>Frequency</TableHead>
-                      <TableHead className="text-right">Budget</TableHead>
-                      <TableHead className="text-right">Freq x Budget</TableHead>
-                      <TableHead className="text-right">Amount Spent</TableHead>
+                      <TableHead className="table-header-text">Category/Merchant</TableHead>
+                      <TableHead className="table-header-text">Frequency</TableHead>
+                      <TableHead className="text-right table-header-text">Budget</TableHead>
+                      <TableHead className="text-right table-header-text">Freq x Budget</TableHead>
+                      <TableHead className="text-right table-header-text">Amount Spent</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {budgetItems.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
-                        <TableCell>
+                        <TableCell className="table-body-text font-medium">{getDisplayName(item.name)}</TableCell>
+                        <TableCell className="table-body-text">
                           {item.frequency}
                           {item.frequency === 'Daily' && item.days_per_week && (
-                            <span className="text-xs text-muted-foreground ml-1">
+                            <span className="text-transaction-date text-text-muted ml-1">
                               ({item.days_per_week}x/week)
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right table-body-text currency">
                           {formatCurrency(item.amount)}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right table-body-text currency">
                           {formatCurrency(calculateMonthlyAmount(item))}
                         </TableCell>
                         <TableCell className="text-right">
-                          <span className={
+                          <span className={`table-body-text currency ${
                             (calculateAmountSpent[item.id] || 0) > calculateMonthlyAmount(item)
-                              ? 'text-destructive font-semibold'
-                              : 'text-green-600 dark:text-green-500'
-                          }>
+                              ? 'text-negative font-semibold'
+                              : 'text-positive'
+                          }`}>
                             {formatCurrency(calculateAmountSpent[item.id] || 0)}
                           </span>
                         </TableCell>
@@ -302,11 +302,11 @@ const Budget = () => {
                       </TableRow>
                     ))}
                     <TableRow className="font-bold bg-muted/50">
-                      <TableCell colSpan={3}>Total</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell colSpan={3} className="table-body-text font-bold">Total</TableCell>
+                      <TableCell className="text-right table-body-text font-bold currency">
                         {formatCurrency(totalBudgetExpenses)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right table-body-text font-bold currency">
                         {formatCurrency(totalAmountSpent)}
                       </TableCell>
                       <TableCell></TableCell>
@@ -321,9 +321,9 @@ const Budget = () => {
         {/* Right Sidebar Cards */}
         <div className="space-y-6 w-full">
           {/* Balance Calculations Card */}
-          <Card className="w-full bg-white border border-black" style={{ boxShadow: '4px 4px 0px #000000' }}>
+          <Card className="w-full bg-card border border-foreground" style={{ boxShadow: '4px 4px 0px #000000' }}>
             <CardHeader>
-              <CardTitle className="text-xl">{t('budget.balanceCalculations')}</CardTitle>
+              <CardTitle className="heading-main">{t('budget.balanceCalculations')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {isLoading ? (
@@ -336,34 +336,34 @@ const Budget = () => {
                 <>
                   {/* Budget Balance Calculation Section */}
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Planned expenses</span>
-                    <span className="font-normal">{formatCurrency(totalBudgetExpenses)}</span>
+                    <span className="label-text">Planned expenses</span>
+                    <span className="table-body-text currency">{formatCurrency(totalBudgetExpenses)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Upcoming events</span>
-                    <span className="font-normal">{formatCurrency(totalUpcomingEvents)}</span>
+                    <span className="label-text">Upcoming events</span>
+                    <span className="table-body-text currency">{formatCurrency(totalUpcomingEvents)}</span>
                   </div>
                   <div className="flex justify-between items-center mb-4">
-                    <span className="font-bold">Budget Balance</span>
-                    <span className="font-bold">{formatCurrency(budgetBalanceValue)}</span>
+                    <span className="table-body-text font-bold">Budget Balance</span>
+                    <span className="table-body-text font-bold currency">{formatCurrency(budgetBalanceValue)}</span>
                   </div>
 
                   {/* Flexible Balance Calculation Section */}
                   <div className="flex justify-between items-center pt-4 border-t">
-                    <span className="text-sm">Available Balance</span>
-                    <span className="font-normal">{formatCurrency(availableBalance)}</span>
+                    <span className="label-text">Available Balance</span>
+                    <span className="table-body-text currency">{formatCurrency(availableBalance)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Savings Goals</span>
-                    <span className="font-normal">-{formatCurrency(totalSavingGoals)}</span>
+                    <span className="label-text">Savings Goals</span>
+                    <span className="table-body-text currency">-{formatCurrency(totalSavingGoals)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Budget Balance</span>
-                    <span className="font-normal">-{formatCurrency(budgetBalanceValue)}</span>
+                    <span className="label-text">Budget Balance</span>
+                    <span className="table-body-text currency">-{formatCurrency(budgetBalanceValue)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold">Flexible Balance</span>
-                    <span className="font-bold">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
+                    <span className="table-body-text font-bold">Flexible Balance</span>
+                    <span className="table-body-text font-bold currency">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
                   </div>
                 </>
               )}
@@ -371,9 +371,9 @@ const Budget = () => {
           </Card>
 
           {/* Calculation Explanation Card */}
-          <Card className="w-full bg-white border border-black" style={{ boxShadow: '4px 4px 0px #000000' }}>
+          <Card className="w-full bg-card border border-foreground" style={{ boxShadow: '4px 4px 0px #000000' }}>
             <CardHeader>
-              <CardTitle className="text-xl">Calculation Explanation</CardTitle>
+              <CardTitle className="heading-card">Calculation Explanation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               <p><span className="font-semibold text-foreground">Monthly:</span> Amount × 1</p>
