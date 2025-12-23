@@ -138,7 +138,7 @@ const Calendar = () => {
     <div className={`min-h-screen bg-background ${isMobile ? 'py-4' : 'p-8'}`}>
       {/* Header with Month/Year and Navigation */}
       <div className={`flex items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'}`}>
-        <h1 className={`${isMobile ? 'text-2xl' : 'text-xl'} font-bold text-foreground`}>
+        <h1 className="heading-main">
           {currentMonth} {currentYear}
         </h1>
         
@@ -180,7 +180,7 @@ const Calendar = () => {
           {/* Day Labels */}
           <div className={`grid grid-cols-7 ${isMobile ? 'gap-1 mb-2' : 'gap-4 mb-6'}`}>
             {dayLabels.map((day, index) => (
-              <div key={index} className={`text-center ${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground uppercase`}>
+              <div key={index} className="text-center chart-axis-text uppercase">
                 {day}
               </div>
             ))}
@@ -223,7 +223,7 @@ const Calendar = () => {
              style={{ boxShadow: '4px 4px 0px #000000' }}
           >
             <div className="flex items-center justify-between">
-              <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-foreground`}>
+              <h2 className="heading-card">
                 {getEventsSectionTitle()}
               </h2>
               {isMobile ? (
@@ -263,7 +263,7 @@ const Calendar = () => {
                 {displayedEvents.map((event) => (
                   <div key={event.id} className="space-y-2 pb-4 border-b border-border last:border-b-0 last:pb-0">
                     {!selectedDateForFilter && (
-                      <h3 className="text-sm font-semibold text-foreground underline">
+                      <h3 className="table-header-text underline">
                         {formatEventDate(event.eventDate)}
                       </h3>
                     )}
@@ -271,7 +271,7 @@ const Calendar = () => {
                       <div className="flex items-start justify-between gap-2">
                         <button 
                           onClick={() => handleEditEvent(event)}
-                          className="text-base text-foreground hover:text-primary transition-colors text-left flex-1"
+                          className="table-body-text hover:text-primary transition-colors text-left flex-1"
                         >
                           {event.eventName}
                           {event.location && ` @ ${event.location}`}
@@ -284,7 +284,7 @@ const Calendar = () => {
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="label-text">
                         {t('calendar.budget')}: R{event.budgetedAmount.toLocaleString()}
                       </p>
                     </div>
@@ -295,13 +295,13 @@ const Calendar = () => {
 
             {/* Total Budget */}
             <div className="pt-4 border-t border-border mt-auto">
-              <p className="text-sm font-medium text-foreground">
+              <p className="label-text">
                 {selectedDateForFilter 
                   ? `${t('calendar.totalFor')} ${format(selectedDateForFilter, "dd MMM")}`
                   : t('calendar.totalBudgetNext30Days')
                 }
               </p>
-              <p className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-foreground mt-1`}>
+              <p className="balance-secondary mt-1 currency">
                 R{displayedTotalBudget.toLocaleString()}
               </p>
             </div>

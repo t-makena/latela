@@ -139,20 +139,20 @@ export const MobileBudgetInsightCard = () => {
   return (
     <div className="animate-fade-in w-full">
       <div 
-        className="bg-white rounded-3xl border border-black p-5 w-full"
+        className="bg-card rounded-3xl border border-foreground p-5 w-full"
         style={{ boxShadow: '4px 4px 0px #000000' }}
       >
-        <h2 className="text-lg font-medium mb-4 text-black">{t('finance.budgetInsight')}</h2>
+        <h2 className="heading-card mb-4">{t('finance.budgetInsight')}</h2>
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#E0E0E0]">
-              <th className="text-left font-normal text-sm text-[#999999] pb-4">{t('finance.metric')}</th>
-              <th className="text-right font-normal text-sm text-[#999999] pb-4">
+            <tr className="border-b border-border">
+              <th className="text-left table-header-text pb-4">{t('finance.metric')}</th>
+              <th className="text-right table-header-text pb-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="ghost" 
-                      className="h-auto p-0 font-normal text-sm text-[#999999] hover:bg-transparent hover:text-black"
+                      className="h-auto p-0 table-header-text hover:bg-transparent hover:text-foreground"
                     >
                       {selectedPeriod}
                       <ChevronDown className="ml-1 h-3 w-3" />
@@ -160,14 +160,14 @@ export const MobileBudgetInsightCard = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" 
-                    className="bg-white border border-black z-50"
+                    className="bg-card border border-foreground z-50"
                     style={{ boxShadow: '2px 2px 0px #000000' }}
                   >
                     {periodOptions.map((period) => (
                       <DropdownMenuItem
                         key={period}
                         onClick={() => setSelectedPeriod(period)}
-                        className={`cursor-pointer ${selectedPeriod === period ? 'bg-gray-100' : ''}`}
+                        className={`cursor-pointer ${selectedPeriod === period ? 'bg-muted' : ''}`}
                       >
                         {period}
                       </DropdownMenuItem>
@@ -178,32 +178,32 @@ export const MobileBudgetInsightCard = () => {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-[#E0E0E0]">
+            <tr className="border-b border-border">
               <td className="py-4">
-                <p className="text-sm font-light text-black">{t('finance.availableBalance')}</p>
+                <p className="table-body-text">{t('finance.availableBalance')}</p>
               </td>
               <td className="py-4 text-right">
-                <p className={`text-sm font-medium ${metrics.availableBalanceChange > 0 ? 'text-green-500' : metrics.availableBalanceChange < 0 ? 'text-red-500' : 'text-[#999999]'}`}>
+                <p className={`percentage-text ${metrics.availableBalanceChange > 0 ? 'percentage-positive' : metrics.availableBalanceChange < 0 ? 'percentage-negative' : 'percentage-neutral'}`}>
                   {formatChange(metrics.availableBalanceChange)}
                 </p>
               </td>
             </tr>
-            <tr className="border-b border-[#E0E0E0]">
+            <tr className="border-b border-border">
               <td className="py-4">
-                <p className="text-sm font-light text-black">{t('finance.budgetBalance')}</p>
+                <p className="table-body-text">{t('finance.budgetBalance')}</p>
               </td>
               <td className="py-4 text-right">
-                <p className={`text-sm font-medium ${metrics.budgetBalanceChange > 0 ? 'text-green-500' : metrics.budgetBalanceChange < 0 ? 'text-red-500' : 'text-[#999999]'}`}>
+                <p className={`percentage-text ${metrics.budgetBalanceChange > 0 ? 'percentage-positive' : metrics.budgetBalanceChange < 0 ? 'percentage-negative' : 'percentage-neutral'}`}>
                   {formatChange(metrics.budgetBalanceChange)}
                 </p>
               </td>
             </tr>
             <tr>
               <td className="py-4">
-                <p className="text-sm font-light text-black">{t('finance.spending')}</p>
+                <p className="table-body-text">{t('finance.spending')}</p>
               </td>
               <td className="py-4 text-right">
-                <p className={`text-sm font-medium ${metrics.spendingChange > 0 ? 'text-red-500' : metrics.spendingChange < 0 ? 'text-green-500' : 'text-[#999999]'}`}>
+                <p className={`percentage-text ${metrics.spendingChange > 0 ? 'percentage-negative' : metrics.spendingChange < 0 ? 'percentage-positive' : 'percentage-neutral'}`}>
                   {formatChange(metrics.spendingChange)}
                 </p>
               </td>

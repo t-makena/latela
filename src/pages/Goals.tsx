@@ -103,7 +103,7 @@ const Goals = () => {
       {/* Budget Goals Section */}
       <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl">{t('goals.budgetGoals')}</CardTitle>
+          <CardTitle className="heading-main">{t('goals.budgetGoals')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {budgetGoals.length > 0 ? (
@@ -111,12 +111,12 @@ const Goals = () => {
               <div key={goal.id} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-medium">{goal.name}</h3>
+                    <h3 className="table-body-text font-medium">{goal.name}</h3>
                     {goal.isComplete && (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <CheckCircle2 className="h-4 w-4 text-positive" />
                     )}
                   </div>
-                  <span className="text-sm text-muted-foreground">{goal.progress}% Saved</span>
+                  <span className="label-text">{goal.progress}% Saved</span>
                 </div>
                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                   <div 
@@ -124,7 +124,7 @@ const Goals = () => {
                     style={{ width: `${Math.min(goal.progress, 100)}%` }}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">{goal.dueDate}</p>
+                <p className="transaction-date">{goal.dueDate}</p>
               </div>
             ))
           ) : (
@@ -143,38 +143,38 @@ const Goals = () => {
           style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}
         >
           <div className="pb-2 mb-2">
-            <h2 className="text-xl font-medium">{t('goals.goalsOverview')}</h2>
+            <h2 className="heading-main">{t('goals.goalsOverview')}</h2>
           </div>
           <div className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-4">
               {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.targetMonthlySaving')}</p>
-                <p className="text-2xl font-bold">{formatCurrency(totalMonthlyAllocation)}</p>
+                <p className="label-text mb-1">{t('goals.targetMonthlySaving')}</p>
+                <p className="balance-secondary currency">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
               {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
-                <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.totalAmountSaved')}</p>
-                <p className="text-2xl font-bold">{formatCurrency(totalAmountSaved)}</p>
+                <p className="label-text mb-1">{t('goals.totalAmountSaved')}</p>
+                <p className="balance-secondary currency">{formatCurrency(totalAmountSaved)}</p>
               </div>
             </div>
             
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-light w-[22%] px-2">{t('goals.goal')}</TableHead>
-                  <TableHead className="font-light w-[18%] px-2">
+                  <TableHead className="table-header-text w-[22%] px-2">{t('goals.goal')}</TableHead>
+                  <TableHead className="table-header-text w-[18%] px-2">
                     {t('goals.allocation')}<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-light text-right w-[18%] px-2">
+                  <TableHead className="table-header-text text-right w-[18%] px-2">
                     {t('goals.saved')} (R)<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-light w-[18%] px-2">
+                  <TableHead className="table-header-text w-[18%] px-2">
                     {t('goals.target')}<sup>3</sup>
                   </TableHead>
-                  <TableHead className="font-light w-[18%] px-2">
+                  <TableHead className="table-header-text w-[18%] px-2">
                     {t('goals.timeline')}<sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[6%]"></TableHead>
@@ -184,16 +184,16 @@ const Goals = () => {
                 {goalsOverview.length > 0 ? (
                   goalsOverview.map((row) => (
                     <TableRow key={row.id} className={row.isComplete ? 'opacity-60' : ''}>
-                      <TableCell className="font-medium px-2 py-4">
+                      <TableCell className="table-body-text font-medium px-2 py-4">
                         <div className="flex items-center gap-1">
-                          {row.isComplete && <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />}
+                          {row.isComplete && <CheckCircle2 className="h-3 w-3 text-positive flex-shrink-0" />}
                           <span className={row.isComplete ? 'line-through' : ''}>{row.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 py-4 font-medium">{formatCurrency(row.monthlyAllocation)}</TableCell>
-                      <TableCell className="text-right font-medium px-2 py-4">{formatCurrency(row.amountSaved)}</TableCell>
-                      <TableCell className="px-2 py-4">{formatCurrency(row.target)}</TableCell>
-                      <TableCell className="px-2 py-4">{row.timeline}</TableCell>
+                      <TableCell className="px-2 py-4 table-body-text font-medium currency">{formatCurrency(row.monthlyAllocation)}</TableCell>
+                      <TableCell className="text-right table-body-text font-medium px-2 py-4 currency">{formatCurrency(row.amountSaved)}</TableCell>
+                      <TableCell className="px-2 py-4 table-body-text currency">{formatCurrency(row.target)}</TableCell>
+                      <TableCell className="px-2 py-4 table-body-text">{row.timeline}</TableCell>
                       <TableCell className="px-2 py-4">
                         <div className="flex items-center gap-1">
                           <Button
@@ -258,38 +258,38 @@ const Goals = () => {
       ) : (
         <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">{t('goals.goalsOverview')}</CardTitle>
+            <CardTitle className="heading-main">{t('goals.goalsOverview')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-8">
               {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.targetMonthlySaving')}</p>
-                <p className="text-3xl font-bold">{formatCurrency(totalMonthlyAllocation)}</p>
+                <p className="label-text mb-1">{t('goals.targetMonthlySaving')}</p>
+                <p className="balance-primary currency">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
               
               {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
-                <p className="text-sm font-light text-muted-foreground mb-1">{t('goals.totalAmountSaved')}</p>
-                <p className="text-3xl font-bold">{formatCurrency(totalAmountSaved)}</p>
+                <p className="label-text mb-1">{t('goals.totalAmountSaved')}</p>
+                <p className="balance-primary currency">{formatCurrency(totalAmountSaved)}</p>
               </div>
             </div>
             
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-light w-[22%] px-6">{t('goals.goal')}</TableHead>
-                  <TableHead className="font-light w-[16%] px-6">
+                  <TableHead className="table-header-text w-[22%] px-6">{t('goals.goal')}</TableHead>
+                  <TableHead className="table-header-text w-[16%] px-6">
                     {t('goals.allocation')}<sup>1</sup>
                   </TableHead>
-                  <TableHead className="font-light text-right w-[16%] px-6">
+                  <TableHead className="table-header-text text-right w-[16%] px-6">
                     {t('goals.saved')} (R)<sup>2</sup>
                   </TableHead>
-                  <TableHead className="font-light w-[16%] px-6">
+                  <TableHead className="table-header-text w-[16%] px-6">
                     {t('goals.target')}<sup>3</sup>
                   </TableHead>
-                  <TableHead className="font-light w-[16%] px-6">
+                  <TableHead className="table-header-text w-[16%] px-6">
                     {t('goals.timeline')}<sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[8%]"></TableHead>
@@ -299,16 +299,16 @@ const Goals = () => {
                 {goalsOverview.length > 0 ? (
                   goalsOverview.map((row) => (
                     <TableRow key={row.id} className={row.isComplete ? 'opacity-60 bg-muted/30' : ''}>
-                      <TableCell className="font-medium px-6 py-4">
+                      <TableCell className="table-body-text font-medium px-6 py-4">
                         <div className="flex items-center gap-2">
-                          {row.isComplete && <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />}
+                          {row.isComplete && <CheckCircle2 className="h-4 w-4 text-positive flex-shrink-0" />}
                           <span className={row.isComplete ? 'line-through' : ''}>{row.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4 font-medium text-primary">{formatCurrency(row.monthlyAllocation)}</TableCell>
-                      <TableCell className="text-right font-medium px-6 py-4">{formatCurrency(row.amountSaved)}</TableCell>
-                      <TableCell className="px-6 py-4">{formatCurrency(row.target)}</TableCell>
-                      <TableCell className="px-6 py-4">{row.timeline}</TableCell>
+                      <TableCell className="px-6 py-4 table-body-text font-medium text-primary currency">{formatCurrency(row.monthlyAllocation)}</TableCell>
+                      <TableCell className="text-right table-body-text font-medium px-6 py-4 currency">{formatCurrency(row.amountSaved)}</TableCell>
+                      <TableCell className="px-6 py-4 table-body-text currency">{formatCurrency(row.target)}</TableCell>
+                      <TableCell className="px-6 py-4 table-body-text">{row.timeline}</TableCell>
                       <TableCell className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <Button
