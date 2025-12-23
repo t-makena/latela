@@ -8,14 +8,14 @@ export const MobileAccountCard = ({ account }: MobileAccountCardProps) => {
   return (
     <div className="animate-fade-in w-full">
       <div 
-        className="bg-white rounded-3xl border border-black p-5 flex justify-between items-start"
+        className="bg-card rounded-3xl border border-foreground p-5 flex justify-between items-start"
         style={{ boxShadow: '4px 4px 0px #000000' }}
       >
         {/* Left Side Content */}
         <div>
-          <p className="font-bold text-lg text-black">{account.name}</p>
-          <p className="text-sm font-light text-[#999999] mt-1">Available balance</p>
-          <p className="text-xl text-black mt-1">
+          <p className="heading-card">{account.name}</p>
+          <p className="label-text mt-1">Available balance</p>
+          <p className="balance-primary mt-1 currency">
             R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>

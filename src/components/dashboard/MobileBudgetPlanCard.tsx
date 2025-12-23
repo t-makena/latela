@@ -52,15 +52,15 @@ export const MobileBudgetPlanCard = () => {
   return (
     <div className="animate-fade-in w-full">
       <div 
-        className="bg-white rounded-3xl border border-black p-5 w-full"
+        className="bg-card rounded-3xl border border-foreground p-5 w-full"
         style={{ boxShadow: '4px 4px 0px #000000' }}
       >
-        <h2 className="text-lg font-medium mb-4 text-black">{t('budget.budgetPlan')}</h2>
+        <h2 className="heading-card mb-4">{t('budget.budgetPlan')}</h2>
         <table className="w-full">
           <thead>
             <tr>
-              <th className="text-left font-normal text-sm pb-4 text-black">{t('finance.category')}:</th>
-              <th className="text-right font-normal text-sm pb-4 text-black">{t('finance.amountSpent')}:</th>
+              <th className="text-left table-header-text pb-4">{t('finance.category')}:</th>
+              <th className="text-right table-header-text pb-4">{t('finance.amountSpent')}:</th>
             </tr>
           </thead>
           <tbody>
@@ -71,8 +71,8 @@ export const MobileBudgetPlanCard = () => {
               
               return (
                 <tr key={item.id}>
-                  <td className="py-3 text-sm text-black">{item.name}</td>
-                  <td className={`py-3 text-sm text-right font-medium ${isOverBudget ? 'text-red-500' : 'text-green-600'}`}>
+                  <td className="py-3 table-body-text font-medium">{item.name}</td>
+                  <td className={`py-3 table-body-text text-right font-medium currency ${isOverBudget ? 'text-negative' : 'text-positive'}`}>
                     {formatCurrency(amountSpent)}
                   </td>
                 </tr>
