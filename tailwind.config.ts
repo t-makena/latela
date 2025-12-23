@@ -18,9 +18,25 @@ export default {
 				"2xl": "1400px"
 			}
 		},
-		extend: {
+	extend: {
 			fontFamily: {
 				'cooper': ['Cooper BT', 'serif'],
+			},
+			fontSize: {
+				'heading-main': 'var(--text-heading-main)',
+				'heading-card': 'var(--text-heading-card)',
+				'balance-primary': 'var(--text-balance-primary)',
+				'balance-secondary': 'var(--text-balance-secondary)',
+				'label': 'var(--text-label)',
+				'table-header': 'var(--text-table-header)',
+				'table-body': 'var(--text-table-body)',
+				'percentage': 'var(--text-percentage)',
+				'transaction': 'var(--text-transaction)',
+				'transaction-date': 'var(--text-transaction-date)',
+				'chart-axis': 'var(--text-chart-axis)',
+				'chart-legend': 'var(--text-chart-legend)',
+				'button': 'var(--text-button)',
+				'pie-percentage': 'var(--text-pie-percentage)',
 			},
 			colors: {
 				border: "hsl(var(--border))",
@@ -56,6 +72,13 @@ export default {
 					DEFAULT: "hsl(var(--card))",
 					foreground: "hsl(var(--card-foreground))"
 				},
+				// Semantic text colors
+				'text-primary': "hsl(var(--color-text-primary))",
+				'text-secondary': "hsl(var(--color-text-secondary))",
+				'text-muted': "hsl(var(--color-text-muted))",
+				'text-faint': "hsl(var(--color-text-faint))",
+				'positive': "hsl(var(--color-positive))",
+				'negative': "hsl(var(--color-negative))",
 				// Budget app specific colors
 				budget: {
 					primary: "#000000",

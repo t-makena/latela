@@ -50,7 +50,7 @@ const Dashboard = () => {
         </div>
         <Card className="w-full flex flex-col" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
           <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
-            <CardTitle className="text-lg">{t('finance.budgetInsight')}</CardTitle>
+            <CardTitle className="heading-main">{t('finance.budgetInsight')}</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 flex items-center pb-6">
             <BudgetBreakdown

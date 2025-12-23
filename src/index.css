@@ -70,6 +70,50 @@
     --ring: 0 0% 0%;
 
     --radius: 0.5rem;
+
+    /* Typography Scale - Desktop/Laptop/Tablet (≥769px) */
+    --text-heading-main: 27px;
+    --text-heading-card: 22px;
+    --text-balance-primary: 40px;
+    --text-balance-secondary: 30px;
+    --text-label: 15px;
+    --text-table-header: 14px;
+    --text-table-body: 16px;
+    --text-percentage: 16px;
+    --text-transaction: 15px;
+    --text-transaction-date: 13px;
+    --text-chart-axis: 12px;
+    --text-chart-legend: 13px;
+    --text-button: 14px;
+    --text-pie-percentage: 15px;
+    
+    /* Semantic Text Colors */
+    --color-text-primary: 0 0% 10%;
+    --color-text-secondary: 220 13% 18%;
+    --color-text-muted: 220 9% 46%;
+    --color-text-faint: 220 9% 64%;
+    --color-positive: 160 84% 39%;
+    --color-negative: 0 84% 60%;
+  }
+
+  /* Mobile Overrides (≤768px) */
+  @media (max-width: 768px) {
+    :root {
+      --text-heading-main: 19px;
+      --text-heading-card: 17px;
+      --text-balance-primary: 26px;
+      --text-balance-secondary: 21px;
+      --text-label: 13px;
+      --text-table-header: 12px;
+      --text-table-body: 14px;
+      --text-percentage: 14px;
+      --text-transaction: 14px;
+      --text-transaction-date: 12px;
+      --text-chart-axis: 11px;
+      --text-chart-legend: 12px;
+      --text-button: 13px;
+      --text-pie-percentage: 14px;
+    }
   }
 
   .dark {
@@ -100,6 +144,12 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    /* Dark mode semantic colors */
+    --color-text-primary: 0 0% 100%;
+    --color-text-secondary: 220 13% 90%;
+    --color-text-muted: 220 9% 65%;
+    --color-text-faint: 220 9% 50%;
   }
 }
 
@@ -111,7 +161,135 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Cooper BT', serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* =====================================================
+   TYPOGRAPHY UTILITY CLASSES
+   ===================================================== */
+
+/* Heading Styles */
+.heading-main {
+  font-size: var(--text-heading-main);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: hsl(var(--color-text-primary));
+}
+
+.heading-card {
+  font-size: var(--text-heading-card);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: hsl(var(--color-text-primary));
+}
+
+/* Balance/Number Styles */
+.balance-primary {
+  font-size: var(--text-balance-primary);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: hsl(var(--foreground));
+  font-feature-settings: 'tnum';
+}
+
+.balance-secondary {
+  font-size: var(--text-balance-secondary);
+  font-weight: 700;
+  line-height: 1.1;
+  color: hsl(var(--foreground));
+  font-feature-settings: 'tnum';
+}
+
+/* Label Styles */
+.label-text {
+  font-size: var(--text-label);
+  font-weight: 500;
+  line-height: 1.4;
+  color: hsl(var(--color-text-muted));
+  letter-spacing: 0.01em;
+}
+
+/* Table Styles */
+.table-header-text {
+  font-size: var(--text-table-header);
+  font-weight: 500;
+  line-height: 1.4;
+  color: hsl(var(--color-text-muted));
+}
+
+.table-body-text {
+  font-size: var(--text-table-body);
+  font-weight: 400;
+  line-height: 1.5;
+  color: hsl(var(--color-text-secondary));
+}
+
+/* Percentage/Change Styles */
+.percentage-text {
+  font-size: var(--text-percentage);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.percentage-positive {
+  color: hsl(var(--color-positive));
+}
+
+.percentage-negative {
+  color: hsl(var(--color-negative));
+}
+
+.percentage-neutral {
+  color: hsl(var(--color-text-muted));
+}
+
+/* Transaction Styles */
+.transaction-description {
+  font-size: var(--text-transaction);
+  font-weight: 500;
+  line-height: 1.4;
+  color: hsl(var(--color-text-secondary));
+}
+
+.transaction-date {
+  font-size: var(--text-transaction-date);
+  font-weight: 400;
+  color: hsl(var(--color-text-faint));
+}
+
+.transaction-amount {
+  font-size: var(--text-transaction);
+  font-weight: 600;
+  font-feature-settings: 'tnum';
+}
+
+/* Chart Styles */
+.chart-axis-text {
+  font-size: var(--text-chart-axis);
+  font-weight: 400;
+  color: hsl(var(--color-text-faint));
+}
+
+.chart-legend-text {
+  font-size: var(--text-chart-legend);
+  font-weight: 500;
+}
+
+/* Button Styles */
+.button-text {
+  font-size: var(--text-button);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Currency formatting helper */
+.currency {
+  font-feature-settings: 'tnum';
 }
 
 .stat-card {
