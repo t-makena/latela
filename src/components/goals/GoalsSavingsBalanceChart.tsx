@@ -158,7 +158,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
     <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{t('goals.savingsBalance') || 'Savings Balance'}</CardTitle>
+          <CardTitle className="heading-main">{t('goals.savingsBalance') || 'Savings Balance'}</CardTitle>
           <div className="flex gap-1">
             {periods.map(period => (
               <Button
@@ -237,12 +237,12 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
           
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">{t('goals.expectedBalance') || 'Expected Balance'}</span>
-              <span className="font-medium">{formatCurrency(savingsStatus.expectedBalance)}</span>
+              <span className="label-text">{t('goals.expectedBalance') || 'Expected Balance'}</span>
+              <span className="table-body-text font-medium currency">{formatCurrency(savingsStatus.expectedBalance)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">{t('finance.availableBalance') || 'Available Balance'}</span>
-              <span className={`font-medium ${savingsStatus.hasShortfall ? '' : 'text-green-600'}`}>
+              <span className="label-text">{t('finance.availableBalance') || 'Available Balance'}</span>
+              <span className={`table-body-text font-medium currency ${savingsStatus.hasShortfall ? '' : 'text-positive'}`}>
                 {formatCurrency(savingsStatus.availableBalance)}
               </span>
             </div>

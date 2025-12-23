@@ -30,7 +30,7 @@ export const AccountCard = ({
             </span>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-foreground leading-tight">
+            <h2 className="heading-card leading-tight">
               {account.name}
             </h2>
           </div>
@@ -39,8 +39,8 @@ export const AccountCard = ({
         {/* Balance Information and Card Logo */}
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-sm text-muted-foreground mb-2">Available Balance</p>
-            <p className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-foreground leading-none`}>
+            <p className="label-text mb-2">Available Balance</p>
+            <p className="balance-primary leading-none">
               R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
