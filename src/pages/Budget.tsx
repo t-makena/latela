@@ -375,27 +375,12 @@ const Budget = () => {
             <CardHeader>
               <CardTitle className="text-xl">Calculation Explanation</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <div>
-                <p className="font-semibold text-foreground mb-1">Monthly:</p>
-                <p>Amount × 1</p>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground mb-1">Weekly:</p>
-                <p>Amount × 4</p>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground mb-1">Bi-weekly:</p>
-                <p>Amount × 2</p>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground mb-1">Daily:</p>
-                <p>Amount × 4</p>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground mb-1">Once-off:</p>
-                <p>Amount × 1</p>
-              </div>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p><span className="font-semibold text-foreground">Monthly:</span> Amount × 1</p>
+              <p><span className="font-semibold text-foreground">Weekly:</span> Amount × 4</p>
+              <p><span className="font-semibold text-foreground">Bi-weekly:</span> Amount × 2</p>
+              <p><span className="font-semibold text-foreground">Daily:</span> Amount × 4</p>
+              <p><span className="font-semibold text-foreground">Once-off:</span> Amount × 1</p>
             </CardContent>
           </Card>
         </div>
