@@ -15,7 +15,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
     return (
       <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-medium">Recent Transactions</CardTitle>
+          <CardTitle className="heading-card">Recent Transactions</CardTitle>
           <Button variant="ghost" className="text-sm h-auto p-0" disabled>
             See More
           </Button>
@@ -39,7 +39,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
     return (
       <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-medium">Recent Transactions</CardTitle>
+          <CardTitle className="heading-card">Recent Transactions</CardTitle>
           <Button variant="ghost" className="text-sm h-auto p-0" disabled>
             See More
           </Button>
@@ -67,7 +67,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
     return (
       <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-medium">Recent Transactions</CardTitle>
+          <CardTitle className="heading-card">Recent Transactions</CardTitle>
           <Button variant="ghost" className="text-sm h-auto p-0" disabled>
             See More
           </Button>
@@ -81,8 +81,8 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
 
   return (
     <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-medium">Recent Transactions</CardTitle>
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="heading-card">Recent Transactions</CardTitle>
         <Button 
           variant="ghost" 
           className="text-sm h-auto p-0 hover:underline"
@@ -99,15 +99,15 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
               className="flex items-center justify-between border-b last:border-0 pb-2 last:pb-0"
             >
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm truncate">
+                <h3 className="transaction-description truncate">
                   {getDisplayMerchantName(transaction)}
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="transaction-date">
                   {formatDate(transaction.created_at)}
                 </p>
               </div>
-              <span className={`font-semibold text-sm ml-3 flex-shrink-0 ${
-                transaction.amount < 0 ? 'text-destructive' : 'text-green-600'
+              <span className={`transaction-amount ml-3 flex-shrink-0 ${
+                transaction.amount < 0 ? 'text-negative' : 'text-positive'
               }`}>
                 {formatCurrency(transaction.amount)}
               </span>
