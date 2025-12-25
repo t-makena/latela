@@ -39,8 +39,8 @@ export const AccountCard = ({
         {/* Balance Information and Card Logo */}
         <div className="flex items-end justify-between">
           <div>
-            <p className="label-text mb-2">Available Balance</p>
-            <p className="balance-primary leading-none">
+            <p className="transaction-description mb-2">Available Balance</p>
+            <p className="heading-card leading-none currency">
               R{account.balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
