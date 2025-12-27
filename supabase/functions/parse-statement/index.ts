@@ -285,6 +285,25 @@ async function parsePDF(content: string, fileName: string) {
       }
     }
     
+    // Standard Bank-specific balance extraction
+    if (bankName === 'Standard Bank' && currentBalance === 0) {
+      const sbBalancePatterns = [
+        /Available\s+Balance[:\s]*\*{0,2}\s*R?\s*([\d,]+\.?\d*)/i,
+        /Closing\s+Balance[:\s]*\*{0,2}\s*R?\s*([\d,]+\.?\d*)/i,
+        /Current\s+Balance[:\s]*\*{0,2}\s*R?\s*([\d,]+\.?\d*)/i,
+        /Balance[:\s]*R\s*([\d,]+\.\d{2})/i,
+      ];
+      
+      for (const pattern of sbBalancePatterns) {
+        const match = extractedText.match(pattern);
+        if (match && match[1]) {
+          currentBalance = parseAmount(match[1]);
+          console.log('[BALANCE] Found Standard Bank balance:', currentBalance);
+          break;
+        }
+      }
+    }
+    
     // Fallback to generic patterns if not found
     if (currentBalance === 0) {
       const balancePatterns = [
@@ -446,7 +465,15 @@ Do not summarize - extract the complete raw text content.`,
 }
 
 function extractTransactionsFromPDF(content: string, bankName: string) {
-  const transactions = [];
+  const transactions: Array<{
+    date: string;
+    description: string;
+    amount: number;
+    balance: number;
+    reference: string;
+    merchantName: string;
+    type: 'debit' | 'credit';
+  }> = [];
   console.log('[TRANS-EXTRACT] Extracting transactions for bank:', bankName);
   
   // Capitec-specific parsing using table structure
@@ -559,6 +586,147 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
     }
     
     console.log('[TRANS-EXTRACT] Capitec: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
+  } else if (bankName === 'Standard Bank') {
+    // Standard Bank-specific parsing for markdown table format from Claude
+    console.log('[TRANS-EXTRACT] Using Standard Bank-specific parsing logic');
+    const lines = content.split('\n');
+    console.log('[TRANS-EXTRACT] Processing', lines.length, 'lines');
+    
+    let matchedLines = 0;
+    
+    // Pattern for Standard Bank markdown table rows: | DD MMM YY | Description | Payments | Deposits | Balance |
+    // Also handle: | 03 Jul 25 | ... | -R1,234.56 | | R12,345.67 |
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Skip header rows and separator rows
+      if (line.includes('Date') && line.includes('Description')) continue;
+      if (line.match(/^\|[-:|\s]+\|$/)) continue;
+      if (line.includes('STATEMENT OPENING BALANCE')) continue;
+      
+      // Match table row with date pattern: | DD MMM YY | ... |
+      const tableMatch = line.match(/^\|\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{2})\s*\|(.+)/i);
+      if (!tableMatch) continue;
+      
+      matchedLines++;
+      if (matchedLines <= 5) {
+        console.log(`[TRANS-EXTRACT] Matched line ${matchedLines}:`, line.substring(0, 120));
+      }
+      
+      const dateStr = tableMatch[1].trim();
+      const restOfRow = tableMatch[2];
+      
+      // Split the rest by pipe character
+      const cells = restOfRow.split('|').map(c => c.trim()).filter(c => c !== '');
+      
+      if (cells.length < 1) continue;
+      
+      // First cell is description
+      const description = cells[0];
+      
+      // Skip if description is too short or looks like a sub-row
+      if (description.length < 3) continue;
+      
+      // Find amounts in remaining cells
+      let payment = 0;  // Debit/payment (money out)
+      let deposit = 0;  // Credit/deposit (money in)
+      let balance = 0;
+      
+      // Parse remaining cells for amounts
+      for (let j = 1; j < cells.length; j++) {
+        const cell = cells[j];
+        // Match amounts like -1,234.56 or R1,234.56 or 1234.56
+        const amountMatch = cell.match(/(-)?R?\s*([\d,]+\.?\d*)/);
+        if (amountMatch && amountMatch[2]) {
+          const isNegative = amountMatch[1] === '-' || cell.includes('-');
+          const amount = parseAmount(amountMatch[2]);
+          
+          if (amount > 0) {
+            // Determine if payment, deposit, or balance based on position and sign
+            if (j === cells.length - 1 && amount > 100) {
+              // Last column with larger value is likely balance
+              balance = amount;
+            } else if (isNegative || cell.includes('-')) {
+              payment = amount;
+            } else if (payment === 0 && j < cells.length - 1) {
+              // Could be payment column (before balance)
+              payment = amount;
+            } else if (deposit === 0) {
+              deposit = amount;
+            }
+          }
+        }
+      }
+      
+      // If we didn't find a clear payment/deposit, look for amounts with - prefix
+      if (payment === 0 && deposit === 0) {
+        const allAmounts = restOfRow.match(/-?R?\s*[\d,]+\.?\d*/g) || [];
+        for (const amt of allAmounts) {
+          const parsed = parseAmount(amt);
+          if (parsed > 0) {
+            if (amt.includes('-')) {
+              payment = parsed;
+            } else if (balance === 0 && parsed > 1000) {
+              balance = parsed;
+            } else {
+              deposit = parsed;
+            }
+          }
+        }
+      }
+      
+      // Determine final amount and type
+      let amount = 0;
+      let isDebit = false;
+      
+      if (payment > 0) {
+        amount = payment;
+        isDebit = true;
+      } else if (deposit > 0) {
+        amount = deposit;
+        isDebit = false;
+      }
+      
+      // Additional checks based on description
+      if (amount > 0) {
+        const descUpper = description.toUpperCase();
+        // Override type if description clearly indicates debit
+        if (!isDebit && (
+          descUpper.includes('PURCHASE') ||
+          descUpper.includes('PAYMENT') ||
+          descUpper.includes('FEE') ||
+          descUpper.includes('DEBIT') ||
+          descUpper.includes('WITHDRAWAL') ||
+          descUpper.includes('DECLINED')
+        )) {
+          isDebit = true;
+        }
+        // Override type if description clearly indicates credit
+        if (isDebit && (
+          descUpper.includes('DEPOSIT') ||
+          descUpper.includes('SALARY') ||
+          descUpper.includes('CREDIT') ||
+          descUpper.includes('REFUND') ||
+          descUpper.includes('RECEIVED')
+        )) {
+          isDebit = false;
+        }
+        
+        transactions.push({
+          date: normalizeDate(dateStr, bankName),
+          description: description,
+          amount: amount,
+          balance: balance,
+          reference: description.substring(0, 50),
+          merchantName: extractMerchantName(description),
+          type: isDebit ? 'debit' : 'credit',
+        });
+      }
+    }
+    
+    console.log('[TRANS-EXTRACT] Standard Bank: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
   } else {
     console.log('[TRANS-EXTRACT] Using generic parsing logic');
     // Generic parsing for other banks
@@ -818,8 +986,9 @@ function extractAccountNumber(content: string, bankName: string): string {
       /(\d{10})\s+\d{2}\/\d{2}\/\d{4}/
     ],
     'Standard Bank': [
-      /Account\s+(?:Number|No)[:\s]+(\d{10,16})/i,
-      /Acc[:\s]+(\d{10,16})/i
+      /Account\s+Number[:\s]*\*{0,2}\s*(\d[\d\s]{8,18}\d)/i,  // Handle spaces in number
+      /Account\s+(?:Number|No)[:\s]+(\d[\d\s]{8,18}\d)/i,
+      /Acc[:\s]+(\d[\d\s]{8,18}\d)/i
     ],
     'Nedbank': [
       /Account\s+Number[:\s]+(\d{10,16})/i,
@@ -885,6 +1054,27 @@ function extractAccountNumber(content: string, bankName: string): string {
 }
 
 function normalizeDate(dateStr: string, bankName: string): string {
+  // Handle DD MMM YY format (Standard Bank: "03 Jul 25")
+  const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  const shortDateMatch = dateStr.match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{2})/i);
+  if (shortDateMatch) {
+    const day = shortDateMatch[1].padStart(2, '0');
+    const monthIdx = monthNames.indexOf(shortDateMatch[2].toLowerCase());
+    const month = monthIdx >= 0 ? String(monthIdx + 1).padStart(2, '0') : '01';
+    const year = '20' + shortDateMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+  
+  // Handle DD MMM YYYY format ("03 Jul 2025")
+  const longDateMatch = dateStr.match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/i);
+  if (longDateMatch) {
+    const day = longDateMatch[1].padStart(2, '0');
+    const monthIdx = monthNames.indexOf(longDateMatch[2].toLowerCase());
+    const month = monthIdx >= 0 ? String(monthIdx + 1).padStart(2, '0') : '01';
+    const year = longDateMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+  
   // Handle different SA bank date formats
   if (dateStr.includes('/')) {
     const parts = dateStr.split('/');
