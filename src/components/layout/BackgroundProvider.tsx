@@ -21,15 +21,30 @@ export const BackgroundProvider = () => {
   const backgroundImage = backgrounds[colorPalette]?.[isDark ? 'dark' : 'light'] 
                          || backgrounds.multicolor.light;
 
+  // For desktop: use an img element with swapped viewport dimensions for proper rotation
+  if (!isMobile) {
+    return (
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
+        <img 
+          src={backgroundImage}
+          alt=""
+          className="object-cover"
+          style={{
+            transform: 'rotate(-90deg)',
+            width: '100vh',
+            height: '100vw',
+          }}
+        />
+      </div>
+    );
+  }
+
+  // For mobile: display normally without rotation
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       <div
         className="absolute inset-0 bg-no-repeat bg-center bg-cover"
-        style={{ 
-          backgroundImage: `url(${backgroundImage})`,
-          transform: isMobile ? 'none' : 'rotate(-90deg) scale(1.5)',
-          transformOrigin: 'center center',
-        }}
+        style={{ backgroundImage: `url(${backgroundImage})` }}
       />
     </div>
   );
