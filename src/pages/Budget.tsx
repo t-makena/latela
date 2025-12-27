@@ -115,6 +115,9 @@ const Budget = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
+        {/* Budget Method Card - Now first */}
+        <BudgetMethodCard />
+
         {/* Budget Plan Card */}
         <div 
           className="bg-card rounded-3xl border border-foreground p-5 w-full"
@@ -168,9 +171,6 @@ const Budget = () => {
             </table>
           )}
         </div>
-
-        {/* Budget Method Card */}
-        <BudgetMethodCard />
 
         {/* Balance Calculations Card - Only show for percentage-based budgeting */}
         {showBalanceCalculations && (
@@ -234,6 +234,11 @@ const Budget = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Budget Method Card - Full width at top */}
+        <div className="lg:col-span-3">
+          <BudgetMethodCard />
+        </div>
+
         {/* Main Budget Items Table */}
         <div className="lg:col-span-2 w-full">
           <Card className="w-full bg-card border border-foreground">
@@ -329,8 +334,6 @@ const Budget = () => {
 
         {/* Right Sidebar Cards */}
         <div className="space-y-6 w-full">
-          {/* Budget Method Card */}
-          <BudgetMethodCard />
 
           {/* Balance Calculations Card - Only show for percentage-based budgeting */}
           {showBalanceCalculations && (
