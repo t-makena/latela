@@ -80,117 +80,130 @@ export const StatementUploadDialog = ({
       reader.readAsDataURL(file);
       
       reader.onload = async () => {
-        const base64Content = reader.result as string;
-        const base64Data = base64Content.split(',')[1];
+        try {
+          const base64Content = reader.result as string;
+          const base64Data = base64Content.split(',')[1];
 
-        setProcessingStage('parsing');
+          setProcessingStage('parsing');
 
-        // Call edge function to parse statement
-        const { data, error } = await supabase.functions.invoke('parse-statement', {
-          body: {
-            fileContent: base64Data,
-            fileName: file.name,
-            fileType: file.type,
-          },
-        });
+          // Call edge function to parse statement
+          const { data, error } = await supabase.functions.invoke('parse-statement', {
+            body: {
+              fileContent: base64Data,
+              fileName: file.name,
+              fileType: file.type,
+            },
+          });
 
-        if (error) {
-          throw error;
-        }
+          if (error) {
+            throw error;
+          }
 
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to parse statement');
-        }
+          if (!data.success) {
+            throw new Error(data.error || 'Failed to parse statement');
+          }
 
-        setProcessingStage('creating');
+          setProcessingStage('creating');
 
-        // Create account with parsed data
-        const { data: accountData, error: accountError } = await supabase
-          .from('accounts')
-          .insert({
-            account_number: data.accountInfo.accountNumber,
-            bank_name: data.accountInfo.bankName,
-            account_type: data.accountInfo.accountType,
-            account_name: data.accountInfo.accountName || `${data.accountInfo.bankName} Account`,
-            balance: Math.round(data.accountInfo.currentBalance * 100),
-            current_balance: Math.round(data.accountInfo.currentBalance * 100),
-            available_balance: Math.round(data.accountInfo.currentBalance * 100),
-            balance_brought_forward: 0,
-            currency: 'ZAR',
-            status: 'active',
-            user_id: (await supabase.auth.getUser()).data.user?.id,
-          })
-          .select()
-          .single();
+          // Create account with parsed data
+          const { data: accountData, error: accountError } = await supabase
+            .from('accounts')
+            .insert({
+              account_number: data.accountInfo.accountNumber,
+              bank_name: data.accountInfo.bankName,
+              account_type: data.accountInfo.accountType,
+              account_name: data.accountInfo.accountName || `${data.accountInfo.bankName} Account`,
+              balance: Math.round(data.accountInfo.currentBalance * 100),
+              current_balance: Math.round(data.accountInfo.currentBalance * 100),
+              available_balance: Math.round(data.accountInfo.currentBalance * 100),
+              balance_brought_forward: 0,
+              currency: 'ZAR',
+              status: 'active',
+              user_id: (await supabase.auth.getUser()).data.user?.id,
+            })
+            .select()
+            .single();
 
-        if (accountError) {
-          throw accountError;
-        }
+          if (accountError) {
+            throw accountError;
+          }
 
-        // Import transactions if any were parsed
-        if (data.transactions && data.transactions.length > 0) {
-          setProcessingStage('importing');
-          
-          const userId = (await supabase.auth.getUser()).data.user?.id;
-          
-          const transactionsToInsert = data.transactions.map((t: any) => ({
-            user_id: userId,
-            account_id: accountData.id,
-            transaction_date: new Date(t.date).toISOString(),
-            description: t.description,
-            reference: t.reference || t.description.substring(0, 50),
-            amount: Math.round(Math.abs(t.amount) * 100), // Convert to cents
-            balance: t.balance ? Math.round(t.balance * 100) : 0,
-            cleared: true,
-          }));
+          // Import transactions if any were parsed
+          if (data.transactions && data.transactions.length > 0) {
+            setProcessingStage('importing');
+            
+            const userId = (await supabase.auth.getUser()).data.user?.id;
+            
+            const transactionsToInsert = data.transactions.map((t: any) => ({
+              user_id: userId,
+              account_id: accountData.id,
+              transaction_date: new Date(t.date).toISOString(),
+              description: t.description,
+              reference: t.reference || t.description.substring(0, 50),
+              amount: Math.round(Math.abs(t.amount) * 100), // Convert to cents
+              balance: t.balance ? Math.round(t.balance * 100) : 0,
+              cleared: true,
+            }));
 
-          const { error: transError } = await supabase
-            .from('transactions')
-            .insert(transactionsToInsert);
+            const { error: transError } = await supabase
+              .from('transactions')
+              .insert(transactionsToInsert);
 
-          if (transError) {
-            console.error('Transaction import error:', transError);
-            // Don't fail the whole operation, account was created successfully
-          } else {
-            setProcessingStage('categorizing');
+            if (transError) {
+              console.error('Transaction import error:', transError);
+              // Don't fail the whole operation, account was created successfully
+            } else {
+              setProcessingStage('categorizing');
 
-            const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
-              body: { accountId: accountData.id }
-            });
-
-            if (catError) {
-              console.error('Categorization error:', catError);
-              toast({
-                title: "Categorization incomplete",
-                description: "Transactions imported but some couldn't be categorized",
-                variant: "destructive",
+              const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
+                body: { accountId: accountData.id }
               });
-            } else if (catData?.success) {
-              console.log(`Categorization complete: ${catData.categorized} transactions, ${catData.cached} from cache, ${catData.aiCalls} AI calls, ~$${catData.cost}`);
+
+              if (catError) {
+                console.error('Categorization error:', catError);
+                toast({
+                  title: "Categorization incomplete",
+                  description: "Transactions imported but some couldn't be categorized",
+                  variant: "destructive",
+                });
+              } else if (catData?.success) {
+                console.log(`Categorization complete: ${catData.categorized} transactions, ${catData.cached} from cache, ${catData.aiCalls} AI calls, ~$${catData.cost}`);
+              }
             }
           }
+
+          toast({
+            title: "Account added successfully!",
+            description: `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
+          });
+
+          onOpenChange(false);
+          onSuccess?.();
+        } catch (error) {
+          console.error('Upload error:', error);
+          toast({
+            title: "Upload failed",
+            description: error instanceof Error ? error.message : "Couldn't read this statement. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setUploading(false);
+          setProcessingStage(null);
         }
-
-        toast({
-          title: "Account added successfully!",
-          description: `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
-        });
-
-        onOpenChange(false);
-        onSuccess?.();
       };
 
       reader.onerror = () => {
-        throw new Error('Failed to read file');
+        setUploading(false);
+        setProcessingStage(null);
+        toast({
+          title: "Upload failed",
+          description: "Failed to read file",
+          variant: "destructive",
+        });
       };
     } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Couldn't read this statement. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
+      // Handle file validation errors before async operations
+      console.error('File validation error:', error);
       setUploading(false);
       setProcessingStage(null);
     }
