@@ -82,17 +82,41 @@ export const BackgroundProvider = () => {
     };
   }, [pathname, colorPalette, isDark, isMobile]);
 
+  // Parse transform for desktop
+  const getDesktopTransform = () => {
+    let rotateVal = '';
+    let scaleVal = '';
+    
+    if (transform.includes('rotate-90')) {
+      rotateVal = 'rotate(90deg)';
+    } else if (transform.includes('-rotate-90')) {
+      rotateVal = 'rotate(-90deg)';
+    }
+    
+    if (transform.includes('-scale-x-100')) {
+      scaleVal = 'scaleX(-1)';
+    }
+    
+    return `translate(-50%, -50%) ${rotateVal} ${scaleVal}`.trim();
+  };
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       <div
-        className={`absolute inset-0 bg-cover bg-center bg-no-repeat ${transform}`}
+        className="absolute bg-no-repeat bg-center bg-cover"
         style={{
           backgroundImage: `url(${backgroundImage})`,
-          // Extend the element beyond viewport for rotated images
-          width: '200%',
-          height: '200%',
-          top: '-50%',
-          left: '-50%',
+          ...(isMobile ? {
+            inset: 0,
+            transform: transform || undefined,
+          } : {
+            // Desktop: swap dimensions so portrait image fills landscape when rotated
+            width: '100vh',
+            height: '100vw',
+            top: '50%',
+            left: '50%',
+            transform: getDesktopTransform(),
+          }),
         }}
       />
     </div>
