@@ -4,24 +4,34 @@ import { useTheme } from 'next-themes';
 import { useColorPalette } from '@/hooks/useColorPalette';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-// Import all background images
+// Import all background images - Multicolor
 import bgMulticolorLight1 from '@/assets/backgrounds/bg-multicolor-light-1.png';
 import bgMulticolorLight2 from '@/assets/backgrounds/bg-multicolor-light-2.png';
+import bgMulticolorLight3 from '@/assets/backgrounds/bg-multicolor-light-3.png';
+import bgMulticolorLight4 from '@/assets/backgrounds/bg-multicolor-light-4.png';
 import bgMulticolorDark1 from '@/assets/backgrounds/bg-multicolor-dark-1.png';
 import bgMulticolorDark2 from '@/assets/backgrounds/bg-multicolor-dark-2.png';
+import bgMulticolorDark3 from '@/assets/backgrounds/bg-multicolor-dark-3.png';
+import bgMulticolorDark4 from '@/assets/backgrounds/bg-multicolor-dark-4.png';
+
+// Import all background images - Black & White
 import bgBwLight1 from '@/assets/backgrounds/bg-bw-light-1.png';
 import bgBwLight2 from '@/assets/backgrounds/bg-bw-light-2.png';
+import bgBwLight3 from '@/assets/backgrounds/bg-bw-light-3.png';
+import bgBwLight4 from '@/assets/backgrounds/bg-bw-light-4.png';
 import bgBwDark1 from '@/assets/backgrounds/bg-bw-dark-1.png';
 import bgBwDark2 from '@/assets/backgrounds/bg-bw-dark-2.png';
+import bgBwDark3 from '@/assets/backgrounds/bg-bw-dark-3.png';
+import bgBwDark4 from '@/assets/backgrounds/bg-bw-dark-4.png';
 
 const backgroundImages = {
   multicolor: {
-    light: [bgMulticolorLight1, bgMulticolorLight2],
-    dark: [bgMulticolorDark1, bgMulticolorDark2],
+    light: [bgMulticolorLight1, bgMulticolorLight2, bgMulticolorLight3, bgMulticolorLight4],
+    dark: [bgMulticolorDark1, bgMulticolorDark2, bgMulticolorDark3, bgMulticolorDark4],
   },
   blackwhite: {
-    light: [bgBwLight1, bgBwLight2],
-    dark: [bgBwDark1, bgBwDark2],
+    light: [bgBwLight1, bgBwLight2, bgBwLight3, bgBwLight4],
+    dark: [bgBwDark1, bgBwDark2, bgBwDark3, bgBwDark4],
   },
 };
 
