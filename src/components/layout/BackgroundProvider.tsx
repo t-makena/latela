@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useColorPalette } from '@/hooks/useColorPalette';
@@ -71,6 +71,12 @@ export const BackgroundProvider = () => {
   const currentTheme = resolvedTheme || theme || 'light';
   const isDark = currentTheme === 'dark';
 
+  // Track current and previous background for crossfade
+  const [displayedBg, setDisplayedBg] = useState<{ image: string; transform: string } | null>(null);
+  const [previousBg, setPreviousBg] = useState<{ image: string; transform: string } | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const { backgroundImage, transform } = useMemo(() => {
     // Get images based on palette and theme
     const images = backgroundImages[colorPalette]?.[isDark ? 'dark' : 'light'] || 
@@ -92,43 +98,92 @@ export const BackgroundProvider = () => {
     };
   }, [pathname, colorPalette, isDark, isMobile]);
 
+  // Handle crossfade transition when background changes
+  useEffect(() => {
+    if (!displayedBg) {
+      // Initial load - no transition needed
+      setDisplayedBg({ image: backgroundImage, transform });
+      return;
+    }
+
+    // If background changed, trigger crossfade
+    if (displayedBg.image !== backgroundImage || displayedBg.transform !== transform) {
+      // Clear any existing timeout
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+      }
+
+      // Set previous background and start transition
+      setPreviousBg(displayedBg);
+      setDisplayedBg({ image: backgroundImage, transform });
+      setIsTransitioning(true);
+
+      // End transition after animation completes
+      transitionTimeoutRef.current = setTimeout(() => {
+        setIsTransitioning(false);
+        setPreviousBg(null);
+      }, 500); // Match transition duration
+    }
+
+    return () => {
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, [backgroundImage, transform, displayedBg]);
+
   // Parse transform for desktop
-  const getDesktopTransform = () => {
+  const getDesktopTransform = (transformString: string) => {
     let rotateVal = '';
     let scaleVal = '';
     
-    if (transform.includes('rotate-90')) {
+    if (transformString.includes('rotate-90')) {
       rotateVal = 'rotate(90deg)';
-    } else if (transform.includes('-rotate-90')) {
+    } else if (transformString.includes('-rotate-90')) {
       rotateVal = 'rotate(-90deg)';
     }
     
-    if (transform.includes('-scale-x-100')) {
+    if (transformString.includes('-scale-x-100')) {
       scaleVal = 'scaleX(-1)';
     }
     
     return `translate(-50%, -50%) ${rotateVal} ${scaleVal}`.trim();
   };
 
+  const getBackgroundStyle = (bg: { image: string; transform: string }, opacity: number) => ({
+    backgroundImage: `url(${bg.image})`,
+    opacity,
+    transition: 'opacity 0.5s ease',
+    ...(isMobile ? {
+      inset: 0,
+      transform: bg.transform || undefined,
+    } : {
+      // Desktop: swap dimensions so portrait image fills landscape when rotated
+      width: '100vh',
+      height: '100vw',
+      top: '50%',
+      left: '50%',
+      transform: getDesktopTransform(bg.transform),
+    }),
+  });
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      <div
-        className="absolute bg-no-repeat bg-center bg-cover"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-          ...(isMobile ? {
-            inset: 0,
-            transform: transform || undefined,
-          } : {
-            // Desktop: swap dimensions so portrait image fills landscape when rotated
-            width: '100vh',
-            height: '100vw',
-            top: '50%',
-            left: '50%',
-            transform: getDesktopTransform(),
-          }),
-        }}
-      />
+      {/* Previous background (fading out) */}
+      {previousBg && isTransitioning && (
+        <div
+          className="absolute bg-no-repeat bg-center bg-cover"
+          style={getBackgroundStyle(previousBg, 0)}
+        />
+      )}
+      
+      {/* Current background (fading in or fully visible) */}
+      {displayedBg && (
+        <div
+          className="absolute bg-no-repeat bg-center bg-cover"
+          style={getBackgroundStyle(displayedBg, 1)}
+        />
+      )}
     </div>
   );
 };
