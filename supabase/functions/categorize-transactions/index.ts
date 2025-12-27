@@ -426,7 +426,8 @@ Respond with ONLY the category name.`
   return category;
 }
 
-async function getOrCreateCategory(supabase: ReturnType<typeof createClient>, categoryName: string): Promise<string> {
+// deno-lint-ignore no-explicit-any
+async function getOrCreateCategory(supabase: any, categoryName: string): Promise<string> {
   // Try to find existing category
   const { data: existing } = await supabase
     .from('categories')
