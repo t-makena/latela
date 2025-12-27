@@ -1,204 +1,30 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useColorPalette } from '@/hooks/useColorPalette';
-import { useIsMobile } from '@/hooks/use-mobile';
 
-// Import all background images - Multicolor
-import bgMulticolorLight1 from '@/assets/backgrounds/bg-multicolor-light-1.png';
-import bgMulticolorLight2 from '@/assets/backgrounds/bg-multicolor-light-2.png';
-import bgMulticolorLight3 from '@/assets/backgrounds/bg-multicolor-light-3.png';
-import bgMulticolorLight4 from '@/assets/backgrounds/bg-multicolor-light-4.png';
-import bgMulticolorDark1 from '@/assets/backgrounds/bg-multicolor-dark-1.png';
-import bgMulticolorDark2 from '@/assets/backgrounds/bg-multicolor-dark-2.png';
-import bgMulticolorDark3 from '@/assets/backgrounds/bg-multicolor-dark-3.png';
-import bgMulticolorDark4 from '@/assets/backgrounds/bg-multicolor-dark-4.png';
+import bgMulticolorLight from '@/assets/backgrounds/bg-multicolor-light.png';
+import bgMulticolorDark from '@/assets/backgrounds/bg-multicolor-dark.png';
+import bgBwLight from '@/assets/backgrounds/bg-bw-light.png';
+import bgBwDark from '@/assets/backgrounds/bg-bw-dark.png';
 
-// Import all background images - Black & White
-import bgBwLight1 from '@/assets/backgrounds/bg-bw-light-1.png';
-import bgBwLight2 from '@/assets/backgrounds/bg-bw-light-2.png';
-import bgBwLight3 from '@/assets/backgrounds/bg-bw-light-3.png';
-import bgBwLight4 from '@/assets/backgrounds/bg-bw-light-4.png';
-import bgBwDark1 from '@/assets/backgrounds/bg-bw-dark-1.png';
-import bgBwDark2 from '@/assets/backgrounds/bg-bw-dark-2.png';
-import bgBwDark3 from '@/assets/backgrounds/bg-bw-dark-3.png';
-import bgBwDark4 from '@/assets/backgrounds/bg-bw-dark-4.png';
-
-const backgroundImages = {
-  multicolor: {
-    light: [bgMulticolorLight1, bgMulticolorLight2, bgMulticolorLight3, bgMulticolorLight4],
-    dark: [bgMulticolorDark1, bgMulticolorDark2, bgMulticolorDark3, bgMulticolorDark4],
-  },
-  blackwhite: {
-    light: [bgBwLight1, bgBwLight2, bgBwLight3, bgBwLight4],
-    dark: [bgBwDark1, bgBwDark2, bgBwDark3, bgBwDark4],
-  },
-};
-
-// Desktop transforms: 90°, -90°, with optional horizontal flip
-const desktopTransforms = [
-  'rotate-90',
-  '-rotate-90',
-  'rotate-90 -scale-x-100',
-  '-rotate-90 -scale-x-100',
-];
-
-// Mobile/Tablet transforms: 0°, 180°, vertical flip, or both
-const mobileTransforms = [
-  '',
-  'rotate-180',
-  '-scale-y-100',
-  'rotate-180 -scale-y-100',
-];
-
-// Simple hash function to get consistent random value from string
-const hashString = (str: string): number => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash);
-};
+const backgrounds = {
+  multicolor: { light: bgMulticolorLight, dark: bgMulticolorDark },
+  blackwhite: { light: bgBwLight, dark: bgBwDark },
+} as const;
 
 export const BackgroundProvider = () => {
-  const { pathname } = useLocation();
-  const { theme, resolvedTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const { colorPalette } = useColorPalette();
-  const isMobile = useIsMobile();
-
-  const currentTheme = resolvedTheme || theme || 'light';
-  const isDark = currentTheme === 'dark';
-
-  // Track current and previous background for crossfade
-  const [displayedBg, setDisplayedBg] = useState<{ image: string; transform: string } | null>(null);
-  const [previousBg, setPreviousBg] = useState<{ image: string; transform: string } | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const { backgroundImage, transform } = useMemo(() => {
-    // Get images based on palette and theme
-    const images = backgroundImages[colorPalette]?.[isDark ? 'dark' : 'light'] || 
-                   backgroundImages.multicolor.light;
-    
-    // Use pathname hash to select image and transform deterministically
-    const pathHash = hashString(pathname);
-    const imageIndex = pathHash % images.length;
-    const selectedImage = images[imageIndex];
-
-    // Select transform based on device type
-    const transforms = isMobile ? mobileTransforms : desktopTransforms;
-    const transformIndex = (pathHash >> 4) % transforms.length;
-    const selectedTransform = transforms[transformIndex];
-
-    return {
-      backgroundImage: selectedImage,
-      transform: selectedTransform,
-    };
-  }, [pathname, colorPalette, isDark, isMobile]);
-
-  // Preload all background images on mount for instant transitions
-  useEffect(() => {
-    const allImages = [
-      ...backgroundImages.multicolor.light,
-      ...backgroundImages.multicolor.dark,
-      ...backgroundImages.blackwhite.light,
-      ...backgroundImages.blackwhite.dark,
-    ];
-    
-    allImages.forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
-
-  // Handle crossfade transition when background changes
-  useEffect(() => {
-    if (!displayedBg) {
-      // Initial load - no transition needed
-      setDisplayedBg({ image: backgroundImage, transform });
-      return;
-    }
-
-    // If background changed, trigger crossfade
-    if (displayedBg.image !== backgroundImage || displayedBg.transform !== transform) {
-      // Clear any existing timeout
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current);
-      }
-
-      // Set previous background and start transition
-      setPreviousBg(displayedBg);
-      setDisplayedBg({ image: backgroundImage, transform });
-      setIsTransitioning(true);
-
-      // End transition after animation completes
-      transitionTimeoutRef.current = setTimeout(() => {
-        setIsTransitioning(false);
-        setPreviousBg(null);
-      }, 500); // Match transition duration
-    }
-
-    return () => {
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current);
-      }
-    };
-  }, [backgroundImage, transform, displayedBg]);
-
-  // Parse transform for desktop
-  const getDesktopTransform = (transformString: string) => {
-    let rotateVal = '';
-    let scaleVal = '';
-    
-    if (transformString.includes('rotate-90')) {
-      rotateVal = 'rotate(90deg)';
-    } else if (transformString.includes('-rotate-90')) {
-      rotateVal = 'rotate(-90deg)';
-    }
-    
-    if (transformString.includes('-scale-x-100')) {
-      scaleVal = 'scaleX(-1)';
-    }
-    
-    return `translate(-50%, -50%) ${rotateVal} ${scaleVal}`.trim();
-  };
-
-  const getBackgroundStyle = (bg: { image: string; transform: string }, opacity: number) => ({
-    backgroundImage: `url(${bg.image})`,
-    opacity,
-    transition: 'opacity 0.5s ease',
-    ...(isMobile ? {
-      inset: 0,
-      transform: bg.transform || undefined,
-    } : {
-      // Desktop: swap dimensions so portrait image fills landscape when rotated
-      width: '100vh',
-      height: '100vw',
-      top: '50%',
-      left: '50%',
-      transform: getDesktopTransform(bg.transform),
-    }),
-  });
+  
+  const isDark = resolvedTheme === 'dark';
+  const backgroundImage = backgrounds[colorPalette]?.[isDark ? 'dark' : 'light'] 
+                         || backgrounds.multicolor.light;
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {/* Previous background (fading out) */}
-      {previousBg && isTransitioning && (
-        <div
-          className="absolute bg-no-repeat bg-center bg-cover"
-          style={getBackgroundStyle(previousBg, 0)}
-        />
-      )}
-      
-      {/* Current background (fading in or fully visible) */}
-      {displayedBg && (
-        <div
-          className="absolute bg-no-repeat bg-center bg-cover"
-          style={getBackgroundStyle(displayedBg, 1)}
-        />
-      )}
+      <div
+        className="absolute inset-0 bg-no-repeat bg-center bg-cover"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      />
     </div>
   );
 };
