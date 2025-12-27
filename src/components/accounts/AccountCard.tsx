@@ -20,7 +20,7 @@ export const AccountCard = ({
   const isMobile = useIsMobile();
   
   return (
-    <Card className="rounded-3xl bg-card border border-black" style={{ boxShadow: '4px 4px 0px #000000' }}>
+    <Card className="rounded-3xl bg-card border border-foreground">
       <CardContent className="p-6">
         {/* Bank Name, Logo and Account Number */}
         <div className="flex items-center gap-3 mb-6">

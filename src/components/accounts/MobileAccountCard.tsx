@@ -9,7 +9,6 @@ export const MobileAccountCard = ({ account }: MobileAccountCardProps) => {
     <div className="animate-fade-in w-full">
       <div 
         className="bg-card rounded-3xl border border-foreground p-5 flex justify-between items-start"
-        style={{ boxShadow: '4px 4px 0px #000000' }}
       >
         {/* Left Side Content */}
         <div>
