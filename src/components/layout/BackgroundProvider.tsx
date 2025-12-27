@@ -1,5 +1,6 @@
 import { useTheme } from 'next-themes';
 import { useColorPalette } from '@/hooks/useColorPalette';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import bgMulticolorLight from '@/assets/backgrounds/bg-multicolor-light.png';
 import bgMulticolorDark from '@/assets/backgrounds/bg-multicolor-dark.png';
@@ -14,6 +15,7 @@ const backgrounds = {
 export const BackgroundProvider = () => {
   const { resolvedTheme } = useTheme();
   const { colorPalette } = useColorPalette();
+  const isMobile = useIsMobile();
   
   const isDark = resolvedTheme === 'dark';
   const backgroundImage = backgrounds[colorPalette]?.[isDark ? 'dark' : 'light'] 
@@ -23,7 +25,11 @@ export const BackgroundProvider = () => {
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       <div
         className="absolute inset-0 bg-no-repeat bg-center bg-cover"
-        style={{ backgroundImage: `url(${backgroundImage})` }}
+        style={{ 
+          backgroundImage: `url(${backgroundImage})`,
+          transform: isMobile ? 'none' : 'rotate(-90deg) scale(1.5)',
+          transformOrigin: 'center center',
+        }}
       />
     </div>
   );
