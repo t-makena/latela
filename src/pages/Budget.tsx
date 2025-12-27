@@ -3,12 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { AddBudgetItemDialog } from '@/components/budget/AddBudgetItemDialog';
+import { BudgetMethodCard } from '@/components/budget/BudgetMethodCard';
 import { useBudgetItems } from '@/hooks/useBudgetItems';
 import { useGoals } from '@/hooks/useGoals';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useSubcategories } from '@/hooks/useSubcategories';
+import { useBudgetMethod } from '@/hooks/useBudgetMethod';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -35,6 +37,7 @@ const Budget = () => {
   const { accounts, loading: accountsLoading } = useAccounts();
   const { transactions, loading: transactionsLoading } = useTransactions();
   const { subcategories, loading: categoriesLoading } = useSubcategories();
+  const { budgetMethod, loading: budgetMethodLoading } = useBudgetMethod();
 
   // Function to get display name (custom name if category has been replaced)
   const getDisplayName = (itemName: string) => {
@@ -103,7 +106,10 @@ const Budget = () => {
     return Object.values(calculateAmountSpent).reduce((sum, amount) => sum + amount, 0);
   }, [calculateAmountSpent]);
 
-  const isLoading = loading || goalsLoading || eventsLoading || accountsLoading;
+  const isLoading = loading || goalsLoading || eventsLoading || accountsLoading || budgetMethodLoading;
+
+  // Check if we should show balance calculations (only for percentage-based budgeting)
+  const showBalanceCalculations = budgetMethod === 'percentage_based';
 
   // Mobile layout - separate path without container wrapper
   if (isMobile) {
@@ -163,52 +169,57 @@ const Budget = () => {
           )}
         </div>
 
-        {/* Balance Calculations Card */}
-        <div 
-          className="bg-card rounded-3xl border border-foreground p-5 w-full"
-        >
-          <h2 className="heading-main mb-4">{t('budget.balanceCalculations')}</h2>
-          
-          {isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-6 w-full" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3 table-body-text">
-              <div className="flex justify-between items-center">
-                <span className="label-text">{t('budget.plannedExpenses')}</span>
-                <span className="currency">{formatCurrency(totalBudgetExpenses)}</span>
+        {/* Budget Method Card */}
+        <BudgetMethodCard />
+
+        {/* Balance Calculations Card - Only show for percentage-based budgeting */}
+        {showBalanceCalculations && (
+          <div 
+            className="bg-card rounded-3xl border border-foreground p-5 w-full"
+          >
+            <h2 className="heading-main mb-4">{t('budget.balanceCalculations')}</h2>
+            
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-6 w-full" />
+                ))}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="label-text">{t('budget.upcomingEvents')}</span>
-                <span className="currency">{formatCurrency(totalUpcomingEvents)}</span>
+            ) : (
+              <div className="space-y-3 table-body-text">
+                <div className="flex justify-between items-center">
+                  <span className="label-text">{t('budget.plannedExpenses')}</span>
+                  <span className="currency">{formatCurrency(totalBudgetExpenses)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="label-text">{t('budget.upcomingEvents')}</span>
+                  <span className="currency">{formatCurrency(totalUpcomingEvents)}</span>
+                </div>
+                <div className="flex justify-between items-center pb-3 border-b border-border">
+                  <span className="font-bold">{t('finance.budgetBalance')}</span>
+                  <span className="font-bold currency">{formatCurrency(budgetBalanceValue)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center pt-2">
+                  <span className="label-text">{t('finance.availableBalance')}</span>
+                  <span className="currency">{formatCurrency(availableBalance)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="label-text">{t('budget.savingsGoals')}</span>
+                  <span className="currency">-{formatCurrency(totalSavingGoals)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="label-text">{t('finance.budgetBalance')}</span>
+                  <span className="currency">-{formatCurrency(budgetBalanceValue)}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-border">
+                  <span className="font-bold">{t('finance.flexibleBalance')}</span>
+                  <span className="font-bold currency">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
+                </div>
               </div>
-              <div className="flex justify-between items-center pb-3 border-b border-border">
-                <span className="font-bold">{t('finance.budgetBalance')}</span>
-                <span className="font-bold currency">{formatCurrency(budgetBalanceValue)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center pt-2">
-                <span className="label-text">{t('finance.availableBalance')}</span>
-                <span className="currency">{formatCurrency(availableBalance)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="label-text">{t('budget.savingsGoals')}</span>
-                <span className="currency">-{formatCurrency(totalSavingGoals)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="label-text">{t('finance.budgetBalance')}</span>
-                <span className="currency">-{formatCurrency(budgetBalanceValue)}</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-border">
-                <span className="font-bold">{t('finance.flexibleBalance')}</span>
-                <span className="font-bold currency">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         <AddBudgetItemDialog
           open={dialogOpen}
@@ -318,69 +329,76 @@ const Budget = () => {
 
         {/* Right Sidebar Cards */}
         <div className="space-y-6 w-full">
-          {/* Balance Calculations Card */}
-          <Card className="w-full bg-card border border-foreground">
-            <CardHeader>
-              <CardTitle className="heading-main">{t('budget.balanceCalculations')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isLoading ? (
-                <>
-                  {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                    <Skeleton key={i} className="h-8 w-full" />
-                  ))}
-                </>
-              ) : (
-                <>
-                  {/* Budget Balance Calculation Section */}
-                  <div className="flex justify-between items-center">
-                    <span className="label-text">Planned expenses</span>
-                    <span className="table-body-text currency">{formatCurrency(totalBudgetExpenses)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="label-text">Upcoming events</span>
-                    <span className="table-body-text currency">{formatCurrency(totalUpcomingEvents)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="table-body-text font-bold">Budget Balance</span>
-                    <span className="table-body-text font-bold currency">{formatCurrency(budgetBalanceValue)}</span>
-                  </div>
+          {/* Budget Method Card */}
+          <BudgetMethodCard />
 
-                  {/* Flexible Balance Calculation Section */}
-                  <div className="flex justify-between items-center pt-4 border-t">
-                    <span className="label-text">Available Balance</span>
-                    <span className="table-body-text currency">{formatCurrency(availableBalance)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="label-text">Savings Goals</span>
-                    <span className="table-body-text currency">-{formatCurrency(totalSavingGoals)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="label-text">Budget Balance</span>
-                    <span className="table-body-text currency">-{formatCurrency(budgetBalanceValue)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="table-body-text font-bold">Flexible Balance</span>
-                    <span className="table-body-text font-bold currency">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          {/* Balance Calculations Card - Only show for percentage-based budgeting */}
+          {showBalanceCalculations && (
+            <Card className="w-full bg-card border border-foreground">
+              <CardHeader>
+                <CardTitle className="heading-main">{t('budget.balanceCalculations')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {isLoading ? (
+                  <>
+                    {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                      <Skeleton key={i} className="h-8 w-full" />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {/* Budget Balance Calculation Section */}
+                    <div className="flex justify-between items-center">
+                      <span className="label-text">Planned expenses</span>
+                      <span className="table-body-text currency">{formatCurrency(totalBudgetExpenses)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="label-text">Upcoming events</span>
+                      <span className="table-body-text currency">{formatCurrency(totalUpcomingEvents)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="table-body-text font-bold">Budget Balance</span>
+                      <span className="table-body-text font-bold currency">{formatCurrency(budgetBalanceValue)}</span>
+                    </div>
 
-          {/* Calculation Explanation Card */}
-          <Card className="w-full bg-card border border-foreground">
-            <CardHeader>
-              <CardTitle className="heading-card">Calculation Explanation</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p><span className="font-semibold text-foreground">Monthly:</span> Amount × 1</p>
-              <p><span className="font-semibold text-foreground">Weekly:</span> Amount × 4</p>
-              <p><span className="font-semibold text-foreground">Bi-weekly:</span> Amount × 2</p>
-              <p><span className="font-semibold text-foreground">Daily:</span> Amount × 4</p>
-              <p><span className="font-semibold text-foreground">Once-off:</span> Amount × 1</p>
-            </CardContent>
-          </Card>
+                    {/* Flexible Balance Calculation Section */}
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <span className="label-text">Available Balance</span>
+                      <span className="table-body-text currency">{formatCurrency(availableBalance)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="label-text">Savings Goals</span>
+                      <span className="table-body-text currency">-{formatCurrency(totalSavingGoals)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="label-text">Budget Balance</span>
+                      <span className="table-body-text currency">-{formatCurrency(budgetBalanceValue)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="table-body-text font-bold">Flexible Balance</span>
+                      <span className="table-body-text font-bold currency">{flexibleBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(flexibleBalance))}</span>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Calculation Explanation Card - Only show for percentage-based budgeting */}
+          {showBalanceCalculations && (
+            <Card className="w-full bg-card border border-foreground">
+              <CardHeader>
+                <CardTitle className="heading-card">Calculation Explanation</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <p><span className="font-semibold text-foreground">Monthly:</span> Amount × 1</p>
+                <p><span className="font-semibold text-foreground">Weekly:</span> Amount × 4</p>
+                <p><span className="font-semibold text-foreground">Bi-weekly:</span> Amount × 2</p>
+                <p><span className="font-semibold text-foreground">Daily:</span> Amount × 4</p>
+                <p><span className="font-semibold text-foreground">Once-off:</span> Amount × 1</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 

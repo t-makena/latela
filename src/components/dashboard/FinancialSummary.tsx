@@ -7,6 +7,7 @@ import { useBudgetItems } from "@/hooks/useBudgetItems";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useBudgetMethod } from "@/hooks/useBudgetMethod";
 
 interface FinancialSummaryProps {
   showExplanations?: boolean;
@@ -19,17 +20,21 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   const isMobile = useIsMobile();
   const { calculateTotalMonthly, loading: budgetLoading } = useBudgetItems();
   const { t } = useLanguage();
+  const { budgetMethod, loading: budgetMethodLoading } = useBudgetMethod();
   const currentDate = new Date();
   const { upcomingEvents, isLoading: eventsLoading } = useCalendarEvents({
     year: currentDate.getFullYear(),
     month: currentDate.getMonth() + 1
   });
 
+  // Determine if we should show budget/flexible balance (only for percentage-based)
+  const isZeroBased = budgetMethod === 'zero_based';
+
   console.log('FinancialSummary - transactions:', transactions);
   console.log('FinancialSummary - loading:', loading);
   console.log('FinancialSummary - error:', error);
 
-  if (loading || budgetLoading || eventsLoading || accountsLoading) {
+  if (loading || budgetLoading || eventsLoading || accountsLoading || budgetMethodLoading) {
     if (minimal) {
       return (
         <div className="animate-pulse">
@@ -41,11 +46,15 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
               <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
               <div className="h-6 bg-gray-200 rounded w-24"></div>
             </div>
-            <div className="w-px bg-gray-300 self-stretch mx-4" />
-            <div className="flex-1">
-              <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
-              <div className="h-6 bg-gray-200 rounded w-24"></div>
-            </div>
+            {!isZeroBased && (
+              <>
+                <div className="w-px bg-gray-300 self-stretch mx-4" />
+                <div className="flex-1">
+                  <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-24"></div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       );
@@ -59,8 +68,8 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
         </div>
         </div>
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${isZeroBased ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6`}>
+            {[1, 2, isZeroBased ? null : 3].filter(Boolean).map((i) => (
               <div key={i} className="financial-metric animate-pulse">
                 <div className="h-4 bg-muted rounded mb-2"></div>
                 <div className="h-8 bg-muted rounded mb-1"></div>
@@ -82,8 +91,8 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
         </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${isZeroBased ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6`}>
+            {[1, 2, isZeroBased ? null : 3].filter(Boolean).map((i) => (
               <div key={i} className="financial-metric animate-pulse">
                 <div className="h-4 bg-muted rounded mb-2"></div>
                 <div className="h-8 bg-muted rounded mb-1"></div>
@@ -160,16 +169,25 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           className="bg-card rounded-3xl border border-foreground p-5 w-full"
         >
           <h2 className="heading-card mb-4">{t('finance.financialOverview')}</h2>
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="label-text mb-1">{t('finance.budgetBalance')}</p>
-              <p className="text-balance-secondary font-bold currency">{formatCurrency(budgetBalance)}</p>
+          {isZeroBased ? (
+            // Zero-based: Only show Available Balance
+            <div className="text-center">
+              <p className="label-text mb-1">{t('finance.availableBalance')}</p>
+              <p className="text-balance-secondary font-bold currency">{formatCurrency(availableBalance)}</p>
             </div>
-            <div className="flex-1 text-right">
-              <p className="label-text mb-1">{t('finance.flexibleBalance')}</p>
-              <p className="text-balance-secondary font-bold currency">{formatCurrency(flexibleBalance)}</p>
+          ) : (
+            // Percentage-based: Show Budget Balance and Flexible Balance
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="label-text mb-1">{t('finance.budgetBalance')}</p>
+                <p className="text-balance-secondary font-bold currency">{formatCurrency(budgetBalance)}</p>
+              </div>
+              <div className="flex-1 text-right">
+                <p className="label-text mb-1">{t('finance.flexibleBalance')}</p>
+                <p className="text-balance-secondary font-bold currency">{formatCurrency(flexibleBalance)}</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -177,7 +195,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
 
   const content = (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${isZeroBased ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-4`}>
         <div className="financial-metric">
           <div className="label-text mb-1">
             {t('finance.availableBalance')}
@@ -192,33 +210,37 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           )}
         </div>
         
-        <div className="financial-metric">
-          <div className="label-text mb-1">
-            {t('finance.budgetBalance')}
-          </div>
-          <div className="text-balance-secondary font-bold mb-1 currency">
-            {formatCurrency(budgetBalance)}
-          </div>
-          {showExplanations && (
-            <p className="text-transaction-date text-text-faint">
-              {t('finance.budgetExpensesPlusEvents')}
-            </p>
-          )}
-        </div>
-        
-        <div className="financial-metric">
-          <div className="label-text mb-1">
-            {t('finance.flexibleBalance')}
-          </div>
-          <div className="text-balance-secondary font-bold mb-1 currency">
-            {formatCurrency(flexibleBalance)}
-          </div>
-          {showExplanations && (
-            <p className="text-transaction-date text-text-faint">
-              {t('finance.availableLessBudget')}
-            </p>
-          )}
-        </div>
+        {!isZeroBased && (
+          <>
+            <div className="financial-metric">
+              <div className="label-text mb-1">
+                {t('finance.budgetBalance')}
+              </div>
+              <div className="text-balance-secondary font-bold mb-1 currency">
+                {formatCurrency(budgetBalance)}
+              </div>
+              {showExplanations && (
+                <p className="text-transaction-date text-text-faint">
+                  {t('finance.budgetExpensesPlusEvents')}
+                </p>
+              )}
+            </div>
+            
+            <div className="financial-metric">
+              <div className="label-text mb-1">
+                {t('finance.flexibleBalance')}
+              </div>
+              <div className="text-balance-secondary font-bold mb-1 currency">
+                {formatCurrency(flexibleBalance)}
+              </div>
+              {showExplanations && (
+                <p className="text-transaction-date text-text-faint">
+                  {t('finance.availableLessBudget')}
+                </p>
+              )}
+            </div>
+          </>
+        )}
         
         <div className="financial-metric">
           <div className="label-text mb-1">
