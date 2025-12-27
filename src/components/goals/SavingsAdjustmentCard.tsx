@@ -71,7 +71,7 @@ export const SavingsAdjustmentCard = ({ compact = false }: SavingsAdjustmentCard
   // No shortfall - show success state
   if (!savingsStatus.hasShortfall) {
     return (
-      <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
+      <Card className="bg-card border border-border w-full">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-500" />
@@ -99,7 +99,7 @@ export const SavingsAdjustmentCard = ({ compact = false }: SavingsAdjustmentCard
   
   // Has shortfall - show warning and adjustments
   return (
-    <Card className="bg-card border border-destructive/50 w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
+    <Card className="bg-card border border-destructive/50 w-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-destructive" />

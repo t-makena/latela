@@ -101,7 +101,7 @@ const Goals = () => {
       <MonthEndReviewDialog />
       
       {/* Budget Goals Section */}
-      <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
+      <Card className="bg-card border border-border w-full">
         <CardHeader className="pb-4">
           <CardTitle className="heading-main">{t('goals.budgetGoals')}</CardTitle>
         </CardHeader>
@@ -140,7 +140,6 @@ const Goals = () => {
       {isMobile ? (
         <div 
           className="bg-card rounded-3xl border border-border p-5 w-full"
-          style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}
         >
           <div className="pb-2 mb-2">
             <h2 className="heading-main">{t('goals.goalsOverview')}</h2>
@@ -256,7 +255,7 @@ const Goals = () => {
           </div>
         </div>
       ) : (
-        <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
+        <Card className="bg-card border border-border w-full">
           <CardHeader className="pb-4">
             <CardTitle className="heading-main">{t('goals.goalsOverview')}</CardTitle>
           </CardHeader>
