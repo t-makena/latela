@@ -16,7 +16,10 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          account_first_four: string | null
           account_holder_id: string | null
+          account_holder_name: string | null
+          account_last_four: string | null
           account_limit: number | null
           account_name: string | null
           account_number: string
@@ -30,7 +33,10 @@ export type Database = {
           current_balance: number | null
           id: string
           is_active: boolean | null
+          last_statement_date: string | null
           power_of_attorney: boolean | null
+          statement_period_end: string | null
+          statement_period_start: string | null
           status: string
           uncleared: number | null
           uncleared_effects_enabled: boolean | null
@@ -38,7 +44,10 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          account_first_four?: string | null
           account_holder_id?: string | null
+          account_holder_name?: string | null
+          account_last_four?: string | null
           account_limit?: number | null
           account_name?: string | null
           account_number: string
@@ -52,7 +61,10 @@ export type Database = {
           current_balance?: number | null
           id?: string
           is_active?: boolean | null
+          last_statement_date?: string | null
           power_of_attorney?: boolean | null
+          statement_period_end?: string | null
+          statement_period_start?: string | null
           status: string
           uncleared?: number | null
           uncleared_effects_enabled?: boolean | null
@@ -60,7 +72,10 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          account_first_four?: string | null
           account_holder_id?: string | null
+          account_holder_name?: string | null
+          account_last_four?: string | null
           account_limit?: number | null
           account_name?: string | null
           account_number?: string
@@ -74,7 +89,10 @@ export type Database = {
           current_balance?: number | null
           id?: string
           is_active?: boolean | null
+          last_statement_date?: string | null
           power_of_attorney?: boolean | null
+          statement_period_end?: string | null
+          statement_period_start?: string | null
           status?: string
           uncleared?: number | null
           uncleared_effects_enabled?: boolean | null
