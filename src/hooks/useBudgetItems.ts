@@ -2,13 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-interface BudgetItem {
+export interface BudgetItem {
   id: string;
   user_id: string;
   name: string;
   frequency: string;
   amount: number;
   days_per_week: number | null;
+  parent_category_id?: string | null;
   created_at: string;
   updated_at: string;
 }

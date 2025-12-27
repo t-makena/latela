@@ -37,7 +37,14 @@ const Budget = () => {
   const { accounts, loading: accountsLoading } = useAccounts();
   const { transactions, loading: transactionsLoading } = useTransactions();
   const { subcategories, loading: categoriesLoading } = useSubcategories();
-  const { budgetMethod, loading: budgetMethodLoading } = useBudgetMethod();
+  const { 
+    budgetMethod, 
+    loading: budgetMethodLoading,
+    calculateCategoryAllocations,
+    needsPercentage,
+    wantsPercentage,
+    savingsPercentage
+  } = useBudgetMethod();
 
   // Function to get display name (custom name if category has been replaced)
   const getDisplayName = (itemName: string) => {
@@ -110,6 +117,35 @@ const Budget = () => {
 
   // Check if we should show balance calculations (only for percentage-based budgeting)
   const showBalanceCalculations = budgetMethod === 'percentage_based';
+
+  // Calculate category allocations for percentage-based budgeting
+  const categoryAllocations = useMemo(() => {
+    if (budgetMethod !== 'percentage_based') return undefined;
+    
+    // Map budget items to include parent_category_id from subcategories
+    const itemsWithCategories = budgetItems.map(item => {
+      const subcategory = subcategories.find(sub => sub.name === item.name);
+      // Use type assertion since parent_category_id may not be in the type yet (pending migration)
+      const existingParentId = (item as { parent_category_id?: string }).parent_category_id;
+      return {
+        ...item,
+        parent_category_id: existingParentId || subcategory?.parent_category_id || undefined,
+      };
+    });
+
+    return calculateCategoryAllocations(availableBalance, itemsWithCategories, calculateMonthlyAmount);
+  }, [budgetMethod, budgetItems, subcategories, availableBalance, calculateCategoryAllocations, calculateMonthlyAmount]);
+
+  // Wrapper for addBudgetItem that handles the optional parentCategoryId
+  const handleAddBudgetItem = async (
+    name: string,
+    frequency: string,
+    amount: number,
+    daysPerWeek?: number,
+    _parentCategoryId?: string
+  ) => {
+    await addBudgetItem(name, frequency, amount, daysPerWeek);
+  };
 
   // Mobile layout - separate path without container wrapper
   if (isMobile) {
@@ -224,7 +260,10 @@ const Budget = () => {
         <AddBudgetItemDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          onAdd={addBudgetItem}
+          onAdd={handleAddBudgetItem}
+          budgetMethod={budgetMethod}
+          categoryAllocations={categoryAllocations}
+          availableBalance={availableBalance}
         />
       </div>
     );
@@ -408,7 +447,10 @@ const Budget = () => {
       <AddBudgetItemDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onAdd={addBudgetItem}
+        onAdd={handleAddBudgetItem}
+        budgetMethod={budgetMethod}
+        categoryAllocations={categoryAllocations}
+        availableBalance={availableBalance}
       />
     </div>
   );
