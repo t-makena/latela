@@ -159,11 +159,17 @@ export const StatementUploadDialog = ({
               account_id: accountData.id,
               transaction_date: new Date(t.date).toISOString(),
               description: t.description,
+              raw_description: t.description,
               reference: t.reference || t.description.substring(0, 50),
               // Store debits as negative cents, credits as positive cents
               amount: Math.round(t.type === 'debit' ? -Math.abs(t.amount) * 100 : Math.abs(t.amount) * 100),
               balance: t.balance ? Math.round(t.balance * 100) : 0,
               cleared: true,
+              // Required fields for categorization workflow
+              is_categorized: false,
+              auto_categorized: false,
+              user_verified: false,
+              categorization_confidence: null,
             }));
 
             const { error: transError } = await supabase
@@ -172,7 +178,19 @@ export const StatementUploadDialog = ({
 
             if (transError) {
               console.error('Transaction import error:', transError);
-              // Don't fail the whole operation, account was created successfully
+              toast({
+                title: "Transactions not imported",
+                description: "Account created, but transactions failed to import. Please try uploading again.",
+                variant: "destructive",
+              });
+              
+              // Notify on partial failure
+              if (notifyWhenDone) {
+                showNotification("Import Partially Failed ⚠️", {
+                  body: "Account created but transactions couldn't be imported",
+                  tag: 'statement-upload',
+                });
+              }
             } else {
               setProcessingStage('categorizing');
 
