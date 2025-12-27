@@ -31,7 +31,7 @@ const Accounts = () => {
   // Mobile neo-brutalist layout
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
+      <div className="min-h-screen bg-background py-6 space-y-5 animate-fade-in">
         <MobileAccountCard account={currentAccount} />
         <MobileBudgetInsightCard />
         
