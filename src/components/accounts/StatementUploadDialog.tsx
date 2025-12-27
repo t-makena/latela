@@ -140,7 +140,8 @@ export const StatementUploadDialog = ({
               transaction_date: new Date(t.date).toISOString(),
               description: t.description,
               reference: t.reference || t.description.substring(0, 50),
-              amount: Math.round(Math.abs(t.amount) * 100), // Convert to cents
+              // Store debits as negative cents, credits as positive cents
+              amount: Math.round(t.type === 'debit' ? -Math.abs(t.amount) * 100 : Math.abs(t.amount) * 100),
               balance: t.balance ? Math.round(t.balance * 100) : 0,
               cleared: true,
             }));
