@@ -37,7 +37,7 @@ export const Navbar = () => {
           {profile?.avatar_type === 'custom' && profile?.avatar_url ? (
             <Avatar className={cn(
               "ring-2 ring-foreground",
-              showLabels ? "h-10 w-10" : "h-14 w-14"
+              showLabels ? "h-10 w-10" : "h-20 w-20"
             )}>
               <AvatarImage src={profile.avatar_url} alt="Profile" />
               <AvatarFallback className="bg-muted text-foreground font-semibold text-sm">
@@ -47,14 +47,14 @@ export const Navbar = () => {
           ) : profile?.avatar_type === 'default' && DefaultAvatarComponent ? (
             <div className={cn(
               "rounded-full overflow-hidden ring-2 ring-foreground",
-              showLabels ? "h-10 w-10" : "h-14 w-14"
+              showLabels ? "h-10 w-10" : "h-20 w-20"
             )}>
               <DefaultAvatarComponent className="h-full w-full" />
             </div>
           ) : (
             <Avatar className={cn(
               "ring-2 ring-foreground",
-              showLabels ? "h-10 w-10" : "h-14 w-14"
+              showLabels ? "h-10 w-10" : "h-20 w-20"
             )}>
               <AvatarFallback className="bg-muted text-foreground font-semibold text-sm">
                 {getInitials()}
@@ -290,7 +290,7 @@ export const Navbar = () => {
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="flex items-center justify-center hover:opacity-80 transition-opacity p-2"
               >
-                <LatelaIcon className="h-16 w-16" />
+                <LatelaIcon className="h-20 w-20" />
               </button>
             )}
           </div>
