@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Wallet, Calendar, Settings, Menu, TrendingUp, Target, LogOut, PanelLeftClose, Calculator, ChevronDown } from "lucide-react";
+import { Home, Wallet, Calendar, Settings, Menu, Target, LogOut, PanelLeftClose, Calculator, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -13,7 +12,8 @@ import { toast } from "@/components/ui/sonner";
 import { LatelaIcon } from "@/components/ui/latela-icon";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useLanguage } from "@/hooks/useLanguage";
-
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 export const Navbar = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -22,6 +22,31 @@ export const Navbar = () => {
   const [accountsOpen, setAccountsOpen] = useState(true);
   const { accounts } = useAccounts();
   const { t } = useLanguage();
+  const { profile, getInitials, getDisplayName } = useUserProfile();
+
+  const UserAvatar = ({ showLabels = true }: { showLabels?: boolean }) => (
+    <Link to="/settings" className="block">
+      <div className={cn(
+        "flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-accent",
+        showLabels ? "" : "justify-center"
+      )}>
+        <Avatar className="h-10 w-10 ring-2 ring-foreground">
+          <AvatarImage src={profile?.avatar_url || undefined} alt="Profile" />
+          <AvatarFallback className="bg-muted text-foreground font-semibold text-sm">
+            {getInitials()}
+          </AvatarFallback>
+        </Avatar>
+        {showLabels && (
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{getDisplayName() || 'Profile'}</p>
+            {profile?.username && (
+              <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>
+            )}
+          </div>
+        )}
+      </div>
+    </Link>
+  );
 
   const navItems = [
     { name: t('nav.dashboard'), href: "/", icon: Home },
@@ -203,6 +228,9 @@ export const Navbar = () => {
                 <div className="py-2">
                   <NavContent showLabels={true} />
                 </div>
+                <div className="border-t pt-4 mt-2">
+                  <UserAvatar showLabels={true} />
+                </div>
               </SheetContent>
             </Sheet>
           </div>
@@ -242,7 +270,12 @@ export const Navbar = () => {
           </div>
           
           <div className="flex flex-col h-[calc(100%-4rem)]">
-            <NavContent showLabels={isExpanded} />
+            <div className="flex-1">
+              <NavContent showLabels={isExpanded} />
+            </div>
+            <div className={cn("border-t pt-3 mt-3", isExpanded ? "px-2" : "px-1")}>
+              <UserAvatar showLabels={isExpanded} />
+            </div>
           </div>
         </div>
       )}
