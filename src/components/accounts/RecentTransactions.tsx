@@ -12,7 +12,7 @@ interface RecentTransactionsProps {
 }
 
 export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
-  const { transactions, loading, error } = useTransactions();
+  const { transactions, loading, error } = useTransactions({ currentMonthOnly: false, limit: 100 });
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
 

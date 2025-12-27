@@ -9,7 +9,7 @@ interface CompactRecentTransactionsProps {
 }
 
 export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecentTransactionsProps) => {
-  const { transactions, loading, error } = useTransactions();
+  const { transactions, loading, error } = useTransactions({ currentMonthOnly: false, limit: 100 });
 
   if (loading) {
     return (
