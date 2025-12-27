@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -14,20 +14,14 @@ interface BudgetItem {
 }
 
 export const useBudgetItems = () => {
-  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchBudgetItems = async () => {
-    try {
-      setLoading(true);
+  const { data: budgetItems = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['budget-items'],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        setBudgetItems([]);
-        setLoading(false);
-        return;
-      }
+      if (!user) return [];
 
       const { data, error } = await supabase
         .from('budget_items')
@@ -36,18 +30,13 @@ export const useBudgetItems = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBudgetItems(data || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Error fetching budget items:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  useEffect(() => {
-    fetchBudgetItems();
-  }, []);
+  const error = queryError instanceof Error ? queryError.message : queryError ? 'An error occurred' : null;
 
   const calculateMonthlyAmount = (item: BudgetItem): number => {
     const amount = Number(item.amount);
@@ -74,13 +63,18 @@ export const useBudgetItems = () => {
     }, 0);
   };
 
-  const addBudgetItem = async (
-    name: string,
-    frequency: string,
-    amount: number,
-    daysPerWeek?: number
-  ) => {
-    try {
+  const addMutation = useMutation({
+    mutationFn: async ({
+      name,
+      frequency,
+      amount,
+      daysPerWeek
+    }: {
+      name: string;
+      frequency: string;
+      amount: number;
+      daysPerWeek?: number;
+    }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -95,46 +89,61 @@ export const useBudgetItems = () => {
         });
 
       if (error) throw error;
-
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budget-items'] });
       toast({
         title: 'Success',
         description: 'Budget item added successfully',
       });
-
-      await fetchBudgetItems();
-    } catch (err) {
+    },
+    onError: (err) => {
       console.error('Error adding budget item:', err);
       toast({
         title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to add budget item',
         variant: 'destructive',
       });
-    }
-  };
+    },
+  });
 
-  const deleteBudgetItem = async (id: string) => {
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('budget_items')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
-
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budget-items'] });
       toast({
         title: 'Success',
         description: 'Budget item deleted successfully',
       });
-
-      await fetchBudgetItems();
-    } catch (err) {
+    },
+    onError: (err) => {
       console.error('Error deleting budget item:', err);
       toast({
         title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to delete budget item',
         variant: 'destructive',
       });
-    }
+    },
+  });
+
+  const addBudgetItem = async (
+    name: string,
+    frequency: string,
+    amount: number,
+    daysPerWeek?: number
+  ) => {
+    await addMutation.mutateAsync({ name, frequency, amount, daysPerWeek });
+  };
+
+  const deleteBudgetItem = async (id: string) => {
+    await deleteMutation.mutateAsync(id);
   };
 
   return {
@@ -145,6 +154,6 @@ export const useBudgetItems = () => {
     calculateTotalMonthly,
     addBudgetItem,
     deleteBudgetItem,
-    refetch: fetchBudgetItems,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['budget-items'] }),
   };
 };

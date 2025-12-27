@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Subcategory {
@@ -13,24 +13,14 @@ export interface Subcategory {
 }
 
 export const useSubcategories = (parentCategoryId?: string) => {
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchSubcategories();
-  }, [parentCategoryId]);
-
-  const fetchSubcategories = async () => {
-    try {
-      setLoading(true);
+  const { data: subcategories = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['subcategories', parentCategoryId],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        setSubcategories([]);
-        return;
-      }
+      if (!user) return [];
 
-      // Fetch system subcategories (categories with parent_id)
+      // Fetch system and custom categories in parallel
       let systemQuery = supabase
         .from('categories')
         .select('id, name, color, parent_id')
@@ -40,11 +30,6 @@ export const useSubcategories = (parentCategoryId?: string) => {
         systemQuery = systemQuery.eq('parent_id', parentCategoryId);
       }
 
-      const { data: systemCategories, error: systemError } = await systemQuery;
-
-      if (systemError) throw systemError;
-
-      // Fetch user's custom categories
       let customQuery = supabase
         .from('user_custom_categories')
         .select('id, name, color, parent_category_id, replaces_category_id, is_active')
@@ -55,13 +40,21 @@ export const useSubcategories = (parentCategoryId?: string) => {
         customQuery = customQuery.eq('parent_category_id', parentCategoryId);
       }
 
-      const { data: customCategories, error: customError } = await customQuery;
+      // Execute both queries in parallel
+      const [systemResult, customResult] = await Promise.all([
+        systemQuery,
+        customQuery
+      ]);
 
-      if (customError) throw customError;
+      if (systemResult.error) throw systemResult.error;
+      if (customResult.error) throw customResult.error;
+
+      const systemCategories = systemResult.data || [];
+      const customCategories = customResult.data || [];
 
       // Create a map of replaced system categories
       const replacementMap = new Map<string, any>();
-      customCategories?.forEach(custom => {
+      customCategories.forEach(custom => {
         if (custom.replaces_category_id) {
           replacementMap.set(custom.replaces_category_id, custom);
         }
@@ -71,7 +64,7 @@ export const useSubcategories = (parentCategoryId?: string) => {
       const combined: Subcategory[] = [];
 
       // Add system categories (or their replacements)
-      systemCategories?.forEach(system => {
+      systemCategories.forEach(system => {
         const replacement = replacementMap.get(system.id);
         if (replacement) {
           // Use custom replacement instead
@@ -98,7 +91,7 @@ export const useSubcategories = (parentCategoryId?: string) => {
       });
 
       // Add custom categories that are not replacements (new subcategories)
-      customCategories?.forEach(custom => {
+      customCategories.forEach(custom => {
         if (!custom.replaces_category_id) {
           combined.push({
             id: custom.id,
@@ -111,14 +104,11 @@ export const useSubcategories = (parentCategoryId?: string) => {
         }
       });
 
-      setSubcategories(combined);
-    } catch (error) {
-      console.error('Error fetching subcategories:', error);
-      setSubcategories([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return combined;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  return { subcategories, loading, refetch: fetchSubcategories };
+  return { subcategories, loading, refetch };
 };

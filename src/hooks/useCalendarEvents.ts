@@ -30,6 +30,8 @@ export const useCalendarEvents = ({ year, month }: UseCalendarEventsParams) => {
   // Fetch events for the current month
   const { data: events = [], isLoading, error } = useQuery({
     queryKey: ["calendar-events", year, month],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     queryFn: async () => {
       const monthStart = startOfMonth(new Date(year, month - 1));
       const monthEnd = endOfMonth(new Date(year, month - 1));
@@ -66,6 +68,8 @@ export const useCalendarEvents = ({ year, month }: UseCalendarEventsParams) => {
   // Fetch upcoming events (next 30 days)
   const { data: upcomingData } = useQuery({
     queryKey: ["upcoming-events"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     queryFn: async () => {
       const today = new Date();
       const thirtyDaysLater = addDays(today, 30);
