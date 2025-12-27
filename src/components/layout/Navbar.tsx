@@ -264,7 +264,7 @@ export const Navbar = () => {
       ) : (
         <div 
           className={cn(
-            "h-fit transition-all duration-300 ease-in-out relative bg-background rounded-2xl border-2 border-foreground shadow-[-4px_4px_0_0_hsl(var(--foreground))]",
+            "h-fit transition-all duration-300 ease-in-out relative bg-background rounded-2xl border-2 border-foreground sidebar-nav",
             isExpanded ? "w-64 pt-6 px-2 pb-4" : "w-24 pt-6 pb-4 px-2"
           )}
         >
