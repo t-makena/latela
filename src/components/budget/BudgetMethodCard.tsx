@@ -87,7 +87,7 @@ export const BudgetMethodCard = () => {
   }
 
   return (
-    <Card className="w-full bg-card border border-foreground">
+    <Card className="w-full bg-card border border-foreground transition-all duration-300 ease-out">
       <CardHeader>
         <CardTitle className="heading-main">Budget Method</CardTitle>
       </CardHeader>
@@ -123,7 +123,7 @@ export const BudgetMethodCard = () => {
         </RadioGroup>
 
         {budgetMethod === 'percentage_based' && (
-          <div className="pt-4 border-t border-border">
+          <div className="pt-4 border-t border-border animate-slide-down overflow-hidden">
             <div className="grid grid-cols-2 gap-2 mb-3">
               <span className="text-sm font-medium">Category</span>
               <span className="text-sm font-medium text-right">%</span>

@@ -211,7 +211,7 @@ const Budget = () => {
         {/* Balance Calculations Card - Only show for percentage-based budgeting */}
         {showBalanceCalculations && (
           <div 
-            className="bg-card rounded-3xl border border-foreground p-5 w-full"
+            className="bg-card rounded-3xl border border-foreground p-5 w-full animate-scale-fade-in"
           >
             <h2 className="heading-main mb-4">{t('budget.balanceCalculations')}</h2>
             
@@ -279,7 +279,7 @@ const Budget = () => {
         </div>
 
         {/* Main Budget Items Table */}
-        <div className={`${showBalanceCalculations ? 'lg:col-span-2' : 'lg:col-span-3'} w-full`}>
+        <div className={`transition-all duration-300 ease-out ${showBalanceCalculations ? 'lg:col-span-2' : 'lg:col-span-3'} w-full`}>
           <Card className="w-full bg-card border border-foreground">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="heading-main">{t('finance.budgetPlan')}</CardTitle>
@@ -372,10 +372,9 @@ const Budget = () => {
         </div>
 
         {/* Right Sidebar Cards */}
-        <div className="space-y-6 w-full">
-
-          {/* Balance Calculations Card - Only show for percentage-based budgeting */}
-          {showBalanceCalculations && (
+        {showBalanceCalculations && (
+          <div className="space-y-6 w-full animate-scale-fade-in">
+            {/* Balance Calculations Card */}
             <Card className="w-full bg-card border border-foreground">
               <CardHeader>
                 <CardTitle className="heading-main">{t('budget.balanceCalculations')}</CardTitle>
@@ -424,10 +423,8 @@ const Budget = () => {
                 )}
               </CardContent>
             </Card>
-          )}
 
-          {/* Calculation Explanation Card - Only show for percentage-based budgeting */}
-          {showBalanceCalculations && (
+            {/* Calculation Explanation Card */}
             <Card className="w-full bg-card border border-foreground">
               <CardHeader>
                 <CardTitle className="heading-card">Calculation Explanation</CardTitle>
@@ -440,8 +437,8 @@ const Budget = () => {
                 <p><span className="font-semibold text-foreground">Once-off:</span> Amount × 1</p>
               </CardContent>
             </Card>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <AddBudgetItemDialog
