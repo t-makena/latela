@@ -5,10 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const MODEL = 'google/gemini-2.5-flash';
+const MODEL = 'claude-haiku-4-5-20251001';
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -23,17 +22,14 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
     console.log('[METADATA] Starting AI extraction with', MODEL);
     console.log('[METADATA] Document type:', isPDF ? 'PDF' : 'Image');
     console.log('[METADATA] Base64 length:', documentBase64.length);
-
-    const mediaType = isPDF ? 'application/pdf' : 'image/jpeg';
-    const dataUrl = `data:${mediaType};base64,${documentBase64}`;
 
     const systemPrompt = `You are a financial data extraction assistant specializing in South African bank statements. Extract metadata accurately from bank statements.
 
@@ -77,25 +73,43 @@ If a field cannot be determined, use null for that field.`;
 
 Return ONLY a valid JSON object with no code blocks or markdown.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Build document content based on file type
+    const documentContent = isPDF
+      ? {
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: documentBase64,
+          },
+        }
+      : {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: 'image/jpeg',
+            data: documentBase64,
+          },
+        };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: userPrompt },
-              { type: 'image_url', image_url: { url: dataUrl } }
-            ]
-          }
-        ],
         max_tokens: 500,
+        system: systemPrompt,
+        messages: [{
+          role: 'user',
+          content: [
+            documentContent,
+            { type: 'text', text: userPrompt }
+          ]
+        }]
       }),
     });
 
@@ -107,22 +121,14 @@ Return ONLY a valid JSON object with no code blocks or markdown.`;
       );
     }
 
-    if (response.status === 402) {
-      console.error('[METADATA] Payment required');
-      return new Response(
-        JSON.stringify({ error: 'AI credits exhausted. Please add credits to your workspace.' }),
-        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[METADATA] AI API error:', response.status, errorText);
-      throw new Error(`AI extraction failed: ${response.status}`);
+      console.error('[METADATA] Anthropic API error:', response.status, errorText);
+      throw new Error(`AI extraction failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const textContent = data.choices?.[0]?.message?.content || '';
+    const textContent = data.content?.[0]?.text || '';
     
     console.log('[METADATA] Raw AI response:', textContent.substring(0, 500));
 
