@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, FileText, AlertCircle, CheckCircle2, Loader2, Check } from "lucide-react";
+import { FileText, AlertCircle, CheckCircle2, Loader2, Check, Bell, BellOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 
 interface StatementUploadDialogProps {
@@ -46,7 +49,24 @@ export const StatementUploadDialog = ({
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [processingStage, setProcessingStage] = useState<ProcessingStage>(null);
+  const [notifyWhenDone, setNotifyWhenDone] = useState(false);
   const { toast } = useToast();
+  const { isSupported, hasPermission, isDenied, requestPermission, showNotification } = useNotifications();
+
+  const handleNotifyToggle = async (checked: boolean) => {
+    if (checked && !hasPermission) {
+      const granted = await requestPermission();
+      if (!granted) {
+        toast({
+          title: "Notifications blocked",
+          description: "Please enable notifications in your browser settings",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    setNotifyWhenDone(checked);
+  };
 
   const handleFile = async (file: File) => {
     // Validate file type
@@ -173,20 +193,40 @@ export const StatementUploadDialog = ({
             }
           }
 
+          const successMessage = `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`;
+
           toast({
             title: "Account added successfully!",
-            description: `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
+            description: successMessage,
           });
+
+          // Send browser notification if user opted in
+          if (notifyWhenDone) {
+            showNotification("Statement Processed! ✅", {
+              body: successMessage,
+              tag: 'statement-upload',
+            });
+          }
 
           onOpenChange(false);
           onSuccess?.();
         } catch (error) {
           console.error('Upload error:', error);
+          const errorMessage = error instanceof Error ? error.message : "Couldn't read this statement. Please try again.";
+          
           toast({
             title: "Upload failed",
-            description: error instanceof Error ? error.message : "Couldn't read this statement. Please try again.",
+            description: errorMessage,
             variant: "destructive",
           });
+
+          // Send browser notification on failure if user opted in
+          if (notifyWhenDone) {
+            showNotification("Statement Processing Failed ❌", {
+              body: errorMessage,
+              tag: 'statement-upload',
+            });
+          }
         } finally {
           setUploading(false);
           setProcessingStage(null);
@@ -345,24 +385,58 @@ export const StatementUploadDialog = ({
         </div>
 
         {!uploading && (
-          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-            <div className="flex gap-2 text-xs">
-              <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-              <span className="text-muted-foreground">
-                Account details extracted automatically
-              </span>
-            </div>
-            <div className="flex gap-2 text-xs">
-              <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-              <span className="text-muted-foreground">
-                Transactions imported and categorized
-              </span>
-            </div>
-            <div className="flex gap-2 text-xs">
-              <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-              <span className="text-muted-foreground">
-                Your statement is processed securely and not stored
-              </span>
+          <div className="space-y-3">
+            {/* Notification option */}
+            {isSupported && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                <Checkbox
+                  id="notify-when-done"
+                  checked={notifyWhenDone}
+                  onCheckedChange={handleNotifyToggle}
+                  disabled={isDenied}
+                />
+                <div className="flex-1">
+                  <Label 
+                    htmlFor="notify-when-done" 
+                    className="text-sm font-medium cursor-pointer flex items-center gap-2"
+                  >
+                    {notifyWhenDone ? (
+                      <Bell className="h-4 w-4 text-primary" />
+                    ) : (
+                      <BellOff className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    Notify me when complete
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isDenied 
+                      ? "Notifications are blocked in browser settings"
+                      : "Processing can take a minute or two"
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Info section */}
+            <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+              <div className="flex gap-2 text-xs">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-muted-foreground">
+                  Account details extracted automatically
+                </span>
+              </div>
+              <div className="flex gap-2 text-xs">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-muted-foreground">
+                  Transactions imported and categorized
+                </span>
+              </div>
+              <div className="flex gap-2 text-xs">
+                <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <span className="text-muted-foreground">
+                  Your statement is processed securely and not stored
+                </span>
+              </div>
             </div>
           </div>
         )}
