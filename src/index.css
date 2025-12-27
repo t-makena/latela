@@ -400,6 +400,20 @@ a {
     5px 5px 0px 2px hsl(0 0% 100%);
 }
 
+/* Neo-brutalist Sidebar Style */
+.sidebar-nav {
+  box-shadow: -4px 4px 0px hsl(0 0% 0%);
+  transition: box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark mode: White outlines on sidebar and shadow */
+.dark .sidebar-nav {
+  box-shadow: 
+    0 0 0 1px hsl(0 0% 100%),
+    -4px 4px 0px 0px hsl(0 0% 0%),
+    -4px 4px 0px 2px hsl(0 0% 100%);
+}
+
 /* Hover effect for financial metric items */
 .financial-metric {
   @apply transition-all duration-300 cursor-pointer;
