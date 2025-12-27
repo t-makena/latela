@@ -18,11 +18,13 @@ import { LanguageSettings } from "@/components/settings/LanguageSettings";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUserSettings, SavingsAdjustmentStrategy } from "@/hooks/useUserSettings";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useColorPalette, ColorPalette } from "@/hooks/useColorPalette";
 
 const Settings = () => {
   const { accounts } = useAccounts();
   const { theme, setTheme } = useTheme();
   const { savingsAdjustmentStrategy, updateSavingsStrategy } = useUserSettings();
+  const { colorPalette, updateColorPalette } = useColorPalette();
   const { 
     payday, 
     frequency, 
@@ -593,7 +595,7 @@ const Settings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Dark Mode</p>
@@ -605,6 +607,34 @@ const Settings = () => {
                 checked={theme === "dark"} 
                 onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
               />
+            </div>
+            
+            <div className="border-t border-border pt-4">
+              <Label className="text-base font-medium">Color Palette</Label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Choose the background color style
+              </p>
+              <RadioGroup
+                value={colorPalette}
+                onValueChange={async (value) => {
+                  try {
+                    await updateColorPalette(value as ColorPalette);
+                    toast.success("Color palette updated!");
+                  } catch (error) {
+                    toast.error("Failed to update color palette");
+                  }
+                }}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="multicolor" id="multicolor" />
+                  <Label htmlFor="multicolor" className="cursor-pointer">Multi-color</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="blackwhite" id="blackwhite" />
+                  <Label htmlFor="blackwhite" className="cursor-pointer">Black & White</Label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
         </CardContent>
