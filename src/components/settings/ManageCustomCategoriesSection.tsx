@@ -17,7 +17,7 @@ export const ManageCustomCategoriesSection = () => {
 
   return (
     <>
-      <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="w-full">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

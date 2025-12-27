@@ -36,7 +36,6 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           <div className="h-5 bg-gray-200 rounded w-32 mb-4"></div>
           <div 
             className="bg-white rounded-full border border-black px-6 py-5 flex items-center"
-            style={{ boxShadow: '4px 4px 0px #000000' }}
           >
             <div className="flex-1">
               <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
@@ -76,7 +75,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
     return isMobile ? (
       <div className="animate-fade-in mb-4">{content}</div>
     ) : (
-      <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="animate-fade-in">
         <CardHeader className="pb-2 pt-4">
         <CardTitle className="heading-main">
           {t('finance.financialOverview')}
@@ -104,7 +103,6 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           <h2 className="heading-main mb-4">{t('finance.financialOverview')}</h2>
           <div 
             className="bg-card rounded-full border border-foreground px-6 py-5"
-            style={{ boxShadow: '4px 4px 0px #000000' }}
           >
             <p className="text-destructive text-sm">{t('common.error')}</p>
           </div>
@@ -124,7 +122,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
         </div>
       </div>
     ) : (
-      <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="animate-fade-in">
         <CardHeader className="pb-2 pt-4">
         <CardTitle className="heading-main">
           {t('finance.financialOverview')}
@@ -160,7 +158,6 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
       <div className="animate-fade-in w-full">
         <div 
           className="bg-card rounded-3xl border border-foreground p-5 w-full"
-          style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <h2 className="heading-card mb-4">{t('finance.financialOverview')}</h2>
           <div className="flex items-center">
@@ -253,7 +250,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
       <div>{content}</div>
     </div>
   ) : (
-    <Card className="animate-fade-in" style={{ boxShadow: '4px 4px 0px #000000' }}>
+    <Card className="animate-fade-in">
       <CardHeader className="pb-1 pt-2">
         <CardTitle className="heading-main">
           {t('finance.financialOverview')}
