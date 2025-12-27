@@ -333,7 +333,7 @@ const Settings = () => {
               {accounts.map((account) => (
                 <div 
                   key={account.id} 
-                  className="flex items-center justify-between p-3 rounded-lg bg-card"
+                  className="flex items-center justify-between p-4 rounded-2xl bg-foreground text-background"
                 >
                   <div>
                     <p className="font-medium">{account.name}</p>
@@ -343,7 +343,7 @@ const Settings = () => {
                     variant="ghost" 
                     onClick={() => handleRemoveAccount(account.id)}
                     disabled={isLoading}
-                    className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                    className="shrink-0 text-background hover:bg-background/20 hover:text-background"
                     title="Remove account"
                   >
                     <X className="h-4 w-4" />
