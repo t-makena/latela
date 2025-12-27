@@ -107,6 +107,7 @@ export const StatementUploadDialog = ({
           setProcessingStage('parsing');
 
           // Call edge function to parse statement
+          console.log('[StatementUpload] Calling parse-statement edge function...');
           const { data, error } = await supabase.functions.invoke('parse-statement', {
             body: {
               fileContent: base64Data,
@@ -115,17 +116,39 @@ export const StatementUploadDialog = ({
             },
           });
 
+          console.log('[StatementUpload] parse-statement response:', { data, error });
+
           if (error) {
+            console.error('[StatementUpload] Edge function error:', error);
             throw error;
           }
 
           if (!data.success) {
+            console.error('[StatementUpload] Parse failed:', data.error);
             throw new Error(data.error || 'Failed to parse statement');
+          }
+
+          // Log parsed data for debugging
+          console.log('[StatementUpload] Parsed account info:', data.accountInfo);
+          console.log('[StatementUpload] Parsed transactions count:', data.transactions?.length || 0);
+          console.log('[StatementUpload] Summary:', data.summary);
+
+          // Warn if no transactions were parsed
+          if (!data.transactions || data.transactions.length === 0) {
+            console.warn('[StatementUpload] No transactions parsed from statement!');
+            toast({
+              title: "No transactions found",
+              description: "The statement was read but no transactions could be extracted. Please check the file format.",
+              variant: "destructive",
+            });
           }
 
           setProcessingStage('creating');
 
           // Create account with parsed data
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          console.log('[StatementUpload] Creating account for user:', userId);
+
           const { data: accountData, error: accountError } = await supabase
             .from('accounts')
             .insert({
@@ -139,20 +162,24 @@ export const StatementUploadDialog = ({
               balance_brought_forward: 0,
               currency: 'ZAR',
               status: 'active',
-              user_id: (await supabase.auth.getUser()).data.user?.id,
+              user_id: userId,
             })
             .select()
             .single();
 
           if (accountError) {
+            console.error('[StatementUpload] Account creation error:', accountError);
             throw accountError;
           }
 
+          console.log('[StatementUpload] Account created:', accountData.id);
+
           // Import transactions if any were parsed
+          let transactionsImported = 0;
           if (data.transactions && data.transactions.length > 0) {
             setProcessingStage('importing');
             
-            const userId = (await supabase.auth.getUser()).data.user?.id;
+            console.log('[StatementUpload] Preparing to insert', data.transactions.length, 'transactions');
             
             const transactionsToInsert = data.transactions.map((t: any) => ({
               user_id: userId,
@@ -172,15 +199,18 @@ export const StatementUploadDialog = ({
               categorization_confidence: null,
             }));
 
-            const { error: transError } = await supabase
+            console.log('[StatementUpload] Sample transaction to insert:', transactionsToInsert[0]);
+
+            const { data: insertedTrans, error: transError } = await supabase
               .from('transactions')
-              .insert(transactionsToInsert);
+              .insert(transactionsToInsert)
+              .select('id');
 
             if (transError) {
-              console.error('Transaction import error:', transError);
+              console.error('[StatementUpload] Transaction import error:', transError);
               toast({
                 title: "Transactions not imported",
-                description: "Account created, but transactions failed to import. Please try uploading again.",
+                description: `Account created, but transactions failed: ${transError.message}`,
                 variant: "destructive",
               });
               
@@ -192,6 +222,9 @@ export const StatementUploadDialog = ({
                 });
               }
             } else {
+              transactionsImported = insertedTrans?.length || 0;
+              console.log('[StatementUpload] Successfully inserted', transactionsImported, 'transactions');
+              
               setProcessingStage('categorizing');
 
               const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
@@ -199,23 +232,28 @@ export const StatementUploadDialog = ({
               });
 
               if (catError) {
-                console.error('Categorization error:', catError);
+                console.error('[StatementUpload] Categorization error:', catError);
                 toast({
                   title: "Categorization incomplete",
                   description: "Transactions imported but some couldn't be categorized",
                   variant: "destructive",
                 });
               } else if (catData?.success) {
-                console.log(`Categorization complete: ${catData.categorized} transactions, ${catData.cached} from cache, ${catData.aiCalls} AI calls, ~$${catData.cost}`);
+                console.log(`[StatementUpload] Categorization complete: ${catData.categorized} transactions, ${catData.cached} from cache, ${catData.aiCalls} AI calls, ~$${catData.cost}`);
               }
             }
           }
 
-          const successMessage = `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`;
+          const successMessage = transactionsImported > 0
+            ? `Imported ${transactionsImported} transactions from ${data.accountInfo.bankName}`
+            : `Account created from ${data.accountInfo.bankName} (no transactions imported)`;
+
+          console.log('[StatementUpload] Complete!', successMessage);
 
           toast({
-            title: "Account added successfully!",
+            title: transactionsImported > 0 ? "Account added successfully!" : "Account created",
             description: successMessage,
+            variant: transactionsImported > 0 ? "default" : "destructive",
           });
 
           // Send browser notification if user opted in
