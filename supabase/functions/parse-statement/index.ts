@@ -590,94 +590,121 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
     
     console.log('[TRANS-EXTRACT] Capitec: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
   } else if (bankName === 'Standard Bank') {
-    // Standard Bank-specific parsing for markdown table format from Claude
+    // Standard Bank-specific parsing - handles BOTH markdown table AND plain text formats
     console.log('[TRANS-EXTRACT] Using Standard Bank-specific parsing logic');
     const lines = content.split('\n');
     console.log('[TRANS-EXTRACT] Processing', lines.length, 'lines');
     
     let matchedLines = 0;
     
-    // Pattern for Standard Bank markdown table rows: | DD MMM YY | Description | Payments | Deposits | Balance |
-    // Also handle: | 03 Jul 25 | ... | -R1,234.56 | | R12,345.67 |
-    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-    
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Skip header rows and separator rows
+      // Skip header rows, separator rows, and opening balance
       if (line.includes('Date') && line.includes('Description')) continue;
       if (line.match(/^\|[-:|\s]+\|$/)) continue;
       if (line.includes('STATEMENT OPENING BALANCE')) continue;
+      if (!line) continue;
       
-      // Match table row with date pattern: | DD MMM YY | ... |
+      let dateStr = '';
+      let description = '';
+      let payment = 0;
+      let deposit = 0;
+      let balance = 0;
+      
+      // Try markdown table format first: | DD MMM YY | Description | ... |
       const tableMatch = line.match(/^\|\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{2})\s*\|(.+)/i);
-      if (!tableMatch) continue;
+      
+      // Try plain text format: DD MMM YY   Description   -100.00   135.27
+      const plainTextMatch = line.match(/^(\d{1,2}\s+[A-Za-z]{3}\s+\d{2})\s{2,}(.+)/i);
+      
+      if (tableMatch) {
+        // Parse markdown table format
+        dateStr = tableMatch[1].trim();
+        const restOfRow = tableMatch[2];
+        const cells = restOfRow.split('|').map(c => c.trim()).filter(c => c !== '');
+        
+        if (cells.length < 1) continue;
+        description = cells[0];
+        
+        // Parse amounts from remaining cells
+        for (let j = 1; j < cells.length; j++) {
+          const cell = cells[j];
+          const amountMatch = cell.match(/(-)?R?\s*([\d,]+\.?\d*)/);
+          if (amountMatch && amountMatch[2]) {
+            const isNegative = amountMatch[1] === '-' || cell.includes('-');
+            const amount = parseAmount(amountMatch[2]);
+            if (amount > 0) {
+              if (j === cells.length - 1 && amount > 100) {
+                balance = amount;
+              } else if (isNegative) {
+                payment = amount;
+              } else if (payment === 0 && j < cells.length - 1) {
+                payment = amount;
+              } else if (deposit === 0) {
+                deposit = amount;
+              }
+            }
+          }
+        }
+      } else if (plainTextMatch) {
+        // Parse plain text format: DD MMM YY   Description   -100.00   135.27
+        dateStr = plainTextMatch[1].trim();
+        const restOfLine = plainTextMatch[2];
+        
+        // Extract all numeric values from the line (amounts with optional R, commas, decimals)
+        // Pattern matches: -100.00, 100.00, R1,234.56, -R1,234.56, 1 234.56
+        const amountMatches = restOfLine.match(/-?R?\s*[\d,\s]+\.\d{2}/g) || [];
+        const amounts: { value: number; isNegative: boolean; position: number }[] = [];
+        
+        for (const amt of amountMatches) {
+          const cleanedAmt = amt.replace(/[R\s]/g, '');
+          const parsed = parseAmount(cleanedAmt);
+          if (parsed > 0) {
+            amounts.push({
+              value: parsed,
+              isNegative: amt.includes('-'),
+              position: restOfLine.indexOf(amt)
+            });
+          }
+        }
+        
+        // Extract description: everything before the first amount
+        if (amounts.length > 0) {
+          const firstAmountPos = Math.min(...amounts.map(a => a.position));
+          description = restOfLine.substring(0, firstAmountPos).trim();
+          
+          // Clean up description - remove trailing partial amounts or special chars
+          description = description.replace(/[\d,.\-]+$/, '').trim();
+          
+          // Last amount is typically the balance
+          if (amounts.length >= 1) {
+            balance = amounts[amounts.length - 1].value;
+          }
+          
+          // Parse payments (negative) and deposits (positive)
+          for (let j = 0; j < amounts.length - 1; j++) {
+            if (amounts[j].isNegative) {
+              payment = Math.max(payment, amounts[j].value);
+            } else {
+              deposit = Math.max(deposit, amounts[j].value);
+            }
+          }
+        } else {
+          // No amounts found on this line - could be a description continuation
+          continue;
+        }
+      } else {
+        // Neither format matched
+        continue;
+      }
+      
+      // Skip if description is too short
+      if (!description || description.length < 3) continue;
       
       matchedLines++;
       if (matchedLines <= 5) {
-        console.log(`[TRANS-EXTRACT] Matched line ${matchedLines}:`, line.substring(0, 120));
-      }
-      
-      const dateStr = tableMatch[1].trim();
-      const restOfRow = tableMatch[2];
-      
-      // Split the rest by pipe character
-      const cells = restOfRow.split('|').map(c => c.trim()).filter(c => c !== '');
-      
-      if (cells.length < 1) continue;
-      
-      // First cell is description
-      const description = cells[0];
-      
-      // Skip if description is too short or looks like a sub-row
-      if (description.length < 3) continue;
-      
-      // Find amounts in remaining cells
-      let payment = 0;  // Debit/payment (money out)
-      let deposit = 0;  // Credit/deposit (money in)
-      let balance = 0;
-      
-      // Parse remaining cells for amounts
-      for (let j = 1; j < cells.length; j++) {
-        const cell = cells[j];
-        // Match amounts like -1,234.56 or R1,234.56 or 1234.56
-        const amountMatch = cell.match(/(-)?R?\s*([\d,]+\.?\d*)/);
-        if (amountMatch && amountMatch[2]) {
-          const isNegative = amountMatch[1] === '-' || cell.includes('-');
-          const amount = parseAmount(amountMatch[2]);
-          
-          if (amount > 0) {
-            // Determine if payment, deposit, or balance based on position and sign
-            if (j === cells.length - 1 && amount > 100) {
-              // Last column with larger value is likely balance
-              balance = amount;
-            } else if (isNegative || cell.includes('-')) {
-              payment = amount;
-            } else if (payment === 0 && j < cells.length - 1) {
-              // Could be payment column (before balance)
-              payment = amount;
-            } else if (deposit === 0) {
-              deposit = amount;
-            }
-          }
-        }
-      }
-      
-      // If we didn't find a clear payment/deposit, look for amounts with - prefix
-      if (payment === 0 && deposit === 0) {
-        const allAmounts = restOfRow.match(/-?R?\s*[\d,]+\.?\d*/g) || [];
-        for (const amt of allAmounts) {
-          const parsed = parseAmount(amt);
-          if (parsed > 0) {
-            if (amt.includes('-')) {
-              payment = parsed;
-            } else if (balance === 0 && parsed > 1000) {
-              balance = parsed;
-            } else {
-              deposit = parsed;
-            }
-          }
-        }
+        console.log(`[TRANS-EXTRACT] Matched line ${matchedLines}: date="${dateStr}" desc="${description.substring(0, 40)}" pay=${payment} dep=${deposit} bal=${balance}`);
       }
       
       // Determine final amount and type
@@ -698,11 +725,12 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
         // Override type if description clearly indicates debit
         if (!isDebit && (
           descUpper.includes('PURCHASE') ||
-          descUpper.includes('PAYMENT') ||
+          descUpper.includes('PAYMENT TO') ||
+          descUpper.includes('PAYSHAP PAYMENT') ||
           descUpper.includes('FEE') ||
           descUpper.includes('DEBIT') ||
           descUpper.includes('WITHDRAWAL') ||
-          descUpper.includes('DECLINED')
+          descUpper.includes('HONOURING')
         )) {
           isDebit = true;
         }
@@ -712,6 +740,7 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
           descUpper.includes('SALARY') ||
           descUpper.includes('CREDIT') ||
           descUpper.includes('REFUND') ||
+          descUpper.includes('REVERSAL') ||
           descUpper.includes('RECEIVED')
         )) {
           isDebit = false;
