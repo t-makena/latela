@@ -131,6 +131,7 @@ export type Database = {
           frequency: string
           id: string
           name: string
+          parent_category_id: string | null
           updated_at: string
           user_id: string
         }
@@ -142,6 +143,7 @@ export type Database = {
           frequency: string
           id?: string
           name: string
+          parent_category_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -153,10 +155,19 @@ export type Database = {
           frequency?: string
           id?: string
           name?: string
+          parent_category_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "budget_items_parent_category_id_fkey"
+            columns: ["parent_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_events: {
         Row: {

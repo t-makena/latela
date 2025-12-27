@@ -1,5 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { 
+  BudgetCategory, 
+  PARENT_TO_BUDGET_CATEGORY, 
+  CategoryLimits,
+  calculateCategoryLimits as calcLimits 
+} from '@/lib/categoryMapping';
 
 export type BudgetMethod = 'zero_based' | 'percentage_based';
 
@@ -9,6 +15,24 @@ interface BudgetMethodSettings {
   wants_percentage: number;
   savings_percentage: number;
 }
+
+export interface BudgetItem {
+  id: string;
+  name: string;
+  amount: number;
+  frequency: string;
+  days_per_week?: number;
+  parent_category_id?: string;
+}
+
+export interface CategoryAllocation {
+  limit: number;
+  allocated: number;
+  remaining: number;
+  percentage: number;
+}
+
+export type CategoryAllocations = Record<BudgetCategory, CategoryAllocation>;
 
 export const useBudgetMethod = () => {
   const [settings, setSettings] = useState<BudgetMethodSettings>({
@@ -113,13 +137,64 @@ export const useBudgetMethod = () => {
   };
 
   // Calculate the limit for each category based on available balance
-  const calculateCategoryLimits = (availableBalance: number) => {
-    return {
-      needs: (settings.needs_percentage / 100) * availableBalance,
-      wants: (settings.wants_percentage / 100) * availableBalance,
-      savings: (settings.savings_percentage / 100) * availableBalance,
+  const calculateCategoryLimits = useCallback((availableBalance: number): CategoryLimits => {
+    return calcLimits(
+      availableBalance,
+      settings.needs_percentage,
+      settings.wants_percentage,
+      settings.savings_percentage
+    );
+  }, [settings.needs_percentage, settings.wants_percentage, settings.savings_percentage]);
+
+  // Calculate current allocations for each category based on budget items
+  const calculateCategoryAllocations = useCallback((
+    availableBalance: number,
+    budgetItems: BudgetItem[],
+    calculateMonthlyAmount: (item: BudgetItem) => number
+  ): CategoryAllocations => {
+    const limits = calculateCategoryLimits(availableBalance);
+    
+    // Initialize allocations
+    const allocations: CategoryAllocations = {
+      needs: { limit: limits.needs, allocated: 0, remaining: limits.needs, percentage: settings.needs_percentage },
+      wants: { limit: limits.wants, allocated: 0, remaining: limits.wants, percentage: settings.wants_percentage },
+      savings: { limit: limits.savings, allocated: 0, remaining: limits.savings, percentage: settings.savings_percentage },
+      income: { limit: 0, allocated: 0, remaining: 0, percentage: 0 },
     };
-  };
+
+    // Sum up allocations by category
+    budgetItems.forEach(item => {
+      if (item.parent_category_id) {
+        const budgetCategory = PARENT_TO_BUDGET_CATEGORY[item.parent_category_id];
+        if (budgetCategory && budgetCategory !== 'income') {
+          const monthlyAmount = calculateMonthlyAmount(item);
+          allocations[budgetCategory].allocated += monthlyAmount;
+          allocations[budgetCategory].remaining = 
+            allocations[budgetCategory].limit - allocations[budgetCategory].allocated;
+        }
+      }
+    });
+
+    return allocations;
+  }, [calculateCategoryLimits, settings]);
+
+  // Check if adding an amount would exceed the category limit
+  const wouldExceedLimit = useCallback((
+    budgetCategory: BudgetCategory,
+    amount: number,
+    allocations: CategoryAllocations
+  ): { exceeds: boolean; excessAmount: number } => {
+    if (budgetCategory === 'income') {
+      return { exceeds: false, excessAmount: 0 };
+    }
+    
+    const allocation = allocations[budgetCategory];
+    const newTotal = allocation.allocated + amount;
+    const exceeds = newTotal > allocation.limit;
+    const excessAmount = exceeds ? newTotal - allocation.limit : 0;
+    
+    return { exceeds, excessAmount };
+  }, []);
 
   return {
     budgetMethod: settings.budget_method,
@@ -131,6 +206,8 @@ export const useBudgetMethod = () => {
     updateBudgetMethod,
     updatePercentages,
     calculateCategoryLimits,
+    calculateCategoryAllocations,
+    wouldExceedLimit,
     refetch: fetchSettings,
   };
 };
