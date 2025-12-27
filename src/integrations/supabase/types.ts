@@ -561,6 +561,7 @@ export type Database = {
           avatar_type: string | null
           avatar_url: string | null
           bio: string | null
+          budget_method: string
           city: string | null
           color_palette: string
           country: string | null
@@ -580,6 +581,7 @@ export type Database = {
           last_active_at: string | null
           last_name: string | null
           marketing_consent: boolean | null
+          needs_percentage: number
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
@@ -590,18 +592,21 @@ export type Database = {
           province: string | null
           push_notifications: boolean | null
           savings_adjustment_strategy: string
+          savings_percentage: number
           terms_accepted_at: string | null
           theme: string | null
           timezone: string | null
           updated_at: string | null
           user_id: string
           username: string | null
+          wants_percentage: number
           week_start_day: number | null
         }
         Insert: {
           avatar_type?: string | null
           avatar_url?: string | null
           bio?: string | null
+          budget_method?: string
           city?: string | null
           color_palette?: string
           country?: string | null
@@ -621,6 +626,7 @@ export type Database = {
           last_active_at?: string | null
           last_name?: string | null
           marketing_consent?: boolean | null
+          needs_percentage?: number
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
@@ -631,18 +637,21 @@ export type Database = {
           province?: string | null
           push_notifications?: boolean | null
           savings_adjustment_strategy?: string
+          savings_percentage?: number
           terms_accepted_at?: string | null
           theme?: string | null
           timezone?: string | null
           updated_at?: string | null
           user_id: string
           username?: string | null
+          wants_percentage?: number
           week_start_day?: number | null
         }
         Update: {
           avatar_type?: string | null
           avatar_url?: string | null
           bio?: string | null
+          budget_method?: string
           city?: string | null
           color_palette?: string
           country?: string | null
@@ -662,6 +671,7 @@ export type Database = {
           last_active_at?: string | null
           last_name?: string | null
           marketing_consent?: boolean | null
+          needs_percentage?: number
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
@@ -672,12 +682,14 @@ export type Database = {
           province?: string | null
           push_notifications?: boolean | null
           savings_adjustment_strategy?: string
+          savings_percentage?: number
           terms_accepted_at?: string | null
           theme?: string | null
           timezone?: string | null
           updated_at?: string | null
           user_id?: string
           username?: string | null
+          wants_percentage?: number
           week_start_day?: number | null
         }
         Relationships: []
