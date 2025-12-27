@@ -83,6 +83,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: unknown
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       budget_items: {
         Row: {
           amount: number
@@ -519,25 +558,118 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          country: string | null
           created_at: string | null
+          currency: string | null
+          date_of_birth: string | null
+          default_account_id: string | null
+          display_name: string | null
+          email_notifications: boolean | null
+          email_verified: boolean | null
+          financial_year_start: number | null
+          first_name: string | null
+          gender: string | null
           id: string
+          language: string | null
+          last_active_at: string | null
+          last_name: string | null
+          marketing_consent: boolean | null
+          notifications_enabled: boolean | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          privacy_accepted_at: string | null
+          profile_completed: boolean | null
+          province: string | null
+          push_notifications: boolean | null
           savings_adjustment_strategy: string
+          terms_accepted_at: string | null
+          theme: string | null
+          timezone: string | null
           updated_at: string | null
           user_id: string
+          username: string | null
+          week_start_day: number | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
+          currency?: string | null
+          date_of_birth?: string | null
+          default_account_id?: string | null
+          display_name?: string | null
+          email_notifications?: boolean | null
+          email_verified?: boolean | null
+          financial_year_start?: number | null
+          first_name?: string | null
+          gender?: string | null
           id?: string
+          language?: string | null
+          last_active_at?: string | null
+          last_name?: string | null
+          marketing_consent?: boolean | null
+          notifications_enabled?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          privacy_accepted_at?: string | null
+          profile_completed?: boolean | null
+          province?: string | null
+          push_notifications?: boolean | null
           savings_adjustment_strategy?: string
+          terms_accepted_at?: string | null
+          theme?: string | null
+          timezone?: string | null
           updated_at?: string | null
           user_id: string
+          username?: string | null
+          week_start_day?: number | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
+          currency?: string | null
+          date_of_birth?: string | null
+          default_account_id?: string | null
+          display_name?: string | null
+          email_notifications?: boolean | null
+          email_verified?: boolean | null
+          financial_year_start?: number | null
+          first_name?: string | null
+          gender?: string | null
           id?: string
+          language?: string | null
+          last_active_at?: string | null
+          last_name?: string | null
+          marketing_consent?: boolean | null
+          notifications_enabled?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          privacy_accepted_at?: string | null
+          profile_completed?: boolean | null
+          province?: string | null
+          push_notifications?: boolean | null
           savings_adjustment_strategy?: string
+          terms_accepted_at?: string | null
+          theme?: string | null
+          timezone?: string | null
           updated_at?: string | null
           user_id?: string
+          username?: string | null
+          week_start_day?: number | null
         }
         Relationships: []
       }
@@ -678,9 +810,34 @@ export type Database = {
           priority_weight: number
         }[]
       }
+      delete_user_account: { Args: never; Returns: undefined }
       extract_merchant_core: { Args: { description: string }; Returns: string }
       fuzzy_match_merchant: {
         Args: { merchant_name: string; pattern: string }
+        Returns: boolean
+      }
+      get_profile_by_username: {
+        Args: { lookup_username: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          display_name: string
+          user_id: string
+          username: string
+        }[]
+      }
+      insert_transaction: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_category_id?: string
+          p_date: string
+          p_description: string
+        }
+        Returns: string
+      }
+      is_username_available: {
+        Args: { check_username: string }
         Returns: boolean
       }
       normalize_merchant_name: {
@@ -709,6 +866,7 @@ export type Database = {
           old_timeline: string
         }[]
       }
+      update_last_active: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
