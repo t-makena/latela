@@ -98,6 +98,21 @@ export const BackgroundProvider = () => {
     };
   }, [pathname, colorPalette, isDark, isMobile]);
 
+  // Preload all background images on mount for instant transitions
+  useEffect(() => {
+    const allImages = [
+      ...backgroundImages.multicolor.light,
+      ...backgroundImages.multicolor.dark,
+      ...backgroundImages.blackwhite.light,
+      ...backgroundImages.blackwhite.dark,
+    ];
+    
+    allImages.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   // Handle crossfade transition when background changes
   useEffect(() => {
     if (!displayedBg) {
