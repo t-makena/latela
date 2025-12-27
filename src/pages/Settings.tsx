@@ -213,42 +213,44 @@ const Settings = () => {
   return (
     <div className="space-y-6 pt-6 px-6">
       <Card className="w-full">
-        <CardHeader>
+        <CardHeader className="relative pb-2">
+          {/* Avatar positioned in top right with edit pencil overlay */}
+          <div className="absolute top-4 right-4">
+            <div 
+              className="relative cursor-pointer group"
+              onClick={() => setAvatarPickerOpen(true)}
+            >
+              {profile?.avatar_type === 'custom' && profile?.avatar_url ? (
+                <Avatar className="h-14 w-14 ring-2 ring-foreground">
+                  <AvatarImage src={profile.avatar_url} alt="Profile" />
+                  <AvatarFallback className="bg-muted text-foreground font-semibold text-lg">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              ) : profile?.avatar_type === 'default' && DefaultAvatarComponent ? (
+                <div className="h-14 w-14 rounded-full overflow-hidden ring-2 ring-foreground">
+                  <DefaultAvatarComponent className="h-full w-full" />
+                </div>
+              ) : (
+                <Avatar className="h-14 w-14 ring-2 ring-foreground">
+                  <AvatarFallback className="bg-muted text-foreground font-semibold text-lg">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              {/* Edit pencil icon overlay */}
+              <div className="absolute bottom-0 right-0 bg-background rounded-full p-1 border border-border shadow-sm group-hover:bg-muted transition-colors">
+                <Edit2 className="h-3 w-3" />
+              </div>
+            </div>
+          </div>
           <CardTitle>Profile</CardTitle>
           <CardDescription>
             Update your personal information
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {/* Avatar Section */}
-            <div className="space-y-2">
-              <Label>Avatar</Label>
-              <div className="flex items-center gap-4">
-                {profile?.avatar_type === 'custom' && profile?.avatar_url ? (
-                  <Avatar className="h-16 w-16 ring-2 ring-foreground">
-                    <AvatarImage src={profile.avatar_url} alt="Profile" />
-                    <AvatarFallback className="bg-muted text-foreground font-semibold">
-                      {getInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : profile?.avatar_type === 'default' && DefaultAvatarComponent ? (
-                  <div className="h-16 w-16 rounded-full overflow-hidden ring-2 ring-foreground">
-                    <DefaultAvatarComponent className="h-full w-full" />
-                  </div>
-                ) : (
-                  <Avatar className="h-16 w-16 ring-2 ring-foreground">
-                    <AvatarFallback className="bg-muted text-foreground font-semibold">
-                      {getInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-                <Button variant="outline" onClick={() => setAvatarPickerOpen(true)}>
-                  Change Avatar
-                </Button>
-              </div>
-            </div>
-
+        <CardContent className="pt-2">
+          <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
