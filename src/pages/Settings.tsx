@@ -19,12 +19,17 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useUserSettings, SavingsAdjustmentStrategy } from "@/hooks/useUserSettings";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useColorPalette, ColorPalette } from "@/hooks/useColorPalette";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { AvatarPickerDialog } from "@/components/settings/AvatarPickerDialog";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { getAvatarComponent } from "@/components/avatars/DefaultAvatars";
 
 const Settings = () => {
   const { accounts } = useAccounts();
   const { theme, setTheme } = useTheme();
   const { savingsAdjustmentStrategy, updateSavingsStrategy } = useUserSettings();
   const { colorPalette, updateColorPalette } = useColorPalette();
+  const { profile, getInitials, updateAvatar } = useUserProfile();
   const { 
     payday, 
     frequency, 
@@ -47,6 +52,7 @@ const Settings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
   
   // Email and mobile editing states
   const [email, setEmail] = useState("john.doe@example.com");
@@ -61,6 +67,16 @@ const Settings = () => {
   const [isUsernameOpen, setIsUsernameOpen] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
+
+  const DefaultAvatarComponent = getAvatarComponent(profile?.default_avatar_id || null);
+
+  const handleAvatarSave = async (
+    avatarType: 'default' | 'custom',
+    defaultAvatarId?: string,
+    avatarUrl?: string
+  ) => {
+    await updateAvatar(avatarType, defaultAvatarId, avatarUrl);
+  };
 
   const handlePaydayChange = (value: string) => {
     const day = parseInt(value, 10);
@@ -205,6 +221,34 @@ const Settings = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
+            {/* Avatar Section */}
+            <div className="space-y-2">
+              <Label>Avatar</Label>
+              <div className="flex items-center gap-4">
+                {profile?.avatar_type === 'custom' && profile?.avatar_url ? (
+                  <Avatar className="h-16 w-16 ring-2 ring-foreground">
+                    <AvatarImage src={profile.avatar_url} alt="Profile" />
+                    <AvatarFallback className="bg-muted text-foreground font-semibold">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : profile?.avatar_type === 'default' && DefaultAvatarComponent ? (
+                  <div className="h-16 w-16 rounded-full overflow-hidden ring-2 ring-foreground">
+                    <DefaultAvatarComponent className="h-full w-full" />
+                  </div>
+                ) : (
+                  <Avatar className="h-16 w-16 ring-2 ring-foreground">
+                    <AvatarFallback className="bg-muted text-foreground font-semibold">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <Button variant="outline" onClick={() => setAvatarPickerOpen(true)}>
+                  Change Avatar
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
@@ -707,6 +751,14 @@ const Settings = () => {
         open={addAccountDialogOpen}
         onOpenChange={setAddAccountDialogOpen}
         onSuccess={() => window.location.reload()}
+      />
+
+      <AvatarPickerDialog
+        open={avatarPickerOpen}
+        onOpenChange={setAvatarPickerOpen}
+        currentAvatarType={profile?.avatar_type || null}
+        currentDefaultAvatarId={profile?.default_avatar_id || null}
+        onSave={handleAvatarSave}
       />
     </div>
   );
