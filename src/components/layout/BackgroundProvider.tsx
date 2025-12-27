@@ -85,7 +85,7 @@ export const BackgroundProvider = () => {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       <div
-        className={`absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10 ${transform}`}
+        className={`absolute inset-0 bg-cover bg-center bg-no-repeat ${transform}`}
         style={{
           backgroundImage: `url(${backgroundImage})`,
           // Extend the element beyond viewport for rotated images
