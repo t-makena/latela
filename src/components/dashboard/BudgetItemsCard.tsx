@@ -89,7 +89,7 @@ export const BudgetItemsCard = () => {
     <>
       <Card className="h-full">
         <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
-          <CardTitle className="heading-main">{t('finance.budgetPlan')}</CardTitle>
+          <CardTitle className="heading-main">{t('budget.budgetPlan')}</CardTitle>
           <Button
             size="icon"
             onClick={() => setDialogOpen(true)}

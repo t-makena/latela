@@ -35,8 +35,9 @@ export const useAccounts = () => {
 
             return {
               ...account,
-              // Convert from cents to Rands - both transaction balance and account balance are stored in cents
-              calculatedBalance: (latestTransaction?.balance ?? (account.available_balance || 0)) / 100
+              // Use latest transaction balance (in Rands) as primary source
+              // Fall back to account.available_balance / 100 if no transactions exist
+              calculatedBalance: latestTransaction?.balance ?? (account.available_balance || 0) / 100
             };
           })
         );
