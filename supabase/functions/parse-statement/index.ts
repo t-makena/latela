@@ -656,80 +656,107 @@ function detectBank(fileName: string, content: string): string {
   const contentUpper = content.toUpperCase();
   const fileUpper = fileName.toUpperCase();
   
-  // More flexible Capitec detection - check for any mention of Capitec
-  if (contentUpper.includes('CAPITEC') || fileUpper.includes('CAPITEC')) {
-    console.log('[DETECT-BANK] Matched: Capitec (flexible match)');
-    return 'Capitec';
+  // Scoring system - each bank gets points based on matches
+  const bankScores: Record<string, number> = {
+    'Capitec': 0,
+    'FNB': 0,
+    'ABSA': 0,
+    'Standard Bank': 0,
+    'Nedbank': 0,
+    'Discovery Bank': 0,
+    'TymeBank': 0,
+    'Bank Zero': 0,
+    'Investec': 0,
+  };
+  
+  // HIGH-WEIGHT patterns (bank statement headers, branding) - +10 points
+  const headerPatterns: Record<string, RegExp[]> = {
+    'Capitec': [/CAPITEC\s+BANK\s+STATEMENT/i, /CAPITEC\s+BANK\s+LTD/i, /CAPITEC\s+SAVINGS\s+ACCOUNT/i],
+    'Standard Bank': [/STANDARD\s+BANK\s+STATEMENT/i, /STANDARD\s+BANK\s+OF\s+SOUTH\s+AFRICA/i, /THE\s+STANDARD\s+BANK/i, /SBSA/i],
+    'FNB': [/FNB\s+STATEMENT/i, /FIRST\s+NATIONAL\s+BANK\s+STATEMENT/i, /FNB\s+PRIVATE/i, /FIRSTRAND\s+BANK/i],
+    'ABSA': [/ABSA\s+BANK\s+STATEMENT/i, /ABSA\s+STATEMENT/i, /ABSA\s+GROUP/i],
+    'Nedbank': [/NEDBANK\s+STATEMENT/i, /NEDBANK\s+LTD/i, /NEDBANK\s+LIMITED/i],
+    'Discovery Bank': [/DISCOVERY\s+BANK\s+STATEMENT/i, /DISCOVERY\s+BANK\s+LIMITED/i],
+    'TymeBank': [/TYMEBANK\s+STATEMENT/i, /TYME\s+DIGITAL/i, /TYME\s+BANK\s+STATEMENT/i],
+    'Bank Zero': [/BANK\s+ZERO\s+STATEMENT/i, /BANKZERO\s+STATEMENT/i],
+    'Investec': [/INVESTEC\s+STATEMENT/i, /INVESTEC\s+BANK\s+LIMITED/i, /INVESTEC\s+PRIVATE\s+BANK/i],
+  };
+  
+  // Check header patterns (high weight: +10 points)
+  for (const [bank, patterns] of Object.entries(headerPatterns)) {
+    for (const pattern of patterns) {
+      if (pattern.test(contentUpper)) {
+        bankScores[bank] += 10;
+        console.log(`[DETECT-BANK] Header match for ${bank}: +10`);
+      }
+    }
   }
   
-  // FNB variations
-  if (contentUpper.includes('FNB') || 
-      contentUpper.includes('FIRST NATIONAL BANK') || 
-      contentUpper.includes('FIRSTRAND') ||
-      fileUpper.includes('FNB')) {
-    console.log('[DETECT-BANK] Matched: FNB');
-    return 'FNB';
+  // Check filename (medium weight: +5 points)
+  const filePatterns: Record<string, string[]> = {
+    'Capitec': ['CAPITEC'],
+    'Standard Bank': ['STANDARD', 'STANBIC', 'SBSA'],
+    'FNB': ['FNB', 'FIRSTRAND'],
+    'ABSA': ['ABSA'],
+    'Nedbank': ['NEDBANK'],
+    'Discovery Bank': ['DISCOVERY'],
+    'TymeBank': ['TYME'],
+    'Bank Zero': ['BANKZERO', 'BANK-ZERO'],
+    'Investec': ['INVESTEC'],
+  };
+  
+  for (const [bank, keywords] of Object.entries(filePatterns)) {
+    for (const keyword of keywords) {
+      if (fileUpper.includes(keyword)) {
+        bankScores[bank] += 5;
+        console.log(`[DETECT-BANK] Filename match for ${bank}: +5`);
+      }
+    }
   }
   
-  // ABSA variations
-  if (contentUpper.includes('ABSA') || 
-      contentUpper.includes('AMALGAMATED BANKS') ||
-      fileUpper.includes('ABSA')) {
-    console.log('[DETECT-BANK] Matched: ABSA');
-    return 'ABSA';
+  // Check general content mentions (low weight: +1 point)
+  // This catches banks mentioned in transactions but doesn't override header matches
+  const contentPatterns: Record<string, string[]> = {
+    'Capitec': ['CAPITEC'],
+    'Standard Bank': ['STANDARD BANK'],
+    'FNB': ['FNB', 'FIRST NATIONAL BANK'],
+    'ABSA': ['ABSA'],
+    'Nedbank': ['NEDBANK'],
+    'Discovery Bank': ['DISCOVERY BANK'],
+    'TymeBank': ['TYMEBANK', 'TYME BANK'],
+    'Bank Zero': ['BANK ZERO', 'BANKZERO'],
+    'Investec': ['INVESTEC'],
+  };
+  
+  for (const [bank, keywords] of Object.entries(contentPatterns)) {
+    for (const keyword of keywords) {
+      if (contentUpper.includes(keyword)) {
+        bankScores[bank] += 1;
+        console.log(`[DETECT-BANK] Content match for ${bank}: +1`);
+      }
+    }
   }
   
-  // Standard Bank variations
-  if (contentUpper.includes('STANDARD BANK') || 
-      contentUpper.includes('STANBIC') || 
-      contentUpper.includes('STANDARD CHARTERED') ||
-      fileUpper.includes('STANDARD')) {
-    console.log('[DETECT-BANK] Matched: Standard Bank');
-    return 'Standard Bank';
+  // Find the bank with the highest score
+  let maxScore = 0;
+  let detectedBank = 'Unknown Bank';
+  
+  for (const [bank, score] of Object.entries(bankScores)) {
+    if (score > maxScore) {
+      maxScore = score;
+      detectedBank = bank;
+    }
   }
   
-  // Nedbank variations
-  if (contentUpper.includes('NEDBANK') || 
-      contentUpper.includes('NED BANK') ||
-      fileUpper.includes('NEDBANK')) {
-    console.log('[DETECT-BANK] Matched: Nedbank');
-    return 'Nedbank';
+  console.log('[DETECT-BANK] Final scores:', JSON.stringify(bankScores));
+  console.log('[DETECT-BANK] Detected bank:', detectedBank, 'with score:', maxScore);
+  
+  if (maxScore === 0) {
+    console.log('[DETECT-BANK] No match found - returning Unknown Bank');
+    console.log('[DETECT-BANK] Content sample (first 1000 chars):', content.substring(0, 1000));
   }
   
-  // Discovery Bank variations
-  if (contentUpper.includes('DISCOVERY BANK') || 
-      contentUpper.includes('DISCOVERY') && (contentUpper.includes('BANK') || contentUpper.includes('ACCOUNT')) ||
-      fileUpper.includes('DISCOVERY')) {
-    console.log('[DETECT-BANK] Matched: Discovery Bank');
-    return 'Discovery Bank';
-  }
-  
-  // TymeBank variations
-  if (contentUpper.includes('TYMEBANK') || 
-      contentUpper.includes('TYME BANK') || 
-      contentUpper.includes('TYME DIGITAL') ||
-      fileUpper.includes('TYME')) {
-    console.log('[DETECT-BANK] Matched: TymeBank');
-    return 'TymeBank';
-  }
-  
-  // Bank Zero variations
-  if (contentUpper.includes('BANK ZERO') || 
-      contentUpper.includes('BANKZERO') ||
-      fileUpper.includes('BANKZERO')) {
-    console.log('[DETECT-BANK] Matched: Bank Zero');
-    return 'Bank Zero';
-  }
-  
-  // Investec variations
-  if (contentUpper.includes('INVESTEC') || fileUpper.includes('INVESTEC')) {
-    console.log('[DETECT-BANK] Matched: Investec');
-    return 'Investec';
-  }
-
-  console.log('[DETECT-BANK] No match found - returning Unknown Bank');
-  console.log('[DETECT-BANK] Content sample (first 1000 chars):', content.substring(0, 1000));
-  return 'Unknown Bank';
+  return detectedBank;
 }
 
 function extractAccountNumber(content: string, bankName: string): string {
