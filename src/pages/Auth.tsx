@@ -24,7 +24,9 @@ const Auth = () => {
 
   const [signupData, setSignupData] = useState({
     username: "",
+    mobile: "",
     email: "",
+    idPassport: "",
     password: "",
     confirmPassword: "",
   });
@@ -39,6 +41,23 @@ const Auth = () => {
       }
     });
   }, [navigate]);
+
+  // Validation functions
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateMobile = (mobile: string) => {
+    const mobileRegex = /^\+27\s?\d{2}\s?\d{3}\s?\d{4}$/;
+    return mobileRegex.test(mobile);
+  };
+
+  const validateIdNumber = (id: string) => {
+    // South African ID: 13 digits
+    const idRegex = /^\d{13}$/;
+    return idRegex.test(id.replace(/\s/g, ""));
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,15 +105,34 @@ const Auth = () => {
     if (!signupData.username.trim()) {
       newErrors.username = "Username is required";
     }
+
+    if (!signupData.mobile.trim()) {
+      newErrors.mobile = "Mobile number is required";
+    } else if (!validateMobile(signupData.mobile)) {
+      newErrors.mobile = "Invalid mobile number format (+27 XX XXX XXXX)";
+    }
+
     if (!signupData.email.trim()) {
       newErrors.email = "Email is required";
+    } else if (!validateEmail(signupData.email)) {
+      newErrors.email = "Invalid email address";
     }
+
+    if (!signupData.idPassport.trim()) {
+      newErrors.idPassport = "ID/Passport number is required";
+    } else if (!validateIdNumber(signupData.idPassport)) {
+      newErrors.idPassport = "Invalid ID number (13 digits required)";
+    }
+
     if (!signupData.password) {
       newErrors.password = "Password is required";
     } else if (signupData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
     }
-    if (signupData.password !== signupData.confirmPassword) {
+
+    if (!signupData.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (signupData.password !== signupData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
@@ -115,6 +153,8 @@ const Auth = () => {
           emailRedirectTo: redirectUrl,
           data: {
             username: signupData.username,
+            mobile: signupData.mobile,
+            id_passport: signupData.idPassport,
           },
         },
       });
@@ -314,7 +354,7 @@ const Auth = () => {
                 </Label>
                 <Input
                   id="signup-username"
-                  placeholder="Your name"
+                  placeholder="Tumiso Makena"
                   value={signupData.username}
                   onChange={(e) =>
                     handleInputChange("username", e.target.value, "signup")
@@ -327,13 +367,31 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="signup-mobile" className="font-bold text-sm">
+                  Mobile Number
+                </Label>
+                <Input
+                  id="signup-mobile"
+                  placeholder="+27 XX XXX 4044"
+                  value={signupData.mobile}
+                  onChange={(e) =>
+                    handleInputChange("mobile", e.target.value, "signup")
+                  }
+                  className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                />
+                {errors.mobile && (
+                  <p className="text-sm text-destructive">{errors.mobile}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="signup-email" className="font-bold text-sm">
-                  Email
+                  E-mail address
                 </Label>
                 <Input
                   id="signup-email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="tumisomakena@gmail.com"
                   value={signupData.email}
                   onChange={(e) =>
                     handleInputChange("email", e.target.value, "signup")
@@ -342,6 +400,24 @@ const Auth = () => {
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive">{errors.email}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-idPassport" className="font-bold text-sm">
+                  ID/Passport Number
+                </Label>
+                <Input
+                  id="signup-idPassport"
+                  placeholder="030720xxxxxxx"
+                  value={signupData.idPassport}
+                  onChange={(e) =>
+                    handleInputChange("idPassport", e.target.value, "signup")
+                  }
+                  className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                />
+                {errors.idPassport && (
+                  <p className="text-sm text-destructive">{errors.idPassport}</p>
                 )}
               </div>
 
