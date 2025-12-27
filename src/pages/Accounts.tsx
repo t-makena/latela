@@ -17,16 +17,43 @@ const Accounts = () => {
   
   const { accounts, loading, error } = useAccounts();
 
-  const currentAccount = accounts[currentAccountIndex];
-
-  // Safety check - should never happen due to guards above, but prevents crashes
-  if (!currentAccount) {
-    return null;
-  }
-
   const scrollToTransactions = () => {
     document.getElementById('transaction-history')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-6 px-6">
+        <Skeleton className="h-[280px] w-full rounded-3xl" />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen pt-6 px-6">
+        <p className="text-destructive">Failed to load accounts: {error}</p>
+      </div>
+    );
+  }
+
+  // Empty state - show upload card when no accounts exist
+  if (accounts.length === 0) {
+    return (
+      <div className="min-h-screen pt-6 px-6">
+        <EmptyAccountState onClick={() => setAddAccountOpen(true)} />
+        <StatementUploadDialog 
+          open={addAccountOpen} 
+          onOpenChange={setAddAccountOpen}
+          onSuccess={() => window.location.reload()}
+        />
+      </div>
+    );
+  }
+
+  const currentAccount = accounts[currentAccountIndex];
 
   // Mobile neo-brutalist layout
   if (isMobile) {
