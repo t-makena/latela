@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.generate-test-transactions]
 verify_jwt = true
+
+[functions.extract-statement-metadata]
+verify_jwt = true
