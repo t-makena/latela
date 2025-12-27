@@ -2,22 +2,13 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useBudgetMethod, BudgetMethod } from '@/hooks/useBudgetMethod';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { cn } from '@/lib/utils';
-
-// 0-100 in 5% increments
-const PERCENTAGE_OPTIONS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
 
 export const BudgetMethodCard = () => {
   const { t } = useLanguage();
@@ -44,8 +35,8 @@ export const BudgetMethodCard = () => {
     setLocalSavings(savingsPercentage);
   }, [needsPercentage, wantsPercentage, savingsPercentage]);
 
-  const total = localNeeds + localWants + localSavings;
-  const isValidTotal = total === 100;
+  const total = Math.round((localNeeds + localWants + localSavings) * 100) / 100;
+  const isValidTotal = Math.abs(total - 100) < 0.01;
   const hasChanges = localNeeds !== needsPercentage || 
                      localWants !== wantsPercentage || 
                      localSavings !== savingsPercentage;
@@ -141,59 +132,59 @@ export const BudgetMethodCard = () => {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2 items-center">
                 <Label className="text-sm">Needs</Label>
-                <Select
-                  value={localNeeds.toString()}
-                  onValueChange={(v) => setLocalNeeds(parseInt(v))}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERCENTAGE_OPTIONS.map((p) => (
-                      <SelectItem key={p} value={p.toString()}>
-                        {p}%
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={localNeeds}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setLocalNeeds(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
+                    }}
+                    className="h-9 text-right pr-7"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">%</span>
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-2 items-center">
                 <Label className="text-sm">Wants</Label>
-                <Select
-                  value={localWants.toString()}
-                  onValueChange={(v) => setLocalWants(parseInt(v))}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERCENTAGE_OPTIONS.map((p) => (
-                      <SelectItem key={p} value={p.toString()}>
-                        {p}%
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={localWants}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setLocalWants(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
+                    }}
+                    className="h-9 text-right pr-7"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">%</span>
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-2 items-center">
                 <Label className="text-sm">Savings</Label>
-                <Select
-                  value={localSavings.toString()}
-                  onValueChange={(v) => setLocalSavings(parseInt(v))}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERCENTAGE_OPTIONS.map((p) => (
-                      <SelectItem key={p} value={p.toString()}>
-                        {p}%
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={localSavings}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setLocalSavings(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
+                    }}
+                    className="h-9 text-right pr-7"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">%</span>
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-2 items-center pt-2 border-t border-border">
