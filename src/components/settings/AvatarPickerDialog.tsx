@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FemaleAvatar, MaleAvatar } from "@/components/avatars/DefaultAvatars";
+import { DefaultAvatar } from "@/components/avatars/DefaultAvatars";
 import { cn } from "@/lib/utils";
 import { Upload, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,7 @@ export const AvatarPickerDialog = ({
     currentAvatarType === 'custom' ? 'custom' : 'default'
   );
   const [selectedDefaultId, setSelectedDefaultId] = useState<string>(
-    currentDefaultAvatarId || 'female'
+    currentDefaultAvatarId || 'default'
   );
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -118,31 +118,20 @@ export const AvatarPickerDialog = ({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Default Avatar Options */}
+          {/* Default Avatar Option */}
           <div className="space-y-3">
-            <p className="text-sm font-medium">Default Avatars</p>
-            <div className="flex justify-center gap-6">
+            <p className="text-sm font-medium">Default Avatar</p>
+            <div className="flex justify-center">
               <button
-                onClick={() => handleDefaultSelect('female')}
+                onClick={() => handleDefaultSelect('default')}
                 className={cn(
                   "p-2 rounded-full transition-all",
-                  selectedType === 'default' && selectedDefaultId === 'female'
+                  selectedType === 'default'
                     ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
                     : "hover:ring-2 hover:ring-muted-foreground"
                 )}
               >
-                <FemaleAvatar className="h-20 w-20" />
-              </button>
-              <button
-                onClick={() => handleDefaultSelect('male')}
-                className={cn(
-                  "p-2 rounded-full transition-all",
-                  selectedType === 'default' && selectedDefaultId === 'male'
-                    ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
-                    : "hover:ring-2 hover:ring-muted-foreground"
-                )}
-              >
-                <MaleAvatar className="h-20 w-20" />
+                <DefaultAvatar className="h-20 w-20" />
               </button>
             </div>
           </div>
