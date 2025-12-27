@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, AlertCircle, CheckCircle2, Loader2, Check, Bell, BellOff } from "lucide-react";
+import { Upload, FileText, AlertCircle, CheckCircle2, Loader2, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,10 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 
 interface StatementUploadDialogProps {
@@ -49,24 +46,7 @@ export const StatementUploadDialog = ({
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [processingStage, setProcessingStage] = useState<ProcessingStage>(null);
-  const [notifyWhenDone, setNotifyWhenDone] = useState(false);
   const { toast } = useToast();
-  const { isSupported, hasPermission, isDenied, requestPermission, showNotification } = useNotifications();
-
-  const handleNotifyToggle = async (checked: boolean) => {
-    if (checked && !hasPermission) {
-      const granted = await requestPermission();
-      if (!granted) {
-        toast({
-          title: "Notifications blocked",
-          description: "Please enable notifications in your browser settings",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    setNotifyWhenDone(checked);
-  };
 
   const handleFile = async (file: File) => {
     // Validate file type
@@ -107,7 +87,6 @@ export const StatementUploadDialog = ({
           setProcessingStage('parsing');
 
           // Call edge function to parse statement
-          console.log('[StatementUpload] Calling parse-statement edge function...');
           const { data, error } = await supabase.functions.invoke('parse-statement', {
             body: {
               fileContent: base64Data,
@@ -116,39 +95,17 @@ export const StatementUploadDialog = ({
             },
           });
 
-          console.log('[StatementUpload] parse-statement response:', { data, error });
-
           if (error) {
-            console.error('[StatementUpload] Edge function error:', error);
             throw error;
           }
 
           if (!data.success) {
-            console.error('[StatementUpload] Parse failed:', data.error);
             throw new Error(data.error || 'Failed to parse statement');
-          }
-
-          // Log parsed data for debugging
-          console.log('[StatementUpload] Parsed account info:', data.accountInfo);
-          console.log('[StatementUpload] Parsed transactions count:', data.transactions?.length || 0);
-          console.log('[StatementUpload] Summary:', data.summary);
-
-          // Warn if no transactions were parsed
-          if (!data.transactions || data.transactions.length === 0) {
-            console.warn('[StatementUpload] No transactions parsed from statement!');
-            toast({
-              title: "No transactions found",
-              description: "The statement was read but no transactions could be extracted. Please check the file format.",
-              variant: "destructive",
-            });
           }
 
           setProcessingStage('creating');
 
           // Create account with parsed data
-          const userId = (await supabase.auth.getUser()).data.user?.id;
-          console.log('[StatementUpload] Creating account for user:', userId);
-
           const { data: accountData, error: accountError } = await supabase
             .from('accounts')
             .insert({
@@ -162,69 +119,41 @@ export const StatementUploadDialog = ({
               balance_brought_forward: 0,
               currency: 'ZAR',
               status: 'active',
-              user_id: userId,
+              user_id: (await supabase.auth.getUser()).data.user?.id,
             })
             .select()
             .single();
 
           if (accountError) {
-            console.error('[StatementUpload] Account creation error:', accountError);
             throw accountError;
           }
 
-          console.log('[StatementUpload] Account created:', accountData.id);
-
           // Import transactions if any were parsed
-          let transactionsImported = 0;
           if (data.transactions && data.transactions.length > 0) {
             setProcessingStage('importing');
             
-            console.log('[StatementUpload] Preparing to insert', data.transactions.length, 'transactions');
+            const userId = (await supabase.auth.getUser()).data.user?.id;
             
             const transactionsToInsert = data.transactions.map((t: any) => ({
               user_id: userId,
               account_id: accountData.id,
               transaction_date: new Date(t.date).toISOString(),
               description: t.description,
-              raw_description: t.description,
               reference: t.reference || t.description.substring(0, 50),
               // Store debits as negative cents, credits as positive cents
               amount: Math.round(t.type === 'debit' ? -Math.abs(t.amount) * 100 : Math.abs(t.amount) * 100),
               balance: t.balance ? Math.round(t.balance * 100) : 0,
               cleared: true,
-              // Required fields for categorization workflow
-              is_categorized: false,
-              auto_categorized: false,
-              user_verified: false,
-              categorization_confidence: null,
             }));
 
-            console.log('[StatementUpload] Sample transaction to insert:', transactionsToInsert[0]);
-
-            const { data: insertedTrans, error: transError } = await supabase
+            const { error: transError } = await supabase
               .from('transactions')
-              .insert(transactionsToInsert)
-              .select('id');
+              .insert(transactionsToInsert);
 
             if (transError) {
-              console.error('[StatementUpload] Transaction import error:', transError);
-              toast({
-                title: "Transactions not imported",
-                description: `Account created, but transactions failed: ${transError.message}`,
-                variant: "destructive",
-              });
-              
-              // Notify on partial failure
-              if (notifyWhenDone) {
-                showNotification("Import Partially Failed ⚠️", {
-                  body: "Account created but transactions couldn't be imported",
-                  tag: 'statement-upload',
-                });
-              }
+              console.error('Transaction import error:', transError);
+              // Don't fail the whole operation, account was created successfully
             } else {
-              transactionsImported = insertedTrans?.length || 0;
-              console.log('[StatementUpload] Successfully inserted', transactionsImported, 'transactions');
-              
               setProcessingStage('categorizing');
 
               const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
@@ -232,57 +161,32 @@ export const StatementUploadDialog = ({
               });
 
               if (catError) {
-                console.error('[StatementUpload] Categorization error:', catError);
+                console.error('Categorization error:', catError);
                 toast({
                   title: "Categorization incomplete",
                   description: "Transactions imported but some couldn't be categorized",
                   variant: "destructive",
                 });
               } else if (catData?.success) {
-                console.log(`[StatementUpload] Categorization complete: ${catData.categorized} transactions, ${catData.cached} from cache, ${catData.aiCalls} AI calls, ~$${catData.cost}`);
+                console.log(`Categorization complete: ${catData.categorized} transactions, ${catData.cached} from cache, ${catData.aiCalls} AI calls, ~$${catData.cost}`);
               }
             }
           }
 
-          const successMessage = transactionsImported > 0
-            ? `Imported ${transactionsImported} transactions from ${data.accountInfo.bankName}`
-            : `Account created from ${data.accountInfo.bankName} (no transactions imported)`;
-
-          console.log('[StatementUpload] Complete!', successMessage);
-
           toast({
-            title: transactionsImported > 0 ? "Account added successfully!" : "Account created",
-            description: successMessage,
-            variant: transactionsImported > 0 ? "default" : "destructive",
+            title: "Account added successfully!",
+            description: `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
           });
-
-          // Send browser notification if user opted in
-          if (notifyWhenDone) {
-            showNotification("Statement Processed! ✅", {
-              body: successMessage,
-              tag: 'statement-upload',
-            });
-          }
 
           onOpenChange(false);
           onSuccess?.();
         } catch (error) {
           console.error('Upload error:', error);
-          const errorMessage = error instanceof Error ? error.message : "Couldn't read this statement. Please try again.";
-          
           toast({
             title: "Upload failed",
-            description: errorMessage,
+            description: error instanceof Error ? error.message : "Couldn't read this statement. Please try again.",
             variant: "destructive",
           });
-
-          // Send browser notification on failure if user opted in
-          if (notifyWhenDone) {
-            showNotification("Statement Processing Failed ❌", {
-              body: errorMessage,
-              tag: 'statement-upload',
-            });
-          }
         } finally {
           setUploading(false);
           setProcessingStage(null);
@@ -441,58 +345,24 @@ export const StatementUploadDialog = ({
         </div>
 
         {!uploading && (
-          <div className="space-y-3">
-            {/* Notification option */}
-            {isSupported && (
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
-                <Checkbox
-                  id="notify-when-done"
-                  checked={notifyWhenDone}
-                  onCheckedChange={handleNotifyToggle}
-                  disabled={isDenied}
-                />
-                <div className="flex-1">
-                  <Label 
-                    htmlFor="notify-when-done" 
-                    className="text-sm font-medium cursor-pointer flex items-center gap-2"
-                  >
-                    {notifyWhenDone ? (
-                      <Bell className="h-4 w-4 text-primary" />
-                    ) : (
-                      <BellOff className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    Notify me when complete
-                  </Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {isDenied 
-                      ? "Notifications are blocked in browser settings"
-                      : "Processing can take a minute or two"
-                    }
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Info section */}
-            <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-              <div className="flex gap-2 text-xs">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground">
-                  Account details extracted automatically
-                </span>
-              </div>
-              <div className="flex gap-2 text-xs">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground">
-                  Transactions imported and categorized
-                </span>
-              </div>
-              <div className="flex gap-2 text-xs">
-                <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground">
-                  Your statement is processed securely and not stored
-                </span>
-              </div>
+          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+            <div className="flex gap-2 text-xs">
+              <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+              <span className="text-muted-foreground">
+                Account details extracted automatically
+              </span>
+            </div>
+            <div className="flex gap-2 text-xs">
+              <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+              <span className="text-muted-foreground">
+                Transactions imported and categorized
+              </span>
+            </div>
+            <div className="flex gap-2 text-xs">
+              <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <span className="text-muted-foreground">
+                Your statement is processed securely and not stored
+              </span>
             </div>
           </div>
         )}

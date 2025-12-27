@@ -54,7 +54,7 @@ export const MobileBudgetPlanCard = () => {
         className="bg-card rounded-3xl border border-foreground p-5 w-full"
         
       >
-        <h2 className="heading-card mb-4">{t('finance.budgetPlan')}</h2>
+        <h2 className="heading-card mb-4">{t('budget.budgetPlan')}</h2>
         <table className="w-full">
           <thead>
             <tr>

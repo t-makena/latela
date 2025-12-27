@@ -245,14 +245,14 @@ function parseCSV(content: string, fileName: string) {
 }
 
 async function parsePDF(content: string, fileName: string) {
-  console.log('[PDF] Starting AI extraction...');
+  console.log('[PDF] Starting Claude Vision extraction...');
   
   try {
-    // Use Lovable AI Gateway for PDF text extraction
-    console.log('[PDF] Running AI extraction...');
-    const extractedText = await extractTextWithAI(content);
+    // Use Claude Vision API for PDF text extraction
+    console.log('[PDF] Running Claude Vision extraction...');
+    const extractedText = await extractTextWithClaude(content);
     
-    console.log('[AI] Extracted text length:', extractedText.length, 'characters');
+    console.log('[CLAUDE] Extracted text length:', extractedText.length, 'characters');
     
     if (extractedText.length < 50) {
       console.error('[PDF] CRITICAL: Insufficient text extracted');
@@ -372,25 +372,47 @@ async function parsePDF(content: string, fileName: string) {
   }
 }
 
-async function extractTextWithAI(pdfContent: string): Promise<string> {
-  console.log('[AI] Starting Lovable AI Gateway extraction...');
+async function extractTextWithClaude(pdfContent: string): Promise<string> {
+  console.log('[CLAUDE] Starting Claude Vision extraction...');
   
-  const apiKey = Deno.env.get('LOVABLE_API_KEY');
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   
   if (!apiKey) {
-    console.error('[AI] No LOVABLE_API_KEY found in environment variables');
-    throw new Error('LOVABLE_API_KEY is not configured');
+    console.error('[CLAUDE] No ANTHROPIC_API_KEY found in environment variables');
+    throw new Error('ANTHROPIC_API_KEY is not configured');
   }
   
   try {
-    console.log('[AI] Sending request to Lovable AI Gateway...');
+    console.log('[CLAUDE] Sending request to Anthropic API...');
     
     // Convert the decoded PDF content back to base64
     const base64Pdf = btoa(pdfContent);
     
-    const systemPrompt = `You are a bank statement text extraction assistant. Extract ALL text content from the provided bank statement document accurately and completely.`;
-    
-    const userPrompt = `Extract ALL text content from this bank statement. Focus on:
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 16000,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'document',
+                source: {
+                  type: 'base64',
+                  media_type: 'application/pdf',
+                  data: base64Pdf,
+                },
+              },
+              {
+                type: 'text',
+                text: `Extract ALL text content from this bank statement PDF. Focus on:
 1. Bank name and account information
 2. Account holder details
 3. Statement period dates
@@ -404,30 +426,7 @@ async function extractTextWithAI(pdfContent: string): Promise<string> {
 
 Format the output as plain text, preserving the tabular structure of transactions where possible.
 Include column headers if visible. Extract every single transaction visible in the statement.
-Do not summarize - extract the complete raw text content.`;
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64Pdf}`,
-                },
-              },
-              {
-                type: 'text',
-                text: userPrompt,
+Do not summarize - extract the complete raw text content.`,
               },
             ],
           },
@@ -435,34 +434,32 @@ Do not summarize - extract the complete raw text content.`;
       }),
     });
     
-    if (response.status === 429) {
-      console.error('[AI] Rate limit exceeded');
-      throw new Error('Rate limits exceeded, please try again later.');
-    }
-    
-    if (response.status === 402) {
-      console.error('[AI] Payment required');
-      throw new Error('Payment required, please add funds to your Lovable AI workspace.');
-    }
-    
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[AI] API request failed:', response.status, errorText);
-      throw new Error(`AI Gateway error: ${response.status} - ${errorText}`);
+      console.error('[CLAUDE] API request failed:', response.status, errorText);
+      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();
-    console.log('[AI] API Response received');
+    console.log('[CLAUDE] API Response received');
     
-    const extractedText = result.choices?.[0]?.message?.content || '';
+    if (result.content && result.content.length > 0) {
+      const extractedText = result.content
+        .filter((block: { type: string }) => block.type === 'text')
+        .map((block: { text: string }) => block.text)
+        .join('\n');
+      
+      console.log('[CLAUDE] Extracted text length:', extractedText.length, 'characters');
+      console.log('[CLAUDE] First 1000 chars:', extractedText.substring(0, 1000));
+      
+      return extractedText;
+    }
     
-    console.log('[AI] Extracted text length:', extractedText.length, 'characters');
-    console.log('[AI] First 1000 chars:', extractedText.substring(0, 1000));
-    
-    return extractedText;
+    console.warn('[CLAUDE] No text content in response');
+    return '';
   } catch (error) {
-    console.error('[AI] Error during AI extraction:', error);
-    console.error('[AI] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('[CLAUDE] Error during Claude extraction:', error);
+    console.error('[CLAUDE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     throw error;
   }
 }
@@ -590,141 +587,94 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
     
     console.log('[TRANS-EXTRACT] Capitec: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
   } else if (bankName === 'Standard Bank') {
-    // Standard Bank-specific parsing - handles BOTH markdown table AND plain text formats
+    // Standard Bank-specific parsing for markdown table format from Claude
     console.log('[TRANS-EXTRACT] Using Standard Bank-specific parsing logic');
     const lines = content.split('\n');
     console.log('[TRANS-EXTRACT] Processing', lines.length, 'lines');
     
     let matchedLines = 0;
-    let skippedInvalidAmounts = 0;
     
-    // Strict currency amount regex: only match standard currency format (max 2 decimal places)
-    const strictAmountRegex = /^-?R?\s*[\d,\s]{1,12}\.\d{2}$/;
+    // Pattern for Standard Bank markdown table rows: | DD MMM YY | Description | Payments | Deposits | Balance |
+    // Also handle: | 03 Jul 25 | ... | -R1,234.56 | | R12,345.67 |
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Skip header rows, separator rows, and opening balance
+      // Skip header rows and separator rows
       if (line.includes('Date') && line.includes('Description')) continue;
       if (line.match(/^\|[-:|\s]+\|$/)) continue;
       if (line.includes('STATEMENT OPENING BALANCE')) continue;
-      if (!line) continue;
       
-      let dateStr = '';
-      let description = '';
-      let payment = 0;
-      let deposit = 0;
+      // Match table row with date pattern: | DD MMM YY | ... |
+      const tableMatch = line.match(/^\|\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{2})\s*\|(.+)/i);
+      if (!tableMatch) continue;
+      
+      matchedLines++;
+      if (matchedLines <= 5) {
+        console.log(`[TRANS-EXTRACT] Matched line ${matchedLines}:`, line.substring(0, 120));
+      }
+      
+      const dateStr = tableMatch[1].trim();
+      const restOfRow = tableMatch[2];
+      
+      // Split the rest by pipe character
+      const cells = restOfRow.split('|').map(c => c.trim()).filter(c => c !== '');
+      
+      if (cells.length < 1) continue;
+      
+      // First cell is description
+      const description = cells[0];
+      
+      // Skip if description is too short or looks like a sub-row
+      if (description.length < 3) continue;
+      
+      // Find amounts in remaining cells
+      let payment = 0;  // Debit/payment (money out)
+      let deposit = 0;  // Credit/deposit (money in)
       let balance = 0;
       
-      // Try markdown table format first: | DD MMM YY | Description | ... |
-      const tableMatch = line.match(/^\|\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{2})\s*\|(.+)/i);
-      
-      // Try plain text format: DD MMM YY   Description   -100.00   135.27
-      const plainTextMatch = line.match(/^(\d{1,2}\s+[A-Za-z]{3}\s+\d{2})\s{2,}(.+)/i);
-      
-      if (tableMatch) {
-        // Parse markdown table format
-        dateStr = tableMatch[1].trim();
-        const restOfRow = tableMatch[2];
-        const cells = restOfRow.split('|').map(c => c.trim()).filter(c => c !== '');
-        
-        if (cells.length < 1) continue;
-        
-        // Sanitize description to remove garbage numeric patterns
-        description = sanitizeDescription(cells[0]);
-        
-        // Parse amounts from remaining cells - with strict validation
-        for (let j = 1; j < cells.length; j++) {
-          const cell = cells[j].trim();
+      // Parse remaining cells for amounts
+      for (let j = 1; j < cells.length; j++) {
+        const cell = cells[j];
+        // Match amounts like -1,234.56 or R1,234.56 or 1234.56
+        const amountMatch = cell.match(/(-)?R?\s*([\d,]+\.?\d*)/);
+        if (amountMatch && amountMatch[2]) {
+          const isNegative = amountMatch[1] === '-' || cell.includes('-');
+          const amount = parseAmount(amountMatch[2]);
           
-          // Skip cells that don't look like proper currency amounts
-          if (!strictAmountRegex.test(cell) && !cell.match(/^-?[\d,\s]+\.?\d*$/)) {
-            // Cell contains garbage data, skip it
-            continue;
-          }
-          
-          const amountMatch = cell.match(/(-)?R?\s*([\d,]+\.?\d*)/);
-          if (amountMatch && amountMatch[2]) {
-            const isNegative = amountMatch[1] === '-' || cell.includes('-');
-            const amount = parseAmount(amountMatch[2]);
-            
-            // Skip invalid amounts (parseAmount returns 0 for garbage)
-            if (amount <= 0) continue;
-            
+          if (amount > 0) {
+            // Determine if payment, deposit, or balance based on position and sign
             if (j === cells.length - 1 && amount > 100) {
+              // Last column with larger value is likely balance
               balance = amount;
-            } else if (isNegative) {
+            } else if (isNegative || cell.includes('-')) {
               payment = amount;
             } else if (payment === 0 && j < cells.length - 1) {
+              // Could be payment column (before balance)
               payment = amount;
             } else if (deposit === 0) {
               deposit = amount;
             }
           }
         }
-      } else if (plainTextMatch) {
-        // Parse plain text format: DD MMM YY   Description   -100.00   135.27
-        dateStr = plainTextMatch[1].trim();
-        let restOfLine = plainTextMatch[2];
-        
-        // Sanitize the line to remove garbage numeric patterns before extraction
-        restOfLine = restOfLine.replace(/\d+\.\d{6,}[\/\-]?\d*\.?\d*/g, '');
-        
-        // Extract all numeric values - only accept standard currency format (exactly 2 decimal places)
-        const amountMatches = restOfLine.match(/-?R?\s*[\d,\s]{1,12}\.\d{2}(?!\d)/g) || [];
-        const amounts: { value: number; isNegative: boolean; position: number }[] = [];
-        
-        for (const amt of amountMatches) {
-          const cleanedAmt = amt.replace(/[R\s]/g, '');
-          const parsed = parseAmount(cleanedAmt);
-          if (parsed > 0) {
-            amounts.push({
-              value: parsed,
-              isNegative: amt.includes('-'),
-              position: restOfLine.indexOf(amt)
-            });
-          }
-        }
-        
-        // Extract description: everything before the first amount
-        if (amounts.length > 0) {
-          const firstAmountPos = Math.min(...amounts.map(a => a.position));
-          description = restOfLine.substring(0, firstAmountPos).trim();
-          
-          // Clean up description - remove trailing partial amounts or special chars
-          description = description.replace(/[\d,.\-]+$/, '').trim();
-          
-          // Sanitize description
-          description = sanitizeDescription(description);
-          
-          // Last amount is typically the balance
-          if (amounts.length >= 1) {
-            balance = amounts[amounts.length - 1].value;
-          }
-          
-          // Parse payments (negative) and deposits (positive)
-          for (let j = 0; j < amounts.length - 1; j++) {
-            if (amounts[j].isNegative) {
-              payment = Math.max(payment, amounts[j].value);
-            } else {
-              deposit = Math.max(deposit, amounts[j].value);
-            }
-          }
-        } else {
-          // No amounts found on this line - could be a description continuation
-          continue;
-        }
-      } else {
-        // Neither format matched
-        continue;
       }
       
-      // Skip if description is too short
-      if (!description || description.length < 3) continue;
-      
-      matchedLines++;
-      if (matchedLines <= 5) {
-        console.log(`[TRANS-EXTRACT] Matched line ${matchedLines}: date="${dateStr}" desc="${description.substring(0, 40)}" pay=${payment} dep=${deposit} bal=${balance}`);
+      // If we didn't find a clear payment/deposit, look for amounts with - prefix
+      if (payment === 0 && deposit === 0) {
+        const allAmounts = restOfRow.match(/-?R?\s*[\d,]+\.?\d*/g) || [];
+        for (const amt of allAmounts) {
+          const parsed = parseAmount(amt);
+          if (parsed > 0) {
+            if (amt.includes('-')) {
+              payment = parsed;
+            } else if (balance === 0 && parsed > 1000) {
+              balance = parsed;
+            } else {
+              deposit = parsed;
+            }
+          }
+        }
       }
       
       // Determine final amount and type
@@ -745,12 +695,11 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
         // Override type if description clearly indicates debit
         if (!isDebit && (
           descUpper.includes('PURCHASE') ||
-          descUpper.includes('PAYMENT TO') ||
-          descUpper.includes('PAYSHAP PAYMENT') ||
+          descUpper.includes('PAYMENT') ||
           descUpper.includes('FEE') ||
           descUpper.includes('DEBIT') ||
           descUpper.includes('WITHDRAWAL') ||
-          descUpper.includes('HONOURING')
+          descUpper.includes('DECLINED')
         )) {
           isDebit = true;
         }
@@ -760,32 +709,24 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
           descUpper.includes('SALARY') ||
           descUpper.includes('CREDIT') ||
           descUpper.includes('REFUND') ||
-          descUpper.includes('REVERSAL') ||
           descUpper.includes('RECEIVED')
         )) {
           isDebit = false;
         }
         
-        const txCandidate = {
+        transactions.push({
           date: normalizeDate(dateStr, bankName),
           description: description,
           amount: amount,
           balance: balance,
           reference: description.substring(0, 50),
           merchantName: extractMerchantName(description),
-          type: isDebit ? 'debit' : 'credit' as 'debit' | 'credit',
-        };
-        
-        // Validate transaction before adding
-        if (isValidTransaction(txCandidate)) {
-          transactions.push(txCandidate);
-        } else {
-          skippedInvalidAmounts++;
-        }
+          type: isDebit ? 'debit' : 'credit',
+        });
       }
     }
     
-    console.log('[TRANS-EXTRACT] Standard Bank: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions, skipped', skippedInvalidAmounts, 'invalid');
+    console.log('[TRANS-EXTRACT] Standard Bank: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
   } else {
     console.log('[TRANS-EXTRACT] Using generic parsing logic');
     // Generic parsing for other banks
@@ -875,16 +816,7 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
     console.log('[TRANS-EXTRACT] Generic: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
   }
   
-  // Final validation pass - filter out any invalid transactions that slipped through
-  const validTransactions = transactions.filter(tx => isValidTransaction(tx));
-  const filtered = transactions.length - validTransactions.length;
-  
-  if (filtered > 0) {
-    console.log('[TRANS-EXTRACT] Final validation filtered out', filtered, 'invalid transactions');
-  }
-  
-  console.log('[TRANS-EXTRACT] Returning', validTransactions.length, 'valid transactions');
-  return validTransactions;
+  return transactions;
 }
 
 function detectBank(fileName: string, content: string): string {
@@ -1196,82 +1128,13 @@ function detectAccountType(content: string, fileName: string): 'checking' | 'sav
 }
 
 function parseAmount(value: string): number {
-  // Reject scientific notation (e.g., 1.3e+21)
-  if (/[eE][+-]?\d+/.test(value)) {
-    console.warn('[PARSE-AMOUNT] Rejected scientific notation:', value);
-    return 0;
-  }
-  
-  // Reject values with more than 2 decimal places (likely garbage data)
-  const decimalMatch = value.match(/\.(\d+)/);
-  if (decimalMatch && decimalMatch[1].length > 2) {
-    console.warn('[PARSE-AMOUNT] Rejected value with >2 decimal places:', value);
-    return 0;
-  }
-  
   // Remove currency symbols, spaces, and commas
   const cleaned = value.replace(/[R\s,]/g, '');
   
   // Handle negative amounts in parentheses
-  let amount: number;
   if (cleaned.startsWith('(') && cleaned.endsWith(')')) {
-    amount = -parseFloat(cleaned.slice(1, -1));
-  } else {
-    amount = parseFloat(cleaned) || 0;
+    return -parseFloat(cleaned.slice(1, -1));
   }
   
-  // Validate the amount is reasonable (max ±100 million ZAR)
-  const MAX_AMOUNT = 100_000_000;
-  if (!isFinite(amount) || Math.abs(amount) > MAX_AMOUNT) {
-    console.warn('[PARSE-AMOUNT] Rejected out-of-range amount:', value, '->', amount);
-    return 0;
-  }
-  
-  return amount;
-}
-
-// Sanitize description by removing numeric garbage patterns
-function sanitizeDescription(description: string): string {
-  // Remove patterns like "120.000000000/160.270000000-" (internal reference numbers)
-  let sanitized = description.replace(/\d+\.\d{6,}[\/\-]?\d*\.?\d*/g, '');
-  
-  // Remove escaped asterisks (markdown artifacts)
-  sanitized = sanitized.replace(/\\\*/g, '*');
-  
-  // Clean up multiple spaces
-  sanitized = sanitized.replace(/\s+/g, ' ').trim();
-  
-  return sanitized;
-}
-
-// Validate a transaction before adding it
-function isValidTransaction(tx: { date: string; description: string; amount: number; balance: number }): boolean {
-  // Must have a valid amount
-  if (!tx.amount || tx.amount <= 0 || !isFinite(tx.amount)) {
-    return false;
-  }
-  
-  // Amount must be reasonable (max 100 million ZAR)
-  if (tx.amount > 100_000_000) {
-    console.warn('[VALIDATE-TX] Rejected transaction with excessive amount:', tx.amount, tx.description?.substring(0, 50));
-    return false;
-  }
-  
-  // Balance must be reasonable if present
-  if (tx.balance && (tx.balance > 100_000_000 || !isFinite(tx.balance))) {
-    console.warn('[VALIDATE-TX] Rejected transaction with invalid balance:', tx.balance, tx.description?.substring(0, 50));
-    return false;
-  }
-  
-  // Must have a description with at least 2 characters
-  if (!tx.description || tx.description.length < 2) {
-    return false;
-  }
-  
-  // Date must be valid
-  if (!tx.date || !/^\d{4}-\d{2}-\d{2}$/.test(tx.date)) {
-    return false;
-  }
-  
-  return true;
+  return parseFloat(cleaned) || 0;
 }
