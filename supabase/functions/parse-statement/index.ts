@@ -245,14 +245,14 @@ function parseCSV(content: string, fileName: string) {
 }
 
 async function parsePDF(content: string, fileName: string) {
-  console.log('[PDF] Starting Claude Vision extraction...');
+  console.log('[PDF] Starting AI extraction...');
   
   try {
-    // Use Claude Vision API for PDF text extraction
-    console.log('[PDF] Running Claude Vision extraction...');
-    const extractedText = await extractTextWithClaude(content);
+    // Use Lovable AI Gateway for PDF text extraction
+    console.log('[PDF] Running AI extraction...');
+    const extractedText = await extractTextWithAI(content);
     
-    console.log('[CLAUDE] Extracted text length:', extractedText.length, 'characters');
+    console.log('[AI] Extracted text length:', extractedText.length, 'characters');
     
     if (extractedText.length < 50) {
       console.error('[PDF] CRITICAL: Insufficient text extracted');
@@ -372,47 +372,25 @@ async function parsePDF(content: string, fileName: string) {
   }
 }
 
-async function extractTextWithClaude(pdfContent: string): Promise<string> {
-  console.log('[CLAUDE] Starting Claude Vision extraction...');
+async function extractTextWithAI(pdfContent: string): Promise<string> {
+  console.log('[AI] Starting Lovable AI Gateway extraction...');
   
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  const apiKey = Deno.env.get('LOVABLE_API_KEY');
   
   if (!apiKey) {
-    console.error('[CLAUDE] No ANTHROPIC_API_KEY found in environment variables');
-    throw new Error('ANTHROPIC_API_KEY is not configured');
+    console.error('[AI] No LOVABLE_API_KEY found in environment variables');
+    throw new Error('LOVABLE_API_KEY is not configured');
   }
   
   try {
-    console.log('[CLAUDE] Sending request to Anthropic API...');
+    console.log('[AI] Sending request to Lovable AI Gateway...');
     
     // Convert the decoded PDF content back to base64
     const base64Pdf = btoa(pdfContent);
     
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 16000,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'document',
-                source: {
-                  type: 'base64',
-                  media_type: 'application/pdf',
-                  data: base64Pdf,
-                },
-              },
-              {
-                type: 'text',
-                text: `Extract ALL text content from this bank statement PDF. Focus on:
+    const systemPrompt = `You are a bank statement text extraction assistant. Extract ALL text content from the provided bank statement document accurately and completely.`;
+    
+    const userPrompt = `Extract ALL text content from this bank statement. Focus on:
 1. Bank name and account information
 2. Account holder details
 3. Statement period dates
@@ -426,7 +404,30 @@ async function extractTextWithClaude(pdfContent: string): Promise<string> {
 
 Format the output as plain text, preserving the tabular structure of transactions where possible.
 Include column headers if visible. Extract every single transaction visible in the statement.
-Do not summarize - extract the complete raw text content.`,
+Do not summarize - extract the complete raw text content.`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:application/pdf;base64,${base64Pdf}`,
+                },
+              },
+              {
+                type: 'text',
+                text: userPrompt,
               },
             ],
           },
@@ -434,32 +435,34 @@ Do not summarize - extract the complete raw text content.`,
       }),
     });
     
+    if (response.status === 429) {
+      console.error('[AI] Rate limit exceeded');
+      throw new Error('Rate limits exceeded, please try again later.');
+    }
+    
+    if (response.status === 402) {
+      console.error('[AI] Payment required');
+      throw new Error('Payment required, please add funds to your Lovable AI workspace.');
+    }
+    
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[CLAUDE] API request failed:', response.status, errorText);
-      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
+      console.error('[AI] API request failed:', response.status, errorText);
+      throw new Error(`AI Gateway error: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();
-    console.log('[CLAUDE] API Response received');
+    console.log('[AI] API Response received');
     
-    if (result.content && result.content.length > 0) {
-      const extractedText = result.content
-        .filter((block: { type: string }) => block.type === 'text')
-        .map((block: { text: string }) => block.text)
-        .join('\n');
-      
-      console.log('[CLAUDE] Extracted text length:', extractedText.length, 'characters');
-      console.log('[CLAUDE] First 1000 chars:', extractedText.substring(0, 1000));
-      
-      return extractedText;
-    }
+    const extractedText = result.choices?.[0]?.message?.content || '';
     
-    console.warn('[CLAUDE] No text content in response');
-    return '';
+    console.log('[AI] Extracted text length:', extractedText.length, 'characters');
+    console.log('[AI] First 1000 chars:', extractedText.substring(0, 1000));
+    
+    return extractedText;
   } catch (error) {
-    console.error('[CLAUDE] Error during Claude extraction:', error);
-    console.error('[CLAUDE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('[AI] Error during AI extraction:', error);
+    console.error('[AI] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     throw error;
   }
 }
