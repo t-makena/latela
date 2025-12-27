@@ -13,7 +13,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
 
   if (loading) {
     return (
-      <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="rounded-3xl border border-foreground bg-card">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="heading-card">Recent Transactions</CardTitle>
           <Button variant="ghost" className="text-sm h-auto p-0" disabled>
@@ -37,7 +37,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
 
   if (error) {
     return (
-      <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="rounded-3xl border border-foreground bg-card">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="heading-card">Recent Transactions</CardTitle>
           <Button variant="ghost" className="text-sm h-auto p-0" disabled>
@@ -65,7 +65,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
 
   if (accountTransactions.length === 0) {
     return (
-      <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="rounded-3xl border border-foreground bg-card">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="heading-card">Recent Transactions</CardTitle>
           <Button variant="ghost" className="text-sm h-auto p-0" disabled>
@@ -80,7 +80,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
   }
 
   return (
-    <Card className="rounded-3xl border border-black bg-card" style={{ boxShadow: '4px 4px 0px #000000' }}>
+    <Card className="rounded-3xl border border-foreground bg-card">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="heading-card">Recent Transactions</CardTitle>
         <Button 

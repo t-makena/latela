@@ -140,7 +140,6 @@ export const MobileBudgetInsightCard = () => {
     <div className="animate-fade-in w-full">
       <div 
         className="bg-card rounded-3xl border border-foreground p-5 w-full"
-        style={{ boxShadow: '4px 4px 0px #000000' }}
       >
         <h2 className="heading-card mb-4">{t('finance.budgetInsight')}</h2>
         <table className="w-full">
@@ -161,7 +160,6 @@ export const MobileBudgetInsightCard = () => {
                   <DropdownMenuContent 
                     align="end" 
                     className="bg-card border border-foreground z-50"
-                    style={{ boxShadow: '2px 2px 0px #000000' }}
                   >
                     {periodOptions.map((period) => (
                       <DropdownMenuItem

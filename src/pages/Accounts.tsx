@@ -31,7 +31,7 @@ const Accounts = () => {
   // Mobile neo-brutalist layout
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background py-6 space-y-5 animate-fade-in">
+      <div className="min-h-screen py-6 space-y-5 animate-fade-in">
         <MobileAccountCard account={currentAccount} />
         <MobileBudgetInsightCard />
         
@@ -46,7 +46,7 @@ const Accounts = () => {
 
   // Desktop layout
   return (
-    <div className="min-h-screen bg-background pt-6 px-6 pb-20">
+    <div className="min-h-screen pt-6 px-6 pb-20">
       <div className="space-y-6">
         {/* Account Card and Recent Transactions side by side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
