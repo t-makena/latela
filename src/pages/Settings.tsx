@@ -212,7 +212,7 @@ const Settings = () => {
 
   return (
     <div className="space-y-6 pt-6 px-6">
-      <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Profile</CardTitle>
           <CardDescription>
@@ -317,7 +317,7 @@ const Settings = () => {
         </CardContent>
       </Card>
       
-      <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Account Management</CardTitle>
           <CardDescription>
@@ -363,7 +363,7 @@ const Settings = () => {
         </CardContent>
       </Card>
       
-      <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Account Security</CardTitle>
           <CardDescription>
@@ -512,7 +512,7 @@ const Settings = () => {
         </CardContent>
       </Card>
       
-      <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Income Settings</CardTitle>
           <CardDescription>
@@ -631,7 +631,7 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Preferences</CardTitle>
           <CardDescription>
@@ -685,7 +685,7 @@ const Settings = () => {
       </Card>
 
       {/* Savings Adjustment Strategy */}
-      <Card className="w-full" style={{ boxShadow: '4px 4px 0px #000000' }}>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>{t('settings.savingsStrategy') || 'Savings Adjustment Strategy'}</CardTitle>
           <CardDescription>

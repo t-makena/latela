@@ -155,7 +155,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
   };
   
   return (
-    <Card className="bg-card border border-border w-full" style={{ boxShadow: '4px 4px 0px hsl(var(--foreground))' }}>
+    <Card className="bg-card border border-border w-full">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="heading-main">{t('goals.savingsBalance') || 'Savings Balance'}</CardTitle>

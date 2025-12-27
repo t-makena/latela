@@ -38,7 +38,6 @@ export const MobileBudgetPlanCard = () => {
         <div className="h-5 bg-gray-200 rounded w-24 mb-3"></div>
         <div 
           className="bg-white rounded-3xl border border-black p-5"
-          style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex justify-between mb-4">
             <div className="h-4 bg-gray-200 rounded w-20"></div>
@@ -53,7 +52,7 @@ export const MobileBudgetPlanCard = () => {
     <div className="animate-fade-in w-full">
       <div 
         className="bg-card rounded-3xl border border-foreground p-5 w-full"
-        style={{ boxShadow: '4px 4px 0px #000000' }}
+        
       >
         <h2 className="heading-card mb-4">{t('budget.budgetPlan')}</h2>
         <table className="w-full">

@@ -112,7 +112,6 @@ const Budget = () => {
         {/* Budget Plan Card */}
         <div 
           className="bg-card rounded-3xl border border-foreground p-5 w-full"
-          style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="heading-main">{t('finance.budgetPlan')}</h2>
@@ -167,7 +166,6 @@ const Budget = () => {
         {/* Balance Calculations Card */}
         <div 
           className="bg-card rounded-3xl border border-foreground p-5 w-full"
-          style={{ boxShadow: '4px 4px 0px #000000' }}
         >
           <h2 className="heading-main mb-4">{t('budget.balanceCalculations')}</h2>
           
@@ -227,7 +225,7 @@ const Budget = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Budget Items Table */}
         <div className="lg:col-span-2 w-full">
-          <Card className="w-full bg-card border border-foreground" style={{ boxShadow: '4px 4px 0px #000000' }}>
+          <Card className="w-full bg-card border border-foreground">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="heading-main">{t('finance.budgetPlan')}</CardTitle>
               <Button
@@ -321,7 +319,7 @@ const Budget = () => {
         {/* Right Sidebar Cards */}
         <div className="space-y-6 w-full">
           {/* Balance Calculations Card */}
-          <Card className="w-full bg-card border border-foreground" style={{ boxShadow: '4px 4px 0px #000000' }}>
+          <Card className="w-full bg-card border border-foreground">
             <CardHeader>
               <CardTitle className="heading-main">{t('budget.balanceCalculations')}</CardTitle>
             </CardHeader>
@@ -371,7 +369,7 @@ const Budget = () => {
           </Card>
 
           {/* Calculation Explanation Card */}
-          <Card className="w-full bg-card border border-foreground" style={{ boxShadow: '4px 4px 0px #000000' }}>
+          <Card className="w-full bg-card border border-foreground">
             <CardHeader>
               <CardTitle className="heading-card">Calculation Explanation</CardTitle>
             </CardHeader>
