@@ -15,7 +15,6 @@ import Goals from "./pages/Goals";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -29,7 +28,6 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
         <Routes>
-          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={
             <ProtectedRoute>
