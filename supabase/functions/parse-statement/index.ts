@@ -658,6 +658,7 @@ function detectBank(fileName: string, content: string): string {
   
   // Scoring system - each bank gets points based on matches
   const bankScores: Record<string, number> = {
+    // Major retail banks
     'Capitec': 0,
     'FNB': 0,
     'ABSA': 0,
@@ -667,6 +668,17 @@ function detectBank(fileName: string, content: string): string {
     'TymeBank': 0,
     'Bank Zero': 0,
     'Investec': 0,
+    // Additional SA banks
+    'African Bank': 0,
+    'Bidvest Bank': 0,
+    'Sasfin Bank': 0,
+    'Grindrod Bank': 0,
+    'Mercantile Bank': 0,
+    'SA Post Bank': 0,
+    'Ubank': 0,
+    'FinBond': 0,
+    'Access Bank': 0,
+    'Old Mutual': 0,
   };
   
   // HIGH-WEIGHT patterns (bank statement headers, branding) - +10 points
@@ -680,6 +692,17 @@ function detectBank(fileName: string, content: string): string {
     'TymeBank': [/TYMEBANK\s+STATEMENT/i, /TYME\s+DIGITAL/i, /TYME\s+BANK\s+STATEMENT/i],
     'Bank Zero': [/BANK\s+ZERO\s+STATEMENT/i, /BANKZERO\s+STATEMENT/i],
     'Investec': [/INVESTEC\s+STATEMENT/i, /INVESTEC\s+BANK\s+LIMITED/i, /INVESTEC\s+PRIVATE\s+BANK/i],
+    // Additional SA banks
+    'African Bank': [/AFRICAN\s+BANK\s+STATEMENT/i, /AFRICAN\s+BANK\s+LIMITED/i],
+    'Bidvest Bank': [/BIDVEST\s+BANK\s+STATEMENT/i, /BIDVEST\s+BANK\s+LIMITED/i],
+    'Sasfin Bank': [/SASFIN\s+BANK\s+STATEMENT/i, /SASFIN\s+HOLDINGS/i],
+    'Grindrod Bank': [/GRINDROD\s+BANK\s+STATEMENT/i, /GRINDROD\s+LIMITED/i],
+    'Mercantile Bank': [/MERCANTILE\s+BANK\s+STATEMENT/i, /MERCANTILE\s+BANK\s+HOLDINGS/i],
+    'SA Post Bank': [/POSTBANK\s+STATEMENT/i, /SA\s+POST\s+BANK/i, /SOUTH\s+AFRICAN\s+POST\s+OFFICE/i],
+    'Ubank': [/UBANK\s+STATEMENT/i, /UBANK\s+LIMITED/i],
+    'FinBond': [/FINBOND\s+STATEMENT/i, /FINBOND\s+MUTUAL\s+BANK/i],
+    'Access Bank': [/ACCESS\s+BANK\s+STATEMENT/i, /ACCESS\s+BANK\s+SOUTH\s+AFRICA/i],
+    'Old Mutual': [/OLD\s+MUTUAL\s+STATEMENT/i, /OLD\s+MUTUAL\s+MONEY\s+ACCOUNT/i],
   };
   
   // Check header patterns (high weight: +10 points)
@@ -703,6 +726,17 @@ function detectBank(fileName: string, content: string): string {
     'TymeBank': ['TYME'],
     'Bank Zero': ['BANKZERO', 'BANK-ZERO'],
     'Investec': ['INVESTEC'],
+    // Additional SA banks
+    'African Bank': ['AFRICAN'],
+    'Bidvest Bank': ['BIDVEST'],
+    'Sasfin Bank': ['SASFIN'],
+    'Grindrod Bank': ['GRINDROD'],
+    'Mercantile Bank': ['MERCANTILE'],
+    'SA Post Bank': ['POSTBANK', 'SASSA'],
+    'Ubank': ['UBANK'],
+    'FinBond': ['FINBOND'],
+    'Access Bank': ['ACCESS'],
+    'Old Mutual': ['OLDMUTUAL'],
   };
   
   for (const [bank, keywords] of Object.entries(filePatterns)) {
@@ -726,6 +760,17 @@ function detectBank(fileName: string, content: string): string {
     'TymeBank': ['TYMEBANK', 'TYME BANK'],
     'Bank Zero': ['BANK ZERO', 'BANKZERO'],
     'Investec': ['INVESTEC'],
+    // Additional SA banks
+    'African Bank': ['AFRICAN BANK'],
+    'Bidvest Bank': ['BIDVEST BANK'],
+    'Sasfin Bank': ['SASFIN'],
+    'Grindrod Bank': ['GRINDROD'],
+    'Mercantile Bank': ['MERCANTILE BANK'],
+    'SA Post Bank': ['POSTBANK', 'SA POST BANK', 'SASSA'],
+    'Ubank': ['UBANK'],
+    'FinBond': ['FINBOND'],
+    'Access Bank': ['ACCESS BANK'],
+    'Old Mutual': ['OLD MUTUAL'],
   };
   
   for (const [bank, keywords] of Object.entries(contentPatterns)) {
