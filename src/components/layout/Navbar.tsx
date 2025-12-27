@@ -35,18 +35,27 @@ export const Navbar = () => {
           showLabels ? "" : "justify-center"
         )}>
           {profile?.avatar_type === 'custom' && profile?.avatar_url ? (
-            <Avatar className="h-10 w-10 ring-2 ring-foreground">
+            <Avatar className={cn(
+              "ring-2 ring-foreground",
+              showLabels ? "h-10 w-10" : "h-14 w-14"
+            )}>
               <AvatarImage src={profile.avatar_url} alt="Profile" />
               <AvatarFallback className="bg-muted text-foreground font-semibold text-sm">
                 {getInitials()}
               </AvatarFallback>
             </Avatar>
           ) : profile?.avatar_type === 'default' && DefaultAvatarComponent ? (
-            <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-foreground">
+            <div className={cn(
+              "rounded-full overflow-hidden ring-2 ring-foreground",
+              showLabels ? "h-10 w-10" : "h-14 w-14"
+            )}>
               <DefaultAvatarComponent className="h-full w-full" />
             </div>
           ) : (
-            <Avatar className="h-10 w-10 ring-2 ring-foreground">
+            <Avatar className={cn(
+              "ring-2 ring-foreground",
+              showLabels ? "h-10 w-10" : "h-14 w-14"
+            )}>
               <AvatarFallback className="bg-muted text-foreground font-semibold text-sm">
                 {getInitials()}
               </AvatarFallback>
@@ -256,7 +265,7 @@ export const Navbar = () => {
         <div 
           className={cn(
             "h-fit transition-all duration-300 ease-in-out relative bg-background rounded-2xl border-2 border-foreground shadow-[-4px_4px_0_0_hsl(var(--foreground))]",
-            isExpanded ? "w-64 pt-6 px-2 pb-4" : "w-20 pt-6 pb-4 px-2"
+            isExpanded ? "w-64 pt-6 px-2 pb-4" : "w-24 pt-6 pb-4 px-2"
           )}
         >
           {/* Toggle Button / Logo */}
@@ -281,7 +290,7 @@ export const Navbar = () => {
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="flex items-center justify-center hover:opacity-80 transition-opacity p-2"
               >
-                <LatelaIcon className="h-10 w-10" />
+                <LatelaIcon className="h-16 w-16" />
               </button>
             )}
           </div>
