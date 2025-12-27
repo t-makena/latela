@@ -1,11 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import pdfParse from "npm:pdf-parse@1.1.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Allowed file types and max size (10MB)
+const ALLOWED_FILE_TYPES = ['application/pdf', 'text/csv'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -17,17 +20,66 @@ serve(async (req) => {
   console.log('[PARSE-STATEMENT] ========== New Request ==========');
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('[AUTH] No authorization header provided');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('[AUTH] User authentication failed:', userError?.message);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[AUTH] Authenticated user:', user.id);
+
     const { fileContent, fileName, fileType } = await req.json();
     console.log('[REQUEST] File:', fileName, '| Type:', fileType, '| Size:', fileContent?.length || 0, 'bytes (base64)');
 
+    // Server-side file type validation
+    if (!ALLOWED_FILE_TYPES.includes(fileType)) {
+      console.error('[VALIDATION] Invalid file type:', fileType);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid file type. Only PDF and CSV files are allowed.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (!fileContent || !fileName) {
-      throw new Error('Missing required fields');
+      console.error('[VALIDATION] Missing required fields');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing required fields: fileContent and fileName are required.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Decode base64 content
     const decodedContent = atob(fileContent);
     const decodedSize = decodedContent.length;
     console.log('[DECODE] Decoded size:', decodedSize, 'bytes');
+
+    // Server-side file size validation
+    if (decodedSize > MAX_FILE_SIZE) {
+      console.error('[VALIDATION] File too large:', decodedSize, 'bytes (max:', MAX_FILE_SIZE, ')');
+      return new Response(
+        JSON.stringify({ success: false, error: 'File too large. Maximum size is 10MB.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     let parsedData;
 
@@ -193,74 +245,22 @@ function parseCSV(content: string, fileName: string) {
 }
 
 async function parsePDF(content: string, fileName: string) {
-  console.log('[PDF] Starting dual extraction (PDF + OCR)...');
+  console.log('[PDF] Starting OCR-based extraction...');
   
   try {
-    // Convert string content to Uint8Array buffer for pdf-parse
-    const encoder = new TextEncoder();
-    const buffer = encoder.encode(content);
-    console.log('[PDF] Buffer created:', buffer.length, 'bytes');
+    // Use OCR for PDF text extraction (pdf-parse has Deno compatibility issues)
+    console.log('[PDF] Running OCR extraction...');
+    const ocrText = await performOCR(content);
     
-    // Run BOTH PDF text extraction AND OCR in parallel
-    console.log('[PDF] Running PDF text extraction and OCR simultaneously...');
-    const [pdfResult, ocrText] = await Promise.all([
-      (async () => {
-        try {
-          const pdfData = await pdfParse(buffer);
-          console.log('[PDF] Text extraction complete');
-          console.log('[PDF] Pages:', pdfData.numpages);
-          console.log('[PDF] Text length:', pdfData.text.length, 'characters');
-          return { text: pdfData.text, pages: pdfData.numpages };
-        } catch (error) {
-          console.error('[PDF] Text extraction failed:', error);
-          return { text: '', pages: 0 };
-        }
-      })(),
-      performOCR(content)
-    ]);
-    
-    const pdfText = pdfResult.text;
-    const numPages = pdfResult.pages;
-    
-    console.log('[PDF] PDF Text length:', pdfText.length, 'characters');
     console.log('[OCR] OCR Text length:', ocrText.length, 'characters');
     
-    // Combine both texts - prioritize the longer one but keep both for better pattern matching
-    let combinedText = '';
-    
-    if (pdfText.length > 0 && ocrText.length > 0) {
-      // Both methods extracted text - combine them
-      console.log('[COMBINE] Using combined text from both PDF and OCR');
-      combinedText = pdfText + '\n\n=== OCR TEXT ===\n\n' + ocrText;
-    } else if (pdfText.length > 0) {
-      console.log('[COMBINE] Using only PDF text (OCR failed)');
-      combinedText = pdfText;
-    } else if (ocrText.length > 0) {
-      console.log('[COMBINE] Using only OCR text (PDF extraction failed)');
-      combinedText = ocrText;
-    } else {
-      console.error('[COMBINE] Both PDF extraction and OCR failed!');
-      throw new Error('Unable to extract any text from PDF');
-    }
-    
-    console.log('[COMBINE] Combined text length:', combinedText.length, 'characters');
-    console.log('[COMBINE] First 500 chars:', combinedText.substring(0, 500));
-    
-    // If combined text is still too short, throw a helpful error
-    if (combinedText.length < 50) {
-      console.error('[COMBINE] CRITICAL: Insufficient text extracted');
-      console.error('[COMBINE] PDF text length:', pdfText.length);
-      console.error('[COMBINE] OCR text length:', ocrText.length);
-      console.error('[COMBINE] This usually means:');
-      console.error('[COMBINE]   1. PDF has corrupt/compressed streams (Bad FCHECK errors)');
-      console.error('[COMBINE]   2. PDF is image-based but OCR quality is poor');
-      console.error('[COMBINE]   3. OCR hit page limit (free tier: 3 pages, this PDF:', numPages, 'pages)');
-      
+    if (ocrText.length < 50) {
+      console.error('[PDF] CRITICAL: Insufficient text extracted');
+      console.error('[PDF] OCR text length:', ocrText.length);
       throw new Error(
         `Unable to extract readable text from PDF. ` +
-        `Extracted only ${combinedText.length} characters from ${numPages} pages. ` +
-        `This PDF may be corrupted, have poor image quality, or exceed the 3-page OCR limit. ` +
-        `Try: 1) Downloading a fresh copy, 2) Converting to images first, 3) Using first 3 pages only.`
+        `Extracted only ${ocrText.length} characters. ` +
+        `This PDF may have poor image quality or exceed the 3-page OCR limit.`
       );
     }
     
