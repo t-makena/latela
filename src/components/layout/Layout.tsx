@@ -16,7 +16,7 @@ export const Layout = ({ children }: LayoutProps) => {
       
       <div className={`container mx-auto flex h-full flex-col md:flex-row ${isMobile ? 'p-0' : 'p-2 md:p-4'} relative z-10 gap-4`}>
         {!isMobile && (
-          <div className="sticky top-4 self-start">
+          <div className="sticky top-4 self-start mt-6">
             <Navbar />
           </div>
         )}
