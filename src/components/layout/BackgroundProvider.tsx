@@ -110,9 +110,9 @@ export const BackgroundProvider = () => {
             inset: 0,
             transform: transform || undefined,
           } : {
-            // Desktop: use max dimension for both to ensure coverage when rotated
-            width: 'max(100vw, 100vh)',
-            height: 'max(100vw, 100vh)',
+            // Desktop: swap dimensions so portrait image fills landscape when rotated
+            width: '100vh',
+            height: '100vw',
             top: '50%',
             left: '50%',
             transform: getDesktopTransform(),
