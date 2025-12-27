@@ -265,11 +265,11 @@ async function parsePDF(content: string, fileName: string) {
     }
     
     // Detect bank
-    const bankName = detectBank(fileName, combinedText);
+    const bankName = detectBank(fileName, ocrText);
     console.log('[BANK] Detected bank:', bankName);
     
     // Extract account number
-    const accountNumber = extractAccountNumber(combinedText, bankName);
+    const accountNumber = extractAccountNumber(ocrText, bankName);
     console.log('[ACCOUNT] Extracted account number:', accountNumber);
     
     // Extract balance with specific patterns for different banks
@@ -278,7 +278,7 @@ async function parsePDF(content: string, fileName: string) {
     
     // Capitec-specific balance extraction
     if (bankName === 'Capitec') {
-      const closingBalanceMatch = combinedText.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
+      const closingBalanceMatch = ocrText.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
       if (closingBalanceMatch && closingBalanceMatch[1]) {
         currentBalance = parseAmount(closingBalanceMatch[1]);
         console.log('[BALANCE] Found Capitec closing balance:', currentBalance);
@@ -295,12 +295,12 @@ async function parsePDF(content: string, fileName: string) {
       
       for (let i = 0; i < balancePatterns.length; i++) {
         const pattern = balancePatterns[i];
-        const matches = Array.from(combinedText.matchAll(pattern));
+        const matches = Array.from(ocrText.matchAll(pattern));
         console.log(`[BALANCE] Pattern ${i + 1} matches:`, matches.length);
         
         if (matches.length > 0) {
           // Get the last balance mentioned (most recent)
-          const lastMatch = matches[matches.length - 1];
+          const lastMatch = matches[matches.length - 1] as RegExpMatchArray;
           if (lastMatch[1]) {
             currentBalance = parseAmount(lastMatch[1]);
             console.log('[BALANCE] Found balance with pattern', i + 1, ':', currentBalance);
@@ -314,12 +314,12 @@ async function parsePDF(content: string, fileName: string) {
       console.warn('[BALANCE] WARNING: No balance found in PDF');
     }
     
-    const accountType = detectAccountType(combinedText, fileName);
+    const accountType = detectAccountType(ocrText, fileName);
     console.log('[ACCOUNT-TYPE] Detected type:', accountType);
     
     // Extract transactions using improved patterns
     console.log('[TRANSACTIONS] Starting transaction extraction...');
-    const transactions = extractTransactionsFromPDF(combinedText, bankName);
+    const transactions = extractTransactionsFromPDF(ocrText, bankName);
     console.log('[TRANSACTIONS] Extracted', transactions.length, 'transactions');
     
     if (transactions.length > 0) {
