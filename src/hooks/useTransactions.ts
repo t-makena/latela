@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 export interface Transaction {
   id: string;
@@ -25,42 +26,51 @@ export interface Transaction {
   merchant_name: string | null;
 }
 
-export const useTransactions = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface UseTransactionsOptions {
+  currentMonthOnly?: boolean;
+  limit?: number;
+}
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
-        // Use the detailed view to get category names
-        const { data, error } = await supabase
-          .from('v_transactions_with_details')
-          .select('*')
-          .order('transaction_date', { ascending: false });
+export const useTransactions = (options: UseTransactionsOptions = {}) => {
+  const { currentMonthOnly = true, limit = 500 } = options;
 
-        if (error) {
-          throw error;
-        }
+  const { data: transactions = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['transactions', currentMonthOnly, limit],
+    queryFn: async () => {
+      let query = supabase
+        .from('v_transactions_with_details')
+        .select('*')
+        .order('transaction_date', { ascending: false });
 
-        // Transform Supabase data to match our Transaction interface
-        const transformedTransactions: Transaction[] = (data || []).map(transaction => ({
-          ...transaction,
-          type: (transaction.amount ?? 0) < 0 ? 'expense' : 'income'
-        }));
+      // Apply current month filter for Budget page optimization
+      if (currentMonthOnly) {
+        const now = new Date();
+        const monthStart = startOfMonth(now);
+        const monthEnd = endOfMonth(now);
         
-        setTransactions(transformedTransactions);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        console.error('Error fetching transactions:', err);
-      } finally {
-        setLoading(false);
+        query = query
+          .gte('transaction_date', format(monthStart, 'yyyy-MM-dd'))
+          .lte('transaction_date', format(monthEnd, 'yyyy-MM-dd'));
       }
-    };
 
-    fetchTransactions();
-  }, []);
+      // Apply limit
+      query = query.limit(limit);
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      // Transform Supabase data to match our Transaction interface
+      return (data || []).map(transaction => ({
+        ...transaction,
+        type: (transaction.amount ?? 0) < 0 ? 'expense' : 'income'
+      })) as Transaction[];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
+  });
+
+  const error = queryError instanceof Error ? queryError.message : queryError ? 'An error occurred' : null;
 
   return { transactions, loading, error };
 };
