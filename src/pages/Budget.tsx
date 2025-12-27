@@ -279,7 +279,7 @@ const Budget = () => {
         </div>
 
         {/* Main Budget Items Table */}
-        <div className="lg:col-span-2 w-full">
+        <div className={`${showBalanceCalculations ? 'lg:col-span-2' : 'lg:col-span-3'} w-full`}>
           <Card className="w-full bg-card border border-foreground">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="heading-main">{t('finance.budgetPlan')}</CardTitle>
