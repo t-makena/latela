@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -8,12 +9,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { useBudgetMethod, BudgetMethod } from '@/hooks/useBudgetMethod';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
+import { cn } from '@/lib/utils';
 
-const PERCENTAGE_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80];
+// 0-100 in 5% increments
+const PERCENTAGE_OPTIONS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
 
 export const BudgetMethodCard = () => {
   const { t } = useLanguage();
@@ -27,6 +31,25 @@ export const BudgetMethodCard = () => {
     updatePercentages,
   } = useBudgetMethod();
 
+  // Local state for unsaved changes
+  const [localNeeds, setLocalNeeds] = useState<number>(needsPercentage);
+  const [localWants, setLocalWants] = useState<number>(wantsPercentage);
+  const [localSavings, setLocalSavings] = useState<number>(savingsPercentage);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sync local state when database values change
+  useEffect(() => {
+    setLocalNeeds(needsPercentage);
+    setLocalWants(wantsPercentage);
+    setLocalSavings(savingsPercentage);
+  }, [needsPercentage, wantsPercentage, savingsPercentage]);
+
+  const total = localNeeds + localWants + localSavings;
+  const isValidTotal = total === 100;
+  const hasChanges = localNeeds !== needsPercentage || 
+                     localWants !== wantsPercentage || 
+                     localSavings !== savingsPercentage;
+
   const handleMethodChange = async (value: string) => {
     try {
       await updateBudgetMethod(value as BudgetMethod);
@@ -36,62 +59,27 @@ export const BudgetMethodCard = () => {
     }
   };
 
-  const handlePercentageChange = async (
-    category: 'needs' | 'wants' | 'savings',
-    value: number
-  ) => {
-    let newNeeds = needsPercentage;
-    let newWants = wantsPercentage;
-    let newSavings = savingsPercentage;
-
-    if (category === 'needs') {
-      newNeeds = value;
-      // Adjust wants and savings proportionally to maintain 100%
-      const remaining = 100 - value;
-      const currentOtherTotal = wantsPercentage + savingsPercentage;
-      if (currentOtherTotal > 0) {
-        newWants = Math.round((wantsPercentage / currentOtherTotal) * remaining);
-        newSavings = remaining - newWants;
-      } else {
-        newWants = Math.round(remaining * 0.6);
-        newSavings = remaining - newWants;
-      }
-    } else if (category === 'wants') {
-      newWants = value;
-      const remaining = 100 - value;
-      const currentOtherTotal = needsPercentage + savingsPercentage;
-      if (currentOtherTotal > 0) {
-        newNeeds = Math.round((needsPercentage / currentOtherTotal) * remaining);
-        newSavings = remaining - newNeeds;
-      } else {
-        newNeeds = Math.round(remaining * 0.7);
-        newSavings = remaining - newNeeds;
-      }
-    } else {
-      newSavings = value;
-      const remaining = 100 - value;
-      const currentOtherTotal = needsPercentage + wantsPercentage;
-      if (currentOtherTotal > 0) {
-        newNeeds = Math.round((needsPercentage / currentOtherTotal) * remaining);
-        newWants = remaining - newNeeds;
-      } else {
-        newNeeds = Math.round(remaining * 0.6);
-        newWants = remaining - newNeeds;
-      }
+  const handleSavePercentages = async () => {
+    if (!isValidTotal) {
+      toast.error('Total must equal 100%');
+      return;
     }
 
-    // Ensure we hit exactly 100%
-    const total = newNeeds + newWants + newSavings;
-    if (total !== 100) {
-      newSavings += (100 - total);
-    }
-
+    setIsSaving(true);
     try {
-      await updatePercentages(newNeeds, newWants, newSavings);
+      await updatePercentages(localNeeds, localWants, localSavings);
       toast.success('Budget percentages updated');
     } catch (err) {
       toast.error('Failed to update percentages');
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handleResetChanges = () => {
+    setLocalNeeds(needsPercentage);
+    setLocalWants(wantsPercentage);
+    setLocalSavings(savingsPercentage);
   };
 
   if (loading) {
@@ -154,8 +142,8 @@ export const BudgetMethodCard = () => {
               <div className="grid grid-cols-2 gap-2 items-center">
                 <Label className="text-sm">Needs</Label>
                 <Select
-                  value={needsPercentage.toString()}
-                  onValueChange={(v) => handlePercentageChange('needs', parseInt(v))}
+                  value={localNeeds.toString()}
+                  onValueChange={(v) => setLocalNeeds(parseInt(v))}
                 >
                   <SelectTrigger className="h-9">
                     <SelectValue />
@@ -173,8 +161,8 @@ export const BudgetMethodCard = () => {
               <div className="grid grid-cols-2 gap-2 items-center">
                 <Label className="text-sm">Wants</Label>
                 <Select
-                  value={wantsPercentage.toString()}
-                  onValueChange={(v) => handlePercentageChange('wants', parseInt(v))}
+                  value={localWants.toString()}
+                  onValueChange={(v) => setLocalWants(parseInt(v))}
                 >
                   <SelectTrigger className="h-9">
                     <SelectValue />
@@ -192,8 +180,8 @@ export const BudgetMethodCard = () => {
               <div className="grid grid-cols-2 gap-2 items-center">
                 <Label className="text-sm">Savings</Label>
                 <Select
-                  value={savingsPercentage.toString()}
-                  onValueChange={(v) => handlePercentageChange('savings', parseInt(v))}
+                  value={localSavings.toString()}
+                  onValueChange={(v) => setLocalSavings(parseInt(v))}
                 >
                   <SelectTrigger className="h-9">
                     <SelectValue />
@@ -210,10 +198,40 @@ export const BudgetMethodCard = () => {
               
               <div className="grid grid-cols-2 gap-2 items-center pt-2 border-t border-border">
                 <span className="text-sm font-bold">Total</span>
-                <span className="text-sm font-bold text-right">
-                  {needsPercentage + wantsPercentage + savingsPercentage}%
+                <span className={cn(
+                  "text-sm font-bold text-right",
+                  isValidTotal ? "text-green-600" : "text-destructive"
+                )}>
+                  {total}%
                 </span>
               </div>
+
+              {!isValidTotal && hasChanges && (
+                <p className="text-xs text-destructive">
+                  Total must equal 100% to save changes
+                </p>
+              )}
+
+              {hasChanges && (
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetChanges}
+                    className="flex-1"
+                  >
+                    Reset
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSavePercentages}
+                    disabled={!isValidTotal || isSaving}
+                    className="flex-1"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}
