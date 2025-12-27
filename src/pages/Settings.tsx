@@ -10,7 +10,7 @@ import { Eye, EyeOff, Edit2, X, ChevronDown, ChevronUp, Plus } from "lucide-reac
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTheme } from "next-themes";
-import { AddAccountDialog } from "@/components/accounts/AddAccountDialog";
+import { StatementUploadDialog } from "@/components/accounts/StatementUploadDialog";
 import { ManageCustomCategoriesSection } from "@/components/settings/ManageCustomCategoriesSection";
 import { useIncomeSettings, IncomeFrequency } from "@/hooks/useIncomeSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -749,7 +749,7 @@ const Settings = () => {
       {/* Custom Categories Management */}
       <ManageCustomCategoriesSection />
 
-      <AddAccountDialog
+      <StatementUploadDialog
         open={addAccountDialogOpen}
         onOpenChange={setAddAccountDialogOpen}
         onSuccess={() => window.location.reload()}
