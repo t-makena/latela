@@ -245,31 +245,31 @@ function parseCSV(content: string, fileName: string) {
 }
 
 async function parsePDF(content: string, fileName: string) {
-  console.log('[PDF] Starting OCR-based extraction...');
+  console.log('[PDF] Starting Claude Vision extraction...');
   
   try {
-    // Use OCR for PDF text extraction (pdf-parse has Deno compatibility issues)
-    console.log('[PDF] Running OCR extraction...');
-    const ocrText = await performOCR(content);
+    // Use Claude Vision API for PDF text extraction
+    console.log('[PDF] Running Claude Vision extraction...');
+    const extractedText = await extractTextWithClaude(content);
     
-    console.log('[OCR] OCR Text length:', ocrText.length, 'characters');
+    console.log('[CLAUDE] Extracted text length:', extractedText.length, 'characters');
     
-    if (ocrText.length < 50) {
+    if (extractedText.length < 50) {
       console.error('[PDF] CRITICAL: Insufficient text extracted');
-      console.error('[PDF] OCR text length:', ocrText.length);
+      console.error('[PDF] Extracted text length:', extractedText.length);
       throw new Error(
         `Unable to extract readable text from PDF. ` +
-        `Extracted only ${ocrText.length} characters. ` +
-        `This PDF may have poor image quality or exceed the 3-page OCR limit.`
+        `Extracted only ${extractedText.length} characters. ` +
+        `The PDF may be corrupted or contain no readable content.`
       );
     }
     
     // Detect bank
-    const bankName = detectBank(fileName, ocrText);
+    const bankName = detectBank(fileName, extractedText);
     console.log('[BANK] Detected bank:', bankName);
     
     // Extract account number
-    const accountNumber = extractAccountNumber(ocrText, bankName);
+    const accountNumber = extractAccountNumber(extractedText, bankName);
     console.log('[ACCOUNT] Extracted account number:', accountNumber);
     
     // Extract balance with specific patterns for different banks
@@ -278,7 +278,7 @@ async function parsePDF(content: string, fileName: string) {
     
     // Capitec-specific balance extraction
     if (bankName === 'Capitec') {
-      const closingBalanceMatch = ocrText.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
+      const closingBalanceMatch = extractedText.match(/Closing\s+Balance:\s*R\s*([\d,\s]+\.?\d*)/i);
       if (closingBalanceMatch && closingBalanceMatch[1]) {
         currentBalance = parseAmount(closingBalanceMatch[1]);
         console.log('[BALANCE] Found Capitec closing balance:', currentBalance);
@@ -295,7 +295,7 @@ async function parsePDF(content: string, fileName: string) {
       
       for (let i = 0; i < balancePatterns.length; i++) {
         const pattern = balancePatterns[i];
-        const matches = Array.from(ocrText.matchAll(pattern));
+        const matches = Array.from(extractedText.matchAll(pattern));
         console.log(`[BALANCE] Pattern ${i + 1} matches:`, matches.length);
         
         if (matches.length > 0) {
@@ -314,12 +314,12 @@ async function parsePDF(content: string, fileName: string) {
       console.warn('[BALANCE] WARNING: No balance found in PDF');
     }
     
-    const accountType = detectAccountType(ocrText, fileName);
+    const accountType = detectAccountType(extractedText, fileName);
     console.log('[ACCOUNT-TYPE] Detected type:', accountType);
     
     // Extract transactions using improved patterns
     console.log('[TRANSACTIONS] Starting transaction extraction...');
-    const transactions = extractTransactionsFromPDF(ocrText, bankName);
+    const transactions = extractTransactionsFromPDF(extractedText, bankName);
     console.log('[TRANSACTIONS] Extracted', transactions.length, 'transactions');
     
     if (transactions.length > 0) {
@@ -353,98 +353,95 @@ async function parsePDF(content: string, fileName: string) {
   }
 }
 
-async function performOCR(base64Content: string): Promise<string> {
-  console.log('[OCR] Starting OCR process...');
+async function extractTextWithClaude(pdfContent: string): Promise<string> {
+  console.log('[CLAUDE] Starting Claude Vision extraction...');
   
-  const apiKey = Deno.env.get('OCR_SPACE_API_KEY');
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   
   if (!apiKey) {
-    console.error('[OCR] No OCR_SPACE_API_KEY found in environment variables');
-    return '';
+    console.error('[CLAUDE] No ANTHROPIC_API_KEY found in environment variables');
+    throw new Error('ANTHROPIC_API_KEY is not configured');
   }
   
   try {
-    console.log('[OCR] Sending request to OCR.Space API...');
-    console.log('[OCR] Note: Free tier OCR.Space limits to 3 pages per request');
+    console.log('[CLAUDE] Sending request to Anthropic API...');
     
-    // OCR.Space API expects base64 data with proper prefix
-    const base64WithPrefix = `data:application/pdf;base64,${btoa(base64Content)}`;
+    // Convert the decoded PDF content back to base64
+    const base64Pdf = btoa(pdfContent);
     
-    const formData = new FormData();
-    formData.append('base64Image', base64WithPrefix);
-    formData.append('language', 'eng');
-    formData.append('isOverlayRequired', 'false');
-    formData.append('detectOrientation', 'true');
-    formData.append('scale', 'true');
-    formData.append('OCREngine', '2'); // Use OCR Engine 2 for better accuracy
-    formData.append('filetype', 'PDF');
-    formData.append('isTable', 'true'); // Enable table detection for bank statements
-    
-    const response = await fetch('https://api.ocr.space/parse/image', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 
-        'apikey': apiKey 
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
       },
-      body: formData,
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 16000,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'document',
+                source: {
+                  type: 'base64',
+                  media_type: 'application/pdf',
+                  data: base64Pdf,
+                },
+              },
+              {
+                type: 'text',
+                text: `Extract ALL text content from this bank statement PDF. Focus on:
+1. Bank name and account information
+2. Account holder details
+3. Statement period dates
+4. Opening and closing balances
+5. ALL transactions with their:
+   - Date
+   - Description/Narrative
+   - Amount (Money In/Money Out)
+   - Balance after transaction
+   - Any fees or charges
+
+Format the output as plain text, preserving the tabular structure of transactions where possible.
+Include column headers if visible. Extract every single transaction visible in the statement.
+Do not summarize - extract the complete raw text content.`,
+              },
+            ],
+          },
+        ],
+      }),
     });
     
     if (!response.ok) {
-      console.error('[OCR] API request failed with status:', response.status);
       const errorText = await response.text();
-      console.error('[OCR] Error response:', errorText);
-      return '';
+      console.error('[CLAUDE] API request failed:', response.status, errorText);
+      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();
-    console.log('[OCR] API Response status:', result.OCRExitCode);
-    console.log('[OCR] Processing time:', result.ProcessingTimeInMilliseconds, 'ms');
+    console.log('[CLAUDE] API Response received');
     
-    if (result.IsErroredOnProcessing) {
-      console.error('[OCR] OCR processing error:', result.ErrorMessage);
-      console.error('[OCR] Error details:', result.ErrorDetails);
+    if (result.content && result.content.length > 0) {
+      const extractedText = result.content
+        .filter((block: { type: string }) => block.type === 'text')
+        .map((block: { text: string }) => block.text)
+        .join('\n');
       
-      // Check if it's a page limit error
-      if (result.ErrorDetails && Array.isArray(result.ErrorDetails)) {
-        const pageLimitError = result.ErrorDetails.find((err: string) => 
-          err.includes('maximum page limit') || err.includes('page limit')
-        );
-        if (pageLimitError) {
-          console.warn('[OCR] Page limit reached - only first 3 pages processed');
-          // Continue processing even with page limit - we'll get the first 3 pages
-        }
-      } else {
-        return '';
-      }
+      console.log('[CLAUDE] Extracted text length:', extractedText.length, 'characters');
+      console.log('[CLAUDE] First 1000 chars:', extractedText.substring(0, 1000));
+      
+      return extractedText;
     }
     
-    if (result.ParsedResults && result.ParsedResults.length > 0) {
-      let fullText = '';
-      
-      for (let i = 0; i < result.ParsedResults.length; i++) {
-        const pageResult = result.ParsedResults[i];
-        console.log(`[OCR] Page ${i + 1} text length:`, pageResult.ParsedText?.length || 0);
-        
-        if (pageResult.ParsedText) {
-          fullText += pageResult.ParsedText + '\n\n--- PAGE BREAK ---\n\n';
-        }
-      }
-      
-      console.log('[OCR] Total OCR text extracted:', fullText.length, 'characters');
-      console.log('[OCR] First 1000 chars:', fullText.substring(0, 1000));
-      
-      if (fullText.length === 0) {
-        console.error('[OCR] No text extracted from any page - PDF may be image-based with poor quality');
-      }
-      
-      return fullText;
-    }
-    
-    console.warn('[OCR] No parsed results in OCR response');
+    console.warn('[CLAUDE] No text content in response');
     return '';
   } catch (error) {
-    console.error('[OCR] Error during OCR processing:', error);
-    console.error('[OCR] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    return '';
+    console.error('[CLAUDE] Error during Claude extraction:', error);
+    console.error('[CLAUDE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    throw error;
   }
 }
 
