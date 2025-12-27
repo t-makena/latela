@@ -388,16 +388,16 @@ a {
 .dark .card {
   box-shadow: 
     0 0 0 1px hsl(0 0% 100%),
-    4px 4px 0px hsl(0 0% 0%),
-    4px 4px 0px 1px hsl(0 0% 100%);
+    4px 4px 0px 0px hsl(0 0% 0%),
+    4px 4px 0px 2px hsl(0 0% 100%);
 }
 
 .dark .card:hover {
   transform: translate(-1px, -1px);
   box-shadow: 
     0 0 0 1px hsl(0 0% 100%),
-    5px 5px 0px hsl(0 0% 0%),
-    5px 5px 0px 1px hsl(0 0% 100%);
+    5px 5px 0px 0px hsl(0 0% 0%),
+    5px 5px 0px 2px hsl(0 0% 100%);
 }
 
 /* Hover effect for financial metric items */
