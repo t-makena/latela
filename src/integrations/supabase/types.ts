@@ -558,6 +558,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          avatar_type: string | null
           avatar_url: string | null
           bio: string | null
           city: string | null
@@ -567,6 +568,7 @@ export type Database = {
           currency: string | null
           date_of_birth: string | null
           default_account_id: string | null
+          default_avatar_id: string | null
           display_name: string | null
           email_notifications: boolean | null
           email_verified: boolean | null
@@ -597,6 +599,7 @@ export type Database = {
           week_start_day: number | null
         }
         Insert: {
+          avatar_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
@@ -606,6 +609,7 @@ export type Database = {
           currency?: string | null
           date_of_birth?: string | null
           default_account_id?: string | null
+          default_avatar_id?: string | null
           display_name?: string | null
           email_notifications?: boolean | null
           email_verified?: boolean | null
@@ -636,6 +640,7 @@ export type Database = {
           week_start_day?: number | null
         }
         Update: {
+          avatar_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
@@ -645,6 +650,7 @@ export type Database = {
           currency?: string | null
           date_of_birth?: string | null
           default_account_id?: string | null
+          default_avatar_id?: string | null
           display_name?: string | null
           email_notifications?: boolean | null
           email_verified?: boolean | null
