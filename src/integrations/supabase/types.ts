@@ -561,6 +561,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           city: string | null
+          color_palette: string
           country: string | null
           created_at: string | null
           currency: string | null
@@ -599,6 +600,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          color_palette?: string
           country?: string | null
           created_at?: string | null
           currency?: string | null
@@ -637,6 +639,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          color_palette?: string
           country?: string | null
           created_at?: string | null
           currency?: string | null
