@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
   avatar_url: string | null;
+  avatar_type: string | null;
+  default_avatar_id: string | null;
   first_name: string | null;
   last_name: string | null;
   display_name: string | null;
@@ -25,7 +27,7 @@ export const useUserProfile = () => {
 
       const { data, error } = await supabase
         .from('user_settings')
-        .select('avatar_url, first_name, last_name, display_name, username')
+        .select('avatar_url, avatar_type, default_avatar_id, first_name, last_name, display_name, username')
         .eq('user_id', user.id)
         .single();
 
@@ -44,6 +46,40 @@ export const useUserProfile = () => {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  const updateAvatar = async (
+    avatarType: 'default' | 'custom' | 'initials',
+    defaultAvatarId?: string,
+    avatarUrl?: string
+  ) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const updateData: Record<string, any> = {
+      avatar_type: avatarType,
+    };
+
+    if (avatarType === 'default' && defaultAvatarId) {
+      updateData.default_avatar_id = defaultAvatarId;
+      updateData.avatar_url = null;
+    } else if (avatarType === 'custom' && avatarUrl) {
+      updateData.avatar_url = avatarUrl;
+      updateData.default_avatar_id = null;
+    } else {
+      updateData.avatar_url = null;
+      updateData.default_avatar_id = null;
+    }
+
+    const { error } = await supabase
+      .from('user_settings')
+      .update(updateData)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    // Update local state
+    setProfile(prev => prev ? { ...prev, ...updateData } : null);
+  };
 
   const getInitials = (): string => {
     if (!profile) return '?';
@@ -90,6 +126,7 @@ export const useUserProfile = () => {
     loading,
     getInitials,
     getDisplayName,
+    updateAvatar,
     refetch: fetchProfile,
   };
 };

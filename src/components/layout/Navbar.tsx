@@ -14,6 +14,7 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { getAvatarComponent } from "@/components/avatars/DefaultAvatars";
 export const Navbar = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -24,29 +25,45 @@ export const Navbar = () => {
   const { t } = useLanguage();
   const { profile, getInitials, getDisplayName } = useUserProfile();
 
-  const UserAvatar = ({ showLabels = true }: { showLabels?: boolean }) => (
-    <Link to="/settings" className="block">
-      <div className={cn(
-        "flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-accent",
-        showLabels ? "" : "justify-center"
-      )}>
-        <Avatar className="h-10 w-10 ring-2 ring-foreground">
-          <AvatarImage src={profile?.avatar_url || undefined} alt="Profile" />
-          <AvatarFallback className="bg-muted text-foreground font-semibold text-sm">
-            {getInitials()}
-          </AvatarFallback>
-        </Avatar>
-        {showLabels && (
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{getDisplayName() || 'Profile'}</p>
-            {profile?.username && (
-              <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>
-            )}
-          </div>
-        )}
-      </div>
-    </Link>
-  );
+  const UserAvatar = ({ showLabels = true }: { showLabels?: boolean }) => {
+    const DefaultAvatarComponent = getAvatarComponent(profile?.default_avatar_id || null);
+    
+    return (
+      <Link to="/settings" className="block">
+        <div className={cn(
+          "flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-accent",
+          showLabels ? "" : "justify-center"
+        )}>
+          {profile?.avatar_type === 'custom' && profile?.avatar_url ? (
+            <Avatar className="h-10 w-10 ring-2 ring-foreground">
+              <AvatarImage src={profile.avatar_url} alt="Profile" />
+              <AvatarFallback className="bg-muted text-foreground font-semibold text-sm">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+          ) : profile?.avatar_type === 'default' && DefaultAvatarComponent ? (
+            <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-foreground">
+              <DefaultAvatarComponent className="h-full w-full" />
+            </div>
+          ) : (
+            <Avatar className="h-10 w-10 ring-2 ring-foreground">
+              <AvatarFallback className="bg-muted text-foreground font-semibold text-sm">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+          )}
+          {showLabels && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{getDisplayName() || 'Profile'}</p>
+              {profile?.username && (
+                <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </Link>
+    );
+  };
 
   const navItems = [
     { name: t('nav.dashboard'), href: "/", icon: Home },
