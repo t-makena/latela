@@ -266,15 +266,15 @@ export const StatementUploadDialog = ({
           onDragLeave={handleDragLeave}
         >
           {uploading ? (
-            <div className="space-y-6">
-              {/* Spinning loader */}
-              <div className="h-16 w-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="space-y-6 animate-fade-in">
+              {/* Spinning loader with glow */}
+              <div className="h-16 w-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center animate-glow-pulse">
                 <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
               
-              {/* Stage message with animated dots */}
+              {/* Stage message */}
               <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">
+                <p className="text-sm font-medium text-foreground animate-pulse">
                   {getStageMessage(processingStage)}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -282,30 +282,41 @@ export const StatementUploadDialog = ({
                 </p>
               </div>
               
-              {/* Progress steps */}
-              <div className="space-y-2 text-left max-w-[200px] mx-auto">
-                {PROCESSING_STAGES.map((stage) => {
+              {/* Progress steps with staggered animations */}
+              <div className="space-y-2.5 text-left max-w-[220px] mx-auto">
+                {PROCESSING_STAGES.map((stage, index) => {
                   const status = getStageStatus(stage.key);
                   return (
                     <div 
                       key={stage.key}
-                      className={`flex items-center gap-2 text-xs transition-all duration-300 ${
-                        status === 'current' ? 'text-primary font-medium' : 
+                      className={`flex items-center gap-3 text-xs transition-all duration-500 opacity-0 animate-fade-in-up ${
+                        status === 'current' ? 'text-primary font-medium scale-[1.02]' : 
                         status === 'completed' ? 'text-muted-foreground' : 
-                        'text-muted-foreground/50'
+                        'text-muted-foreground/40'
                       }`}
+                      style={{ 
+                        animationDelay: `${index * 80}ms`,
+                        animationFillMode: 'forwards'
+                      }}
                     >
-                      <div className={`h-4 w-4 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                      <div className={`relative h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500 ${
                         status === 'completed' ? 'bg-primary text-primary-foreground' :
-                        status === 'current' ? 'bg-primary/20 border-2 border-primary' :
-                        'bg-muted border border-border'
+                        status === 'current' ? 'bg-primary/20 border-2 border-primary animate-glow-pulse' :
+                        'bg-muted/50 border border-border/50'
                       }`}>
-                        {status === 'completed' && <Check className="h-2.5 w-2.5" />}
+                        {status === 'completed' && (
+                          <Check className="h-3 w-3 animate-bounce-in" />
+                        )}
                         {status === 'current' && (
-                          <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                          <>
+                            <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping-slow" />
+                            <div className="h-2 w-2 rounded-full bg-primary" />
+                          </>
                         )}
                       </div>
-                      <span>{stage.label}</span>
+                      <span className={`transition-all duration-300 ${status === 'current' ? 'translate-x-0.5' : ''}`}>
+                        {stage.label}
+                      </span>
                     </div>
                   );
                 })}
