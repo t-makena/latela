@@ -426,41 +426,104 @@ Respond with ONLY the category name.`
   return category;
 }
 
+/**
+ * Maps AI category responses to existing database category names.
+ * AI returns simple names, but database has more specific names.
+ */
+const AI_TO_DB_CATEGORY_MAP: Record<string, string[]> = {
+  'groceries': ['Food & Groceries', 'Groceries', 'Food'],
+  'food': ['Food & Groceries', 'Groceries', 'Food'],
+  'dining': ['Dining & Restaurants', 'Dining', 'Restaurants'],
+  'restaurant': ['Dining & Restaurants', 'Dining', 'Restaurants'],
+  'restaurants': ['Dining & Restaurants', 'Dining', 'Restaurants'],
+  'transport': ['Transportation & Fuel', 'Transportation', 'Transport', 'Fuel'],
+  'transportation': ['Transportation & Fuel', 'Transportation', 'Transport'],
+  'fuel': ['Transportation & Fuel', 'Fuel', 'Transport'],
+  'utilities': ['Housing & Utilities', 'Utilities', 'Bills & Subscriptions'],
+  'housing': ['Housing & Utilities', 'Housing'],
+  'healthcare': ['Healthcare & Medical', 'Healthcare', 'Medical'],
+  'medical': ['Healthcare & Medical', 'Medical', 'Healthcare'],
+  'bills': ['Bills & Subscriptions', 'Bills', 'Utilities'],
+  'subscriptions': ['Bills & Subscriptions', 'Subscriptions', 'Bills'],
+  'entertainment': ['Entertainment & Leisure', 'Entertainment', 'Leisure'],
+  'leisure': ['Entertainment & Leisure', 'Leisure', 'Entertainment'],
+  'shopping': ['Personal & Lifestyle', 'Shopping', 'Retail'],
+  'personal': ['Personal & Lifestyle', 'Personal', 'Lifestyle'],
+  'lifestyle': ['Personal & Lifestyle', 'Lifestyle'],
+  'salary': ['Salary/Wages', 'Salary', 'Income', 'Wages'],
+  'wages': ['Salary/Wages', 'Wages', 'Salary'],
+  'income': ['Salary/Wages', 'Income', 'Other Income'],
+  'transfer': ['Transfers', 'Transfer', 'Bank Transfer'],
+  'transfers': ['Transfers', 'Transfer'],
+  'savings': ['Savings', 'Savings & Investments'],
+  'other': ['Other', 'Miscellaneous', 'Other Expenses'],
+};
+
+// Fallback category ID for "Other" - will be fetched once
+let fallbackCategoryId: string | null = null;
+
 // deno-lint-ignore no-explicit-any
 async function getOrCreateCategory(supabase: any, categoryName: string): Promise<string> {
-  // Try to find existing category
-  const { data: existing } = await supabase
-    .from('categories')
-    .select('id')
-    .ilike('name', categoryName)
-    .is('parent_id', null)
-    .maybeSingle();
+  const normalizedName = categoryName.trim().toLowerCase();
+  
+  // Get potential matches from the mapping
+  const potentialMatches = AI_TO_DB_CATEGORY_MAP[normalizedName] || [categoryName];
+  
+  // Try each potential match in order
+  for (const matchName of potentialMatches) {
+    const { data: existing } = await supabase
+      .from('categories')
+      .select('id')
+      .ilike('name', matchName)
+      .maybeSingle();
 
-  if (existing) {
-    return existing.id;
+    if (existing) {
+      console.log(`✓ Category mapped: "${categoryName}" → "${matchName}" (${existing.id})`);
+      return existing.id;
+    }
+  }
+  
+  // Try fuzzy match with LIKE
+  const { data: fuzzyMatch } = await supabase
+    .from('categories')
+    .select('id, name')
+    .ilike('name', `%${normalizedName}%`)
+    .maybeSingle();
+    
+  if (fuzzyMatch) {
+    console.log(`✓ Category fuzzy matched: "${categoryName}" → "${fuzzyMatch.name}" (${fuzzyMatch.id})`);
+    return fuzzyMatch.id;
   }
 
-  // Create new category (this requires appropriate permissions)
-  const { data: newCategory, error } = await supabase
-    .from('categories')
-    .insert({ name: categoryName })
-    .select('id')
-    .single();
-
-  if (error) {
-    // If we can't create, try to find "Other" category as fallback
+  // Fallback to "Other" or first available category
+  if (!fallbackCategoryId) {
+    // Try to find "Other" category
     const { data: otherCategory } = await supabase
       .from('categories')
       .select('id')
-      .ilike('name', 'Other')
-      .is('parent_id', null)
+      .or('name.ilike.Other,name.ilike.Miscellaneous,name.ilike.Other Expenses')
+      .limit(1)
       .maybeSingle();
     
     if (otherCategory) {
-      return otherCategory.id;
+      fallbackCategoryId = otherCategory.id;
+    } else {
+      // Get any category as absolute fallback
+      const { data: anyCategory } = await supabase
+        .from('categories')
+        .select('id')
+        .is('parent_id', null)
+        .limit(1)
+        .maybeSingle();
+      
+      fallbackCategoryId = anyCategory?.id || null;
     }
-    throw error;
   }
 
-  return newCategory.id;
+  if (fallbackCategoryId) {
+    console.log(`⚠ Category not found: "${categoryName}" → using fallback`);
+    return fallbackCategoryId;
+  }
+
+  throw new Error(`No categories found in database for: ${categoryName}`);
 }
