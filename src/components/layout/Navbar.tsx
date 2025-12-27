@@ -106,10 +106,10 @@ export const Navbar = () => {
                 </Button>
               ) : (
                 <div className={cn(
-                  "w-full flex items-center justify-center py-4 transition-colors cursor-pointer rounded-md",
-                  isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
+                  "w-full flex items-center justify-center py-3 transition-colors cursor-pointer rounded-lg",
+                  isActive ? "bg-foreground text-background" : "text-foreground hover:bg-accent"
                 )}>
-                  <item.icon size={22} className="shrink-0" />
+                  <item.icon size={20} className="shrink-0" />
                 </div>
               )}
             </Link>
@@ -167,10 +167,10 @@ export const Navbar = () => {
         ) : (
           <Link to="/accounts">
             <div className={cn(
-              "w-full flex items-center justify-center py-4 transition-colors cursor-pointer rounded-md",
-              isAccountsPath ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
+              "w-full flex items-center justify-center py-3 transition-colors cursor-pointer rounded-lg",
+              isAccountsPath ? "bg-foreground text-background" : "text-foreground hover:bg-accent"
             )}>
-              <Wallet size={22} className="shrink-0" />
+              <Wallet size={20} className="shrink-0" />
             </div>
           </Link>
         )}
@@ -194,10 +194,10 @@ export const Navbar = () => {
                 </Button>
               ) : (
                 <div className={cn(
-                  "w-full flex items-center justify-center py-4 transition-colors cursor-pointer rounded-md",
-                  isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
+                  "w-full flex items-center justify-center py-3 transition-colors cursor-pointer rounded-lg",
+                  isActive ? "bg-foreground text-background" : "text-foreground hover:bg-accent"
                 )}>
-                  <item.icon size={22} className="shrink-0" />
+                  <item.icon size={20} className="shrink-0" />
                 </div>
               )}
             </Link>
@@ -217,9 +217,9 @@ export const Navbar = () => {
         ) : (
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center py-4 text-destructive hover:text-destructive/80 transition-colors mt-auto cursor-pointer"
+            className="w-full flex items-center justify-center py-3 text-destructive hover:text-destructive/80 transition-colors cursor-pointer rounded-lg"
           >
-            <LogOut size={22} className="shrink-0" />
+            <LogOut size={20} className="shrink-0" />
           </button>
         )}
       </div>
@@ -255,8 +255,8 @@ export const Navbar = () => {
       ) : (
         <div 
           className={cn(
-            "h-full transition-all duration-300 ease-in-out relative bg-background rounded-2xl",
-            isExpanded ? "w-64 pt-6 px-2 pb-2" : "w-[74px] ml-1 pt-6 pb-2"
+            "h-fit transition-all duration-300 ease-in-out relative bg-background rounded-2xl border-2 border-foreground shadow-[-4px_4px_0_0_hsl(var(--foreground))]",
+            isExpanded ? "w-64 pt-6 px-2 pb-4" : "w-20 pt-6 pb-4 px-2"
           )}
         >
           {/* Toggle Button / Logo */}
@@ -286,11 +286,9 @@ export const Navbar = () => {
             )}
           </div>
           
-          <div className="flex flex-col h-[calc(100%-4rem)]">
-            <div className="flex-1">
-              <NavContent showLabels={isExpanded} />
-            </div>
-            <div className={cn("border-t pt-3 mt-3", isExpanded ? "px-2" : "px-1")}>
+          <div className="flex flex-col gap-3">
+            <NavContent showLabels={isExpanded} />
+            <div className={cn("pt-2", isExpanded ? "px-2" : "flex justify-center")}>
               <UserAvatar showLabels={isExpanded} />
             </div>
           </div>
