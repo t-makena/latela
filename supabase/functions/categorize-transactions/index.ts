@@ -371,26 +371,40 @@ function findBestUserMapping(
   return bestMatch;
 }
 
-async function categorizeMerchantWithAI(merchantName: string, description: string): Promise<string> {
+/**
+ * Delays execution for specified milliseconds
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Categorizes a merchant using Anthropic API with retry logic and exponential backoff
+ */
+async function categorizeMerchantWithAI(merchantName: string, description: string, retryCount = 0): Promise<string> {
+  const MAX_RETRIES = 3;
+  const BASE_DELAY_MS = 2000; // Start with 2 second delay
+  
   const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
   if (!ANTHROPIC_API_KEY) {
     throw new Error('ANTHROPIC_API_KEY not configured');
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 20,
-      messages: [
-        {
-          role: 'user',
-          content: `You are a financial transaction categorizer for South African transactions. Categorize this transaction into ONE category:
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 20,
+        messages: [
+          {
+            role: 'user',
+            content: `You are a financial transaction categorizer for South African transactions. Categorize this transaction into ONE category:
 
 Merchant: ${merchantName}
 Description: ${description}
@@ -398,25 +412,41 @@ Description: ${description}
 Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Salary, Transfer, Other
 
 Respond with ONLY the category name, nothing else.`
-        }
-      ],
-    }),
-  });
+          }
+        ],
+      }),
+    });
 
-  if (response.status === 429) {
-    throw new Error('Rate limit exceeded. Please try again later.');
+    if (response.status === 429) {
+      if (retryCount < MAX_RETRIES) {
+        const delayMs = BASE_DELAY_MS * Math.pow(2, retryCount); // Exponential backoff: 2s, 4s, 8s
+        console.log(`Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        await delay(delayMs);
+        return categorizeMerchantWithAI(merchantName, description, retryCount + 1);
+      }
+      // After max retries, return 'Other' instead of failing
+      console.warn(`Rate limit exceeded after ${MAX_RETRIES} retries, defaulting to 'Other'`);
+      return 'Other';
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Anthropic API error:', response.status, errorText);
+      // Return 'Other' instead of throwing to prevent full failure
+      return 'Other';
+    }
+
+    const data = await response.json();
+    const category = data.content?.[0]?.text?.trim() || 'Other';
+    
+    // Add small delay between successful calls to avoid hitting rate limits
+    await delay(500);
+    
+    return category;
+  } catch (error) {
+    console.error('AI categorization error:', error);
+    return 'Other';
   }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Anthropic API error:', response.status, errorText);
-    throw new Error('AI categorization failed');
-  }
-
-  const data = await response.json();
-  const category = data.content?.[0]?.text?.trim() || 'Other';
-  
-  return category;
 }
 
 /**
