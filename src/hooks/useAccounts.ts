@@ -35,9 +35,12 @@ export const useAccounts = () => {
 
             return {
               ...account,
-              // Use latest transaction balance (in Rands) as primary source
-              // Fall back to account.available_balance / 100 if no transactions exist
-              calculatedBalance: latestTransaction?.balance ?? (account.available_balance || 0) / 100
+              // Keep balance in cents for consistent handling with formatCurrency
+              // Transaction balance is in Rands (from statement), so multiply by 100
+              // Account available_balance is already in cents
+              calculatedBalance: latestTransaction?.balance 
+                ? latestTransaction.balance * 100  
+                : (account.available_balance || 0)
             };
           })
         );
