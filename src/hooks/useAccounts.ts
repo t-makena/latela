@@ -35,11 +35,9 @@ export const useAccounts = () => {
 
             return {
               ...account,
-              // Keep balance in cents for consistent handling with formatCurrency
-              // Transaction balance is in Rands (from statement), so multiply by 100
-              // Account available_balance is already in cents
+              // Balance is already stored in cents from StatementUploadDialog
               calculatedBalance: latestTransaction?.balance 
-                ? latestTransaction.balance * 100  
+                ? latestTransaction.balance  
                 : (account.available_balance || 0)
             };
           })
