@@ -1,5 +1,6 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ChartCardLayout } from "@/components/ui/chart-card-layout";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { 
@@ -13,10 +14,28 @@ interface ChartProps {
   type?: "line" | "bar" | "pie";
 }
 
+type PeriodKey = '1W' | '1M' | '6M' | '1Y';
+
 export const SpendingChart = ({ type = "line" }: ChartProps) => {
   const { transactions } = useTransactions();
   const { monthlySpending, categoryBreakdownArray } = calculateFinancialMetrics(transactions);
   const isMobile = useIsMobile();
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('1M');
+
+  const periods: { key: PeriodKey; label: string }[] = [
+    { key: '1W', label: '1W' },
+    { key: '1M', label: '1M' },
+    { key: '6M', label: '6M' },
+    { key: '1Y', label: '1Y' },
+  ];
+
+  const getTitle = () => {
+    switch (type) {
+      case "line": return "Monthly Spending Trend";
+      case "bar": return "Monthly Spending Comparison";
+      case "pie": return "Spending by Category";
+    }
+  };
   
   const renderChart = () => {
     switch (type) {
@@ -38,7 +57,7 @@ export const SpendingChart = ({ type = "line" }: ChartProps) => {
               <Line 
                 type="monotone" 
                 dataKey="amount" 
-                stroke="#1e65ff" 
+                stroke="hsl(var(--primary))" 
                 strokeWidth={2} 
                 dot={{ r: 4 }} 
               />
@@ -61,13 +80,13 @@ export const SpendingChart = ({ type = "line" }: ChartProps) => {
               <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 45 : 60} />
               <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, "Spending"]} />
               <Legend />
-              <Bar dataKey="amount" fill="#1e65ff" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         );
       
       case "pie":
-        const COLORS = ['#1e65ff', '#41b883', '#ff6b6b', '#ffd166', '#8959a8', '#6c757d'];
+        const COLORS = ['hsl(var(--primary))', '#41b883', '#ff6b6b', '#ffd166', '#8959a8', '#6c757d'];
         
         return (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
@@ -100,17 +119,27 @@ export const SpendingChart = ({ type = "line" }: ChartProps) => {
   };
 
   return (
-    <Card className="mt-6">
-      <CardHeader className="pb-2">
-        <CardTitle>
-          {type === "line" && "Monthly Spending Trend"}
-          {type === "bar" && "Monthly Spending Comparison"}
-          {type === "pie" && "Spending by Category"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {renderChart()}
-      </CardContent>
-    </Card>
+    <ChartCardLayout
+      title={getTitle()}
+      subtitle={`over the past ${selectedPeriod === '1W' ? 'week' : selectedPeriod === '1M' ? 'month' : selectedPeriod === '6M' ? '6 months' : 'year'}`}
+      className="mt-6"
+      filters={
+        <>
+          {periods.map(period => (
+            <Button
+              key={period.key}
+              variant={selectedPeriod === period.key ? "default" : "ghost"}
+              size="sm"
+              className="h-6 px-2 text-xs rounded-full"
+              onClick={() => setSelectedPeriod(period.key)}
+            >
+              {period.label}
+            </Button>
+          ))}
+        </>
+      }
+    >
+      {renderChart()}
+    </ChartCardLayout>
   );
 };
