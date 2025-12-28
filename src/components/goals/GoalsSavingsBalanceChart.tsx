@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChartCardLayout } from "@/components/ui/chart-card-layout";
 import { 
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend
@@ -38,12 +37,16 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
   }, [goals]);
   
   // Generate chart data based on period
+  // Logic: 
+  // - Expected Balance (orange): Shows the cumulative expected savings for each month
+  // - Savings Balance (green): If available balance >= expected for that month, show expected; else show actual
   const chartData = useMemo(() => {
     const now = new Date();
     const periods: Record<string, number> = { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 };
     const monthCount = periods[selectedPeriod];
     const data = [];
     
+    // Track cumulative expected savings
     let cumulativeExpected = 0;
     
     for (let i = monthCount - 1; i >= 0; i--) {
@@ -51,29 +54,39 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
       date.setMonth(date.getMonth() - i);
       const monthName = date.toLocaleDateString('en-US', { month: 'short' });
       
+      // Find transactions for this month
       const monthTransactions = transactions.filter(tx => {
         const txDate = new Date(tx.transaction_date);
         return txDate.getMonth() === date.getMonth() && 
                txDate.getFullYear() === date.getFullYear();
       });
       
+      // Calculate available balance at end of month
       const monthAvailableBalance = monthTransactions.length > 0
         ? Math.abs(monthTransactions[monthTransactions.length - 1]?.balance || 0)
         : 0;
       
+      // Expected balance: accumulating expected savings each month
       cumulativeExpected += expectedMonthlySavings;
       
+      // KEY LOGIC: Savings balance
+      // If available balance >= expected for this month, show expected (target met)
+      // Otherwise, show what we can calculate from actual savings progression
       const isCurrentMonth = i === 0;
       const monthsFromStart = monthCount - i;
       const progressRatio = monthsFromStart / monthCount;
       const actualSavingsAtPoint = totalSaved * progressRatio;
       
+      // For current month: use actual available balance comparison
+      // For past months: interpolate savings progression
       let savingsBalance: number;
       if (isCurrentMonth) {
+        // Current month: if available >= expected, show expected; else show actual saved
         savingsBalance = monthAvailableBalance >= expectedMonthlySavings 
           ? cumulativeExpected 
           : actualSavingsAtPoint;
       } else {
+        // Past months: interpolate from total saved
         savingsBalance = actualSavingsAtPoint;
       }
       
@@ -140,39 +153,29 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
       setIsApplying(false);
     }
   };
-
-  const getPeriodLabel = () => {
-    switch (selectedPeriod) {
-      case '1M': return 'month';
-      case '3M': return '3 months';
-      case '6M': return '6 months';
-      case '1Y': return 'year';
-    }
-  };
   
   return (
-    <div className="space-y-4">
-      {/* Chart Section with new layout */}
-      <ChartCardLayout
-        title={t('goals.savingsBalance') || 'Savings Balance'}
-        subtitle={`over the past ${getPeriodLabel()}`}
-        compact={compact}
-        filters={
-          <>
+    <Card className="bg-card border border-border w-full">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="heading-main">{t('goals.savingsBalance') || 'Savings Balance'}</CardTitle>
+          <div className="flex gap-1">
             {periods.map(period => (
               <Button
                 key={period.key}
-                variant={selectedPeriod === period.key ? "default" : "ghost"}
+                variant={selectedPeriod === period.key ? "default" : "outline"}
                 size="sm"
-                className="h-6 px-2 text-xs rounded-full"
+                className="h-7 px-2 text-xs"
                 onClick={() => setSelectedPeriod(period.key)}
               >
                 {period.label}
               </Button>
             ))}
-          </>
-        }
-      >
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Chart */}
         <ResponsiveContainer width="100%" height={compact ? 200 : 250}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -199,6 +202,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
               }}
             />
             <Legend />
+            {/* Expected Balance - Orange dashed line */}
             <Line 
               type="monotone" 
               dataKey="expected" 
@@ -208,6 +212,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
               name={t('goals.expectedBalance') || 'Expected Balance'}
               dot={{ fill: 'hsl(var(--secondary))' }}
             />
+            {/* Total Amount Saved - Green solid line */}
             <Line 
               type="monotone" 
               dataKey="savings" 
@@ -218,12 +223,10 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
             />
           </LineChart>
         </ResponsiveContainer>
-      </ChartCardLayout>
-
-      {/* Savings Status Section - Separate Card */}
-      <Card className="bg-card border border-border">
-        <CardContent className="pt-4 space-y-4">
-          <div className="flex items-center gap-2">
+        
+        {/* Savings Status Section */}
+        <div className="border-t pt-4">
+          <div className="flex items-center gap-2 mb-3">
             {savingsStatus.hasShortfall ? (
               <AlertTriangle className="h-5 w-5 text-destructive" />
             ) : (
@@ -252,18 +255,22 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
             )}
           </div>
           
+          {/* Success message when on track */}
           {!savingsStatus.hasShortfall && (
-            <p className="text-sm text-green-600">
+            <p className="text-sm text-green-600 pt-3">
               {t('finance.onTrack') || "You're on track, keep going :)"}
             </p>
           )}
           
+          {/* Shortfall details when not on track */}
           {savingsStatus.hasShortfall && (
-            <div className="space-y-3">
+            <div className="space-y-3 pt-3">
+              {/* Strategy Info */}
               <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
                 {t('goals.usingStrategy') || 'Strategy'}: <span className="font-medium">{getStrategyLabel(savingsAdjustmentStrategy)}</span>
               </div>
               
+              {/* Adjustment Preview */}
               {!compact && savingsStatus.adjustments.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium flex items-center gap-1">
@@ -293,6 +300,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                 </div>
               )}
               
+              {/* Apply Button */}
               <Button 
                 onClick={handleApplyAdjustments}
                 disabled={isApplying || savingsStatus.adjustments.length === 0}
@@ -305,8 +313,8 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
