@@ -293,7 +293,7 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
       </div>
 
       {/* Transaction Table */}
-      <div className="border rounded-lg">
+      <div className="border rounded-lg bg-background">
         <Table>
           <TableHeader>
             <TableRow>
