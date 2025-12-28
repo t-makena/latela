@@ -61,8 +61,11 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
       if (error) throw error;
 
       // Transform Supabase data to match our Transaction interface
+      // Convert amounts from Rands to cents for consistent handling with formatCurrency
       return (data || []).map(transaction => ({
         ...transaction,
+        amount: (transaction.amount ?? 0) * 100,
+        balance: transaction.balance != null ? transaction.balance * 100 : null,
         type: (transaction.amount ?? 0) < 0 ? 'expense' : 'income'
       })) as Transaction[];
     },
