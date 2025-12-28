@@ -61,11 +61,11 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
       if (error) throw error;
 
       // Transform Supabase data to match our Transaction interface
-      // Amounts are already stored in cents from StatementUploadDialog
+      // Amounts are stored in cents - convert to Rands for display
       return (data || []).map(transaction => ({
         ...transaction,
-        amount: transaction.amount ?? 0,
-        balance: transaction.balance ?? null,
+        amount: (transaction.amount ?? 0) / 100, // Convert cents to Rands
+        balance: transaction.balance != null ? transaction.balance / 100 : null, // Convert cents to Rands
         type: (transaction.amount ?? 0) < 0 ? 'expense' : 'income'
       })) as Transaction[];
     },
