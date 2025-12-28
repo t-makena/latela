@@ -50,14 +50,14 @@ export const useAccounts = () => {
           const bankName = account.bank_name || 'Account';
           const formattedName = `${bankName} ${last4Digits}`;
           
-          return {
-            id: account.id,
-            name: formattedName,
-            type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
-            balance: account.calculatedBalance, // Already in Rands from transaction
-            currency: 'ZAR',
-            color: getAccountColor(index),
-          };
+            return {
+              id: account.id,
+              name: formattedName,
+              type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
+              balance: account.calculatedBalance / 100, // Convert cents to Rands for display
+              currency: 'ZAR',
+              color: getAccountColor(index),
+            };
         });
 
         setAccounts(transformedAccounts);
