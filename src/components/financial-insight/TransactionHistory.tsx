@@ -5,10 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Edit, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { EditTransactionDialog } from "./EditTransactionDialog";
-
 interface Transaction {
   id: string;
   transaction_date: string;
@@ -197,9 +197,23 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
     fetchData();
   };
 
+  const activeFilterCount = [
+    selectedAccount !== "all",
+    selectedCategory !== "all",
+    selectedMerchant !== "all",
+    selectedPeriod !== "all"
+  ].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSelectedAccount("all");
+    setSelectedCategory("all");
+    setSelectedMerchant("all");
+    setSelectedPeriod("all");
+  };
+
   return (
     <div id="transaction-history" className="space-y-4">
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
             Transaction History
@@ -211,85 +225,112 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
             {loading ? "Loading..." : `Showing ${transactions.length} transactions`}
           </p>
         </div>
-      </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Account</label>
-          <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select account" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Accounts</SelectItem>
-              {accounts.map(account => (
-                <SelectItem key={account.id} value={account.id}>
-                  Account {account.account_number}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Filter Dropdown */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Filter className="h-4 w-4" />
+              <span className="hidden sm:inline">Filters</span>
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="h-5 min-w-5 rounded-full px-1.5 flex items-center justify-center text-xs">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 bg-background" align="end">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Filters</h4>
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-auto py-1 px-2 text-xs">
+                    Clear All
+                  </Button>
+                )}
+              </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Category</label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {/* Show parent categories with their subcategories */}
-              {categories.filter(c => !c.parent_id).map(parent => (
-                <div key={parent.id}>
-                  <SelectItem value={parent.id} className="font-semibold">
-                    {parent.name}
-                  </SelectItem>
-                  {categories.filter(sub => sub.parent_id === parent.id).map(sub => (
-                    <SelectItem key={sub.id} value={sub.id} className="pl-6 text-muted-foreground">
-                      {sub.name}
-                    </SelectItem>
-                  ))}
-                </div>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+              {/* Account Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Account</label>
+                <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Accounts</SelectItem>
+                    {accounts.map(account => (
+                      <SelectItem key={account.id} value={account.id}>
+                        Account {account.account_number}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Merchant</label>
-          <Select value={selectedMerchant} onValueChange={setSelectedMerchant}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select merchant" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Merchants</SelectItem>
-              {merchants.map(merchant => (
-                <SelectItem key={merchant.id} value={merchant.id}>
-                  {merchant.merchant_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Category</label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.filter(c => !c.parent_id).map(parent => (
+                      <div key={parent.id}>
+                        <SelectItem value={parent.id} className="font-semibold">
+                          {parent.name}
+                        </SelectItem>
+                        {categories.filter(sub => sub.parent_id === parent.id).map(sub => (
+                          <SelectItem key={sub.id} value={sub.id} className="pl-6 text-muted-foreground">
+                            {sub.name}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Period</label>
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1w">1 Week</SelectItem>
-              <SelectItem value="1m">1 Month</SelectItem>
-              <SelectItem value="3m">3 Months</SelectItem>
-              <SelectItem value="6m">6 Months</SelectItem>
-              <SelectItem value="1y">1 Year</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+              {/* Merchant Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Merchant</label>
+                <Select value={selectedMerchant} onValueChange={setSelectedMerchant}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select merchant" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Merchants</SelectItem>
+                    {merchants.map(merchant => (
+                      <SelectItem key={merchant.id} value={merchant.id}>
+                        {merchant.merchant_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Period Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Period</label>
+                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1w">1 Week</SelectItem>
+                    <SelectItem value="1m">1 Month</SelectItem>
+                    <SelectItem value="3m">3 Months</SelectItem>
+                    <SelectItem value="6m">6 Months</SelectItem>
+                    <SelectItem value="1y">1 Year</SelectItem>
+                    <SelectItem value="all">All Time</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Transaction Table */}
