@@ -372,37 +372,34 @@ function findBestUserMapping(
 }
 
 async function categorizeMerchantWithAI(merchantName: string, description: string): Promise<string> {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    throw new Error('LOVABLE_API_KEY not configured');
+  const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY not configured');
   }
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash-lite',
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 20,
       messages: [
         {
-          role: 'system',
-          content: 'You are a financial transaction categorizer for South African transactions. Respond with ONLY the category name, nothing else.'
-        },
-        {
           role: 'user',
-          content: `Categorize this South African transaction into ONE category:
+          content: `You are a financial transaction categorizer for South African transactions. Categorize this transaction into ONE category:
 
 Merchant: ${merchantName}
 Description: ${description}
 
 Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Salary, Transfer, Other
 
-Respond with ONLY the category name.`
+Respond with ONLY the category name, nothing else.`
         }
       ],
-      max_tokens: 20,
     }),
   });
 
@@ -410,18 +407,14 @@ Respond with ONLY the category name.`
     throw new Error('Rate limit exceeded. Please try again later.');
   }
 
-  if (response.status === 402) {
-    throw new Error('AI credits exhausted. Please add credits to your workspace.');
-  }
-
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('AI API error:', response.status, errorText);
+    console.error('Anthropic API error:', response.status, errorText);
     throw new Error('AI categorization failed');
   }
 
   const data = await response.json();
-  const category = data.choices?.[0]?.message?.content?.trim() || 'Other';
+  const category = data.content?.[0]?.text?.trim() || 'Other';
   
   return category;
 }
