@@ -24,8 +24,6 @@ export type Database = {
           account_name: string | null
           account_number: string
           account_type: string
-          available_balance: number
-          balance: number
           balance_brought_forward: number
           bank_name: string | null
           created_at: string | null
@@ -52,8 +50,6 @@ export type Database = {
           account_name?: string | null
           account_number: string
           account_type: string
-          available_balance: number
-          balance: number
           balance_brought_forward: number
           bank_name?: string | null
           created_at?: string | null
@@ -80,8 +76,6 @@ export type Database = {
           account_name?: string | null
           account_number?: string
           account_type?: string
-          available_balance?: number
-          balance?: number
           balance_brought_forward?: number
           bank_name?: string | null
           created_at?: string | null
@@ -106,36 +100,30 @@ export type Database = {
           action: string
           created_at: string | null
           id: string
-          ip_address: unknown
           new_data: Json | null
           old_data: Json | null
           record_id: string | null
           table_name: string
-          user_agent: string | null
           user_id: string | null
         }
         Insert: {
           action: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
           record_id?: string | null
           table_name: string
-          user_agent?: string | null
           user_id?: string | null
         }
         Update: {
           action?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
           record_id?: string | null
           table_name?: string
-          user_agent?: string | null
           user_id?: string | null
         }
         Relationships: []
