@@ -113,9 +113,7 @@ export const StatementUploadDialog = ({
               bank_name: data.accountInfo.bankName,
               account_type: data.accountInfo.accountType,
               account_name: data.accountInfo.accountName || `${data.accountInfo.bankName} Account`,
-              balance: Math.round(data.accountInfo.currentBalance * 100),
-              current_balance: Math.round(data.accountInfo.currentBalance * 100),
-              available_balance: Math.round(data.accountInfo.currentBalance * 100),
+              current_balance: Math.round(data.accountInfo.currentBalance * 100), // Store in cents
               balance_brought_forward: 0,
               currency: 'ZAR',
               status: 'active',
