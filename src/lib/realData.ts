@@ -134,12 +134,10 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
 };
 
 export const formatCurrency = (amount: number, currency = 'ZAR') => {
-  // Convert cents to Rands for display
-  const amountInRands = amount / 100;
   return new Intl.NumberFormat('en-ZA', {
     style: 'currency',
     currency: currency,
-  }).format(amountInRands);
+  }).format(amount);
 };
 
 export const formatDate = (dateString: string) => {
