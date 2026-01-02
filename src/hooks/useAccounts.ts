@@ -20,44 +20,21 @@ export const useAccounts = () => {
 
         if (accountsError) throw accountsError;
 
-        // For each account, get the latest transaction balance
-        const accountsWithBalances = await Promise.all(
-          (accountsData || []).map(async (account) => {
-            // Get the latest transaction for this account (by date, then by created_at)
-            const { data: latestTransaction } = await supabase
-              .from('transactions')
-              .select('balance')
-              .eq('account_id', account.id)
-              .order('transaction_date', { ascending: false })
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
-
-            return {
-              ...account,
-              // Balance is already stored in cents from StatementUploadDialog
-              calculatedBalance: latestTransaction?.balance 
-                ? latestTransaction.balance  
-                : (account.available_balance || 0)
-            };
-          })
-        );
-
         // Transform Supabase data to match our AccountType interface
-        const transformedAccounts: AccountType[] = accountsWithBalances.map((account, index) => {
-          // Format account name as "Bank Name ****1234"
+        // Use current_balance directly (Anthropic-extracted value stored in cents)
+        const transformedAccounts: AccountType[] = (accountsData || []).map((account, index) => {
           const last4Digits = account.account_number?.slice(-4) || '0000';
           const bankName = account.bank_name || 'Account';
           const formattedName = `${bankName} ${last4Digits}`;
           
-            return {
-              id: account.id,
-              name: formattedName,
-              type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
-              balance: account.calculatedBalance / 100, // Convert cents to Rands for display
-              currency: 'ZAR',
-              color: getAccountColor(index),
-            };
+          return {
+            id: account.id,
+            name: formattedName,
+            type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
+            balance: (account.current_balance || 0) / 100, // Convert cents to Rands for display
+            currency: 'ZAR',
+            color: getAccountColor(index),
+          };
         });
 
         setAccounts(transformedAccounts);
