@@ -273,13 +273,12 @@ const Budget = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Budget Method Card - Full width at top */}
-        <div className="lg:col-span-3">
+        {/* Left Column - Budget Method + Budget Plan */}
+        <div className={`${showBalanceCalculations ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-6`}>
+          {/* Budget Method Card */}
           <BudgetMethodCard />
-        </div>
 
-        {/* Main Budget Items Table */}
-        <div className={`transition-all duration-300 ease-out ${showBalanceCalculations ? 'lg:col-span-2' : 'lg:col-span-3'} w-full`}>
+          {/* Main Budget Items Table */}
           <Card className="w-full bg-card border border-foreground">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="heading-main">{t('finance.budgetPlan')}</CardTitle>
