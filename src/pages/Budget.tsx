@@ -43,7 +43,9 @@ const Budget = () => {
     calculateCategoryAllocations,
     needsPercentage,
     wantsPercentage,
-    savingsPercentage
+    savingsPercentage,
+    updateBudgetMethod,
+    updatePercentages,
   } = useBudgetMethod();
 
   // Function to get display name (custom name if category has been replaced)
@@ -152,7 +154,15 @@ const Budget = () => {
     return (
       <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
         {/* Budget Method Card - Now first */}
-        <BudgetMethodCard />
+        <BudgetMethodCard
+          budgetMethod={budgetMethod}
+          needsPercentage={needsPercentage}
+          wantsPercentage={wantsPercentage}
+          savingsPercentage={savingsPercentage}
+          loading={budgetMethodLoading}
+          onUpdateBudgetMethod={updateBudgetMethod}
+          onUpdatePercentages={updatePercentages}
+        />
 
         {/* Budget Plan Card */}
         <div 
@@ -276,7 +286,15 @@ const Budget = () => {
         {/* Left Column - Budget Method + Budget Plan */}
         <div className={`${showBalanceCalculations ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-6`}>
           {/* Budget Method Card */}
-          <BudgetMethodCard />
+          <BudgetMethodCard
+            budgetMethod={budgetMethod}
+            needsPercentage={needsPercentage}
+            wantsPercentage={wantsPercentage}
+            savingsPercentage={savingsPercentage}
+            loading={budgetMethodLoading}
+            onUpdateBudgetMethod={updateBudgetMethod}
+            onUpdatePercentages={updatePercentages}
+          />
 
           {/* Main Budget Items Table */}
           <Card className="w-full bg-card border border-foreground">
