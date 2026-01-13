@@ -145,7 +145,7 @@ export const MobileBudgetInsightCard = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left table-header-text pb-4">{t('finance.metric')}</th>
+              <th className="text-left table-header-text pb-4">{t('budget.metric')}</th>
               <th className="text-right table-header-text pb-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -293,7 +293,7 @@ export const BudgetBreakdown = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">{t('finance.metric')}</TableHead>
+              <TableHead className="w-[200px]">{t('budget.metric')}</TableHead>
               <TableHead className="text-right">{t('budget.oneMonthChange')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -326,7 +326,7 @@ export const BudgetBreakdown = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">{t('finance.metric')}</TableHead>
+              <TableHead className="w-[200px]">{t('budget.metric')}</TableHead>
               <TableHead className="text-right">{t('budget.oneMonthChange')}</TableHead>
               <TableHead className="text-right">{t('budget.threeMonthChange')}</TableHead>
               <TableHead className="text-right">{t('budget.sixMonthChange')}</TableHead>
@@ -393,7 +393,7 @@ export const BudgetBreakdown = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">{t('finance.metric')}</TableHead>
+              <TableHead className="w-[200px]">{t('budget.metric')}</TableHead>
               <TableHead className="text-right">{t('budget.oneMonthChange')}</TableHead>
             </TableRow>
           </TableHeader>
