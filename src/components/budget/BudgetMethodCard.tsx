@@ -4,23 +4,32 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useBudgetMethod, BudgetMethod } from '@/hooks/useBudgetMethod';
+import { BudgetMethod } from '@/hooks/useBudgetMethod';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { cn } from '@/lib/utils';
 
-export const BudgetMethodCard = () => {
+interface BudgetMethodCardProps {
+  budgetMethod: BudgetMethod;
+  needsPercentage: number;
+  wantsPercentage: number;
+  savingsPercentage: number;
+  loading: boolean;
+  onUpdateBudgetMethod: (method: BudgetMethod) => Promise<boolean>;
+  onUpdatePercentages: (needs: number, wants: number, savings: number) => Promise<boolean>;
+}
+
+export const BudgetMethodCard = ({
+  budgetMethod,
+  needsPercentage,
+  wantsPercentage,
+  savingsPercentage,
+  loading,
+  onUpdateBudgetMethod,
+  onUpdatePercentages,
+}: BudgetMethodCardProps) => {
   const { t } = useLanguage();
-  const {
-    budgetMethod,
-    needsPercentage,
-    wantsPercentage,
-    savingsPercentage,
-    loading,
-    updateBudgetMethod,
-    updatePercentages,
-  } = useBudgetMethod();
 
   // Local state for unsaved changes
   const [localNeeds, setLocalNeeds] = useState<number>(needsPercentage);
@@ -43,7 +52,7 @@ export const BudgetMethodCard = () => {
 
   const handleMethodChange = async (value: string) => {
     try {
-      await updateBudgetMethod(value as BudgetMethod);
+      await onUpdateBudgetMethod(value as BudgetMethod);
       toast.success('Budget method updated');
     } catch (err) {
       toast.error('Failed to update budget method');
@@ -58,7 +67,7 @@ export const BudgetMethodCard = () => {
 
     setIsSaving(true);
     try {
-      await updatePercentages(localNeeds, localWants, localSavings);
+      await onUpdatePercentages(localNeeds, localWants, localSavings);
       toast.success('Budget percentages updated');
     } catch (err) {
       toast.error('Failed to update percentages');
