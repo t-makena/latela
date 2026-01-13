@@ -10,7 +10,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useSavingsAdjustment } from "@/hooks/useSavingsAdjustment";
 import { useUserSettings, SavingsAdjustmentStrategy } from "@/hooks/useUserSettings";
 import { useLanguage } from "@/hooks/useLanguage";
-import { AlertTriangle, CheckCircle, ArrowRight, TrendingDown } from "lucide-react";
+import { ArrowRight, TrendingDown } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
 interface GoalsSavingsBalanceChartProps {
@@ -226,12 +226,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
         
         {/* Savings Status Section */}
         <div className="border-t pt-4">
-          <div className="flex items-center gap-2 mb-3">
-            {savingsStatus.hasShortfall ? (
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-            ) : (
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            )}
+          <div className="mb-3">
             <span className="font-medium">{t('goals.savingsStatus') || 'Savings Status'}</span>
           </div>
           
