@@ -206,11 +206,11 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
             <Line 
               type="monotone" 
               dataKey="expected" 
-              stroke="hsl(var(--secondary))" 
+              stroke="hsl(var(--foreground))" 
               strokeWidth={2} 
               strokeDasharray="5 5"
               name={t('goals.expectedBalance') || 'Expected Balance'}
-              dot={{ fill: 'hsl(var(--secondary))' }}
+              dot={{ fill: 'hsl(var(--foreground))' }}
             />
             {/* Total Amount Saved - Green solid line */}
             <Line 
