@@ -25,7 +25,7 @@ const Dashboard = () => {
   // Minimal mobile view
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background py-6 space-y-5 animate-fade-in">
+      <div className="min-h-screen py-6 space-y-5 animate-fade-in">
         <FinancialSummary showExplanations={false} minimal={true} />
         <MobileBudgetPlanCard />
         <MobileBudgetInsightCard />
