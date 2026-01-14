@@ -152,7 +152,7 @@ const Budget = () => {
   // Mobile layout - separate path without container wrapper
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
+      <div className="min-h-screen py-6 space-y-5 animate-fade-in">
         {/* Budget Method Card - Now first */}
         <BudgetMethodCard
           budgetMethod={budgetMethod}
