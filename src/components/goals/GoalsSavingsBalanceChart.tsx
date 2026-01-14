@@ -212,14 +212,14 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
               name={t('goals.expectedBalance') || 'Expected Balance'}
               dot={{ fill: 'hsl(var(--foreground))' }}
             />
-            {/* Total Amount Saved - Green solid line */}
+            {/* Total Amount Saved - Theme-aware solid line */}
             <Line 
               type="monotone" 
               dataKey="savings" 
-              stroke="#41b883" 
+              stroke="hsl(var(--foreground))" 
               strokeWidth={2} 
               name={t('goals.totalAmountSaved') || 'Total Amount Saved'}
-              dot={{ fill: '#41b883' }}
+              dot={{ fill: 'hsl(var(--foreground))' }}
             />
           </LineChart>
         </ResponsiveContainer>
