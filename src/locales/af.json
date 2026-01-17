@@ -150,5 +150,35 @@
     "next": "Volgende",
     "skip": "Slaan Oor",
     "finish": "Voltooi"
+  },
+  "score": {
+    "latelaScore": "Latela-telling",
+    "outOf100": "uit 100",
+    "daysToPayday": "dae tot betaaldag",
+    "safeToSpend": "Jy kan veilig spandeer",
+    "perDay": "dag",
+    "forNextDays": "vir die volgende {{days}} dae",
+    "scoreBreakdown": "Telling-uiteensetting",
+    "budgetCompliance": "Begrotingsnakoming",
+    "spendingConsistency": "Besteding Konsekwentheid",
+    "savingsHealth": "Spaargesondheid",
+    "cashSurvival": "Kontantoorlewering",
+    "expectedSpend": "Verwagte Besteding",
+    "avgDailySpend": "Gem. Daaglikse Besteding",
+    "riskRatio": "Risikoverhouding",
+    "riskLevels": {
+      "safe": "Veilig",
+      "mild": "Ligte Risiko",
+      "moderate": "Matige Risiko",
+      "high": "Hoë Risiko",
+      "critical": "Kritiek"
+    },
+    "riskMessages": {
+      "safe": "Jy is op koers om gemaklik betaaldag te haal.",
+      "mild": "Ligte versigtigheid word aanbeveel, maar jy behoort reg te wees.",
+      "moderate": "Oorweeg om besteding te verminder om veilig te bly.",
+      "high": "Hoë risiko om kort te kom voor betaaldag.",
+      "critical": "Dringend: Jy het dalk nie genoeg om te hou nie."
+    }
   }
 }

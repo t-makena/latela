@@ -24,6 +24,7 @@ export type Database = {
           account_name: string | null
           account_number: string
           account_type: string
+          available_balance: number | null
           balance_brought_forward: number
           bank_name: string | null
           created_at: string | null
@@ -50,6 +51,7 @@ export type Database = {
           account_name?: string | null
           account_number: string
           account_type: string
+          available_balance?: number | null
           balance_brought_forward: number
           bank_name?: string | null
           created_at?: string | null
@@ -76,6 +78,7 @@ export type Database = {
           account_name?: string | null
           account_number?: string
           account_type?: string
+          available_balance?: number | null
           balance_brought_forward?: number
           bank_name?: string | null
           created_at?: string | null
@@ -171,6 +174,68 @@ export type Database = {
             columns: ["parent_category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_scores: {
+        Row: {
+          account_id: string | null
+          avg_daily_spend: number | null
+          budget_compliance_score: number | null
+          calculated_at: string | null
+          cash_survival_risk_score: number | null
+          created_at: string | null
+          days_until_payday: number | null
+          expected_spend_to_payday: number | null
+          id: string
+          remaining_balance: number | null
+          risk_ratio: number | null
+          savings_health_score: number | null
+          spending_consistency_score: number | null
+          total_score: number
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          avg_daily_spend?: number | null
+          budget_compliance_score?: number | null
+          calculated_at?: string | null
+          cash_survival_risk_score?: number | null
+          created_at?: string | null
+          days_until_payday?: number | null
+          expected_spend_to_payday?: number | null
+          id?: string
+          remaining_balance?: number | null
+          risk_ratio?: number | null
+          savings_health_score?: number | null
+          spending_consistency_score?: number | null
+          total_score: number
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          avg_daily_spend?: number | null
+          budget_compliance_score?: number | null
+          calculated_at?: string | null
+          cash_survival_risk_score?: number | null
+          created_at?: string | null
+          days_until_payday?: number | null
+          expected_spend_to_payday?: number | null
+          id?: string
+          remaining_balance?: number | null
+          risk_ratio?: number | null
+          savings_health_score?: number | null
+          spending_consistency_score?: number | null
+          total_score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_scores_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -318,6 +383,66 @@ export type Database = {
           target?: number
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      grocery_prices: {
+        Row: {
+          barcode: string | null
+          brand: string | null
+          category: string
+          created_at: string | null
+          id: string
+          image_url: string | null
+          name: string
+          on_sale: boolean | null
+          original_price_cents: number | null
+          price_cents: number
+          product_url: string | null
+          retailer: string
+          scraped_at: string
+          sku: string | null
+          subcategory: string | null
+          unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string | null
+          category: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          on_sale?: boolean | null
+          original_price_cents?: number | null
+          price_cents: number
+          product_url?: string | null
+          retailer: string
+          scraped_at: string
+          sku?: string | null
+          subcategory?: string | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string | null
+          category?: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          on_sale?: boolean | null
+          original_price_cents?: number | null
+          price_cents?: number
+          product_url?: string | null
+          retailer?: string
+          scraped_at?: string
+          sku?: string | null
+          subcategory?: string | null
+          unit?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -506,6 +631,48 @@ export type Database = {
           },
         ]
       }
+      user_grocery_budget: {
+        Row: {
+          alert_threshold_percent: number | null
+          alerts_enabled: boolean | null
+          budget_period_start: string | null
+          created_at: string | null
+          current_month_spent_cents: number | null
+          current_month_transactions: number | null
+          id: string
+          monthly_budget_cents: number
+          preferred_retailers: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_threshold_percent?: number | null
+          alerts_enabled?: boolean | null
+          budget_period_start?: string | null
+          created_at?: string | null
+          current_month_spent_cents?: number | null
+          current_month_transactions?: number | null
+          id?: string
+          monthly_budget_cents?: number
+          preferred_retailers?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_threshold_percent?: number | null
+          alerts_enabled?: boolean | null
+          budget_period_start?: string | null
+          created_at?: string | null
+          current_month_spent_cents?: number | null
+          current_month_transactions?: number | null
+          id?: string
+          monthly_budget_cents?: number
+          preferred_retailers?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_merchant_mappings: {
         Row: {
           category_id: string
@@ -573,6 +740,70 @@ export type Database = {
           },
         ]
       }
+      user_price_alerts: {
+        Row: {
+          created_at: string | null
+          current_price_cents: number | null
+          grocery_price_id: string | null
+          id: string
+          is_active: boolean | null
+          product_name: string
+          retailer: string | null
+          target_price_cents: number
+          triggered_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_price_cents?: number | null
+          grocery_price_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          product_name: string
+          retailer?: string | null
+          target_price_cents: number
+          triggered_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_price_cents?: number | null
+          grocery_price_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          product_name?: string
+          retailer?: string | null
+          target_price_cents?: number
+          triggered_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_price_alerts_grocery_price_id_fkey"
+            columns: ["grocery_price_id"]
+            isOneToOne: false
+            referencedRelation: "cheapest_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_price_alerts_grocery_price_id_fkey"
+            columns: ["grocery_price_id"]
+            isOneToOne: false
+            referencedRelation: "current_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_price_alerts_grocery_price_id_fkey"
+            columns: ["grocery_price_id"]
+            isOneToOne: false
+            referencedRelation: "grocery_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           avatar_type: string | null
@@ -594,6 +825,7 @@ export type Database = {
           first_name: string | null
           gender: string | null
           id: string
+          income_frequency: string | null
           language: string | null
           last_active_at: string | null
           last_name: string | null
@@ -602,6 +834,7 @@ export type Database = {
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
+          payday_date: number | null
           phone_number: string | null
           phone_verified: boolean | null
           privacy_accepted_at: string | null
@@ -639,6 +872,7 @@ export type Database = {
           first_name?: string | null
           gender?: string | null
           id?: string
+          income_frequency?: string | null
           language?: string | null
           last_active_at?: string | null
           last_name?: string | null
@@ -647,6 +881,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          payday_date?: number | null
           phone_number?: string | null
           phone_verified?: boolean | null
           privacy_accepted_at?: string | null
@@ -684,6 +919,7 @@ export type Database = {
           first_name?: string | null
           gender?: string | null
           id?: string
+          income_frequency?: string | null
           language?: string | null
           last_active_at?: string | null
           last_name?: string | null
@@ -692,6 +928,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          payday_date?: number | null
           phone_number?: string | null
           phone_verified?: boolean | null
           privacy_accepted_at?: string | null
@@ -711,8 +948,147 @@ export type Database = {
         }
         Relationships: []
       }
+      user_shopping_list: {
+        Row: {
+          actual_price_cents: number | null
+          category: string | null
+          created_at: string | null
+          estimated_price_cents: number | null
+          grocery_price_id: string | null
+          id: string
+          is_purchased: boolean | null
+          list_name: string | null
+          name: string
+          notes: string | null
+          preferred_retailer: string | null
+          purchased_at: string | null
+          quantity: number | null
+          sort_order: number | null
+          unit: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_price_cents?: number | null
+          category?: string | null
+          created_at?: string | null
+          estimated_price_cents?: number | null
+          grocery_price_id?: string | null
+          id?: string
+          is_purchased?: boolean | null
+          list_name?: string | null
+          name: string
+          notes?: string | null
+          preferred_retailer?: string | null
+          purchased_at?: string | null
+          quantity?: number | null
+          sort_order?: number | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_price_cents?: number | null
+          category?: string | null
+          created_at?: string | null
+          estimated_price_cents?: number | null
+          grocery_price_id?: string | null
+          id?: string
+          is_purchased?: boolean | null
+          list_name?: string | null
+          name?: string
+          notes?: string | null
+          preferred_retailer?: string | null
+          purchased_at?: string | null
+          quantity?: number | null
+          sort_order?: number | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_shopping_list_grocery_price_id_fkey"
+            columns: ["grocery_price_id"]
+            isOneToOne: false
+            referencedRelation: "cheapest_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_shopping_list_grocery_price_id_fkey"
+            columns: ["grocery_price_id"]
+            isOneToOne: false
+            referencedRelation: "current_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_shopping_list_grocery_price_id_fkey"
+            columns: ["grocery_price_id"]
+            isOneToOne: false
+            referencedRelation: "grocery_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
+      cheapest_products: {
+        Row: {
+          brand: string | null
+          category: string | null
+          id: string | null
+          name: string | null
+          on_sale: boolean | null
+          original_price_cents: number | null
+          price_cents: number | null
+          product_url: string | null
+          retailer: string | null
+          scraped_at: string | null
+        }
+        Relationships: []
+      }
+      current_sales: {
+        Row: {
+          brand: string | null
+          category: string | null
+          discount_percent: number | null
+          id: string | null
+          name: string | null
+          original_price_cents: number | null
+          price_cents: number | null
+          product_url: string | null
+          retailer: string | null
+          savings_cents: number | null
+          scraped_at: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          discount_percent?: never
+          id?: string | null
+          name?: string | null
+          original_price_cents?: number | null
+          price_cents?: number | null
+          product_url?: string | null
+          retailer?: string | null
+          savings_cents?: never
+          scraped_at?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          discount_percent?: never
+          id?: string | null
+          name?: string | null
+          original_price_cents?: number | null
+          price_cents?: number | null
+          product_url?: string | null
+          retailer?: string | null
+          savings_cents?: never
+          scraped_at?: string | null
+        }
+        Relationships: []
+      }
       upcoming_events_summary: {
         Row: {
           event_count: number | null
