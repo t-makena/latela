@@ -150,5 +150,35 @@
     "next": "E Latelago",
     "skip": "Tlola",
     "finish": "Feleletša"
+  },
+  "score": {
+    "latelaScore": "Dintlha tša Latela",
+    "outOf100": "go tše 100",
+    "daysToPayday": "matšatši go fihla letšatšing la tefo",
+    "safeToSpend": "O ka šomiša ka polokego",
+    "perDay": "ka letšatši",
+    "forNextDays": "matšatšing a latelago a {{days}}",
+    "scoreBreakdown": "Tlhalošo ya Dintlha",
+    "budgetCompliance": "Go Obamela Tekanyetso",
+    "spendingConsistency": "Go Šomiša ka Botswerere",
+    "savingsHealth": "Bophelo bja Poloko",
+    "cashSurvival": "Go Phela ka Tšhelete",
+    "expectedSpend": "Tšhomišo ye e Letelwago",
+    "avgDailySpend": "Tšhomišo ye e Tlwaelegilego ka Letšatši",
+    "riskRatio": "Sekelo sa Kotsi",
+    "riskLevels": {
+      "safe": "Go Bolokegile",
+      "mild": "Kotsi ye Nnyane",
+      "moderate": "Kotsi ye e Magareng",
+      "high": "Kotsi ye e Godimo",
+      "critical": "E Kotsi Kudu"
+    },
+    "riskMessages": {
+      "safe": "O tseleng ya go fihla letšatšing la tefo ka boiketlo.",
+      "mild": "Temošo ye nnyane e eletšwa, eupša o swanetše go ba gabotse.",
+      "moderate": "Nagana go fokotša tšhomišo go dula o bolokegile.",
+      "high": "Kotsi ye e godimo ya go hloka pele ga letšatši la tefo.",
+      "critical": "Go potlakile: O ka no se be le ye e lekanego go tšwela pele."
+    }
   }
 }

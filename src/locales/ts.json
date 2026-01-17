@@ -150,5 +150,35 @@
     "next": "Leyi Landzelaka",
     "skip": "Tlula",
     "finish": "Hetisa"
+  },
+  "score": {
+    "latelaScore": "Swikoro swa Latela",
+    "outOf100": "eka 100",
+    "daysToPayday": "masiku ku fikela siku ra ku hakeriwa",
+    "safeToSpend": "U nga tirhisa hi ku hlayiseka",
+    "perDay": "hi siku",
+    "forNextDays": "emasikwini lama landzelaka ya {{days}}",
+    "scoreBreakdown": "Nhlamuselo ya Swikoro",
+    "budgetCompliance": "Ku Landza Tekanyetso",
+    "spendingConsistency": "Ku Tirhisa hi Vuswikoti",
+    "savingsHealth": "Rihanyu ra Ku Hlayisa",
+    "cashSurvival": "Ku Hanya hi Mali",
+    "expectedSpend": "Ku Tirhisa loku Languteriwaka",
+    "avgDailySpend": "Ku Tirhisa loku Tolovelekaka hi Siku",
+    "riskRatio": "Xikalo xa Khombo",
+    "riskLevels": {
+      "safe": "Ku Hlayisekile",
+      "mild": "Khombo Leri Tsongo",
+      "moderate": "Khombo leri Xikarhi",
+      "high": "Khombo leri Lehulu",
+      "critical": "Leswi Vavaka"
+    },
+    "riskMessages": {
+      "safe": "U le ndleleni yo fika esikwini ra ku hakeriwa hi ku rhula.",
+      "mild": "Vuhlayiseki lebyi tsongo byi byeriwa, kambe u fanele ku va kahle.",
+      "moderate": "Ehleketa ku hunguta ku tirhisa ku tshama u hlayisekile.",
+      "high": "Khombo leri lehulu ro pfumala eku heleni ka siku ra ku hakeriwa.",
+      "critical": "Swa hatima: U nga ha va u nga ri na leswi ringaneke ku ya emahlweni."
+    }
   }
 }
