@@ -150,5 +150,35 @@
     "next": "Zwi Ḓaho",
     "skip": "Pfulusani",
     "finish": "Fhedzani"
+  },
+  "score": {
+    "latelaScore": "Maḓuvha a Latela",
+    "outOf100": "kha 100",
+    "daysToPayday": "maḓuvha u swika ḓuvha ḽa mbadelo",
+    "safeToSpend": "Ni nga shumisa nga vhuṱanzi",
+    "perDay": "nga ḓuvha",
+    "forNextDays": "maḓuvhani a tevhelaho a {{days}}",
+    "scoreBreakdown": "Ṱhalutshedzo ya Maḓuvha",
+    "budgetCompliance": "U Tevhela Tekanyetso",
+    "spendingConsistency": "U Shumisa nga Vhuḓipfi",
+    "savingsHealth": "Mutakalo wa u Vhulungi",
+    "cashSurvival": "U Tshila nga Tshelede",
+    "expectedSpend": "U Shumisa ho Lavhelelwaho",
+    "avgDailySpend": "U Shumisa hu Ḓoweleaho nga Ḓuvha",
+    "riskRatio": "Tshikalo tsha Khombo",
+    "riskLevels": {
+      "safe": "Zwi Tsireledzeaho",
+      "mild": "Khombo Ṱhukhu",
+      "moderate": "Khombo vhukati",
+      "high": "Khombo Nṱha",
+      "critical": "Zwi Vhavhaho"
+    },
+    "riskMessages": {
+      "safe": "Ni kha nḓila ya u swika ḓuvhani ḽa mbadelo nga u ḓiṱukufhadza.",
+      "mild": "U vha na nḓila i elelwaho, fhedzi ni fanela u vha zwavhuḓi.",
+      "moderate": "Humbulani u fhungudza u shumisa u dzula no tsireledzea.",
+      "high": "Khombo nṱha ya u shaya phambi ha ḓuvha ḽa mbadelo.",
+      "critical": "Zwi ṱoḓa u ṱavhanya: Ni nga si vhe na zwo eḓanaho u bvela phanḓa."
+    }
   }
 }

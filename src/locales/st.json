@@ -150,5 +150,35 @@
     "next": "E Latelang",
     "skip": "Tlola",
     "finish": "Qeta"
+  },
+  "score": {
+    "latelaScore": "Lintlha tsa Latela",
+    "outOf100": "ho tse 100",
+    "daysToPayday": "matsatsi ho fihlela letsatsi la tefo",
+    "safeToSpend": "O ka sebelisa ka polokeho",
+    "perDay": "ka letsatsi",
+    "forNextDays": "bakeng sa matsatsi a latelang a {{days}}",
+    "scoreBreakdown": "Tlhaloso ea Lintlha",
+    "budgetCompliance": "Ho Mamela Tekanyetso",
+    "spendingConsistency": "Ho Sebelisa ka Botsitso",
+    "savingsHealth": "Bophelo ba Poloko",
+    "cashSurvival": "Ho Phela ka Chelete",
+    "expectedSpend": "Tšebeliso e Lebelletsoeng",
+    "avgDailySpend": "Tšebeliso e Tlwaelehileng ka Letsatsi",
+    "riskRatio": "Seelo sa Kotsi",
+    "riskLevels": {
+      "safe": "E Bolokehile",
+      "mild": "Kotsi e Nyane",
+      "moderate": "Kotsi e Mahareng",
+      "high": "Kotsi e Phahameng",
+      "critical": "E Tšosang"
+    },
+    "riskMessages": {
+      "safe": "O tseleng ea ho fihla letsatsing la tefo ka boiketlo.",
+      "mild": "Kelello e nyane e elelletsoa, empa o lokela ho ba hantle.",
+      "moderate": "Nahana ho fokotsa tšebeliso ho lula o bolokehile.",
+      "high": "Kotsi e phahameng ea ho hloka pele ho letsatsi la tefo.",
+      "critical": "E potlakileng: U kanna ua se be le e lekaneng ho tsoela pele."
+    }
   }
 }

@@ -150,5 +150,35 @@
     "next": "Lokulandzelako",
     "skip": "Yeqa",
     "finish": "Cedzela"
+  },
+  "score": {
+    "latelaScore": "Emaphuzu e-Latela",
+    "outOf100": "ku-100",
+    "daysToPayday": "emalanga kuze kube lilanga lekuholela",
+    "safeToSpend": "Ungasebentisa ngekuphepha",
+    "perDay": "ngelilanga",
+    "forNextDays": "emalangeni lalandzelako langu-{{days}}",
+    "scoreBreakdown": "Kuhlukaniswa Kwemaphuzu",
+    "budgetCompliance": "Kulandzela Tekanyetso",
+    "spendingConsistency": "Kusebentisa Lokungaguquki",
+    "savingsHealth": "Imphilo Yekulondvolota",
+    "cashSurvival": "Kuphila Ngemali",
+    "expectedSpend": "Kusebentisa Lokulindzelekile",
+    "avgDailySpend": "Kusebentisa Lokuvamile Ngelilanga",
+    "riskRatio": "Silinganiso Sengoti",
+    "riskLevels": {
+      "safe": "Kuphephile",
+      "mild": "Ingoti Lencane",
+      "moderate": "Ingoti Lephakati",
+      "high": "Ingoti Lephakeme",
+      "critical": "Lokubucayi"
+    },
+    "riskMessages": {
+      "safe": "Usendleleni yekufika elangeni lekuholela ngekutetsemba.",
+      "mild": "Kunakekelwa lokuncane kuyelelwako, kodvwa kufanele ube kahle.",
+      "moderate": "Cabanga kunciphisa kusebentisa kuze uhlale uphephile.",
+      "high": "Ingoti lephakeme yekushoda ngaphambili kwelilanga lekuholela.",
+      "critical": "Kuyaphutfuma: Ungase ungabi nalokwenele kuragela phambili."
+    }
   }
 }
