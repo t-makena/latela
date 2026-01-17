@@ -150,5 +150,35 @@
     "next": "Okulandelako",
     "skip": "Yeqa",
     "finish": "Qeda"
+  },
+  "score": {
+    "latelaScore": "Iphuzu Le-Latela",
+    "outOf100": "ku-100",
+    "daysToPayday": "amalanga kuze kube lilanga lokuhlawulwa",
+    "safeToSpend": "Ungasebenzisa ngokuphepha",
+    "perDay": "ngelanga",
+    "forNextDays": "emalangeni alandelako angu-{{days}}",
+    "scoreBreakdown": "Ukuhlukaniswa Kwephuzu",
+    "budgetCompliance": "Ukuthobela Isabelomali",
+    "spendingConsistency": "Ukusebenzisa Okungaguqukiko",
+    "savingsHealth": "Ipilo Yokulondoloza",
+    "cashSurvival": "Ukusinda Kwemali",
+    "expectedSpend": "Ukusebenzisa Okulindelweko",
+    "avgDailySpend": "Ukusebenzisa Okuvamileko Ngelanga",
+    "riskRatio": "Isilinganiso Sengozi",
+    "riskLevels": {
+      "safe": "Kuphephile",
+      "mild": "Ingozi Encani",
+      "moderate": "Ingozi Ephakathi",
+      "high": "Ingozi Ephezulu",
+      "critical": "Okubhuduzekako"
+    },
+    "riskMessages": {
+      "safe": "Useendleleni yokufika elangeni lokuhlawulwa ngokuzethemba.",
+      "mild": "Ukunakekela okuncani kuyacebiswa, kodwana kufanele ube kulungile.",
+      "moderate": "Cabanga ngokunciphisa ukusebenzisa ukuze uhlale uphephile.",
+      "high": "Ingozi ephezulu yokutlhoga ngaphambi kwelanga lokuhlawulwa.",
+      "critical": "Kurhabile: Ungatjho ungabi nakho okwaneleko ukuragela phambili."
+    }
   }
 }

@@ -150,5 +150,35 @@
     "next": "Elandelayo",
     "skip": "Tsiba",
     "finish": "Gqiba"
+  },
+  "score": {
+    "latelaScore": "Inqaku Le-Latela",
+    "outOf100": "kwikhulu",
+    "daysToPayday": "iintsuku zide kube lusuku lokuhlawulwa",
+    "safeToSpend": "Ungachitha ngokukhuselekileyo",
+    "perDay": "ngosuku",
+    "forNextDays": "kwiintsuku ezilandelayo ezingu-{{days}}",
+    "scoreBreakdown": "Ukwahlulwa Kwenqaku",
+    "budgetCompliance": "Ukuthobela Isabelomali",
+    "spendingConsistency": "Ukuchitha Okungaguqukiyo",
+    "savingsHealth": "Impilo Yokonga",
+    "cashSurvival": "Ukusinda Kwemali",
+    "expectedSpend": "Ukuchitha Okulindelweyo",
+    "avgDailySpend": "Ukuchitha Okuqhelekileyo Ngosuku",
+    "riskRatio": "Umlinganiselo Wengozi",
+    "riskLevels": {
+      "safe": "Kukhuselekile",
+      "mild": "Ingozi Encinane",
+      "moderate": "Ingozi Ephakathi",
+      "high": "Ingozi Ephezulu",
+      "critical": "Okubalulekileyo"
+    },
+    "riskMessages": {
+      "safe": "Usendleleni yokufika kusuku lokuhlawulwa ngokukhululekileyo.",
+      "mild": "Ukunyamekela okuncinci kuyacetyiswa, kodwa kufuneka ube kulungile.",
+      "moderate": "Cinga ngokunciphisa ukuchitha ukuze uhlale ukhuselekile.",
+      "high": "Ingozi ephezulu yokushota ngaphambi kosuku lokuhlawulwa.",
+      "critical": "Kungxamisekile: Unokungabi nakho okwaneleyo ukuqhubeka."
+    }
   }
 }

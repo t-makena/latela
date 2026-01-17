@@ -150,5 +150,35 @@
     "next": "E e Latelang",
     "skip": "Tlola",
     "finish": "Fetsa"
+  },
+  "score": {
+    "latelaScore": "Maduo a Latela",
+    "outOf100": "mo go 100",
+    "daysToPayday": "malatsi go fitlha letsatsi la tuelo",
+    "safeToSpend": "O ka dirisa ka pabalesego",
+    "perDay": "ka letsatsi",
+    "forNextDays": "mo malatsing a a latelang a {{days}}",
+    "scoreBreakdown": "Tlhaloso ya Maduo",
+    "budgetCompliance": "Go Obamela Tekanyetso",
+    "spendingConsistency": "Go Dirisa ka Botswerere",
+    "savingsHealth": "Boitekanelo jwa Poloko",
+    "cashSurvival": "Go Tshela ka Madi",
+    "expectedSpend": "Tiriso e e Solofelwang",
+    "avgDailySpend": "Tiriso e e Tlwaelegileng ka Letsatsi",
+    "riskRatio": "Sekelo sa Kotsi",
+    "riskLevels": {
+      "safe": "Go Babalesegile",
+      "mild": "Kotsi e Nnye",
+      "moderate": "Kotsi e e Magareng",
+      "high": "Kotsi e e Kwa Godimo",
+      "critical": "E Kotsi Thata"
+    },
+    "riskMessages": {
+      "safe": "O mo tseleng ya go fitlha letsatsing la tuelo ka boiketlo.",
+      "mild": "Kelotlhoko e nnye e eletswa, mme o tshwanetse go nna sentle.",
+      "moderate": "Akanya go fokotsa tiriso go nna o babalesegile.",
+      "high": "Kotsi e e kwa godimo ya go tlhoka pele ga letsatsi la tuelo.",
+      "critical": "Go potlaka: O ka nna wa se nne le e e lekaneng go tswelela."
+    }
   }
 }

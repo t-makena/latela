@@ -9,7 +9,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { GoalsSavingsBalanceChart } from "@/components/goals/GoalsSavingsBalanceChart";
-
+import { LatelaScoreCard } from "@/components/budget/LatelaScoreCard";
 import { MonthEndReviewDialog } from "@/components/goals/MonthEndReviewDialog";
 
 const Dashboard = () => {
@@ -27,6 +27,10 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen py-6 space-y-5 animate-fade-in">
         <FinancialSummary showExplanations={false} minimal={true} />
+        {/* Latela Score Card - Compact for mobile */}
+        <div className="px-4">
+          <LatelaScoreCard compact />
+        </div>
         <MobileBudgetPlanCard />
         <MobileBudgetInsightCard />
         {/* Combined Savings Balance Chart with Status */}
@@ -48,25 +52,8 @@ const Dashboard = () => {
         <div className="lg:col-span-2 h-full">
           <BudgetItemsCard />
         </div>
-        <Card className="w-full flex flex-col">
-          <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
-            <CardTitle className="heading-main">{t('finance.budgetInsight')}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 flex items-center pb-6">
-            <BudgetBreakdown
-              availableBalance={availableBalance}
-              budgetBalance={budgetBalance}
-              spending={spending}
-              previousMonth={{
-                availableBalance: availableBalance * 0.9,
-                budgetBalance: budgetBalance * 0.9,
-                spending: spending * 0.9,
-              }}
-              showOnlyTable
-              showOnlyOneMonth
-            />
-          </CardContent>
-        </Card>
+        {/* Latela Score Card for desktop */}
+        <LatelaScoreCard />
       </div>
 
       {/* Savings Balance Chart with Status */}

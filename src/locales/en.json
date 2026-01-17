@@ -254,5 +254,35 @@
     "next": "Next",
     "skip": "Skip",
     "finish": "Finish"
+  },
+  "score": {
+    "latelaScore": "Latela Score",
+    "outOf100": "out of 100",
+    "daysToPayday": "days to payday",
+    "safeToSpend": "You can safely spend",
+    "perDay": "day",
+    "forNextDays": "for the next {{days}} days",
+    "scoreBreakdown": "Score Breakdown",
+    "budgetCompliance": "Budget Compliance",
+    "spendingConsistency": "Spending Consistency",
+    "savingsHealth": "Savings Health",
+    "cashSurvival": "Cash Survival",
+    "expectedSpend": "Expected Spend",
+    "avgDailySpend": "Avg Daily Spend",
+    "riskRatio": "Risk Ratio",
+    "riskLevels": {
+      "safe": "Safe",
+      "mild": "Mild Risk",
+      "moderate": "Moderate Risk",
+      "high": "High Risk",
+      "critical": "Critical"
+    },
+    "riskMessages": {
+      "safe": "You're on track to make it to payday comfortably.",
+      "mild": "Slight caution advised, but you should be fine.",
+      "moderate": "Consider reducing spending to stay safe.",
+      "high": "High risk of running short before payday.",
+      "critical": "Urgent: You may not have enough to last."
+    }
   }
 }
