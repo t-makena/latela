@@ -160,7 +160,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     "T/F": "#F59E0B",        // Transportation & Fuel - amber/orange
     "D&R": "#EC4899",        // Dining & Restaurants - pink
     "S&R": "#A855F7",        // Shopping & Retail - light purple
-    "E&R": "#F97316",        // Entertainment & Recreation - orange
+    "E&R": "#f85f00",        // Entertainment & Recreation - orange
     "H&M": "#EF4444",        // Healthcare & Medical - red
     "B&S": "#6B7280",        // Bills & Subscriptions - gray
     "Misc": "#06B6D4",       // Miscellaneous - cyan
