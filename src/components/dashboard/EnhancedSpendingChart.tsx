@@ -33,7 +33,7 @@ const categoryColors = {
   "Dining & Restaurants": "#EC4899",
   "Shopping & Retail": "#A855F7",
   "Entertainment & Recreation": "#F97316",
-  "Healthcare & Medical": "#EF4444",
+  "Healthcare & Medical": "#ff3132",
   "Bills & Subscriptions": "#6B7280",
   "Miscellaneous": "#06B6D4"
 };

@@ -136,7 +136,7 @@ export const BudgetBreakdown = ({
     "Housing & Utilities": "#3B82F6",
     "Food & Groceries": "#84CC16",
     "Transportation & Fuel": "#F59E0B",
-    "Healthcare & Medical": "#EF4444",
+    "Healthcare & Medical": "#ff3132",
     "Bills & Subscriptions": "#6B7280",
     "Fees": "#9CA3AF",
     // Discretionary subcategories
