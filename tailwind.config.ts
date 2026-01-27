@@ -83,7 +83,7 @@ export default {
 				budget: {
 					primary: "#000000",
 					secondary: "#41b883",
-					expense: "#F97316",
+					expense: "#f85f00",
 					income: "#000000",
 					neutral: "#6c757d",
 					dark: "#2d3748",

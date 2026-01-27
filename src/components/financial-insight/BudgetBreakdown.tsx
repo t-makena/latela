@@ -121,7 +121,7 @@ export const BudgetBreakdown = ({
   const parentCategoryColors: Record<string, string> = {
     "Income": "#10B981",        // Green
     "Necessities": "#3B82F6",   // Blue
-    "Discretionary": "#F97316", // Orange
+    "Discretionary": "#f85f00", // Orange
     "Savings": "#8B5CF6"        // Purple
   };
 
