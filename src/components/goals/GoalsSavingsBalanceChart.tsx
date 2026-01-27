@@ -250,13 +250,6 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
             )}
           </div>
           
-          {/* Success message when on track */}
-          {!savingsStatus.hasShortfall && (
-            <p className="text-sm text-green-600 pt-3">
-              {t('finance.onTrack') || "You're on track, keep going :)"}
-            </p>
-          )}
-          
           {/* Shortfall details when not on track */}
           {savingsStatus.hasShortfall && (
             <div className="space-y-3 pt-3">
