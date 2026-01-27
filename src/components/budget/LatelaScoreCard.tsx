@@ -195,7 +195,7 @@ export function LatelaScoreCard({ compact = false }: LatelaScoreCardProps) {
         {/* Key Metrics */}
         <div className="grid grid-cols-2 gap-3 pt-2">
           <MetricBox 
-            label={t('finance.balance') || 'Balance'} 
+            label={t('finance.availableBalance') || 'Available Balance'} 
             value={formatCurrency(metrics.remainingBalance)} 
           />
           <MetricBox 
