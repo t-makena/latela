@@ -28,7 +28,7 @@ export function PasswordStrength({
   if (!password || !result) return null;
 
   const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
-  const strengthColors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981'];
+  const strengthColors = ['#ef4444', '#f85f00', '#eab308', '#22c55e', '#10b981'];
 
   return (
     <div className="mt-2">
