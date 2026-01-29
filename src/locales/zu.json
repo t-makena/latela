@@ -2,6 +2,8 @@
   "nav": {
     "dashboard": "Ibhodi",
     "budget": "Isabelomali",
+    "compare": "Qhathanisa Amanani",
+    "scan": "Skena Uhlu",
     "goals": "Izinjongo",
     "calendar": "Ikhalenda",
     "settings": "Izilungiselelo",
@@ -180,5 +182,32 @@
       "high": "Ingozi ephezulu yokushoda ngaphambi kosuku lokukhokha.",
       "critical": "Kuphuthumile: Ungase ungabi nakho okwanele ukuqhubeka."
     }
+  },
+  "compare": {
+    "title": "Qhathanisa Amanani",
+    "searchPlaceholder": "Sesha imikhiqizo...",
+    "bestPrice": "NGCONO",
+    "onSale": "UKUTHENGISWA",
+    "savingsMessage": "Onga R{{amount}} ngokuqhathanisa",
+    "noResults": "Ayikho imikhiqizo etholakele",
+    "searchPrompt": "Sesha imikhiqizo ukuqhathanisa amanani ezitolo",
+    "outOfStock": "Ayikho esitokini",
+    "perUnit": "nge {{unit}}",
+    "storesAvailable": "izitolo eziyi-{{count}}"
+  },
+  "scan": {
+    "title": "Skena Uhlu Lwezinto Zokudla",
+    "uploadTitle": "Layisha Uhlu Lwakho",
+    "uploadDescription": "Thatha isithombe noma layisha isithombe sohlu lwakho lwebandla elibhaliwe noma eliprintiwe",
+    "takePhoto": "Thatha Isithombe",
+    "uploadImage": "Layisha Isithombe",
+    "parsing": "Kuhlaziywa uhlu lwakho...",
+    "itemsFound": "izinto eziyi-{{count}} zitholakele",
+    "needsSelection": "izinto eziyi-{{count}} zidinga ukukhetha",
+    "selectProduct": "Khetha umkhiqizo",
+    "estimatedTotal": "Inani Elilinganiselwe",
+    "addManually": "Engeza into ngesandla",
+    "clearList": "Sula Uhlu",
+    "scanAnother": "Skena Okunye"
   }
 }

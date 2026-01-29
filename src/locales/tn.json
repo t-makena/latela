@@ -2,6 +2,8 @@
   "nav": {
     "dashboard": "Phanele",
     "budget": "Tekanyetso",
+    "compare": "Bapisa Ditlhwatlhwa",
+    "scan": "Skena Lenaane",
     "goals": "Maikaelelo",
     "calendar": "Khalendara",
     "settings": "Ditlhophiso",
@@ -180,5 +182,32 @@
       "high": "Kotsi e e kwa godimo ya go tlhoka pele ga letsatsi la tuelo.",
       "critical": "Go potlaka: O ka nna wa se nne le e e lekaneng go tswelela."
     }
+  },
+  "compare": {
+    "title": "Bapisa Ditlhwatlhwa",
+    "searchPlaceholder": "Batla dihlahiswa...",
+    "bestPrice": "BOTOKA",
+    "onSale": "THEKISO",
+    "savingsMessage": "Boloka R{{amount}} ka go bapisa",
+    "noResults": "Ga go na dihlahiswa tse di fitlhetsweng",
+    "searchPrompt": "Batla dihlahiswa go bapisa ditlhwatlhwa mo mabenkeleng",
+    "outOfStock": "Ga e yo mo setokong",
+    "perUnit": "ka {{unit}}",
+    "storesAvailable": "mabenkel a {{count}}"
+  },
+  "scan": {
+    "title": "Skena Lenaane la Dijo",
+    "uploadTitle": "Tsenya Lenaane la Gago",
+    "uploadDescription": "Tšea setshwantsho kgotsa tsenya setshwantsho sa lenaane la gago le le kwadilweng kgotsa le gatisitsweng",
+    "takePhoto": "Tšea Setshwantsho",
+    "uploadImage": "Tsenya Setshwantsho",
+    "parsing": "Go tlhatlhoba lenaane la gago...",
+    "itemsFound": "dilo tse {{count}} di fitlhetswe",
+    "needsSelection": "dilo tse {{count}} di tlhoka kgetho",
+    "selectProduct": "Kgetha sehlahiswa",
+    "estimatedTotal": "Palomoka e e Akantsweng",
+    "addManually": "Tsenya selo ka diatla",
+    "clearList": "Phimola Lenaane",
+    "scanAnother": "Skena e nngwe"
   }
 }

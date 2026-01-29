@@ -303,6 +303,42 @@ export type Database = {
         }
         Relationships: []
       }
+      canonical_products: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          name: string
+          quantity_unit: string | null
+          quantity_value: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          quantity_unit?: string | null
+          quantity_value?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          quantity_unit?: string | null
+          quantity_value?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           budget_amount: number | null
@@ -478,6 +514,85 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      price_history: {
+        Row: {
+          canonical_product_id: string | null
+          id: string
+          price_cents: number
+          recorded_at: string | null
+          store: string
+        }
+        Insert: {
+          canonical_product_id?: string | null
+          id?: string
+          price_cents: number
+          recorded_at?: string | null
+          store: string
+        }
+        Update: {
+          canonical_product_id?: string | null
+          id?: string
+          price_cents?: number
+          recorded_at?: string | null
+          store?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_canonical_product_id_fkey"
+            columns: ["canonical_product_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_offers: {
+        Row: {
+          canonical_product_id: string | null
+          id: string
+          in_stock: boolean | null
+          on_sale: boolean | null
+          price_cents: number
+          product_url: string | null
+          promotion_text: string | null
+          scraped_at: string | null
+          store: string
+          unit_price_cents: number | null
+        }
+        Insert: {
+          canonical_product_id?: string | null
+          id?: string
+          in_stock?: boolean | null
+          on_sale?: boolean | null
+          price_cents: number
+          product_url?: string | null
+          promotion_text?: string | null
+          scraped_at?: string | null
+          store: string
+          unit_price_cents?: number | null
+        }
+        Update: {
+          canonical_product_id?: string | null
+          id?: string
+          in_stock?: boolean | null
+          on_sale?: boolean | null
+          price_cents?: number
+          product_url?: string | null
+          promotion_text?: string | null
+          scraped_at?: string | null
+          store?: string
+          unit_price_cents?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_offers_canonical_product_id_fkey"
+            columns: ["canonical_product_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -1269,6 +1384,19 @@ export type Database = {
       redistribute_priorities_for_user: {
         Args: { manually_set_goal_id: string; new_priority_percentage: number }
         Returns: undefined
+      }
+      search_products: {
+        Args: { result_limit?: number; search_query: string }
+        Returns: {
+          brand: string
+          category: string
+          id: string
+          image_url: string
+          name: string
+          offers: Json
+          quantity_unit: string
+          quantity_value: number
+        }[]
       }
       update_goal_current_allocation: {
         Args: { goal_id: string; new_allocation: number }
