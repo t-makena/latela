@@ -2,6 +2,8 @@
   "nav": {
     "dashboard": "Ibhodi",
     "budget": "Ibhajethi",
+    "compare": "Thelekisa Amaxabiso",
+    "scan": "Skena Uluhlu",
     "goals": "Iinjongo",
     "calendar": "Ikhalenda",
     "settings": "Useto",
@@ -180,5 +182,32 @@
       "high": "Ingozi ephezulu yokushota ngaphambi kosuku lokuhlawulwa.",
       "critical": "Kungxamisekile: Unokungabi nakho okwaneleyo ukuqhubeka."
     }
+  },
+  "compare": {
+    "title": "Thelekisa Amaxabiso",
+    "searchPlaceholder": "Khangela iimveliso...",
+    "bestPrice": "BHETELE",
+    "onSale": "UKUTHENGISWA",
+    "savingsMessage": "Gcina R{{amount}} ngokuthelekisa",
+    "noResults": "Azikho iimveliso ezifunyenweyo",
+    "searchPrompt": "Khangela iimveliso ukuthelekisa amaxabiso ezivenkile",
+    "outOfStock": "Ayikho esistokini",
+    "perUnit": "nge {{unit}}",
+    "storesAvailable": "izitolo eziyi-{{count}}"
+  },
+  "scan": {
+    "title": "Skena Uluhlu Lwezinto Zokutya",
+    "uploadTitle": "Layisha Uluhlu Lwakho",
+    "uploadDescription": "Thatha umfanekiso okanye layisha umfanekiso woluhlu lwakho olubhaliweyo okanye oluprintiweyo",
+    "takePhoto": "Thatha Umfanekiso",
+    "uploadImage": "Layisha Umfanekiso",
+    "parsing": "Kuhlaziywa uluhlu lwakho...",
+    "itemsFound": "izinto eziyi-{{count}} zifunyenwe",
+    "needsSelection": "izinto eziyi-{{count}} zidinga ukukhetha",
+    "selectProduct": "Khetha imveliso",
+    "estimatedTotal": "Inani Elilinganiselweyo",
+    "addManually": "Yongeza into ngesandla",
+    "clearList": "Sula Uluhlu",
+    "scanAnother": "Skena Enye"
   }
 }

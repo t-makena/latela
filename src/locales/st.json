@@ -2,6 +2,8 @@
   "nav": {
     "dashboard": "Phanele",
     "budget": "Tekanyetso",
+    "compare": "Bapisa Litheko",
+    "scan": "Skena Lenane",
     "goals": "Maikemisetso",
     "calendar": "Khalendara",
     "settings": "Ditlhophiso",
@@ -180,5 +182,32 @@
       "high": "Kotsi e phahameng ea ho hloka pele ho letsatsi la tefo.",
       "critical": "E potlakileng: U kanna ua se be le e lekaneng ho tsoela pele."
     }
+  },
+  "compare": {
+    "title": "Bapisa Litheko",
+    "searchPlaceholder": "Batla lihlahisoa...",
+    "bestPrice": "BETERE",
+    "onSale": "THEKISO",
+    "savingsMessage": "Boloka R{{amount}} ka ho bapisa",
+    "noResults": "Ha ho lihlahisoa tse fumanoeng",
+    "searchPrompt": "Batla lihlahisoa ho bapisa litheko mabenkeleng",
+    "outOfStock": "Ha e eo stoking",
+    "perUnit": "ka {{unit}}",
+    "storesAvailable": "mabenkele a {{count}}"
+  },
+  "scan": {
+    "title": "Skena Lenane la Lijo",
+    "uploadTitle": "Kenya Lenane la Hao",
+    "uploadDescription": "Nka senepe kapa kenya setshwantsho sa lenane la hao le ngotsoeng kapa le hatisitsoeng",
+    "takePhoto": "Nka Senepe",
+    "uploadImage": "Kenya Setshwantsho",
+    "parsing": "Ho hlahloba lenane la hao...",
+    "itemsFound": "lintho tse {{count}} li fumanoe",
+    "needsSelection": "lintho tse {{count}} li hloka khetho",
+    "selectProduct": "Khetha sehlahisoa",
+    "estimatedTotal": "Kakaretso e Hakantsoeng",
+    "addManually": "Kenya ntho ka matsoho",
+    "clearList": "Hlakola Lenane",
+    "scanAnother": "Skena e 'ngoe"
   }
 }

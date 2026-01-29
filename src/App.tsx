@@ -12,6 +12,8 @@ import Index from "./pages/Index";
 import Accounts from "./pages/Accounts";
 import AccountDetail from "./pages/AccountDetail";
 import Budget from "./pages/Budget";
+import Compare from "./pages/Compare";
+import Scan from "./pages/Scan";
 import Goals from "./pages/Goals";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
@@ -56,6 +58,20 @@ const App = () => (
                   <ProtectedRoute>
                     <Layout>
                       <Budget />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/compare" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Compare />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/scan" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Scan />
                     </Layout>
                   </ProtectedRoute>
                 } />

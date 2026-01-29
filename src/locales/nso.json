@@ -2,6 +2,8 @@
   "nav": {
     "dashboard": "Phanele",
     "budget": "Tekanyetšo",
+    "compare": "Bapetša Ditheko",
+    "scan": "Skena Lenaneo",
     "goals": "Maikemišetšo",
     "calendar": "Khalendara",
     "settings": "Ditlhophiso",
@@ -180,5 +182,32 @@
       "high": "Kotsi ye e godimo ya go hloka pele ga letšatši la tefo.",
       "critical": "Go potlakile: O ka no se be le ye e lekanego go tšwela pele."
     }
+  },
+  "compare": {
+    "title": "Bapetša Ditheko",
+    "searchPlaceholder": "Nyaka dihlahiswa...",
+    "bestPrice": "KAONE",
+    "onSale": "THEKIŠO",
+    "savingsMessage": "Boloka R{{amount}} ka go bapetša",
+    "noResults": "Ga go na dihlahiswa tše di hwetšwago",
+    "searchPrompt": "Nyaka dihlahiswa go bapetša ditheko mabenkeleng",
+    "outOfStock": "Ga e gona setokong",
+    "perUnit": "ka {{unit}}",
+    "storesAvailable": "mabenkele a {{count}}"
+  },
+  "scan": {
+    "title": "Skena Lenaneo la Dijo",
+    "uploadTitle": "Laetša Lenaneo la Gago",
+    "uploadDescription": "Tšea seswantšho goba laetša seswantšho sa lenaneo la gago le le ngwadilwego goba le gatišitšwego",
+    "takePhoto": "Tšea Seswantšho",
+    "uploadImage": "Laetša Seswantšho",
+    "parsing": "Go sekaseka lenaneo la gago...",
+    "itemsFound": "dilo tše {{count}} di hwetšwa",
+    "needsSelection": "dilo tše {{count}} di nyaka go kgethwa",
+    "selectProduct": "Kgetha sehlahiswa",
+    "estimatedTotal": "Palomoka ye e Akantšwego",
+    "addManually": "Tsenya selo ka matsogo",
+    "clearList": "Phumula Lenaneo",
+    "scanAnother": "Skena ye nngwe"
   }
 }
