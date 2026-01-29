@@ -4,6 +4,7 @@
     "budget": "Bajete",
     "compare": "Vhambedza Mutengo",
     "scan": "Skena Tshithu",
+    "groceryBudget": "Bajete ya Zwiḽiwa",
     "goals": "Zwipikwa",
     "calendar": "Khalendara",
     "settings": "Zwidodombedzwa",
@@ -182,5 +183,29 @@
       "high": "Khombo nṱha ya u shaya phambi ha ḓuvha ḽa mbadelo.",
       "critical": "Zwi ṱoḓa u ṱavhanya: Ni nga si vhe na zwo eḓanaho u bvela phanḓa."
     }
+  },
+  "groceryBudget": {
+    "title": "Bajete ya Zwiḽiwa",
+    "searchTab": "Ṱoḓa",
+    "myListTab": "Tshiṱangano Tshanga",
+    "searchPlaceholder": "Ṱoḓa zwiḽiwa...",
+    "filterAll": "Zwoṱhe",
+    "onSaleOnly": "Zwine Zwa Rengiswa Fhedzi",
+    "searchEmpty": "Ṱoḓa zwiḽiwa",
+    "searchHint": "Ṅwalani u swika maletere a 2",
+    "addToList": "Ṋea",
+    "addedToList": "Yo ṋeelwa kha tshiṱangano",
+    "estMonthlyBudget": "Bajete ya Ṅwedzi Ine Ya Akanywa",
+    "itemsTotal": "{{count}} zwithu · Mutengo Une Wa Akanywa",
+    "cheapestAt": "Zwi thetshelesa kha",
+    "scanList": "Skena Tshiṱangano",
+    "scanListDesc": "Ṅwalisani tshifanyiso tsha tshiṱangano tshaṋu tsha zwiḽiwa",
+    "addAllToList": "Ṋea Zwoṱhe Kha Tshiṱangano",
+    "itemsAdded": "{{count}} zwithu zwo ṋeelwa kha tshiṱangano tshaṋu",
+    "changeStore": "Shandukisa vhengelele",
+    "emptyList": "Tshiṱangano tshaṋu a tshi na tshithu",
+    "emptyListHint": "Ṱoḓa zwithu kana skena tshiṱangano tsha zwiḽiwa",
+    "clearList": "Ṱanzwa Tshiṱangano",
+    "confirmClear": "Naa ni na vhungoho uri ni ṱoḓa u ṱanzwa tshiṱangano tshaṋu?"
   }
 }

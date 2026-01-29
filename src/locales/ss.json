@@ -4,6 +4,7 @@
     "budget": "Imali lekhelethiwe",
     "compare": "Cisanisa Tintengo",
     "scan": "Skena Luhla",
+    "groceryBudget": "Imali Yekudla",
     "goals": "Tinjongo",
     "calendar": "Likhalenda",
     "settings": "Tilungiselelo",
@@ -182,5 +183,29 @@
       "high": "Ingoti lephakeme yekushoda ngaphambili kwelilanga lekuholela.",
       "critical": "Kuyaphutfuma: Ungase ungabi nalokwenele kuragela phambili."
     }
+  },
+  "groceryBudget": {
+    "title": "Imali Yekudla",
+    "searchTab": "Funa",
+    "myListTab": "Luhla Lwami",
+    "searchPlaceholder": "Funa kudla...",
+    "filterAll": "Konkhe",
+    "onSaleOnly": "Lokutsengiswako Kuphela",
+    "searchEmpty": "Funa kudla",
+    "searchHint": "Bhala buncane tinhlavu leti-2",
+    "addToList": "Engeta",
+    "addedToList": "Kungeteliwe elulhleni",
+    "estMonthlyBudget": "Imali Yenyanga Lelinganisiwako",
+    "itemsTotal": "{{count}} tintfo · Senani Lelinganisiwako",
+    "cheapestAt": "Kushibhile kakhulu ku",
+    "scanList": "Skena Luhla",
+    "scanListDesc": "Layisha sitfombe seluhla lwakho lwekudla",
+    "addAllToList": "Engeta Konkhe Elulhleni",
+    "itemsAdded": "{{count}} tintfo tengeteliwe elulhleni lwakho",
+    "changeStore": "Shintja sitolo",
+    "emptyList": "Luhla lwakho alunalutfo",
+    "emptyListHint": "Funa tintfo noma skena luhla lwekudla",
+    "clearList": "Sula Luhla",
+    "confirmClear": "Ucinisekile kutsi ufuna kusula luhla lwakho?"
   }
 }

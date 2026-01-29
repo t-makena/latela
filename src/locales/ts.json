@@ -4,6 +4,7 @@
     "budget": "Bajete",
     "compare": "Pimanyisa Mitsengo",
     "scan": "Skena Nxaxamelo",
+    "groceryBudget": "Bajete ya Swakudya",
     "goals": "Swikongomelelo",
     "calendar": "Khalendara",
     "settings": "Tiyimiselo",
@@ -182,5 +183,29 @@
       "high": "Khombo leri lehulu ro pfumala eku heleni ka siku ra ku hakeriwa.",
       "critical": "Swa hatima: U nga ha va u nga ri na leswi ringaneke ku ya emahlweni."
     }
+  },
+  "groceryBudget": {
+    "title": "Bajete ya Swakudya",
+    "searchTab": "Lava",
+    "myListTab": "Nxaxamelo wa Mina",
+    "searchPlaceholder": "Lava swakudya...",
+    "filterAll": "Hinkwaswo",
+    "onSaleOnly": "Leswi Xavisiwaka Ntsena",
+    "searchEmpty": "Lava swakudya",
+    "searchHint": "Tsala hi ku fikelela maletere ya 2",
+    "addToList": "Engetela",
+    "addedToList": "Yi engeteriwile eka nxaxamelo",
+    "estMonthlyBudget": "Bajete ya N'hweti Leyi Akanyiweke",
+    "itemsTotal": "{{count}} swilo · Ntsengo Lowu Akanyiweke",
+    "cheapestAt": "Swa xuma swinene eka",
+    "scanList": "Skena Nxaxamelo",
+    "scanListDesc": "Layicha xifaniso xa nxaxamelo wa wena wa swakudya",
+    "addAllToList": "Engetela Hinkwaswo Eka Nxaxamelo",
+    "itemsAdded": "{{count}} swilo swi engeteriwile eka nxaxamelo wa wena",
+    "changeStore": "Cinca xitolo",
+    "emptyList": "Nxaxamelo wa wena a wu na nchumu",
+    "emptyListHint": "Lava swilo kumbe skena nxaxamelo wa swakudya",
+    "clearList": "Basisa Nxaxamelo",
+    "confirmClear": "Xana u tiyisekile leswaku u lava ku basisa nxaxamelo wa wena?"
   }
 }
