@@ -4,6 +4,7 @@
     "budget": "Tekanyetso",
     "compare": "Bapisa Litheko",
     "scan": "Skena Lenane",
+    "groceryBudget": "Tekanyetso ya Lijo",
     "goals": "Maikemisetso",
     "calendar": "Khalendara",
     "settings": "Ditlhophiso",
@@ -209,5 +210,29 @@
     "addManually": "Kenya ntho ka matsoho",
     "clearList": "Hlakola Lenane",
     "scanAnother": "Skena e 'ngoe"
+  },
+  "groceryBudget": {
+    "title": "Tekanyetso ya Lijo",
+    "searchTab": "Batla",
+    "myListTab": "Lenane la Ka",
+    "searchPlaceholder": "Batla lijo...",
+    "filterAll": "Tsohle",
+    "onSaleOnly": "Tse Rekisoang Feela",
+    "searchEmpty": "Batla lijo",
+    "searchHint": "Ngola bonyane litlhaku tse 2",
+    "addToList": "Eketsa",
+    "addedToList": "E kentswe lenaneng",
+    "estMonthlyBudget": "Tekanyetso ea Khoeli e Hakanyetsoang",
+    "itemsTotal": "{{count}} lintho · Palomoka e Hakanyetsoang",
+    "cheapestAt": "E theko e tlase ho",
+    "scanList": "Skena Lenane",
+    "scanListDesc": "Kenya setšoantšo sa lenane la hao la lijo",
+    "addAllToList": "Eketsa Tsohle Lenaneng",
+    "itemsAdded": "{{count}} lintho li kentswe lenaneng la hao",
+    "changeStore": "Fetola lebenkele",
+    "emptyList": "Lenane la hao ha le na letho",
+    "emptyListHint": "Batla lintho kapa skena lenane la lijo",
+    "clearList": "Hlakola Lenane",
+    "confirmClear": "Na u na le bonnete ba hore u batla ho hlakola lenane la hao?"
   }
 }

@@ -4,6 +4,7 @@
     "budget": "Isabelomali",
     "compare": "Madelanisa Amanani",
     "scan": "Skena Irhelo",
+    "groceryBudget": "Isabelomali Sokudla",
     "goals": "Iinjongo",
     "calendar": "Ikhalenda",
     "settings": "Izilungiselelo",
@@ -182,5 +183,29 @@
       "high": "Ingozi ephezulu yokutlhoga ngaphambi kwelanga lokuhlawulwa.",
       "critical": "Kurhabile: Ungatjho ungabi nakho okwaneleko ukuragela phambili."
     }
+  },
+  "groceryBudget": {
+    "title": "Isabelomali Sokudla",
+    "searchTab": "Funana",
+    "myListTab": "Irhelo Lami",
+    "searchPlaceholder": "Funana ukudla...",
+    "filterAll": "Koke",
+    "onSaleOnly": "Okuthengiswako Kwaphela",
+    "searchEmpty": "Funana ukudla",
+    "searchHint": "Tlola buncani iinhlavu ezi-2",
+    "addToList": "Engeza",
+    "addedToList": "Kwengezwe erhelweni",
+    "estMonthlyBudget": "Isabelomali Senyanga Esilinaganyelwako",
+    "itemsTotal": "{{count}} izinto · Inani Elilinaganyelwako",
+    "cheapestAt": "Kutjhibhile khulu ku",
+    "scanList": "Skena Irhelo",
+    "scanListDesc": "Layisha isithombe serhelo lakho lokudla",
+    "addAllToList": "Engeza Koke Erhelweni",
+    "itemsAdded": "{{count}} izinto zengezwe erhelweni lakho",
+    "changeStore": "Tjhintja isitolo",
+    "emptyList": "Irhelo lakho alinanto",
+    "emptyListHint": "Funana izinto namkha skena irhelo lokudla",
+    "clearList": "Sula Irhelo",
+    "confirmClear": "Uqinisekile bona ufuna ukusula irhelo lakho?"
   }
 }

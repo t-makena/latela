@@ -4,6 +4,7 @@
     "budget": "Ibhajethi",
     "compare": "Thelekisa Amaxabiso",
     "scan": "Skena Uluhlu",
+    "groceryBudget": "Ibhajethi Yokutya",
     "goals": "Iinjongo",
     "calendar": "Ikhalenda",
     "settings": "Useto",
@@ -209,5 +210,29 @@
     "addManually": "Yongeza into ngesandla",
     "clearList": "Sula Uluhlu",
     "scanAnother": "Skena Enye"
+  },
+  "groceryBudget": {
+    "title": "Ibhajethi Yokutya",
+    "searchTab": "Khangela",
+    "myListTab": "Uluhlu Lwam",
+    "searchPlaceholder": "Khangela ukutya...",
+    "filterAll": "Konke",
+    "onSaleOnly": "Okuthengiswa Kuphela",
+    "searchEmpty": "Khangela ukutya",
+    "searchHint": "Chwetheza ubuncinane oonobumba aba-2",
+    "addToList": "Yongeza",
+    "addedToList": "Yongezwe kuluhlu",
+    "estMonthlyBudget": "Ibhajethi Yenyanga Eqikelelwayo",
+    "itemsTotal": "{{count}} izinto · Isixa Esiqikelelwayo",
+    "cheapestAt": "Itshiphu kakhulu ku",
+    "scanList": "Skena Uluhlu",
+    "scanListDesc": "Layisha umfanekiso woluhlu lwakho lokutya",
+    "addAllToList": "Yongeza Konke Kuluhlu",
+    "itemsAdded": "{{count}} izinto zongezwe kuluhlu lwakho",
+    "changeStore": "Tshintsha ivenkile",
+    "emptyList": "Uluhlu lwakho alunanto",
+    "emptyListHint": "Khangela izinto okanye skena uluhlu lokutya",
+    "clearList": "Sula Uluhlu",
+    "confirmClear": "Uqinisekile ufuna ukusula uluhlu lwakho?"
   }
 }

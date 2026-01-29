@@ -4,6 +4,7 @@
     "budget": "Budget",
     "compare": "Compare Prices",
     "scan": "Scan List",
+    "groceryBudget": "Grocery Budget",
     "goals": "Goals",
     "calendar": "Calendar",
     "settings": "Settings",
@@ -313,5 +314,29 @@
     "addManually": "Add item manually",
     "clearList": "Clear List",
     "scanAnother": "Scan Another"
+  },
+  "groceryBudget": {
+    "title": "Grocery Budget",
+    "searchTab": "Search",
+    "myListTab": "My List",
+    "searchPlaceholder": "Search groceries...",
+    "filterAll": "All",
+    "onSaleOnly": "On Sale Only",
+    "searchEmpty": "Search for grocery items",
+    "searchHint": "Type at least 2 characters to search",
+    "addToList": "Add",
+    "addedToList": "Added to list",
+    "estMonthlyBudget": "Est. Monthly Grocery Budget",
+    "itemsTotal": "{{count}} items · Est. Total",
+    "cheapestAt": "Cheapest at",
+    "scanList": "Scan List",
+    "scanListDesc": "Upload a photo of your grocery list",
+    "addAllToList": "Add All to List",
+    "itemsAdded": "Added {{count}} items to your list",
+    "changeStore": "Change store",
+    "emptyList": "Your list is empty",
+    "emptyListHint": "Search for items or scan a grocery list",
+    "clearList": "Clear List",
+    "confirmClear": "Are you sure you want to clear your list?"
   }
 }

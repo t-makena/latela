@@ -1,4 +1,4 @@
-export type StoreKey = 'pnp' | 'checkers' | 'shoprite' | 'woolworths';
+export type StoreKey = 'pnp' | 'checkers' | 'shoprite' | 'woolworths' | 'makro';
 
 export interface StoreColorConfig {
   bg: string;
@@ -31,6 +31,12 @@ export const storeColors: Record<StoreKey, StoreColorConfig> = {
     text: 'text-green-800', 
     border: 'border-green-300',
     name: 'Woolworths' 
+  },
+  makro: { 
+    bg: 'bg-orange-100', 
+    text: 'text-orange-800', 
+    border: 'border-orange-300',
+    name: 'Makro' 
   }
 };
 
