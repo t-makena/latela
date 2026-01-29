@@ -1,74 +1,69 @@
 
 
-## Unified Grocery Budget Page Refactor
+## Unified Grocery Budget Page Implementation
 
 ### Summary
-Create a new unified "Grocery Budget" page that combines price comparison and cart estimation into one cohesive experience. This will replace/consolidate the separate `/compare` and `/scan` pages with a new `/grocery-budget` page featuring a Search/My List tab interface.
+Create a new unified `/grocery-budget` page that combines price comparison and cart estimation into one cohesive experience. This page will feature a Search/My List tab interface, store filters, an "On Sale Only" toggle, and a persistent footer showing the estimated total.
 
 ---
 
 ### Current State Analysis
 
-**Existing Components to Reuse:**
-- `usePriceSearch` hook - handles product search with debouncing
-- `useGroceryScanner` hook - handles image scanning and list management
-- `ProductComparisonCard` - displays product with store price comparison
-- `StoreOfferRow` - displays individual store price rows
-- `StoreBadge` - color-coded store pills
+**Existing Assets to Leverage:**
+- `usePriceSearch` hook - product search with debouncing via React Query
+- `useGroceryScanner` hook - image scanning and item parsing
+- `ProductComparisonCard`, `StoreOfferRow`, `StoreBadge` - price comparison UI
 - `ImageUploader` - camera/upload component
-- `GroceryItemCard` - list item with quantity controls
-- `ListSummary` - total calculation display
-- `storeColors.ts` - store color definitions
+- `storeColors.ts` - store color configuration (missing Makro)
+- Edge functions: `search-products`, `scan-grocery-list`
 
-**Missing from Current Implementation:**
-- "Makro" store (needs adding to storeColors)
-- Store filter functionality
-- "On Sale Only" toggle filter
-- Search/My List tab navigation
-- Unified cart state management
-- "Add to List" functionality on search results
-- Sticky footer with running total
+**What Needs to be Created:**
+- `useGroceryCart` hook - unified cart state with localStorage persistence
+- `GroceryBudget.tsx` page - main unified page
+- `SearchTab.tsx` - search functionality with filters
+- `MyListTab.tsx` - cart/list management
+- `GrocerySearchResultCard.tsx` - search result with "+ Add" button
+- `CartItemCard.tsx` - cart item with store switching
+- `StoreFilterPills.tsx` - store filter buttons
+- `ScanListDialog.tsx` - modal for scanning
 
 ---
 
-### Implementation Plan
+### Implementation Details
 
 #### Phase 1: Update Store Colors Configuration
 
 **File: `src/lib/storeColors.ts`**
 
-Add Makro store configuration:
-```text
-makro: { 
-  bg: 'bg-orange-100', 
-  text: 'text-orange-800', 
-  border: 'border-orange-300',
-  name: 'Makro' 
-}
-```
+Add Makro store and update type:
 
-Update the `StoreKey` type to include `'makro'`.
+| Change | Description |
+|--------|-------------|
+| Add `'makro'` to `StoreKey` type | Enable Makro store support |
+| Add Makro config | `{ bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300', name: 'Makro' }` |
 
 ---
 
-#### Phase 2: Create Unified Cart Context/Hook
+#### Phase 2: Create Grocery Cart Hook
 
 **New File: `src/hooks/useGroceryCart.ts`**
 
-Create a unified cart management hook that:
-- Manages cart items with: product ID, name, brand, image, selected store, price, quantity
-- Provides `addToCart(product, selectedOffer)` function
-- Provides `updateQuantity(itemId, quantity)` function
-- Provides `updateStore(itemId, newStoreOffer)` function
-- Provides `removeFromCart(itemId)` function
-- Provides `clearCart()` function
-- Computes totals: item count, total price, store breakdown
-- Persists cart to localStorage for session continuity
-- Integrates with the scanner hook's output format
+A custom hook that manages the shopping cart with localStorage persistence:
 
-**Interface for Cart Item:**
+| Feature | Implementation |
+|---------|----------------|
+| Cart items state | Array of `CartItem` objects |
+| `addToCart(product, offer)` | Add product with selected store offer |
+| `updateQuantity(id, qty)` | Change item quantity (min 1) |
+| `updateStore(id, offer)` | Switch to different store's offer |
+| `removeFromCart(id)` | Remove item |
+| `clearCart()` | Empty the cart |
+| localStorage sync | Persist/restore cart on mount |
+| Computed totals | `totalCents`, `itemCount`, `storeBreakdown` |
+
+**CartItem Interface:**
 ```text
-CartItem {
+{
   id: string;
   productId: string;
   productName: string;
@@ -77,48 +72,32 @@ CartItem {
   quantityValue: number | null;
   quantityUnit: string | null;
   selectedOffer: ProductOffer;
+  availableOffers: ProductOffer[];
   quantity: number;
-  addedAt: Date;
+  addedAt: number;
 }
 ```
 
 ---
 
-#### Phase 3: Create New Grocery Budget Page
+#### Phase 3: Create Grocery Budget Page
 
 **New File: `src/pages/GroceryBudget.tsx`**
 
-Main page component with:
+Main page component with tab-based navigation:
 
-1. **Header Section**
-   - Cart icon + "Grocery Budget" title
-   - No duplicate title (fix screenshot issue showing it twice)
+| Section | Details |
+|---------|---------|
+| Header | ShoppingCart icon + "Grocery Budget" title |
+| Tab Navigation | "Search" (magnifier icon) / "My List (X)" (cart icon + count) |
+| Active tab | Black background, white text |
+| Inactive tab | White background, black border |
+| Content Area | Renders `SearchTab` or `MyListTab` based on active tab |
+| Sticky Footer | Shows item count + estimated total |
 
-2. **Tab Navigation**
-   - Two toggle buttons: "Search" (with magnifier icon) and "My List (X)" (with cart icon)
-   - Active tab: black background, white text
-   - Inactive tab: white background, black border
-   - Count badge updates dynamically
-
-3. **Search Tab Content**
-   - Search input with magnifier icon
-   - Store filter pills: All, Checkers, Makro, PnP, Woolies (matching screenshot layout)
-   - "On Sale Only" toggle button with flame/sale icon
-   - Search results grid or empty state
-   - Minimum 2 characters to trigger search
-
-4. **My List Tab Content**
-   - List of added items with quantity controls
-   - Each item shows: name, selected store badge, price, quantity +/- buttons
-   - Store selector to change store for each item
-   - Trash icon to remove items
-   - "Scan List" button to add items via photo
-
-5. **Sticky Footer**
-   - Always visible at bottom
-   - Shows: "Est. Monthly Grocery Budget: R0.00" when empty
-   - Shows: "X items · Est. Total: RXXX.XX" when items exist
-   - Optional: "Cheapest at: [Store] - RXXX.XX" for single-store optimization
+**Footer Logic:**
+- Empty cart: "Est. Monthly Grocery Budget: R0.00"
+- With items: "X items · Est. Total: RXXX.XX"
 
 ---
 
@@ -126,14 +105,20 @@ Main page component with:
 
 **New File: `src/components/grocery-budget/SearchTab.tsx`**
 
-Features:
-- Integrates `usePriceSearch` hook
-- Store filter state (selectedStore: 'all' | 'checkers' | 'makro' | 'pnp' | 'woolworths')
-- On Sale Only filter state
-- Filters products client-side based on selected store
-- Empty state: "Search for grocery items - Type at least 2 characters to search"
-- Loading state with skeleton cards
-- Search results rendered using `GrocerySearchResultCard` component
+| Feature | Implementation |
+|---------|----------------|
+| Search input | Uses `usePriceSearch` hook |
+| Store filter pills | All, Checkers, Makro, PnP, Woolies |
+| On Sale Only toggle | Filter by `on_sale` flag |
+| Client-side filtering | Filter results by selected store |
+| Empty state | "Search for grocery items - Type at least 2 characters to search" |
+| Loading state | Skeleton cards |
+| Results | Grid of `GrocerySearchResultCard` components |
+
+**Filter Logic:**
+- "All" shows all products with all store offers
+- Specific store filters to only show that store's prices
+- "On Sale Only" filters offers where `on_sale === true`
 
 ---
 
@@ -141,14 +126,19 @@ Features:
 
 **New File: `src/components/grocery-budget/GrocerySearchResultCard.tsx`**
 
-Modified version of `ProductComparisonCard` that includes:
-- Product image, name, brand, quantity
-- Price pills for each store (color-coded badges)
-- "BEST" badge on cheapest store price
-- "SALE" badge on promotional prices
-- Unit price (R/100g or R/100ml) in smaller text
-- "+ Add" button that calls `addToCart` from context
-- When store filter is active, only show that store's price
+Modified product card with "Add to List" functionality:
+
+| Element | Description |
+|---------|-------------|
+| Product image | 80x80px, object-contain |
+| Product name | Bold, line-clamp-2 |
+| Brand + quantity | Muted text (e.g., "Kellogg's 500g") |
+| Price pills | Color-coded badges per store |
+| "BEST" badge | Green, on cheapest offer |
+| "SALE" badge | Orange, on promotional offers |
+| Unit price | Small text showing R/100g or R/100ml |
+| "+ Add" button | Adds to cart with cheapest offer selected |
+| Success feedback | Toast notification on add |
 
 ---
 
@@ -156,11 +146,12 @@ Modified version of `ProductComparisonCard` that includes:
 
 **New File: `src/components/grocery-budget/MyListTab.tsx`**
 
-Features:
-- Renders list of cart items using `CartItemCard` component
-- "Scan List" button with camera icon that opens uploader dialog
-- Empty state when no items
-- Integrates with `useGroceryCart` for state management
+| Feature | Implementation |
+|---------|----------------|
+| Item list | Renders `CartItemCard` for each item |
+| "Scan List" button | Camera icon, opens `ScanListDialog` |
+| Empty state | "Your list is empty - Search for items or scan a grocery list" |
+| Clear list button | Trash icon, confirms before clearing |
 
 ---
 
@@ -168,13 +159,18 @@ Features:
 
 **New File: `src/components/grocery-budget/CartItemCard.tsx`**
 
-Features:
-- Product name and brand
-- Current store badge (tappable to cycle stores or dropdown)
-- Price display (updates when store changes)
-- Quantity controls (+/- buttons)
-- Remove button (trash icon)
-- Subtotal for item (price × quantity)
+| Element | Description |
+|---------|-------------|
+| Product name/brand | Left-aligned |
+| Store badge | Current selected store (tappable to cycle) |
+| Price display | Updates when store changes |
+| Quantity controls | +/- buttons with current count |
+| Subtotal | Price × quantity |
+| Remove button | Trash icon |
+
+**Store Switching:**
+- Tap store badge to cycle through available offers
+- Or use dropdown to select specific store
 
 ---
 
@@ -182,12 +178,13 @@ Features:
 
 **New File: `src/components/grocery-budget/StoreFilterPills.tsx`**
 
-Features:
-- Pill buttons: All, Checkers, Makro, PnP, Woolies
-- "All" has amber/orange background when selected (matching screenshot)
-- Other pills have black background when selected
-- Unselected pills have white background with black border
-- `onStoreChange(store)` callback
+| Pill | Selected Style | Unselected Style |
+|------|----------------|------------------|
+| All | Amber background (`bg-amber-400`) | White + black border |
+| Checkers | Black background, white text | White + black border |
+| Makro | Black background, white text | White + black border |
+| PnP | Black background, white text | White + black border |
+| Woolies | Black background, white text | White + black border |
 
 ---
 
@@ -195,34 +192,37 @@ Features:
 
 **New File: `src/components/grocery-budget/ScanListDialog.tsx`**
 
-Wrapper component that:
-- Opens as a modal/dialog
-- Contains the `ImageUploader` component
-- Shows scanning progress
-- Displays parsed items with confirmation
-- "Add All to List" button
-- Calls `addToCart` for each matched item
+| Feature | Implementation |
+|---------|----------------|
+| Trigger | Button with camera icon |
+| Modal/Dialog | Uses `Dialog` from radix |
+| Content | `ImageUploader` component |
+| Scanning state | Shows progress indicator |
+| Results preview | List of parsed items with matches |
+| "Add All" button | Batch add matched items to cart |
+| Success toast | "Added X items to your list" |
 
 ---
 
 #### Phase 10: Update Navigation and Routes
 
 **Modify: `src/App.tsx`**
+- Add import for `GroceryBudget`
 - Add route: `/grocery-budget` → `<GroceryBudget />`
-- Consider removing or redirecting `/compare` and `/scan` routes
+- Keep `/compare` and `/scan` routes (redirect later if needed)
 
 **Modify: `src/components/layout/Navbar.tsx`**
-- Replace "Compare Prices" and "Scan List" nav items with single "Grocery Budget" item
-- Use `ShoppingCart` icon
+- Replace separate "Compare Prices" and "Scan List" nav items with single "Grocery Budget"
+- Use `ShoppingCart` icon from lucide-react
 - Route to `/grocery-budget`
 
 ---
 
 #### Phase 11: Add Translations
 
-**Modify: `src/locales/en.json` (and other locale files)**
+**Modify: `src/locales/en.json`** (and other 10 locale files)
 
-Add new translation keys:
+Add new translation section:
 ```text
 "groceryBudget": {
   "title": "Grocery Budget",
@@ -234,18 +234,25 @@ Add new translation keys:
   "searchEmpty": "Search for grocery items",
   "searchHint": "Type at least 2 characters to search",
   "addToList": "Add",
+  "addedToList": "Added to list",
   "estMonthlyBudget": "Est. Monthly Grocery Budget",
   "itemsTotal": "{{count}} items · Est. Total",
   "cheapestAt": "Cheapest at",
   "scanList": "Scan List",
-  "addedToList": "Added {{count}} items to your list",
-  "changeStore": "Change store"
+  "scanListDesc": "Upload a photo of your grocery list",
+  "addAllToList": "Add All to List",
+  "itemsAdded": "Added {{count}} items to your list",
+  "changeStore": "Change store",
+  "emptyList": "Your list is empty",
+  "emptyListHint": "Search for items or scan a grocery list",
+  "clearList": "Clear List",
+  "confirmClear": "Are you sure you want to clear your list?"
 }
 ```
 
 ---
 
-### File Structure Summary
+### File Structure
 
 ```text
 New Files:
@@ -262,28 +269,43 @@ New Files:
 Modified Files:
 ├── src/lib/storeColors.ts (add Makro)
 ├── src/App.tsx (add route)
-├── src/components/layout/Navbar.tsx (update nav items)
-├── src/locales/en.json (add translations)
-├── src/locales/af.json
-├── src/locales/zu.json
-├── src/locales/xh.json
-├── src/locales/nso.json
-├── src/locales/st.json
-├── src/locales/tn.json
-├── src/locales/ts.json
-├── src/locales/ve.json
-├── src/locales/ss.json
-└── src/locales/nr.json
+├── src/components/layout/Navbar.tsx (update nav)
+├── src/locales/*.json (all 11 files)
 ```
 
 ---
 
-### Technical Considerations
+### Technical Notes
 
-1. **Cart Persistence**: Use localStorage to persist cart between sessions
-2. **Store Filtering**: Filter products client-side after API response to avoid multiple API calls
-3. **Neo-brutalist Styling**: Maintain 2px borders, 4px hard shadows, rounded corners
-4. **Mobile Responsiveness**: Use `useIsMobile` hook for adaptive layouts
-5. **Edge Functions**: Reuse existing `search-products` and `scan-grocery-list` functions
-6. **Currency**: All prices in cents, divide by 100 for display using `formatPriceCents`
+| Concern | Approach |
+|---------|----------|
+| Cart persistence | localStorage with JSON serialization |
+| Store filtering | Client-side filter after API response |
+| Neo-brutalist styling | 2px borders, 4px hard shadows, rounded corners |
+| Mobile layout | `useIsMobile` hook for responsive design |
+| Currency | All prices in cents, display with `formatPriceCents` |
+| Tab state | React useState, could be URL params later |
+| API reuse | Existing `search-products` and `scan-grocery-list` edge functions |
+
+---
+
+### UI Styling Reference
+
+**Tab Buttons:**
+```text
+Active: bg-foreground text-background font-semibold
+Inactive: bg-background border-2 border-foreground text-foreground
+```
+
+**Sticky Footer:**
+```text
+Fixed bottom, full width, bg-background, border-t-2 border-foreground
+py-4 px-6, shadow-[0_-4px_0px_0px_rgba(0,0,0,1)]
+```
+
+**Store Filter Pills:**
+```text
+Rounded-full, px-3 py-1.5, text-sm font-medium
+Gap-2 between pills, flex-wrap on mobile
+```
 
