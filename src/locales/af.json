@@ -2,6 +2,8 @@
   "nav": {
     "dashboard": "Paneelbord",
     "budget": "Begroting",
+    "compare": "Vergelyk Pryse",
+    "scan": "Skandeer Lys",
     "goals": "Doelwitte",
     "calendar": "Kalender",
     "settings": "Instellings",
@@ -180,5 +182,32 @@
       "high": "Hoë risiko om kort te kom voor betaaldag.",
       "critical": "Dringend: Jy het dalk nie genoeg om te hou nie."
     }
+  },
+  "compare": {
+    "title": "Vergelyk Pryse",
+    "searchPlaceholder": "Soek na produkte...",
+    "bestPrice": "BESTE",
+    "onSale": "UITVERKOPING",
+    "savingsMessage": "Spaar R{{amount}} deur te vergelyk",
+    "noResults": "Geen produkte gevind nie",
+    "searchPrompt": "Soek na produkte om pryse oor winkels te vergelyk",
+    "outOfStock": "Uit voorraad",
+    "perUnit": "per {{unit}}",
+    "storesAvailable": "{{count}} winkels"
+  },
+  "scan": {
+    "title": "Skandeer Kruidenierswarelys",
+    "uploadTitle": "Laai Jou Lys Op",
+    "uploadDescription": "Neem 'n foto of laai 'n prent van jou handgeskrewe of gedrukte kruidenierswarelys op",
+    "takePhoto": "Neem Foto",
+    "uploadImage": "Laai Prent Op",
+    "parsing": "Ontleed jou lys...",
+    "itemsFound": "{{count}} items gevind",
+    "needsSelection": "{{count}} items benodig keuse",
+    "selectProduct": "Kies 'n produk",
+    "estimatedTotal": "Geraamde Totaal",
+    "addManually": "Voeg item handmatig by",
+    "clearList": "Maak Lys Skoon",
+    "scanAnother": "Skandeer Nog Een"
   }
 }

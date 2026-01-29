@@ -2,6 +2,8 @@
   "nav": {
     "dashboard": "Dashboard",
     "budget": "Budget",
+    "compare": "Compare Prices",
+    "scan": "Scan List",
     "goals": "Goals",
     "calendar": "Calendar",
     "settings": "Settings",
@@ -284,5 +286,32 @@
       "high": "High risk of running short before payday.",
       "critical": "Urgent: You may not have enough to last."
     }
+  },
+  "compare": {
+    "title": "Compare Prices",
+    "searchPlaceholder": "Search for products...",
+    "bestPrice": "BEST",
+    "onSale": "SALE",
+    "savingsMessage": "Save R{{amount}} by comparing",
+    "noResults": "No products found",
+    "searchPrompt": "Search for products to compare prices across stores",
+    "outOfStock": "Out of stock",
+    "perUnit": "per {{unit}}",
+    "storesAvailable": "{{count}} stores"
+  },
+  "scan": {
+    "title": "Scan Grocery List",
+    "uploadTitle": "Upload Your List",
+    "uploadDescription": "Take a photo or upload an image of your handwritten or printed grocery list",
+    "takePhoto": "Take Photo",
+    "uploadImage": "Upload Image",
+    "parsing": "Analysing your list...",
+    "itemsFound": "{{count}} items found",
+    "needsSelection": "{{count}} items need selection",
+    "selectProduct": "Select a product",
+    "estimatedTotal": "Estimated Total",
+    "addManually": "Add item manually",
+    "clearList": "Clear List",
+    "scanAnother": "Scan Another"
   }
 }
