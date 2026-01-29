@@ -4,6 +4,7 @@
     "budget": "Tekanyetso",
     "compare": "Bapisa Ditlhwatlhwa",
     "scan": "Skena Lenaane",
+    "groceryBudget": "Tekanyetso ya Dijo",
     "goals": "Maikaelelo",
     "calendar": "Khalendara",
     "settings": "Ditlhophiso",
@@ -209,5 +210,29 @@
     "addManually": "Tsenya selo ka diatla",
     "clearList": "Phimola Lenaane",
     "scanAnother": "Skena e nngwe"
+  },
+  "groceryBudget": {
+    "title": "Tekanyetso ya Dijo",
+    "searchTab": "Batla",
+    "myListTab": "Lenaane la Me",
+    "searchPlaceholder": "Batla dijo...",
+    "filterAll": "Tsotlhe",
+    "onSaleOnly": "Tse di Rekiswang Fela",
+    "searchEmpty": "Batla dijo",
+    "searchHint": "Kwala bonnye ditlhaka di le 2",
+    "addToList": "Oketsa",
+    "addedToList": "E okeditswe mo lenaaneng",
+    "estMonthlyBudget": "Tekanyetso ya Kgwedi e e Akanywang",
+    "itemsTotal": "{{count}} dilo · Palomoka e e Akanywang",
+    "cheapestAt": "E theko e kwa tlase go",
+    "scanList": "Skena Lenaane",
+    "scanListDesc": "Tsenya setshwantsho sa lenaane la gago la dijo",
+    "addAllToList": "Oketsa Tsotlhe mo Lenaaneng",
+    "itemsAdded": "{{count}} dilo di okeditswe mo lenaaneng la gago",
+    "changeStore": "Fetola lebenkele",
+    "emptyList": "Lenaane la gago ga le na sepe",
+    "emptyListHint": "Batla dilo kgotsa skena lenaane la dijo",
+    "clearList": "Phimola Lenaane",
+    "confirmClear": "A o tlhomamisegile gore o batla go phimola lenaane la gago?"
   }
 }

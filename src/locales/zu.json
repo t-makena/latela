@@ -4,6 +4,7 @@
     "budget": "Isabelomali",
     "compare": "Qhathanisa Amanani",
     "scan": "Skena Uhlu",
+    "groceryBudget": "Isabelomali Sokudla",
     "goals": "Izinjongo",
     "calendar": "Ikhalenda",
     "settings": "Izilungiselelo",
@@ -209,5 +210,29 @@
     "addManually": "Engeza into ngesandla",
     "clearList": "Sula Uhlu",
     "scanAnother": "Skena Okunye"
+  },
+  "groceryBudget": {
+    "title": "Isabelomali Sokudla",
+    "searchTab": "Sesha",
+    "myListTab": "Uhlu Lwami",
+    "searchPlaceholder": "Sesha ukudla...",
+    "filterAll": "Konke",
+    "onSaleOnly": "Okusethengiswayo Kuphela",
+    "searchEmpty": "Sesha ukudla",
+    "searchHint": "Bhala okungenani izinhlamvu ezi-2 ukusesha",
+    "addToList": "Engeza",
+    "addedToList": "Kwengeziwe ohlwini",
+    "estMonthlyBudget": "Isabelomali Senyanga Esilinaganyelayo",
+    "itemsTotal": "{{count}} izinto · Inani Elilinaganyelwayo",
+    "cheapestAt": "Kushibhile kakhulu ku",
+    "scanList": "Skena Uhlu",
+    "scanListDesc": "Layisha isithombe sohlu lwakho lokudla",
+    "addAllToList": "Engeza Konke Ohlwini",
+    "itemsAdded": "{{count}} izinto zengeziwe ohlwini lwakho",
+    "changeStore": "Shintsha isitolo",
+    "emptyList": "Uhlu lwakho alunalutho",
+    "emptyListHint": "Sesha izinto noma skena uhlu lokudla",
+    "clearList": "Sula Uhlu",
+    "confirmClear": "Uqinisekile ufuna ukusula uhlu lwakho?"
   }
 }

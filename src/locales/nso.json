@@ -4,6 +4,7 @@
     "budget": "Tekanyetšo",
     "compare": "Bapetša Ditheko",
     "scan": "Skena Lenaneo",
+    "groceryBudget": "Tekanyetšo ya Dijo",
     "goals": "Maikemišetšo",
     "calendar": "Khalendara",
     "settings": "Ditlhophiso",
@@ -209,5 +210,29 @@
     "addManually": "Tsenya selo ka matsogo",
     "clearList": "Phumula Lenaneo",
     "scanAnother": "Skena ye nngwe"
+  },
+  "groceryBudget": {
+    "title": "Tekanyetšo ya Dijo",
+    "searchTab": "Nyaka",
+    "myListTab": "Lenaneo la Ka",
+    "searchPlaceholder": "Nyaka dijo...",
+    "filterAll": "Ka Moka",
+    "onSaleOnly": "Tše di Rekišwago Fela",
+    "searchEmpty": "Nyaka dijo",
+    "searchHint": "Ngwala bonyane ditlhaka tše 2",
+    "addToList": "Oketša",
+    "addedToList": "Go okeditšwe lenaneong",
+    "estMonthlyBudget": "Tekanyetšo ya Kgwedi e Akanyetšwago",
+    "itemsTotal": "{{count}} dilo · Palomoka e Akanyetšwago",
+    "cheapestAt": "E theko e fase go",
+    "scanList": "Skena Lenaneo",
+    "scanListDesc": "Laodela seswantšho sa lenaneo la gago la dijo",
+    "addAllToList": "Oketša Ka Moka Lenaneong",
+    "itemsAdded": "{{count}} dilo di okeditšwe lenaneong la gago",
+    "changeStore": "Fetola lebenkele",
+    "emptyList": "Lenaneo la gago ga le na selo",
+    "emptyListHint": "Nyaka dilo goba skena lenaneo la dijo",
+    "clearList": "Phumula Lenaneo",
+    "confirmClear": "O na le nnete gore o nyaka go phumula lenaneo la gago?"
   }
 }
