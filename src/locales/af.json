@@ -4,6 +4,7 @@
     "budget": "Begroting",
     "compare": "Vergelyk Pryse",
     "scan": "Skandeer Lys",
+    "groceryBudget": "Kruideniersbegroting",
     "goals": "Doelwitte",
     "calendar": "Kalender",
     "settings": "Instellings",
@@ -209,5 +210,29 @@
     "addManually": "Voeg item handmatig by",
     "clearList": "Maak Lys Skoon",
     "scanAnother": "Skandeer Nog Een"
+  },
+  "groceryBudget": {
+    "title": "Kruideniersbegroting",
+    "searchTab": "Soek",
+    "myListTab": "My Lys",
+    "searchPlaceholder": "Soek kruideniersware...",
+    "filterAll": "Almal",
+    "onSaleOnly": "Slegs Uitverkoping",
+    "searchEmpty": "Soek kruideniersware",
+    "searchHint": "Tik ten minste 2 karakters om te soek",
+    "addToList": "Voeg By",
+    "addedToList": "Bygevoeg op lys",
+    "estMonthlyBudget": "Geraamde Maandelikse Kruideniersbegroting",
+    "itemsTotal": "{{count}} items · Geraamde Totaal",
+    "cheapestAt": "Goedkoopste by",
+    "scanList": "Skandeer Lys",
+    "scanListDesc": "Laai 'n foto van jou kruidenierswarelys op",
+    "addAllToList": "Voeg Almal by Lys",
+    "itemsAdded": "{{count}} items bygevoeg op jou lys",
+    "changeStore": "Verander winkel",
+    "emptyList": "Jou lys is leeg",
+    "emptyListHint": "Soek items of skandeer 'n kruidenierswarelys",
+    "clearList": "Maak Lys Skoon",
+    "confirmClear": "Is jy seker jy wil jou lys skoonmaak?"
   }
 }

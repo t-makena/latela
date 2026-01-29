@@ -19,6 +19,7 @@ import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import GroceryBudget from "./pages/GroceryBudget";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,13 @@ const App = () => (
                   <ProtectedRoute>
                     <Layout>
                       <Scan />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/grocery-budget" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <GroceryBudget />
                     </Layout>
                   </ProtectedRoute>
                 } />
