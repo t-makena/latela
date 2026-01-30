@@ -4,6 +4,282 @@
  */
 
 /**
+ * Display name mappings for known South African merchants.
+ * Keys should be uppercase for matching.
+ */
+const DISPLAY_NAME_MAP: Record<string, string> = {
+  'PNP': 'Pick n Pay',
+  'PICK N PAY': 'Pick n Pay',
+  'PICKNPAY': 'Pick n Pay',
+  'SHOPRITE': 'Shoprite',
+  'SUPERSPAR': 'SuperSpar',
+  'SPAR': 'Spar',
+  'KWIKSPAR': 'KwikSpar',
+  'WOOLWORTHS': 'Woolworths',
+  'WOOLIES': 'Woolworths',
+  'CHECKERS': 'Checkers',
+  'USAVE': 'USave',
+  'KFC': 'KFC',
+  'MCD': "McDonald's",
+  'MCDONALDS': "McDonald's",
+  'NANDOS': "Nando's",
+  'STEERS': 'Steers',
+  'DEBONAIRS': 'Debonairs',
+  'ROMANS': "Roman's Pizza",
+  'ENGEN': 'Engen',
+  'SHELL': 'Shell',
+  'BP': 'BP',
+  'CALTEX': 'Caltex',
+  'SASOL': 'Sasol',
+  'CLICKS': 'Clicks',
+  'DISCHEM': 'Dis-Chem',
+  'DIS-CHEM': 'Dis-Chem',
+  'TAKEALOT': 'Takealot',
+  'MRPRICE': 'Mr Price',
+  'MR PRICE': 'Mr Price',
+  'FOSCHINI': 'Foschini',
+  'EDGARS': 'Edgars',
+  'JET': 'Jet',
+  'TRUWORTHS': 'Truworths',
+  'VODACOM': 'Vodacom',
+  'MTN': 'MTN',
+  'TELKOM': 'Telkom',
+  'CELLC': 'Cell C',
+  'CAPITEC': 'Capitec',
+  'FNB': 'FNB',
+  'ABSA': 'Absa',
+  'NEDBANK': 'Nedbank',
+  'STANDARDBANK': 'Standard Bank',
+  'MAKRO': 'Makro',
+  'GAME': 'Game',
+  'BUILDERS': 'Builders Warehouse',
+  'CASHBUILD': 'Cashbuild',
+};
+
+/**
+ * Location abbreviations commonly found in SA transaction descriptions.
+ */
+const LOCATION_ABBREVS: Record<string, string> = {
+  'VOSL': 'Vosloorus',
+  'VOSLO': 'Vosloorus',
+  'JHB': 'Johannesburg',
+  'PTA': 'Pretoria',
+  'CPT': 'Cape Town',
+  'DBN': 'Durban',
+  'PE': 'Port Elizabeth',
+  'BFN': 'Bloemfontein',
+  'EL': 'East London',
+  'SANDTON': 'Sandton',
+  'ROSEBANK': 'Rosebank',
+  'MENLYN': 'Menlyn',
+  'GATEWAY': 'Gateway',
+  'MALL OF AFRICA': 'Mall of Africa',
+};
+
+/**
+ * Store type codes to remove (they add no value for display).
+ */
+const STORE_CODES_TO_REMOVE = ['CRP', 'FAM', 'VC', 'HC', 'LIQ', 'EXP'];
+
+/**
+ * Noise patterns to remove from transaction descriptions.
+ */
+const NOISE_PATTERNS = [
+  /\d{4}\*\d{4}/g,                           // Card masks: 5222*2822
+  /\*{2,}\d+/g,                              // Card masks: **2822, ****1234
+  /\d{2}\s+(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)/gi,  // Dates: 28 JAN
+  /\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/g, // ISO dates: 2026-01-28T10:34:59
+  /\d{2}H\d{2}(:\d{2})?/g,                   // Timestamps: 17H33:45, 10H31
+  /CHEQUE CARD PURCHASE/gi,
+  /PREPAID MOBILE PURCHASE/gi,
+  /AUTOBANK CASH WITHDRAWAL AT/gi,
+  /CASH WITHDRAWAL/gi,
+  /IB TRANSFER (FROM|TO)/gi,
+  /PAYSHAP PAYMENT (FROM|TO)/gi,
+  /VAS\d{10,}/g,                             // Reference: VAS00182812693
+  /VODA\d{10}/g,                             // Vodacom ref: VODA0636844044
+  /\b[A-Z]{3}\d{6,}\b/g,                     // Generic refs: ABC123456
+  /\b0{4}[A-Z0-9]{4}\b/g,                    // Refs like 0000B867
+  /\bZAF?\b/gi,                              // Country codes
+  /\s+/g,                                    // Normalize whitespace (applied last)
+];
+
+/**
+ * Intelligently shortens and formats a transaction description for display.
+ * Removes noise (card numbers, dates, refs) and expands abbreviations.
+ * 
+ * @param description - Raw transaction description
+ * @returns Clean, user-friendly display name
+ */
+export const smartDisplayName = (description: string): string => {
+  if (!description) return '';
+  
+  let text = description.toUpperCase().trim();
+  
+  // 1. Handle fee transactions specially
+  if (text.includes('FEE:') || text.includes('FEE ')) {
+    // Remove duplicate fee patterns
+    text = text.replace(/(FEE:\s*\w+(\s+\w+)?)\s*\1/gi, '$1');
+    
+    if (text.includes('PAYSHAP')) return 'Payshap Fee';
+    if (text.includes('PREPAID') || text.includes('AIRTIME') || text.includes('MOBILE')) return 'Airtime Fee';
+    if (text.includes('WITHDRAWAL') || text.includes('ATM')) return 'ATM Fee';
+    if (text.includes('TRANSFER')) return 'Transfer Fee';
+    
+    // Generic fee extraction
+    const feeMatch = text.match(/FEE:\s*(\w+)/i);
+    if (feeMatch) {
+      return toTitleCase(feeMatch[1]) + ' Fee';
+    }
+  }
+  
+  // Handle duplicate withdrawal fee
+  if (text.includes('CASH WITHDRAWAL FEE')) {
+    return 'ATM Fee';
+  }
+  
+  // 2. Handle ATM/Cash withdrawals
+  if (text.includes('AUTOBANK') || text.includes('CASH WITHDRAWAL') || text.includes('ATM')) {
+    if (!text.includes('FEE')) {
+      return 'ATM Withdrawal';
+    }
+  }
+  
+  // 3. Handle transfers
+  if (text.includes('TRANSFER FROM') || text.includes('IB TRANSFER FROM')) {
+    // Try to extract sender name
+    const senderMatch = text.match(/(?:FROM|TO)\s+([A-Z][A-Z\s]+?)(?:\s+\d|\s*$)/i);
+    if (senderMatch && senderMatch[1].trim().length > 1) {
+      return 'Transfer from ' + toTitleCase(senderMatch[1].trim());
+    }
+    return 'Transfer In';
+  }
+  if (text.includes('TRANSFER TO') || text.includes('IB TRANSFER TO')) {
+    const recipientMatch = text.match(/(?:TO)\s+([A-Z][A-Z\s]+?)(?:\s+\d|\s*$)/i);
+    if (recipientMatch && recipientMatch[1].trim().length > 1) {
+      return 'Transfer to ' + toTitleCase(recipientMatch[1].trim());
+    }
+    return 'Transfer Out';
+  }
+  
+  // 4. Handle PayShap payments
+  if (text.includes('PAYSHAP')) {
+    const nameMatch = text.match(/^([A-Z]+)\s+PAYSHAP/i);
+    if (nameMatch && nameMatch[1].length > 1) {
+      return toTitleCase(nameMatch[1]);
+    }
+    return 'PayShap Payment';
+  }
+  
+  // 5. Handle airtime/prepaid
+  if (text.includes('PREPAID MOBILE') || text.includes('AIRTIME')) {
+    if (text.includes('VODA')) return 'Vodacom Airtime';
+    if (text.includes('MTN')) return 'MTN Airtime';
+    if (text.includes('CELLC') || text.includes('CELL C')) return 'Cell C Airtime';
+    if (text.includes('TELKOM')) return 'Telkom Airtime';
+    return 'Airtime';
+  }
+  
+  // 6. Handle payment gateway prefixes (YOCO, C*, DNH*, S2S*, etc.)
+  const gatewayMatch = text.match(/^(YOCO|C|DNH|S2S)\s*\*\s*([A-Z0-9][A-Z0-9\s\.]+)/i);
+  if (gatewayMatch) {
+    const merchantName = gatewayMatch[2].replace(/\s+/g, ' ').trim();
+    // Clean the merchant name
+    let cleanName = merchantName;
+    NOISE_PATTERNS.forEach(pattern => {
+      cleanName = cleanName.replace(pattern, ' ');
+    });
+    cleanName = cleanName.trim();
+    
+    // Check if it's a known brand like BP
+    if (gatewayMatch[1].toUpperCase() === 'C' && cleanName.startsWith('BP')) {
+      return 'BP ' + toTitleCase(cleanName.substring(2).trim());
+    }
+    if (gatewayMatch[2].includes('GODADDY')) {
+      return 'GoDaddy';
+    }
+    
+    return toTitleCase(cleanName.split(/\s+/)[0]);
+  }
+  
+  // 7. Remove noise patterns
+  NOISE_PATTERNS.forEach(pattern => {
+    text = text.replace(pattern, ' ');
+  });
+  text = text.replace(/\s+/g, ' ').trim();
+  
+  // 8. Remove store type codes
+  STORE_CODES_TO_REMOVE.forEach(code => {
+    text = text.replace(new RegExp(`\\b${code}\\b`, 'gi'), '');
+  });
+  text = text.replace(/\s+/g, ' ').trim();
+  
+  // 9. Split into words and process
+  const words = text.split(/\s+/).filter(w => w.length > 0);
+  if (words.length === 0) return description;
+  
+  // 10. Check first word(s) for known merchants
+  const firstWord = words[0];
+  const firstTwoWords = words.slice(0, 2).join(' ');
+  
+  let merchantName = DISPLAY_NAME_MAP[firstWord] || DISPLAY_NAME_MAP[firstTwoWords];
+  let remainingWords = merchantName ? (DISPLAY_NAME_MAP[firstTwoWords] ? words.slice(2) : words.slice(1)) : words.slice(1);
+  
+  if (!merchantName) {
+    merchantName = toTitleCase(firstWord);
+  }
+  
+  // 11. Check for location in remaining words
+  let location = '';
+  const processedRemaining: string[] = [];
+  
+  for (const word of remainingWords) {
+    const expandedLocation = LOCATION_ABBREVS[word];
+    if (expandedLocation && !location) {
+      location = expandedLocation;
+    } else if (!STORE_CODES_TO_REMOVE.includes(word) && word.length > 1) {
+      // Only keep meaningful words (not single chars or store codes)
+      const expanded = LOCATION_ABBREVS[word];
+      if (expanded) {
+        if (!location) location = expanded;
+      } else if (!/^\d+$/.test(word)) {
+        // Don't include pure numbers
+        processedRemaining.push(word);
+      }
+    }
+  }
+  
+  // 12. Build final display name
+  let result = merchantName;
+  if (location) {
+    result += ' ' + location;
+  } else if (processedRemaining.length > 0 && processedRemaining[0].length > 2) {
+    // Add first remaining meaningful word as location hint
+    const nextWord = processedRemaining[0];
+    if (!/^\d/.test(nextWord) && !DISPLAY_NAME_MAP[nextWord]) {
+      result += ' ' + toTitleCase(nextWord);
+    }
+  }
+  
+  return result.trim();
+};
+
+/**
+ * Converts a string to title case, handling special cases.
+ */
+const toTitleCase = (str: string): string => {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => {
+      if (word.length <= 2) return word.toUpperCase(); // Keep short words like 'BP' uppercase
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+};
+
+/**
  * Common South African merchant aliases - maps abbreviations to full names.
  * Each brand is distinct for fuzzy matching - no cross-brand aliases.
  */
@@ -300,22 +576,14 @@ export const findBestMerchantMatch = <T extends { merchant_name: string; merchan
 
 /**
  * Extracts a display-friendly merchant name from a transaction description.
- * Similar to normalizeMerchantName but preserves original casing for display.
+ * Uses intelligent shortening to create clean, readable merchant names.
  * 
  * @param description - Raw transaction description
- * @returns Display-friendly merchant name (title case)
+ * @returns Display-friendly merchant name
  */
 export const extractDisplayMerchantName = (description: string): string => {
   if (!description) return '';
-  
-  const normalized = normalizeMerchantName(description);
-  
-  // Convert to title case for display
-  return normalized
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  return smartDisplayName(description);
 };
 
 /**
