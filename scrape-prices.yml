@@ -1,0 +1,79 @@
+name: 🛒 Scrape Grocery Prices
+
+on:
+  # Run on schedule (South Africa timezone = UTC+2)
+  schedule:
+    # Every day at 6am SAST (4am UTC)
+    - cron: '0 4 * * *'
+    # Every Monday at 8am SAST for weekly specials
+    - cron: '0 6 * * 1'
+  
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      stores:
+        description: 'Stores to scrape (comma-separated: checkers,pnp,woolworths or "all")'
+        required: false
+        default: 'all'
+      scrape_type:
+        description: 'Scrape type'
+        required: false
+        default: 'specials'
+        type: choice
+        options:
+          - specials
+          - all_categories
+          - search
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: scraper/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ./scraper
+        run: npm ci
+
+      - name: 🌐 Install Chromium for Puppeteer
+        run: npx puppeteer browsers install chrome
+
+      - name: 🛒 Run price scraper
+        working-directory: ./scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SCRAPE_STORES: ${{ github.event.inputs.stores || 'all' }}
+          SCRAPE_TYPE: ${{ github.event.inputs.scrape_type || 'specials' }}
+        run: npm run scrape
+
+      - name: 📊 Upload scrape results (artifact)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scrape-results-${{ github.run_number }}
+          path: |
+            scraper/output/*.json
+            scraper/error_*.png
+          retention-days: 7
+
+      - name: 📈 Post summary
+        if: always()
+        run: |
+          echo "## 🛒 Scrape Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f scraper/output/summary.json ]; then
+            echo "$(cat scraper/output/summary.json | jq -r '.summary')" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No summary generated" >> $GITHUB_STEP_SUMMARY
+          fi
