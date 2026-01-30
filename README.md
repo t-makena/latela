@@ -1,73 +1,161 @@
-# Welcome to your Lovable project
+# 🛒 Latela Price Scraper
 
-## Project info
+Automated South African grocery price scraper that runs on GitHub Actions and syncs to Supabase.
 
-**URL**: https://lovable.dev/projects/d107e486-722c-43c6-8593-a3be333d0bc3
+## Features
 
-## How can I edit this code?
+- ✅ Scrapes Checkers, Pick n Pay, Woolworths (more coming)
+- ✅ Runs automatically via GitHub Actions (daily at 6am SAST)
+- ✅ Uploads to Supabase for use in Latela app
+- ✅ Tracks price history for price drop alerts
+- ✅ Manual trigger from GitHub UI
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## 🚀 Quick Setup
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d107e486-722c-43c6-8593-a3be333d0bc3) and start prompting.
+### 1. Add to Your Repo
 
-Changes made via Lovable will be committed automatically to this repo.
+Copy the `scraper/` folder and `.github/` folder to your Latela repo:
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+latela/
+├── .github/
+│   └── workflows/
+│       └── scrape-prices.yml
+├── scraper/
+│   ├── src/
+│   │   ├── scrapers/
+│   │   │   └── checkers.ts
+│   │   ├── config.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── package.json
+│   └── tsconfig.json
+└── ... (rest of your app)
 ```
 
-**Edit a file directly in GitHub**
+### 2. Run Supabase Migration
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Go to your Supabase Dashboard → SQL Editor → Run:
 
-**Use GitHub Codespaces**
+```sql
+-- Copy contents from supabase/migrations/20240131_product_offers.sql
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 3. Add GitHub Secrets
 
-## What technologies are used for this project?
+Go to your repo → Settings → Secrets and variables → Actions → New repository secret
 
-This project is built with:
+Add these secrets:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+| Secret Name | Value |
+|-------------|-------|
+| `SUPABASE_URL` | `https://your-project.supabase.co` |
+| `SUPABASE_SERVICE_KEY` | Your service role key (from Supabase Dashboard → Settings → API) |
 
-## How can I deploy this project?
+### 4. Test Manually
 
-Simply open [Lovable](https://lovable.dev/projects/d107e486-722c-43c6-8593-a3be333d0bc3) and click on Share -> Publish.
+1. Go to your repo → Actions tab
+2. Click "🛒 Scrape Grocery Prices"
+3. Click "Run workflow"
+4. Select options and run
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
+## 📅 Schedule
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+The scraper runs automatically:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+| Schedule | Time | What |
+|----------|------|------|
+| Daily | 6:00 AM SAST | Scrape specials |
+| Monday | 8:00 AM SAST | Weekly full scrape |
+
+To change the schedule, edit `.github/workflows/scrape-prices.yml`:
+
+```yaml
+schedule:
+  - cron: '0 4 * * *'  # Daily at 4am UTC (6am SAST)
+```
+
+---
+
+## 🖥️ Local Development
+
+```bash
+cd scraper
+
+# Install dependencies
+npm install
+
+# Set environment variables
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_SERVICE_KEY="your-service-key"
+
+# Run scraper
+npm run scrape
+
+# Or scrape specific store
+npm run scrape:checkers
+```
+
+---
+
+## 📊 Using the Data in Latela
+
+### Query Specials
+
+```typescript
+const { data: specials } = await supabase
+  .from('current_specials')
+  .select('*')
+  .limit(20);
+```
+
+### Search Products
+
+```typescript
+const { data: products } = await supabase
+  .from('product_offers')
+  .select('*')
+  .textSearch('product_name', 'milk')
+  .order('price_cents');
+```
+
+### Compare Prices
+
+```typescript
+const { data: comparison } = await supabase
+  .from('price_comparison')
+  .select('*')
+  .ilike('product_name', '%bread%');
+```
+
+---
+
+## 🔧 Adding New Stores
+
+1. Create `scraper/src/scrapers/newstore.ts`
+2. Follow the pattern in `checkers.ts`
+3. Add to `config.ts` STORES object
+4. Import in `index.ts` and add case to `scrapeStore()`
+
+---
+
+## ⚠️ Important Notes
+
+- **Rate Limiting**: The scraper includes delays to avoid being blocked
+- **ToS**: Scraping may violate store Terms of Service - use responsibly
+- **Costs**: GitHub Actions free tier = 2000 minutes/month (plenty for daily scrapes)
+- **Caching**: Results are cached in Supabase - only new prices update
+
+---
+
+## 📁 Output
+
+Scrape results are saved as:
+- GitHub Actions artifacts (JSON files)
+- Supabase `product_offers` table
+
+Check the Actions tab for logs and downloadable results.
