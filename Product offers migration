@@ -1,93 +1,51 @@
 -- ============================================
--- Latela: Product Offers Table (FIXED)
--- Run this in Supabase SQL Editor
+-- Latela: Product Offers Schema
+-- Stores scraped product prices from SA retailers
 -- ============================================
 
--- Step 1: Drop existing views first (they depend on the table)
-DROP VIEW IF EXISTS price_comparison;
-DROP VIEW IF EXISTS current_specials;
-
--- Step 2: Drop existing table if it exists (remove this line if you want to keep existing data)
--- DROP TABLE IF EXISTS price_history;
--- DROP TABLE IF EXISTS product_offers;
-
--- Step 3: Create product_offers table
+-- Product Offers Table
 CREATE TABLE IF NOT EXISTS product_offers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
-  -- Store identification
+  canonical_product_id UUID,
   store TEXT NOT NULL,
-  store_product_code TEXT NOT NULL,
-  
-  -- Product details
-  product_name TEXT NOT NULL,
+  store_product_code TEXT,
+  product_name TEXT,
   brand TEXT,
-  category TEXT NOT NULL DEFAULT 'Uncategorized',
+  category TEXT DEFAULT 'Uncategorized',
   subcategory TEXT,
-  
-  -- Pricing (stored in cents for precision)
   price_cents INTEGER NOT NULL,
+  unit_price_cents INTEGER,
   original_price_cents INTEGER,
   on_sale BOOLEAN DEFAULT FALSE,
   promotion_text TEXT,
-  
-  -- Availability
   in_stock BOOLEAN DEFAULT TRUE,
-  
-  -- Media
   image_url TEXT,
   product_url TEXT,
-  
-  -- Timestamps
-  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
-  -- Unique constraint for upserts
-  CONSTRAINT unique_store_product UNIQUE (store, store_product_code)
+  scraped_at TIMESTAMPTZ,
+  last_seen_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Step 4: Add missing columns if table already exists
-DO $$ 
-BEGIN
-  -- Add category column if missing
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'product_offers' AND column_name = 'category') THEN
-    ALTER TABLE product_offers ADD COLUMN category TEXT NOT NULL DEFAULT 'Uncategorized';
-  END IF;
-  
-  -- Add subcategory column if missing
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'product_offers' AND column_name = 'subcategory') THEN
-    ALTER TABLE product_offers ADD COLUMN subcategory TEXT;
-  END IF;
-  
-  -- Add brand column if missing
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'product_offers' AND column_name = 'brand') THEN
-    ALTER TABLE product_offers ADD COLUMN brand TEXT;
-  END IF;
-  
-  -- Add promotion_text column if missing
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'product_offers' AND column_name = 'promotion_text') THEN
-    ALTER TABLE product_offers ADD COLUMN promotion_text TEXT;
-  END IF;
-  
-  -- Add on_sale column if missing
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'product_offers' AND column_name = 'on_sale') THEN
-    ALTER TABLE product_offers ADD COLUMN on_sale BOOLEAN DEFAULT FALSE;
-  END IF;
-  
-  -- Add original_price_cents column if missing
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'product_offers' AND column_name = 'original_price_cents') THEN
-    ALTER TABLE product_offers ADD COLUMN original_price_cents INTEGER;
-  END IF;
-END $$;
+-- Price History Table
+CREATE TABLE IF NOT EXISTS price_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  canonical_product_id UUID,
+  store TEXT,
+  price_cents INTEGER NOT NULL,
+  original_price_cents INTEGER,
+  on_sale BOOLEAN DEFAULT FALSE,
+  recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
--- Step 5: Create indexes
+-- Indexes
 CREATE INDEX IF NOT EXISTS idx_product_offers_store ON product_offers(store);
-CREATE INDEX IF NOT EXISTS idx_product_offers_category ON product_offers(category);
+CREATE INDEX IF NOT EXISTS idx_product_offers_canonical ON product_offers(canonical_product_id);
 CREATE INDEX IF NOT EXISTS idx_product_offers_on_sale ON product_offers(on_sale) WHERE on_sale = TRUE;
-CREATE INDEX IF NOT EXISTS idx_product_offers_name_search ON product_offers USING gin(to_tsvector('english', product_name));
+CREATE INDEX IF NOT EXISTS idx_price_history_canonical ON price_history(canonical_product_id);
+CREATE INDEX IF NOT EXISTS idx_price_history_date ON price_history(recorded_at);
 
--- Step 6: Update timestamp trigger
+-- Update timestamp trigger
 CREATE OR REPLACE FUNCTION update_product_offers_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -102,77 +60,18 @@ CREATE TRIGGER trigger_product_offers_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_product_offers_updated_at();
 
--- Step 7: Create price_history table
-CREATE TABLE IF NOT EXISTS price_history (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_offer_id UUID NOT NULL REFERENCES product_offers(id) ON DELETE CASCADE,
-  price_cents INTEGER NOT NULL,
-  original_price_cents INTEGER,
-  on_sale BOOLEAN DEFAULT FALSE,
-  recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_price_history_product ON price_history(product_offer_id);
-CREATE INDEX IF NOT EXISTS idx_price_history_date ON price_history(recorded_at);
-
--- Step 8: RLS Policies
+-- RLS Policies
 ALTER TABLE product_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE price_history ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public read product_offers" ON product_offers;
-CREATE POLICY "Public read product_offers" ON product_offers
-  FOR SELECT USING (true);
+CREATE POLICY "Public read product_offers" ON product_offers FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Service write product_offers" ON product_offers;
-CREATE POLICY "Service write product_offers" ON product_offers
-  FOR ALL USING (auth.role() = 'service_role');
+CREATE POLICY "Service write product_offers" ON product_offers FOR ALL USING (auth.role() = 'service_role');
 
 DROP POLICY IF EXISTS "Public read price_history" ON price_history;
-CREATE POLICY "Public read price_history" ON price_history
-  FOR SELECT USING (true);
+CREATE POLICY "Public read price_history" ON price_history FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Service write price_history" ON price_history;
-CREATE POLICY "Service write price_history" ON price_history
-  FOR ALL USING (auth.role() = 'service_role');
-
--- Step 9: Create views
-CREATE OR REPLACE VIEW current_specials AS
-SELECT 
-  store,
-  product_name,
-  brand,
-  category,
-  price_cents / 100.0 AS price_rands,
-  original_price_cents / 100.0 AS original_price_rands,
-  ROUND((1 - (price_cents::NUMERIC / NULLIF(original_price_cents, 0))) * 100) AS discount_percent,
-  promotion_text,
-  image_url,
-  product_url,
-  last_seen_at
-FROM product_offers
-WHERE on_sale = TRUE
-  AND last_seen_at > NOW() - INTERVAL '7 days'
-ORDER BY discount_percent DESC NULLS LAST;
-
-CREATE OR REPLACE VIEW price_comparison AS
-SELECT 
-  product_name,
-  brand,
-  category,
-  jsonb_agg(
-    jsonb_build_object(
-      'store', store,
-      'price_rands', price_cents / 100.0,
-      'on_sale', on_sale,
-      'url', product_url
-    ) ORDER BY price_cents
-  ) AS store_prices,
-  MIN(price_cents) / 100.0 AS lowest_price,
-  MAX(price_cents) / 100.0 AS highest_price
-FROM product_offers
-WHERE last_seen_at > NOW() - INTERVAL '7 days'
-GROUP BY product_name, brand, category
-HAVING COUNT(DISTINCT store) > 1;
-
--- Done!
-SELECT 'Migration complete! ✅' AS status;
+CREATE POLICY "Service write price_history" ON price_history FOR ALL USING (auth.role() = 'service_role');
