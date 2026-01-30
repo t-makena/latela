@@ -24,6 +24,72 @@ const MERCHANT_ALIASES: Record<string, string[]> = {
   'KENTUCKY': ['KFC'],
 };
 
+/**
+ * Pre-AI smart detection for common transaction patterns.
+ * Returns category name if pattern is detected, null otherwise.
+ * This saves AI costs and ensures consistent categorization.
+ */
+function preCategorizeSmart(description: string, amount: number): string | null {
+  const desc = description.toUpperCase();
+  
+  // 1. FEES - Any FEE: prefix or withdrawal fee
+  if (desc.includes('FEE:') || desc.includes('WITHDRAWAL FEE') || desc.includes('ATM FEE')) {
+    return 'Fees';
+  }
+  
+  // 2. TRANSPORTATION - Fuel stations (check before other patterns)
+  const fuelKeywords = ['BP ', 'C*BP', 'SHELL ', 'ENGEN ', 'SASOL ', 'CALTEX ', 'TOTAL ', 'ASTRON '];
+  if (fuelKeywords.some(k => desc.includes(k))) {
+    return 'Transport';
+  }
+  
+  // 3. INCOME DETECTION - Positive amounts
+  if (amount > 0) {
+    if (desc.includes('SALARY') || desc.includes('WAGES')) {
+      return 'Salary';
+    }
+    // All other incoming money = Other Income
+    return 'Other Income';
+  }
+  
+  // 4. BILLS & SUBSCRIPTIONS - Known subscription services
+  const subscriptionKeywords = ['CLAUDE', 'CHATGPT', 'NETFLIX', 'SPOTIFY', 'DSTV', 'OPENAI', 
+    'SHOWMAX', 'YOUTUBE', 'AMAZON PRIME', 'APPLE', 'MICROSOFT', 'GOOGLE PLAY'];
+  if (subscriptionKeywords.some(k => desc.includes(k))) {
+    return 'Bills';
+  }
+  
+  // 5. ASSISTANCE/LENDING - PayShap TO a person (outgoing money)
+  // Patterns: "NAME PAYSHAP PAYMENT TO", "PAYSHAP PAY BY PROXY"
+  if (desc.includes('PAYSHAP') && (desc.includes(' TO') || desc.includes('PAY BY PROXY')) && amount < 0) {
+    // Check if it's NOT a known subscription (handled above)
+    return 'Assistance';
+  }
+  
+  // 6. GROCERIES - Major SA grocery chains
+  const groceryKeywords = ['PNP ', 'PICK N PAY', 'CHECKERS', 'SHOPRITE', 'WOOLWORTHS', 'SPAR ', 
+    'SUPERSPAR', 'USAVE', 'BOXER', 'FOOD LOVER'];
+  if (groceryKeywords.some(k => desc.includes(k))) {
+    return 'Groceries';
+  }
+  
+  // 7. DINING - Fast food and restaurants
+  const diningKeywords = ['MCD ', 'MCDONALDS', 'KFC ', 'NANDOS', "NANDO'S", 'STEERS', 'WIMPY', 
+    'SPUR ', 'DEBONAIRS', 'FISHAWAYS', 'CHICKEN LICKEN', 'BURGER'];
+  if (diningKeywords.some(k => desc.includes(k))) {
+    return 'Dining';
+  }
+  
+  // 8. AIRTIME/MOBILE - Prepaid purchases
+  if (desc.includes('PREPAID MOBILE') || desc.includes('VODA') || desc.includes('MTN ') || 
+      desc.includes('TELKOM') || desc.includes('CELLC')) {
+    return 'Bills';
+  }
+  
+  // Let AI handle complex cases like YOCO payments
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -137,29 +203,48 @@ serve(async (req) => {
         .maybeSingle();
 
       let categoryName: string;
+      let smartDetected = false;
 
-      if (cachedCategory) {
-        categoryName = cachedCategory.category;
-        cachedCount++;
-        console.log(`✓ Cached: ${merchantName} → ${categoryName}`);
+      // PRIORITY 2: Pre-AI smart detection (saves AI costs)
+      const smartCategory = preCategorizeSmart(transaction.description, transaction.amount);
+      if (smartCategory) {
+        categoryName = smartCategory;
+        smartDetected = true;
+        console.log(`✓ Smart detection: ${merchantName} → ${categoryName}`);
       } else {
-        // PRIORITY 3: Call AI for new merchant
-        categoryName = await categorizeMerchantWithAI(merchantName, transaction.description);
-        aiCallsCount++;
-        console.log(`💰 AI Call: ${merchantName} → ${categoryName}`);
-
-        // Save to merchants cache
-        await supabase
+        // PRIORITY 3: Check merchants table (cached AI categorizations)
+        const { data: cachedCategory } = await supabase
           .from('merchants')
-          .upsert({
-            merchant_name: merchantName,
-            category: categoryName,
-            user_id: user.id,
-            frequency: 1,
-            confidence: 0.9,
-          }, {
-            onConflict: 'merchant_name,user_id'
-          });
+          .select('category')
+          .eq('merchant_name', merchantName)
+          .or(`user_id.eq.${user.id},user_id.is.null`)
+          .order('user_id', { ascending: false, nullsFirst: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (cachedCategory) {
+          categoryName = cachedCategory.category;
+          cachedCount++;
+          console.log(`✓ Cached: ${merchantName} → ${categoryName}`);
+        } else {
+          // PRIORITY 4: Call AI for new merchant
+          categoryName = await categorizeMerchantWithAI(merchantName, transaction.description);
+          aiCallsCount++;
+          console.log(`💰 AI Call: ${merchantName} → ${categoryName}`);
+
+          // Save to merchants cache
+          await supabase
+            .from('merchants')
+            .upsert({
+              merchant_name: merchantName,
+              category: categoryName,
+              user_id: user.id,
+              frequency: 1,
+              confidence: 0.9,
+            }, {
+              onConflict: 'merchant_name,user_id'
+            });
+        }
       }
 
       // Get or create category_id from category name
@@ -409,7 +494,15 @@ async function categorizeMerchantWithAI(merchantName: string, description: strin
 Merchant: ${merchantName}
 Description: ${description}
 
-Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Salary, Transfer, Other
+Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Assistance, Fees, Salary, Other Income, Other
+
+Rules:
+- BP, Shell, Engen, Sasol, Caltex = Transport (fuel stations)
+- Netflix, Spotify, DSTV, Claude, ChatGPT = Bills (subscriptions)
+- YOCO * = vendor payment, categorize by likely vendor type (food vendor = Dining, clothing = Shopping, etc.)
+- Money paid to individuals (names in description) = Assistance
+- FEE: or withdrawal fee = Fees
+- Incoming money (not salary) = Other Income
 
 Respond with ONLY the category name, nothing else.`
           }
@@ -470,15 +563,20 @@ const AI_TO_DB_CATEGORY_MAP: Record<string, string[]> = {
   'subscriptions': ['Bills & Subscriptions', 'Subscriptions', 'Bills'],
   'entertainment': ['Entertainment & Leisure', 'Entertainment', 'Leisure'],
   'leisure': ['Entertainment & Leisure', 'Leisure', 'Entertainment'],
-  'shopping': ['Personal & Lifestyle', 'Shopping', 'Retail'],
+  'shopping': ['Personal & Lifestyle', 'Shopping', 'Retail', 'Shopping & Retail'],
   'personal': ['Personal & Lifestyle', 'Personal', 'Lifestyle'],
   'lifestyle': ['Personal & Lifestyle', 'Lifestyle'],
-  'salary': ['Salary/Wages', 'Salary', 'Income', 'Wages'],
-  'wages': ['Salary/Wages', 'Wages', 'Salary'],
-  'income': ['Salary/Wages', 'Income', 'Other Income'],
+  'salary': ['Salary & Wages', 'Salary/Wages', 'Salary', 'Income', 'Wages'],
+  'wages': ['Salary & Wages', 'Salary/Wages', 'Wages', 'Salary'],
+  'income': ['Other Income', 'Income', 'Salary & Wages'],
+  'other income': ['Other Income', 'Income'],
   'transfer': ['Transfers', 'Transfer', 'Bank Transfer'],
   'transfers': ['Transfers', 'Transfer'],
   'savings': ['Savings', 'Savings & Investments'],
+  'fees': ['Fees', 'Bank Fees'],
+  'fee': ['Fees', 'Bank Fees'],
+  'assistance': ['Assistance/Lending', 'Assistance', 'Lending'],
+  'lending': ['Assistance/Lending', 'Lending', 'Assistance'],
   'other': ['Other', 'Miscellaneous', 'Other Expenses'],
 };
 
