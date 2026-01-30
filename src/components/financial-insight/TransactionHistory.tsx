@@ -153,7 +153,13 @@ export const TransactionHistory = ({ initialCategoryFilterName }: TransactionHis
 
       const { data: transactionsData } = await query;
       if (transactionsData) {
-        setTransactions(transactionsData as any);
+        // Convert amounts from cents to Rands for display
+        const convertedTransactions = (transactionsData as any[]).map(t => ({
+          ...t,
+          amount: (t.amount ?? 0) / 100,
+          balance: t.balance != null ? t.balance / 100 : t.balance,
+        }));
+        setTransactions(convertedTransactions);
         
         // Extract unique merchants from user's transactions for the dropdown
         const uniqueMerchants = (transactionsData as any[])
