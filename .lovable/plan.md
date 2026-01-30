@@ -1,89 +1,116 @@
 
-## Fix Account Balance Discrepancy
+## Intelligent Merchant Name Shortening
 
-### Problem Summary
-The app displays **R23,089.76** as the Available Balance, but the bank statement shows **R15,951.28**. This is a ~R7,138 discrepancy (45% error).
-
-### Root Cause Analysis
-
-**Data flow investigation:**
-
-| Step | Value | Status |
-|------|-------|--------|
-| Statement's Available Balance | R15,951.28 | Source of truth |
-| parse-statement extracted balance | R23,089.76 | Incorrect extraction |
-| accounts.current_balance (DB) | 2,308,976 cents | Matches wrong extraction |
-| Latest transaction.balance (DB) | 1,595,128 cents | Correct (R15,951.28) |
-| App displays | R23,089.76 | Shows incorrect value |
-
-**The bug is in the `parse-statement` edge function's balance extraction logic.** The regex patterns matched a different balance figure on the Standard Bank statement (likely an opening balance, credit limit, or intermediate running balance) instead of the correct closing/available balance.
-
-### Evidence from Database
-
-```text
-Account current_balance:     2,308,976 cents = R23,089.76 (WRONG)
-Last transaction balance:    1,595,128 cents = R15,951.28 (CORRECT)
-```
-
-The transaction-level balances are correct, proving the statement was parsed correctly for transactions, but the account-level balance was extracted from the wrong location in the PDF.
-
----
+### Problem
+Transaction descriptions from bank statements are verbose and hard to read. Examples:
+- `"FEE: PAYSHAP PAYMENT FEE: PAYSHAP PAYMENT"` → Should display as `"Payshap Fee"`
+- `"PNP CRP VOSLO 5222*2822 16 JAN CHEQUE CARD PURCHASE"` → Should be `"PnP Vosloorus"`
+- `"MEATEXPRESS 5222*2822 28 JAN CHEQUE CARD PURCHASE"` → Should be `"Meatexpress"`
+- `"WOOLWORTHS 5222*2822 24 JAN CHEQUE CARD PURCHASE"` → Should be `"Woolworths"`
 
 ### Solution
-
-Modify the `parse-statement` function to use the **last transaction's balance** as the account's `current_balance`, rather than relying on regex extraction from the PDF text. This approach is more reliable because:
-
-1. Transaction balances are already being extracted correctly
-2. The closing balance equals the balance after the final transaction
-3. Eliminates dependency on variable PDF layouts across banks
+Create a smart display name extraction function that intelligently shortens and formats merchant names while preserving meaningful context.
 
 ---
 
 ### Technical Changes
 
-#### File: `supabase/functions/parse-statement/index.ts`
+#### File 1: `src/lib/merchantUtils.ts`
 
-**Location: ~Lines 350-368** (in `parsePDF` function return)
+**Add a new function `smartDisplayName` that:**
 
-**Current logic:**
-- Uses `currentBalance` from regex extraction (error-prone)
-- Different patterns for different banks, but still unreliable
+1. **Remove noise patterns:**
+   - Card numbers: `5222*2822`, `****1234`
+   - Dates: `28 JAN`, `16 JAN`, `2026-01-28`
+   - Timestamps: `17H33:45`, `10H31`
+   - Transaction types: `CHEQUE CARD PURCHASE`, `PREPAID MOBILE PURCHASE`, `AUTOBANK CASH WITHDRAWAL AT`
+   - Reference numbers: `VAS00182812693`, `0000B867`
+   - Location codes: `ZAF`, `ZA`
 
-**New logic:**
-- After extracting transactions, use the balance from the most recent transaction
-- Fall back to regex-extracted balance only if no transactions have balance data
+2. **Handle fee transactions specially:**
+   - `FEE: PAYSHAP PAYMENT` → `Payshap Fee`
+   - `FEE: PREPAID MOBILE PURCHASE` → `Airtime Fee`
+   - `CASH WITHDRAWAL FEE` → `ATM Fee`
+   - Remove duplicate fee suffixes (`FEE: X FEE: X` → `X Fee`)
 
-**Implementation approach:**
+3. **Expand known South African abbreviations:**
+   - `PNP` → `Pick n Pay`
+   - `VOSL` / `VOSLO` → `Vosloorus`
+   - `CRP` → remove (corp store indicator)
+   - `FAM` → remove (family store indicator)
+   - `CHRI` → `Christiana` (or similar)
+   - `VC` → remove (store type code)
 
+4. **Brand-specific formatting:**
+   - `YOCO *ZODWA` → `Zodwa (via Yoco)`
+   - `C*BP RUSLOO` → `BP Ruslof`
+   - `DNH*GODADDY.C` → `GoDaddy`
+   - `S2S*TAMIRA` → `Tamira`
+
+5. **Apply title case formatting**
+
+**New function signature:**
 ```text
-After line 342 (after transactions are extracted):
-
-// Use the latest transaction's balance as the current balance if available
-let finalBalance = currentBalance;
-if (transactions.length > 0) {
-  // Find the latest transaction with a valid balance
-  const transactionsWithBalance = transactions.filter(t => t.balance > 0);
-  if (transactionsWithBalance.length > 0) {
-    // Get the balance from the most recent transaction (first in array, sorted by date desc)
-    finalBalance = transactionsWithBalance[0].balance;
-    console.log('[BALANCE] Using latest transaction balance:', finalBalance);
-  }
-}
-
-// Use finalBalance instead of currentBalance in the return object
+export const smartDisplayName = (description: string): string
 ```
 
-**Key change in return statement:**
-- Replace `currentBalance` with `finalBalance` in `accountInfo.currentBalance`
+**Add a mapping dictionary for known merchants:**
+```text
+const DISPLAY_NAME_MAP: Record<string, string> = {
+  'PNP': 'Pick n Pay',
+  'SHOPRITE': 'Shoprite',
+  'SUPERSPAR': 'SuperSpar',
+  'WOOLWORTHS': 'Woolworths',
+  'KFC': 'KFC',
+  'MCD': "McDonald's",
+  // ... etc
+};
+```
+
+**Add a mapping for location abbreviations:**
+```text
+const LOCATION_ABBREVS: Record<string, string> = {
+  'VOSL': 'Vosloorus',
+  'VOSLO': 'Vosloorus',
+  'JHB': 'Johannesburg',
+  'PTA': 'Pretoria',
+  'CPT': 'Cape Town',
+  // ... etc
+};
+```
 
 ---
 
-### Why This Fix Works
+#### File 2: `src/lib/merchantUtils.ts` - Update `extractDisplayMerchantName`
 
-1. **Transaction balances are already correct** - The DB shows the latest transaction balance is R15,951.28, exactly matching the statement
-2. **More reliable than regex** - Transaction balance extraction is structured and consistent
-3. **Bank-agnostic** - Works across all bank formats without needing bank-specific patterns
-4. **Fallback preserved** - If no transaction balances exist, regex extraction is still used
+Replace the simple title-case logic with a call to `smartDisplayName`:
+
+```text
+export const extractDisplayMerchantName = (description: string): string => {
+  if (!description) return '';
+  return smartDisplayName(description);
+};
+```
+
+---
+
+### Transformation Examples
+
+| Input Description | Output Display Name |
+|-------------------|---------------------|
+| `FEE: PAYSHAP PAYMENT FEE: PAYSHAP PAYMENT` | `Payshap Fee` |
+| `PNP CRP VOSLO 5222*2822 16 JAN CHEQUE CARD PURCHASE` | `Pick n Pay Vosloorus` |
+| `MEATEXPRESS 5222*2822 28 JAN CHEQUE CARD PURCHASE` | `Meatexpress` |
+| `WOOLWORTHS 5222*2822 24 JAN CHEQUE CARD PURCHASE` | `Woolworths` |
+| `YOCO *ZODWA 5222*2822 18 JAN CHEQUE CARD PURCHASE` | `Zodwa` |
+| `VAS00182812693 VODA0636844044 PREPAID MOBILE PURCHASE` | `Vodacom Airtime` |
+| `0000B867 2026-01-05T10:34:59 5222*2822 AUTOBANK CASH WITHDRAWAL AT` | `ATM Withdrawal` |
+| `**2095407 10H31 **2822 IB TRANSFER FROM` | `Transfer In` |
+| `CASH WITHDRAWAL FEE CASH WITHDRAWAL FEE` | `ATM Fee` |
+| `SUPERSPAR VC 5222*2822 09 JAN CHEQUE CARD PURCHASE` | `SuperSpar` |
+| `C*BP RUSLOO 5222*2822 21 JAN CHEQUE CARD PURCHASE` | `BP Rusloo` |
+| `PULE PAYSHAP PAYMENT TO` | `Pule` |
+| `FOSCHINI CHRI 5222*2822 22 JAN CHEQUE CARD PURCHASE` | `Foschini` |
 
 ---
 
@@ -91,27 +118,26 @@ if (transactions.length > 0) {
 
 | File | Change |
 |------|--------|
-| `supabase/functions/parse-statement/index.ts` | Use latest transaction balance as account current_balance |
+| `src/lib/merchantUtils.ts` | Add `smartDisplayName` function and update `extractDisplayMerchantName` |
 
 ---
 
-### Immediate Fix for Current Data
+### How It Works
 
-The user's existing account has the wrong balance. After deploying the fix, they can either:
-1. **Re-upload the statement** (will recreate account with correct balance)
-2. **Manual database update** (run SQL to fix existing data):
+The function processes descriptions in this order:
 
-```sql
-UPDATE accounts 
-SET current_balance = 1595128 
-WHERE id = '432448ab-06a2-488d-9926-b2156f3a9d14';
-```
+1. **Detect transaction type** (fee, transfer, purchase, withdrawal)
+2. **Remove noise** (card numbers, dates, reference codes)
+3. **Handle prefixes** (YOCO *, C*, DNH*, S2S*, VAS*)
+4. **Expand abbreviations** (PNP, VOSL, etc.)
+5. **Apply brand formatting** (maintain correct casing for brands)
+6. **Title case remaining words**
 
 ---
 
-### Testing
+### Benefits
 
-After implementation:
-1. Upload the same bank statement again
-2. Verify the new account shows R15,951.28 as Available Balance
-3. Confirm this matches the statement's closing balance
+- **User-friendly display** - Transactions are instantly recognizable
+- **Consistent formatting** - All merchants displayed uniformly
+- **Maintains accuracy** - Original description preserved in database for categorization
+- **Extensible** - Easy to add new merchant mappings and abbreviations
