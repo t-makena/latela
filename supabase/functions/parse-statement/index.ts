@@ -347,13 +347,26 @@ async function parsePDF(content: string, fileName: string) {
       console.warn('[TRANSACTIONS] WARNING: No transactions found');
     }
 
+    // Use the latest transaction's balance as the account's current balance
+    // This is more reliable than regex extraction from PDF text
+    let finalBalance = currentBalance;
+    if (transactions.length > 0) {
+      // Find transactions with valid balances (positive values)
+      const transactionsWithBalance = transactions.filter(t => t.balance > 0);
+      if (transactionsWithBalance.length > 0) {
+        // Get the balance from the most recent transaction (first in array, sorted by date desc)
+        finalBalance = transactionsWithBalance[0].balance;
+        console.log('[BALANCE] Using latest transaction balance:', finalBalance, '(was regex:', currentBalance, ')');
+      }
+    }
+
     return {
       accountInfo: {
         accountNumber,
         bankName,
         accountType,
         accountName: `${bankName} ${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Account`,
-        currentBalance,
+        currentBalance: finalBalance,
         currency: 'ZAR',
       },
       transactions,
