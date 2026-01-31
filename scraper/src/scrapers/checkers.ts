@@ -2,16 +2,10 @@ import puppeteer, { Browser, Page } from 'puppeteer';
 import { PnPProduct } from '../types';
 import { DEFAULT_CONFIG, getRandomUserAgent, sleep } from '../config';
 
-export { CheckersScraper };
-
 /**
  * Checkers/Sixty60 Price Scraper for Latela
- * 
- * Checkers uses a React-based SPA with their Sixty60 delivery platform.
- * Products are loaded dynamically via API calls.
  */
 
-// Checkers-specific URLs
 export const CHECKERS_URLS = {
   base: 'https://www.checkers.co.za',
   allProducts: 'https://www.checkers.co.za/c-2256/All-Products',
@@ -20,7 +14,6 @@ export const CHECKERS_URLS = {
   category: (slug: string) => `https://www.checkers.co.za/${slug}`,
 };
 
-// Checkers category configuration mapped to Latela categories
 export const CHECKERS_CATEGORIES = [
   { slug: 'c-2569/Food', name: 'Food', latela_category: 'Groceries' },
   { slug: 'c-2604/Fruit-Vegetables', name: 'Fruit & Vegetables', latela_category: 'Groceries' },
@@ -36,29 +29,17 @@ export const CHECKERS_CATEGORIES = [
   { slug: 'c-2948/Pet', name: 'Pet', latela_category: 'Pet Care' },
 ];
 
-// CSS Selectors for Checkers website
 const CHECKERS_SELECTORS = {
-  // Product grid
   productCard: '[class*="product-card"], [class*="ProductCard"], [data-testid="product-card"], .product-item',
-  
-  // Product details
   productName: '[class*="product-name"], [class*="ProductName"], h3, .product-title',
   productPrice: '[class*="price"]:not([class*="was"]):not([class*="original"]), .special-price, .current-price',
   originalPrice: '[class*="was-price"], [class*="original-price"], [class*="WasPrice"], .was-price',
   productImage: 'img[class*="product"], img[src*="product"], .product-image img',
   productLink: 'a[href*="/p/"], a[href*="productId"]',
-  
-  // Promotion badges
   promoBadge: '[class*="promo"], [class*="special"], [class*="saving"], .promotion-badge',
-  
-  // Pagination
   nextPage: '[class*="next"]:not([disabled]), [aria-label="Next"], .pagination-next',
   loadMore: '[class*="load-more"], button[class*="LoadMore"]',
-  
-  // Loading states
   spinner: '[class*="loading"], [class*="spinner"], .loader',
-  
-  // Popups
   cookieAccept: '#onetrust-accept-btn-handler, [class*="cookie-accept"], .accept-cookies',
   locationModal: '[class*="location-modal"], [class*="store-selector"]',
   closeModal: '[class*="close"], [aria-label="Close"], .modal-close',
@@ -72,7 +53,7 @@ export class CheckersScraper {
     console.log('🏪 Initializing Checkers Scraper...');
     
     this.browser = await puppeteer.launch({
-      headless: this.config.headless,
+      headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -108,7 +89,6 @@ export class CheckersScraper {
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     });
 
-    // Block heavy resources
     await page.setRequestInterception(true);
     page.on('request', (req) => {
       const resourceType = req.resourceType();
@@ -126,7 +106,6 @@ export class CheckersScraper {
     try {
       await sleep(1500);
 
-      // Accept cookies
       const cookieBtn = await page.$(CHECKERS_SELECTORS.cookieAccept);
       if (cookieBtn) {
         await cookieBtn.click();
@@ -134,7 +113,6 @@ export class CheckersScraper {
         await sleep(500);
       }
 
-      // Close location modal if present
       const closeBtn = await page.$(CHECKERS_SELECTORS.closeModal);
       if (closeBtn) {
         await closeBtn.click();
@@ -154,10 +132,9 @@ export class CheckersScraper {
 
     await sleep(2000);
 
-    // Wait for spinners to disappear
     try {
       await page.waitForFunction(
-        (selector) => !document.querySelector(selector),
+        (selector: string) => !document.querySelector(selector),
         { timeout: 10000 },
         CHECKERS_SELECTORS.spinner
       );
@@ -167,38 +144,32 @@ export class CheckersScraper {
   }
 
   private async extractProducts(page: Page, categoryName: string): Promise<PnPProduct[]> {
-    const rawProducts = await page.evaluate((selectors) => {
+    const rawProducts = await page.evaluate(() => {
       const items: any[] = [];
       
-      // Try multiple selector strategies for product cards
       const productCards = document.querySelectorAll(
         '[class*="product-card"], [class*="ProductCard"], [data-testid*="product"], .product-item, [class*="product-listing"] > div'
       );
 
       productCards.forEach((card) => {
         try {
-          // Get link and extract product code
           const linkEl = card.querySelector('a[href*="/p/"]') as HTMLAnchorElement;
           const href = linkEl?.href || '';
           const codeMatch = href.match(/\/p\/(\d+)/) || href.match(/productId[=:](\d+)/);
           const code = codeMatch ? codeMatch[1] : `checkers_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-          // Get name
           const nameEl = card.querySelector('[class*="product-name"], [class*="ProductName"], h3, h4, .product-title');
           const name = nameEl?.textContent?.trim() || '';
 
-          // Get prices
           const priceEl = card.querySelector('[class*="price"]:not([class*="was"]):not([class*="original"])');
           const priceText = priceEl?.textContent?.trim() || '';
           
           const wasPriceEl = card.querySelector('[class*="was"], [class*="original"], [class*="Was"]');
           const wasPriceText = wasPriceEl?.textContent?.trim() || '';
 
-          // Get image
           const imgEl = card.querySelector('img') as HTMLImageElement;
           const imageUrl = imgEl?.src || imgEl?.dataset?.src || '';
 
-          // Check for promotions
           const promoEl = card.querySelector('[class*="promo"], [class*="saving"], [class*="special"]');
           const promotionText = promoEl?.textContent?.trim() || '';
 
@@ -220,10 +191,9 @@ export class CheckersScraper {
       });
 
       return items;
-    }, CHECKERS_SELECTORS);
+    });
 
-    // Parse into PnPProduct format (reusing the type for consistency)
-    return rawProducts.map(raw => this.parseProduct(raw, categoryName)).filter(Boolean) as PnPProduct[];
+    return rawProducts.map((raw: any) => this.parseProduct(raw, categoryName)).filter(Boolean) as PnPProduct[];
   }
 
   private parseProduct(raw: any, categoryName: string): PnPProduct | null {
@@ -238,7 +208,6 @@ export class CheckersScraper {
       const priceCents = parsePrice(raw.priceText);
       const originalPriceCents = parsePrice(raw.wasPriceText);
 
-      // Extract brand (first word(s) before main product name pattern)
       const brandMatch = raw.name.match(/^([\w\s&']+?)\s+(?=\d|[A-Z]{2,}|\w+\s+\d)/);
       const brand = brandMatch ? brandMatch[1].trim() : undefined;
 
@@ -289,7 +258,6 @@ export class CheckersScraper {
         console.log(`   Found ${products.length} products`);
         allProducts.push(...products);
 
-        // Try to load more or go to next page
         const nextBtn = await page.$(CHECKERS_SELECTORS.nextPage);
         const loadMoreBtn = await page.$(CHECKERS_SELECTORS.loadMore);
 
@@ -433,10 +401,9 @@ export class CheckersScraper {
           maxPagesPerCategory
         );
         
-        // Map to Latela category
         products.forEach(p => {
           p.category = category.latela_category;
-          p.subcategory = category.name;
+          (p as any).subcategory = category.name;
         });
 
         allProducts.push(...products);
@@ -459,5 +426,3 @@ export class CheckersScraper {
     };
   }
 }
-
-export default CheckersScraper;
