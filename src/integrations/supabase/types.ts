@@ -135,36 +135,42 @@ export type Database = {
         Row: {
           amount: number
           amount_spent: number | null
+          auto_detected: boolean | null
           created_at: string
           days_per_week: number | null
           frequency: string
           id: string
           name: string
           parent_category_id: string | null
+          source_merchant_pattern: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           amount: number
           amount_spent?: number | null
+          auto_detected?: boolean | null
           created_at?: string
           days_per_week?: number | null
           frequency: string
           id?: string
           name: string
           parent_category_id?: string | null
+          source_merchant_pattern?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
           amount_spent?: number | null
+          auto_detected?: boolean | null
           created_at?: string
           days_per_week?: number | null
           frequency?: string
           id?: string
           name?: string
           parent_category_id?: string | null
+          source_merchant_pattern?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -519,6 +525,8 @@ export type Database = {
         Row: {
           canonical_product_id: string | null
           id: string
+          on_sale: boolean | null
+          original_price_cents: number | null
           price_cents: number
           recorded_at: string | null
           store: string
@@ -526,6 +534,8 @@ export type Database = {
         Insert: {
           canonical_product_id?: string | null
           id?: string
+          on_sale?: boolean | null
+          original_price_cents?: number | null
           price_cents: number
           recorded_at?: string | null
           store: string
@@ -533,6 +543,8 @@ export type Database = {
         Update: {
           canonical_product_id?: string | null
           id?: string
+          on_sale?: boolean | null
+          original_price_cents?: number | null
           price_cents?: number
           recorded_at?: string | null
           store?: string
@@ -549,40 +561,70 @@ export type Database = {
       }
       product_offers: {
         Row: {
+          brand: string | null
           canonical_product_id: string | null
+          category: string | null
+          created_at: string | null
           id: string
+          image_url: string | null
           in_stock: boolean | null
+          last_seen_at: string | null
           on_sale: boolean | null
+          original_price_cents: number | null
           price_cents: number
+          product_name: string | null
           product_url: string | null
           promotion_text: string | null
           scraped_at: string | null
           store: string
+          store_product_code: string | null
+          subcategory: string | null
           unit_price_cents: number | null
+          updated_at: string | null
         }
         Insert: {
+          brand?: string | null
           canonical_product_id?: string | null
+          category?: string | null
+          created_at?: string | null
           id?: string
+          image_url?: string | null
           in_stock?: boolean | null
+          last_seen_at?: string | null
           on_sale?: boolean | null
+          original_price_cents?: number | null
           price_cents: number
+          product_name?: string | null
           product_url?: string | null
           promotion_text?: string | null
           scraped_at?: string | null
           store: string
+          store_product_code?: string | null
+          subcategory?: string | null
           unit_price_cents?: number | null
+          updated_at?: string | null
         }
         Update: {
+          brand?: string | null
           canonical_product_id?: string | null
+          category?: string | null
+          created_at?: string | null
           id?: string
+          image_url?: string | null
           in_stock?: boolean | null
+          last_seen_at?: string | null
           on_sale?: boolean | null
+          original_price_cents?: number | null
           price_cents?: number
+          product_name?: string | null
           product_url?: string | null
           promotion_text?: string | null
           scraped_at?: string | null
           store?: string
+          store_product_code?: string | null
+          subcategory?: string | null
           unit_price_cents?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {

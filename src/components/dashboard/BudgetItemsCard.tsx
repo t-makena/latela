@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, RefreshCw } from 'lucide-react';
 import { AddBudgetItemDialog } from '@/components/budget/AddBudgetItemDialog';
 import { useBudgetItems } from '@/hooks/useBudgetItems';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -17,15 +17,51 @@ import {
 } from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/hooks/useLanguage';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export const BudgetItemsCard = () => {
   const isMobile = useIsMobile();
   const { t } = useLanguage();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { budgetItems, loading, calculateMonthlyAmount, calculateTotalMonthly, addBudgetItem, deleteBudgetItem } = useBudgetItems();
+  const [isScanning, setIsScanning] = useState(false);
+  const { budgetItems, loading, calculateMonthlyAmount, calculateTotalMonthly, addBudgetItem, deleteBudgetItem, refetch } = useBudgetItems();
   const { transactions, loading: transactionsLoading } = useTransactions();
   const { subcategories, loading: categoriesLoading } = useSubcategories();
 
+  const handleScanForDebitOrders = async () => {
+    setIsScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('detect-recurring-transactions', {
+        body: { lookbackMonths: 6 }
+      });
+
+      if (error) throw error;
+
+      if (data.added > 0) {
+        toast({
+          title: t('common.success'),
+          description: `Added ${data.added} detected debit order${data.added > 1 ? 's' : ''} to your budget.`,
+        });
+        refetch();
+      } else {
+        toast({
+          title: 'No new debit orders found',
+          description: 'All detected recurring transactions are already in your budget.',
+        });
+      }
+    } catch (error) {
+      console.error('Error scanning for debit orders:', error);
+      toast({
+        title: t('common.error'),
+        description: 'Failed to scan for debit orders. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
   // Function to get display name (custom name if category has been replaced)
   const getDisplayName = (itemName: string) => {
     // Find a custom category that replaced a system category with this name
@@ -90,13 +126,25 @@ export const BudgetItemsCard = () => {
       <Card className="h-full">
         <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
           <CardTitle className="heading-main">{t('finance.budgetPlan')}</CardTitle>
-          <Button
-            size="icon"
-            onClick={() => setDialogOpen(true)}
-            className="rounded-full"
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={handleScanForDebitOrders}
+              disabled={isScanning}
+              className="rounded-full"
+              title="Scan for debit orders"
+            >
+              <RefreshCw className={`h-4 w-4 ${isScanning ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button
+              size="icon"
+              onClick={() => setDialogOpen(true)}
+              className="rounded-full"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -126,7 +174,16 @@ export const BudgetItemsCard = () => {
                 <TableBody>
                   {budgetItems.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {getDisplayName(item.name)}
+                          {item.auto_detected && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                              Auto
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         {t(`budget.${item.frequency.toLowerCase().replace('-', '')}`)}
                         {item.frequency === 'Daily' && item.days_per_week && (

@@ -10,6 +10,8 @@ export interface BudgetItem {
   amount: number;
   days_per_week: number | null;
   parent_category_id?: string | null;
+  auto_detected?: boolean;
+  source_merchant_pattern?: string | null;
   created_at: string;
   updated_at: string;
 }
