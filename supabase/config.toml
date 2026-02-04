@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.scan-grocery-list]
 verify_jwt = true
+
+[functions.detect-recurring-transactions]
+verify_jwt = true
