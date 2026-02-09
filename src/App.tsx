@@ -20,6 +20,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import GroceryBudget from "./pages/GroceryBudget";
+import Chat from "./pages/Chat";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,13 @@ const App = () => (
                   <ProtectedRoute>
                     <Layout>
                       <GroceryBudget />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/chat" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Chat />
                     </Layout>
                   </ProtectedRoute>
                 } />
