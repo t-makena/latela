@@ -1,141 +1,71 @@
 
 
-## Auto-Detect & Auto-Add Debit Orders to Budget
+## Budget Buddy - AI Financial Chatbot
 
 ### Overview
 
-A proactive approach where the system automatically detects recurring debit orders from transaction history and adds them directly to the budget plan. Users can remove any incorrect items using the existing delete functionality.
+A conversational AI chatbot page where users can interact with their financial data using Anthropic's Claude Sonnet 4.5. The chatbot will have access to the user's transactions, budget items, goals, and account balances to provide personalized financial advice.
+
+### What It Does
+
+- Users can ask questions like "How much did I spend on groceries this month?" or "Am I on track with my savings?"
+- The AI responds with insights based on actual financial data from the database
+- Streaming responses for a smooth chat experience (tokens appear as they're generated)
+- Chat history persists during the session
+- Mobile-friendly, matching the app's existing design language
 
 ---
 
-### Simplified Flow
+### Architecture
 
-```text
-Upload Statement → Transactions Parsed → Detection Runs → Budget Items Created
-                                                              ↓
-                                            User sees new items in Budget Plan
-                                            User deletes any incorrect ones
-```
+The chatbot follows a backend-first approach:
 
-No review step needed - the system acts proactively.
+1. **Frontend** sends the user's message to an edge function
+2. **Edge function** fetches the user's financial data from Supabase (transactions, budget, goals, accounts)
+3. **Edge function** constructs a system prompt with the financial context and sends it to Anthropic's API
+4. **Response streams** back to the frontend token-by-token via SSE
 
----
-
-### Detection Criteria (Unchanged)
-
-A transaction is flagged as a **recurring debit order** if:
-
-| Condition | Criteria |
-|-----------|----------|
-| **Exact Amount Match** | Same merchant + exact same amount + 2+ occurrences across months |
-| **Monthly Merchant** | Same merchant + appears once per month + 2+ months |
-| **Explicit Keyword** | Description contains "DEBIT ORDER", "D/O", or "DEBIT ORD" |
-
-**Excluded**: Varying amounts or multiple times per month (Betway, data top-ups)
+This keeps the Anthropic API key secure and ensures financial data context is assembled server-side.
 
 ---
 
 ### Technical Implementation
 
-#### Database Changes
+#### 1. Edge Function: `chat-financial`
 
-Add a column to `budget_items` to track auto-detected items:
+- Authenticates the user via JWT
+- Fetches the user's financial snapshot:
+  - Recent transactions (last 3 months, up to 500)
+  - Budget items with spending data
+  - Goals and savings progress
+  - Account balances
+- Constructs a system prompt containing this data as context
+- Streams the response from Anthropic's `claude-sonnet-4-5-20241022` model
+- Returns SSE stream to the frontend
 
-```text
-ALTER TABLE budget_items ADD COLUMN:
-  - auto_detected (BOOLEAN, default false)
-  - source_merchant_pattern (TEXT, nullable) - for deduplication
-```
+**System prompt** will include:
+- Current date and user's financial summary
+- Transaction history formatted as a table
+- Budget allocations vs actual spending
+- Savings goals and progress
+- Account balances
+- Instructions to be a helpful South African financial advisor using Rand (R) currency
 
-This allows:
-- Showing a badge like "Auto-detected" in the UI
-- Preventing duplicate detection on subsequent runs
-- Easy filtering if needed
+#### 2. New Page: `/chat`
 
-#### Edge Function: detect-recurring-transactions
+A clean chat interface with:
+- Message list showing user and assistant messages
+- Text input with send button at the bottom
+- Streaming token display for AI responses
+- Markdown rendering for formatted responses (tables, lists, bold text)
+- Empty state with suggested questions to get started
+- Mobile-responsive layout matching the app's rounded card style
 
-```text
-detect-recurring-transactions
-├── Input: { user_id } (from auth JWT)
-├── Process:
-│   1. Query transactions (last 3-6 months)
-│   2. Normalize merchant names
-│   3. Group by merchant
-│   4. Apply detection rules:
-│      - Exact amount match (2+ same amount)
-│      - Monthly merchant (once per month, 2+ months)
-│      - Explicit keyword (DEBIT ORDER, D/O)
-│   5. Check existing budget_items to avoid duplicates
-│   6. INSERT new budget_items directly (auto_detected = true)
-├── Output: { added: number, skipped: number, items: [...] }
-```
+#### 3. Navigation Update
 
-#### Duplicate Prevention
-
-Before inserting, check if:
-- A budget_item with same `source_merchant_pattern` already exists
-- A budget_item with similar name already exists (fuzzy match)
-
-```text
-// Skip if already exists
-SELECT * FROM budget_items 
-WHERE user_id = ? 
-AND (source_merchant_pattern = ? OR LOWER(name) LIKE ?)
-```
-
-#### Trigger Points
-
-The detection runs automatically after:
-1. **Statement upload** - When `parse-statement` completes
-2. **Manual trigger** - Button on Budget page: "Scan for Debit Orders"
-
-#### Integration with parse-statement
-
-Modify the existing `parse-statement` edge function to call detection:
-
-```text
-// At end of parse-statement, after transactions inserted:
-await supabase.functions.invoke('detect-recurring-transactions', {
-  body: { lookbackMonths: 3 }
-});
-```
-
----
-
-### UI Changes
-
-#### Budget Items Table
-
-Add visual indicator for auto-detected items:
-
-```text
-┌──────────────────────────────────────────────────────────────────┐
-│ Category/Merchant │ Frequency │ Amount │ Monthly │ Spent │      │
-├──────────────────────────────────────────────────────────────────┤
-│ Rent              │ Monthly   │ R5,000 │ R5,000  │ R5,000│ [🗑] │
-│ CLAUDE 🔄         │ Monthly   │ R350   │ R350    │ R350  │ [🗑] │
-│ GODADDY 🔄        │ Monthly   │ R178   │ R178    │ R0    │ [🗑] │
-└──────────────────────────────────────────────────────────────────┘
-                    🔄 = Auto-detected debit order
-```
-
-#### Optional: Toast Notification
-
-After statement upload, show:
-```text
-"✓ Statement uploaded. Added 2 detected debit orders to your budget."
-```
-
-#### Scan Button (Optional)
-
-Add a button to manually trigger detection:
-```text
-┌─────────────────────────────────────────────────────┐
-│ Budget Plan                              [+] [🔄]  │
-└─────────────────────────────────────────────────────┘
-                                            ↑
-                                   "Scan for Debit Orders"
-```
+- Add "Budget Buddy" to the sidebar navigation with a `MessageCircle` icon
+- Position it after "Grocery Budget" in the nav list
+- Add translation key for the nav item
 
 ---
 
@@ -143,103 +73,59 @@ Add a button to manually trigger detection:
 
 | File | Action | Description |
 |------|--------|-------------|
-| New migration | Create | Add `auto_detected` and `source_merchant_pattern` to `budget_items` |
-| `supabase/functions/detect-recurring-transactions/index.ts` | Create | Detection + auto-insert logic |
-| `supabase/functions/parse-statement/index.ts` | Modify | Call detection after parsing |
-| `src/hooks/useBudgetItems.ts` | Modify | Include `auto_detected` in queries |
-| `src/components/dashboard/BudgetItemsCard.tsx` | Modify | Show auto-detected badge |
-| `src/integrations/supabase/types.ts` | Auto-update | Will reflect new columns |
+| `supabase/functions/chat-financial/index.ts` | Create | Edge function with Anthropic streaming + financial data context |
+| `supabase/config.toml` | Modify | Add `chat-financial` function config with `verify_jwt = false` (manual auth) |
+| `src/pages/Chat.tsx` | Create | Chat page with message list, input, and streaming display |
+| `src/hooks/useFinancialChat.ts` | Create | Hook for managing chat state and SSE streaming |
+| `src/App.tsx` | Modify | Add `/chat` route |
+| `src/components/layout/Navbar.tsx` | Modify | Add "Budget Buddy" nav item |
+| `src/locales/en.json` | Modify | Add translation keys |
 
 ---
 
-### Detection Function Logic
+### Edge Function Details
 
-```text
-async function detectAndAddRecurring(userId: string):
-  
-  // 1. Get transactions (last 3 months)
-  transactions = await getTransactions(userId, months=3)
-  
-  // 2. Get existing budget items (for dedup)
-  existingItems = await getBudgetItems(userId)
-  existingPatterns = existingItems.map(i => i.source_merchant_pattern)
-  
-  // 3. Normalize and group
-  groups = groupByMerchant(normalize(transactions))
-  
-  // 4. Detect patterns
-  detected = []
-  for group in groups:
-    
-    // Skip if already in budget
-    if existingPatterns.includes(group.pattern):
-      continue
-    
-    // Check explicit keyword
-    if group.hasKeyword('DEBIT ORDER', 'D/O'):
-      detected.push({ ...group, type: 'keyword' })
-      continue
-    
-    // Check exact amount match
-    if group.uniqueAmounts.length == 1 && group.count >= 2:
-      detected.push({ ...group, type: 'exact_amount' })
-      continue
-    
-    // Check monthly merchant
-    if group.avgPerMonth == 1 && group.monthsPresent >= 2:
-      if group.amountVariance < 0.15:
-        detected.push({ ...group, type: 'monthly' })
-  
-  // 5. Insert into budget_items
-  for item in detected:
-    await supabase.from('budget_items').insert({
-      user_id: userId,
-      name: item.displayName,
-      frequency: 'Monthly',
-      amount: item.averageAmount,
-      auto_detected: true,
-      source_merchant_pattern: item.pattern
-    })
-  
-  return { added: detected.length }
-```
+The edge function will:
+
+1. Accept `{ messages: Array<{role, content}> }` in the request body
+2. Authenticate via the Authorization header
+3. Fetch financial data using the authenticated Supabase client:
+   - `accounts` - balances, types
+   - `v_transactions_with_details` - recent transactions with categories
+   - `budget_items` - budget allocations
+   - `goals` - savings goals and progress
+4. Build a system prompt with this data injected
+5. Call Anthropic's API with streaming enabled (`stream: true`)
+6. Pipe the SSE stream back to the client
+
+**Model**: `claude-sonnet-4-5-20241022` (as requested)
+
+**Rate limiting**: The function will handle Anthropic API errors (429, 500) gracefully and return appropriate error messages.
+
+#### 4. Frontend Chat UI
+
+The chat page will include:
+- A scrollable message area with auto-scroll on new messages
+- User messages styled differently from AI messages (right-aligned vs left-aligned)
+- A fixed input area at the bottom
+- Suggested starter questions like:
+  - "How much did I spend this month?"
+  - "What are my biggest expenses?"
+  - "Am I on track with my savings goals?"
+  - "Where can I cut spending?"
+- Loading indicator while AI is responding
+- Error handling with toast notifications for API failures
+
+**Markdown support**: AI responses will be rendered with `react-markdown` (needs to be added as a dependency) for proper formatting of tables, lists, and emphasis.
 
 ---
 
-### Merchant Normalization Examples
+### Dependencies
 
-| Raw Description | Normalized Pattern | Display Name |
-|-----------------|-------------------|--------------|
-| `CLAUDE PAYSHAP PAYMENT` | `CLAUDE` | Claude |
-| `GODADDY RENEWAL 123456` | `GODADDY` | GoDaddy |
-| `DISCOVERY D/O PREMIUM` | `DISCOVERY` | Discovery |
-| `NETFLIX.COM 8888888888` | `NETFLIX` | Netflix |
-| `DSTV SUBSCRIPTION FEE` | `DSTV` | DStv |
+- `react-markdown` - For rendering AI responses with proper formatting (tables, lists, code blocks)
 
----
+### Existing Resources Used
 
-### Expected Results
-
-After uploading 2+ months of statements:
-
-| Merchant | Pattern | Auto-Added? | Reason |
-|----------|---------|-------------|--------|
-| CLAUDE R350 (once per month) | Monthly merchant | Yes | Once per month, consistent |
-| GODADDY R178.25 (once per month) | Monthly merchant | Yes | Once per month |
-| DISCOVERY D/O R1200 | Keyword | Yes | Contains "D/O" |
-| BETWAY R10, R50, R1000 | - | No | Varying amounts, multiple per month |
-| PREPAID MOBILE R5, R10 | - | No | Varying amounts |
-
----
-
-### User Experience
-
-1. User uploads bank statement
-2. Transactions are parsed and categorized
-3. System automatically detects CLAUDE, GODADDY as debit orders
-4. Budget Items table shows new entries with 🔄 badge
-5. Toast: "Added 2 detected debit orders to your budget"
-6. If incorrect, user clicks trash icon to remove
-
-No extra clicks needed - the system is proactive.
+- `ANTHROPIC_API_KEY` - Already configured as a Supabase secret
+- `@anthropic-ai/sdk` - Already installed (though the edge function will use the REST API directly for streaming compatibility with Deno)
 
