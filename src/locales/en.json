@@ -10,6 +10,7 @@
     "settings": "Settings",
     "accounts": "Accounts",
     "allAccounts": "All Accounts",
+    "budgetBuddy": "Budget Buddy",
     "logout": "Log Out"
   },
   "auth": {
