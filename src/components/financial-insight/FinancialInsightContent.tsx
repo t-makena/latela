@@ -478,7 +478,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               const balanceTicks = minBalance === maxBalance ? [minBalance] : [minBalance, maxBalance];
               return (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={netBalanceData} margin={{ top: 40, left: 0, right: 0, bottom: 5 }}>
+              <LineChart data={netBalanceData} margin={{ bottom: 40 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis 
                   hide={false}
@@ -568,7 +568,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               const balanceTicks = minBalance === maxBalance ? [minBalance] : [minBalance, maxBalance];
               return (
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-              <LineChart data={netBalanceData} margin={{ top: 40, left: 0, right: 0, bottom: 5 }}>
+              <LineChart data={netBalanceData} margin={{ bottom: 40 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis 
                   hide={false}
