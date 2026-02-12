@@ -1,40 +1,34 @@
 
 
-# Add Legend to Balance Chart and Fix Vertical Positioning
+# Fix Chart Vertical Position and Legend Consistency
 
-## 1. Balance chart legend
+## Issue 1: Vertical positioning mismatch
 
-Add a `<Legend />` component to both mobile and desktop Balance `<LineChart>` instances in `FinancialInsightContent.tsx`, matching the Savings Balance chart pattern. The two `<Line>` components already have distinct colors but no `name` prop -- add human-readable names:
+The Savings Balance chart uses `margin={{ bottom: 40 }}` (no top margin), which pushes the graph lines toward the top and leaves space at the bottom. The Balance and Spending Trend charts use `margin={{ top: 40 }}`, which does the opposite -- pushing lines down but from a different baseline.
 
-- `netBalance` line: `name="Available Balance"`
-- `budgetBalance` line: `name="Savings Balance"`
+**Fix**: Align Balance and Spending Trend to match Savings Balance's margin pattern: `margin={{ bottom: 40 }}` with no top padding.
 
-Then add `<Legend />` inside each `<LineChart>`.
+| Chart | Current margin | New margin |
+|-------|---------------|------------|
+| Balance (mobile) | `top: 40, bottom: 5` | `bottom: 40` |
+| Balance (desktop) | `top: 40, bottom: 5` | `bottom: 40` |
+| Spending Trend (BarChart) | `top: 40, bottom: 0` | `bottom: 40` |
+| Spending Trend (LineChart) | `top: 40, bottom: 0` | `bottom: 40` |
 
-## 2. Push charts lower in the card (vertical positioning)
+## Issue 2: Legend style mismatch
 
-Currently the `<LineChart>` components use `margin={{ left: 0, right: 0 }}` which centers the chart vertically. To push the chart area down (so lines sit roughly a quarter above the card bottom), add a large `top` margin and a `bottom` margin for legend space:
+The Balance chart legend uses `verticalAlign="bottom" height={24} iconType="line"` with a formatter. The Savings Balance chart uses a bare `<Legend />` with no props.
 
-**Balance chart** (both mobile and desktop instances):
-- Change `margin` to `{{ top: 40, left: 0, right: 0, bottom: 30 }}`
+**Fix**: Update the Savings Balance `<Legend />` to match the Balance card's style:
 
-**Spending Trend chart** (`EnhancedSpendingChart.tsx`, both BarChart and LineChart):
-- Change `margin` to `{{ top: 40, left: 0, right: 0, bottom: 0 }}`
+```
+<Legend verticalAlign="bottom" height={24} iconType="line" />
+```
 
-This shifts the actual plot area downward within the fixed-height `ResponsiveContainer`, placing the lines/bars in the lower portion of the card.
+The Savings Balance lines already have `name` props set, so no formatter is needed -- the names will display automatically.
 
-## Technical Details
+## Files to edit
 
-### Files to edit
-
-1. **`src/components/financial-insight/FinancialInsightContent.tsx`**
-   - Mobile Balance chart (~line 480): Add `<Legend />` import from recharts, add `name` props to both `<Line>` components, insert `<Legend />`, update `margin` to `{ top: 40, left: 0, right: 0, bottom: 30 }`
-   - Desktop Balance chart (~line 567): Same changes
-
-2. **`src/components/dashboard/EnhancedSpendingChart.tsx`**
-   - BarChart (~line 161): Update `margin` to `{ top: 40, left: 0, right: 0, bottom: 0 }`
-   - LineChart fallback (further down): Same margin update
-
-### Legend import
-`Legend` from `recharts` -- check if already imported in `FinancialInsightContent.tsx`; if not, add it to the existing recharts import.
-
+1. **`src/components/financial-insight/FinancialInsightContent.tsx`** -- Change margin on both mobile and desktop LineChart instances from `{ top: 40, left: 0, right: 0, bottom: 5 }` to `{ bottom: 40 }`
+2. **`src/components/dashboard/EnhancedSpendingChart.tsx`** -- Change margin on both BarChart and LineChart from `{ top: 40, left: 0, right: 0, bottom: 0 }` to `{ bottom: 40 }`
+3. **`src/components/goals/GoalsSavingsBalanceChart.tsx`** -- Update `<Legend />` to `<Legend verticalAlign="bottom" height={24} iconType="line" />`
