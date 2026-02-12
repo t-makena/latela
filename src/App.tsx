@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { ColorPaletteProvider } from "@/contexts/ColorPaletteContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -19,7 +19,7 @@ import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
-import GroceryBudget from "./pages/GroceryBudget";
+
 
 const queryClient = new QueryClient();
 
@@ -76,13 +76,7 @@ const App = () => (
                     </Layout>
                   </ProtectedRoute>
                 } />
-                <Route path="/grocery-budget" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <GroceryBudget />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
+                <Route path="/grocery-budget" element={<Navigate to="/budget" replace />} />
                 <Route path="/goals" element={
                   <ProtectedRoute>
                     <Layout>

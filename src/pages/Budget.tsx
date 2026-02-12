@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ShoppingCart, ChevronRight, ArrowLeft, Search } from 'lucide-react';
 import { AddBudgetItemDialog } from '@/components/budget/AddBudgetItemDialog';
 import { BudgetMethodCard } from '@/components/budget/BudgetMethodCard';
 import { useBudgetItems } from '@/hooks/useBudgetItems';
@@ -22,12 +22,79 @@ import {
 } from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useGroceryCart } from '@/hooks/useGroceryCart';
+import { SearchProduct, ProductOffer } from '@/hooks/usePriceSearch';
+import { SearchTab } from '@/components/grocery-budget/SearchTab';
+import { MyListTab } from '@/components/grocery-budget/MyListTab';
+import { formatPriceCents } from '@/lib/storeColors';
+import { toast } from '@/components/ui/sonner';
+import { cn } from '@/lib/utils';
+
+type GroceryTabType = 'search' | 'list';
 
 const Budget = () => {
   const isMobile = useIsMobile();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [view, setView] = useState<'budget' | 'grocery'>('budget');
+  const [groceryTab, setGroceryTab] = useState<GroceryTabType>('search');
   const currentDate = new Date();
   const { t } = useLanguage();
+
+  const {
+    items: groceryItems,
+    addToCart,
+    updateQuantity,
+    updateStore,
+    removeFromCart,
+    clearCart,
+    itemCount: groceryItemCount,
+    totalCents: groceryTotalCents,
+  } = useGroceryCart();
+
+  const handleAddToCart = (product: SearchProduct, selectedOffer?: ProductOffer) => {
+    addToCart({
+      productId: product.id,
+      productName: product.name,
+      brand: product.brand,
+      imageUrl: product.image_url,
+      quantityValue: product.quantity_value,
+      quantityUnit: product.quantity_unit,
+      offers: product.offers,
+      selectedOffer,
+    });
+    toast.success(t('groceryBudget.addedToList'));
+  };
+
+  const handleAddScannedItems = (scannedItems: Array<{
+    productId: string;
+    productName: string;
+    brand: string | null;
+    imageUrl: string | null;
+    quantityValue: number | null;
+    quantityUnit: string | null;
+    offers: Array<{
+      store: string;
+      store_display_name: string;
+      price_cents: number;
+      unit_price_cents: number | null;
+      in_stock: boolean;
+      on_sale: boolean;
+      promotion_text: string | null;
+      product_url: string | null;
+    }>;
+  }>) => {
+    scannedItems.forEach(item => {
+      addToCart({
+        productId: item.productId,
+        productName: item.productName,
+        brand: item.brand,
+        imageUrl: item.imageUrl,
+        quantityValue: item.quantityValue,
+        quantityUnit: item.quantityUnit,
+        offers: item.offers,
+      });
+    });
+  };
   const { budgetItems, loading, calculateMonthlyAmount, calculateTotalMonthly, addBudgetItem, deleteBudgetItem } = useBudgetItems();
   const { goals, loading: goalsLoading } = useGoals();
   const { upcomingEvents, isLoading: eventsLoading } = useCalendarEvents({
@@ -149,8 +216,115 @@ const Budget = () => {
     await addBudgetItem(name, frequency, amount, daysPerWeek);
   };
 
+  // Grocery sub-view content
+  const GrocerySubView = () => (
+    <div className="flex flex-col min-h-full pb-20">
+      {/* Back Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setView('budget')}
+          className="rounded-full"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-bold">{t('groceryBudget.title')}</h1>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setGroceryTab('search')}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors border-2",
+            groceryTab === 'search'
+              ? "bg-foreground text-background border-foreground"
+              : "bg-background text-foreground border-foreground hover:bg-accent"
+          )}
+        >
+          <Search size={18} />
+          {t('groceryBudget.searchTab')}
+        </button>
+        <button
+          onClick={() => setGroceryTab('list')}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors border-2",
+            groceryTab === 'list'
+              ? "bg-foreground text-background border-foreground"
+              : "bg-background text-foreground border-foreground hover:bg-accent"
+          )}
+        >
+          <ShoppingCart size={18} />
+          {t('groceryBudget.myListTab')} ({groceryItemCount})
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      <div className="flex-1">
+        {groceryTab === 'search' ? (
+          <SearchTab onAddToCart={handleAddToCart} />
+        ) : (
+          <MyListTab
+            items={groceryItems}
+            onUpdateQuantity={updateQuantity}
+            onUpdateStore={updateStore}
+            onRemove={removeFromCart}
+            onClearCart={clearCart}
+            onAddScannedItems={handleAddScannedItems}
+          />
+        )}
+      </div>
+
+      {/* Sticky Footer */}
+      <div
+        className={cn(
+          "fixed bottom-0 left-0 right-0 bg-background border-t-2 border-foreground py-4 px-6",
+          isMobile ? "" : "ml-24 lg:ml-64"
+        )}
+        style={{ boxShadow: '0 -4px 0px 0px rgba(0,0,0,1)' }}
+      >
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          {groceryItemCount === 0 ? (
+            <span className="text-muted-foreground">
+              {t('groceryBudget.estMonthlyBudget')}: R0.00
+            </span>
+          ) : (
+            <span className="font-semibold">
+              {t('groceryBudget.itemsTotal').replace('{{count}}', groceryItemCount.toString())}: {formatPriceCents(groceryTotalCents)}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Grocery Budget Navigation Card
+  const GroceryNavCard = () => (
+    <div
+      onClick={() => setView('grocery')}
+      className="bg-card rounded-2xl border border-foreground p-5 cursor-pointer hover:bg-accent/50 transition-colors"
+      style={{ boxShadow: '4px 4px 0px #000000' }}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ShoppingCart className="h-6 w-6" />
+          <div>
+            <h3 className="font-bold text-base">{t('groceryBudget.title')}</h3>
+            <p className="text-sm text-muted-foreground">{t('groceryBudget.searchTab')} & {t('groceryBudget.myListTab')}</p>
+          </div>
+        </div>
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      </div>
+    </div>
+  );
+
   // Mobile layout - separate path without container wrapper
   if (isMobile) {
+    if (view === 'grocery') {
+      return <div className="min-h-screen py-6 animate-fade-in"><GrocerySubView /></div>;
+    }
+
     return (
       <div className="min-h-screen py-6 space-y-5 animate-fade-in">
         {/* Budget Method Card - Now first */}
@@ -267,6 +441,9 @@ const Budget = () => {
           </div>
         )}
 
+        {/* Grocery Budget Navigation Card */}
+        <GroceryNavCard />
+
         <AddBudgetItemDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
@@ -280,6 +457,14 @@ const Budget = () => {
   }
 
   // Desktop layout
+  if (view === 'grocery') {
+    return (
+      <div className="container mx-auto p-6 animate-fade-in">
+        <GrocerySubView />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -405,7 +590,6 @@ const Budget = () => {
                   </>
                 ) : (
                   <>
-                    {/* Budget Balance Calculation Section */}
                     <div className="flex justify-between items-center">
                       <span className="label-text">Planned expenses</span>
                       <span className="table-body-text currency">{formatCurrency(totalBudgetExpenses)}</span>
@@ -419,7 +603,6 @@ const Budget = () => {
                       <span className="table-body-text font-bold currency">{formatCurrency(budgetBalanceValue)}</span>
                     </div>
 
-                    {/* Flexible Balance Calculation Section */}
                     <div className="flex justify-between items-center pt-4 border-t">
                       <span className="label-text">Available Balance</span>
                       <span className="table-body-text currency">{formatCurrency(availableBalance)}</span>
@@ -454,9 +637,19 @@ const Budget = () => {
                 <p><span className="font-semibold text-foreground">Once-off:</span> Amount × 1</p>
               </CardContent>
             </Card>
+
+            {/* Grocery Budget Navigation Card */}
+            <GroceryNavCard />
           </div>
         )}
       </div>
+
+      {/* Grocery Nav Card when no sidebar */}
+      {!showBalanceCalculations && (
+        <div className="mt-6">
+          <GroceryNavCard />
+        </div>
+      )}
 
       <AddBudgetItemDialog
         open={dialogOpen}
