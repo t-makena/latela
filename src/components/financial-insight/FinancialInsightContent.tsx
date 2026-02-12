@@ -470,27 +470,25 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             </div>
           </div>
           <div>
+            {(() => {
+              const allBalanceValues = netBalanceData.flatMap(d => [d.netBalance, d.budgetBalance]);
+              const minBalance = allBalanceValues.length ? Math.min(...allBalanceValues) : 0;
+              const maxBalance = allBalanceValues.length ? Math.max(...allBalanceValues) : 0;
+              const balanceTicks = minBalance === maxBalance ? [minBalance] : [minBalance, maxBalance];
+              return (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={netBalanceData} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis 
-                  dataKey="month" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  angle={isMobile ? -45 : 0}
-                  textAnchor={isMobile ? "end" : "middle"}
-                  height={isMobile ? 60 : 30}
-                />
+              <LineChart data={netBalanceData} margin={{ left: 0, right: 0 }}>
+                <XAxis dataKey="month" hide={true} />
                 <YAxis 
-                  label={isMobile ? undefined : { 
-                    value: 'Balance', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                  }}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  width={isMobile ? 45 : 60}
+                  hide={false}
+                  ticks={balanceTicks}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value: number) => `R${value.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`}
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={11}
+                  width={70}
+                  domain={[minBalance, maxBalance]}
                 />
                 <Tooltip 
                   contentStyle={{ 
@@ -535,6 +533,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 />
               </LineChart>
             </ResponsiveContainer>
+              );
+            })()}
           </div>
         </div>
       ) : (
@@ -557,27 +557,25 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             </div>
           </CardHeader>
           <CardContent>
+            {(() => {
+              const allBalanceValues = netBalanceData.flatMap(d => [d.netBalance, d.budgetBalance]);
+              const minBalance = allBalanceValues.length ? Math.min(...allBalanceValues) : 0;
+              const maxBalance = allBalanceValues.length ? Math.max(...allBalanceValues) : 0;
+              const balanceTicks = minBalance === maxBalance ? [minBalance] : [minBalance, maxBalance];
+              return (
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-              <LineChart data={netBalanceData} margin={{ left: 20, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis 
-                  dataKey="month" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  angle={isMobile ? -45 : 0}
-                  textAnchor={isMobile ? "end" : "middle"}
-                  height={isMobile ? 60 : 30}
-                />
+              <LineChart data={netBalanceData} margin={{ left: 0, right: 0 }}>
+                <XAxis dataKey="month" hide={true} />
                 <YAxis 
-                  label={isMobile ? undefined : { 
-                    value: 'Balance', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                  }}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 11 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  width={isMobile ? 45 : 60}
+                  hide={false}
+                  ticks={balanceTicks}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value: number) => `R${value.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`}
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={11}
+                  width={70}
+                  domain={[minBalance, maxBalance]}
                 />
                 <Tooltip 
                   contentStyle={{ 
@@ -622,6 +620,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 />
               </LineChart>
             </ResponsiveContainer>
+              );
+            })()}
           </CardContent>
         </Card>
       )}
