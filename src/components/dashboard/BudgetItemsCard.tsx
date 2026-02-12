@@ -87,7 +87,7 @@ export const BudgetItemsCard = () => {
 
   return (
     <>
-      <Card className="h-full">
+      <Card>
         <CardHeader className="flex flex-row items-start justify-between pt-4 pb-4">
           <CardTitle className="heading-main">{t('finance.budgetPlan')}</CardTitle>
           <Button
