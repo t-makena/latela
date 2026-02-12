@@ -1,187 +1,43 @@
 
 
-## Smarter Transaction Categorization
+## Fix: Integrate Grocery Budget Into the Budget Page
 
-### Problem Summary
-The current categorization logic doesn't handle several common transaction patterns correctly:
-
-1. **YOCO payments** - Treated as vendor payments but vendor type unclear
-2. **PayShap with service names** (like "Claude") - Should be Bills & Subscriptions
-3. **PayShap with person names** - Should be Assistance/Lending (money sent to people)
-4. **Non-salary income** (transfers in, PayShap from) - Should be Other Income
-5. **Fuel stations** (BP, Sasol) - Should be Transportation & Fuel
-
-### Database Categories (Reference)
-
-| Category | Parent | ID |
-|----------|--------|-----|
-| Transportation & Fuel | Necessities | `10235bed-...` |
-| Bills & Subscriptions | Necessities | `af6ce140-...` |
-| Fees | Necessities | `04c66707-...` |
-| Food & Groceries | Necessities | `0b2596ef-...` |
-| Assistance/Lending | Discretionary | `408395e2-...` |
-| Dining & Restaurants | Discretionary | `98a43caa-...` |
-| Other Income | Income | `0a29792e-...` |
-| Salary & Wages | Income | `f055c472-...` |
+The previous implementation was not saved. All three files still contain the original standalone grocery budget code. This plan re-implements the integration from scratch.
 
 ---
 
-### Technical Changes
+### What Will Change
 
-#### File 1: `src/lib/transactionCategories.ts`
-
-Add these keyword mappings:
-
-```text
-// Transportation & Fuel - add fuel station brands
-'bp': 'Transportation & Fuel',
-'caltex': 'Transportation & Fuel',
-'sasol': 'Transportation & Fuel',
-'total': 'Transportation & Fuel',
-'astron': 'Transportation & Fuel',
-
-// Bills & Subscriptions - add known services
-'claude': 'Bills & Subscriptions',
-'chatgpt': 'Bills & Subscriptions',
-'openai': 'Bills & Subscriptions',
-'amazon prime': 'Bills & Subscriptions',
-'youtube': 'Bills & Subscriptions',
-'apple': 'Bills & Subscriptions',
-'google': 'Bills & Subscriptions',
-'microsoft': 'Bills & Subscriptions',
-
-// Fees category
-'fee:': 'Fees',
-'cash withdrawal fee': 'Fees',
-
-// Airtime/Mobile
-'prepaid mobile': 'Bills & Subscriptions',
-'voda': 'Bills & Subscriptions',
-'mtn': 'Bills & Subscriptions',
-'telkom': 'Bills & Subscriptions',
-```
+1. **Budget page gets a sub-view toggle** -- clicking a new "Grocery Budget" card switches to the grocery search/list UI without leaving `/budget`
+2. **The standalone `/grocery-budget` route redirects** to `/budget`
+3. **The "Grocery Budget" nav item is removed** from the sidebar
 
 ---
 
-#### File 2: `supabase/functions/categorize-transactions/index.ts`
+### File Changes
 
-**Add pre-AI smart detection function (~line 145, before AI call):**
+#### 1. `src/pages/Budget.tsx`
 
-```text
-function preCategorizeSmart(description: string, amount: number): string | null {
-  const desc = description.toUpperCase();
-  
-  // 1. FEES - Any FEE: prefix or withdrawal fee
-  if (desc.includes('FEE:') || desc.includes('WITHDRAWAL FEE')) {
-    return 'Fees';
-  }
-  
-  // 2. TRANSPORTATION - Fuel stations
-  const fuelKeywords = ['BP ', 'C*BP', 'SHELL', 'ENGEN', 'SASOL', 'CALTEX', 'TOTAL '];
-  if (fuelKeywords.some(k => desc.includes(k))) {
-    return 'Transport';
-  }
-  
-  // 3. INCOME DETECTION - Positive amounts or PAYMENT FROM
-  if (amount > 0) {
-    if (desc.includes('SALARY') || desc.includes('WAGES')) {
-      return 'Salary';
-    }
-    // All other incoming money = Other Income
-    return 'Other Income';
-  }
-  
-  // 4. BILLS & SUBSCRIPTIONS - Known services via PayShap
-  const subscriptionKeywords = ['CLAUDE', 'CHATGPT', 'NETFLIX', 'SPOTIFY', 'DSTV', 'OPENAI'];
-  if (desc.includes('PAYSHAP') && subscriptionKeywords.some(k => desc.includes(k))) {
-    return 'Bills';
-  }
-  
-  // 5. ASSISTANCE/LENDING - PayShap TO a person (outgoing)
-  if (desc.includes('PAYSHAP') && desc.includes(' TO') && amount < 0) {
-    return 'Assistance';
-  }
-  
-  // 6. YOCO payments - These are vendor payments, let AI determine type
-  // (Could be food, retail, services)
-  
-  return null; // Let AI handle
-}
-```
+- Add a `view` state: `useState<'budget' | 'grocery'>('budget')`
+- Import grocery dependencies: `useGroceryCart`, `SearchTab`, `MyListTab`, `formatPriceCents`, `ShoppingCart`, `ChevronRight`, `ArrowLeft`, `Search`
+- **When `view === 'budget'`**: render everything as-is, plus a new **"Grocery Budget" navigation card**:
+  - **Desktop**: placed after the "Calculation Explanation" card (line 456) inside the right-column `div`. When `showBalanceCalculations` is false, placed as a full-width card below the grid.
+  - **Mobile**: placed as the last card before the `AddBudgetItemDialog` (before line 270)
+  - Card style: `rounded-2xl border border-foreground cursor-pointer`, `box-shadow: 4px 4px 0px #000`, with ShoppingCart icon, title, description, and ChevronRight arrow
+- **When `view === 'grocery'`**: render the full grocery UI:
+  - Back header: ArrowLeft + "Back to Budget" button
+  - Tab buttons (Search / My List) with item count badge
+  - SearchTab and MyListTab components
+  - Sticky total footer
 
-**Update AI prompt (~line 406):**
+#### 2. `src/App.tsx`
 
-```text
-Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Assistance, Fees, Salary, Other Income, Other
+- Add `import { Navigate } from "react-router-dom"`
+- Change line 79-85 from rendering `<GroceryBudget />` to: `<Navigate to="/budget" replace />`
+- Remove the `GroceryBudget` import (line 22)
 
-Rules:
-- BP, Shell, Engen, Sasol, Caltex = Transport (fuel stations)
-- Netflix, Spotify, DSTV, subscriptions = Bills
-- YOCO * = vendor payment, categorize by likely vendor type (food vendor, retail, etc.)
-- Money paid to individuals = Assistance (unless it's a known business)
-- FEE: or withdrawal fee = Fees
-```
+#### 3. `src/components/layout/Navbar.tsx`
 
-**Update AI_TO_DB_CATEGORY_MAP (~line 456):**
-
-Add these mappings:
-
-```text
-'fees': ['Fees', 'Bank Fees'],
-'fee': ['Fees', 'Bank Fees'],
-'assistance': ['Assistance/Lending', 'Assistance', 'Lending'],
-'lending': ['Assistance/Lending', 'Lending'],
-'other income': ['Other Income', 'Income', 'Other'],
-```
-
-**Integrate pre-categorization (before line 147):**
-
-Before calling AI, check smart detection:
-
-```text
-// Before: categoryName = await categorizeMerchantWithAI(...)
-// After:
-const smartCategory = preCategorizeSmart(transaction.description, transaction.amount);
-if (smartCategory) {
-  categoryName = smartCategory;
-  console.log(`✓ Smart detection: ${merchantName} → ${categoryName}`);
-} else {
-  categoryName = await categorizeMerchantWithAI(merchantName, transaction.description);
-  aiCallsCount++;
-}
-```
-
----
-
-### Files Modified
-
-| File | Change |
-|------|--------|
-| `src/lib/transactionCategories.ts` | Add fuel brands, subscription services, fees keywords |
-| `supabase/functions/categorize-transactions/index.ts` | Add smart pre-categorization, update AI prompt, expand mappings |
-
----
-
-### Expected Results
-
-| Description | Before | After |
-|-------------|--------|-------|
-| `C*BP RUSLOO` | Uncategorized | Transportation & Fuel |
-| `CLAUDE PAYSHAP PAY` | Uncategorized | Bills & Subscriptions |
-| `PULE PAYSHAP PAYMENT TO` | Uncategorized | Assistance/Lending |
-| `HLONI TICKETS PAYSHAP PAYMENT FROM` (positive) | Uncategorized | Other Income |
-| `IB TRANSFER FROM` (positive) | Uncategorized | Other Income |
-| `YOCO *ZODWA` | Uncategorized | Dining (AI determines) |
-| `YOCO *LIMIT` | Uncategorized | Dining/Shopping (AI determines) |
-| `FEE: PAYSHAP PAYMENT` | Uncategorized | Fees |
-| `SASOL BOKSBURG` | Uncategorized | Transportation & Fuel |
-
----
-
-### Benefits
-
-- **Reduces AI costs** - Common patterns detected without calling AI
-- **More accurate** - Amount-based income detection is reliable
-- **Context-aware** - Uses PayShap direction (TO vs FROM) for categorization
-- **User-friendly** - Categories match user expectations
+- Remove line 80: `{ name: t('nav.groceryBudget'), href: "/grocery-budget", icon: ShoppingCart }`
+- Remove the `ShoppingCart` import from lucide-react (line 4) since it's no longer used in this file
 
