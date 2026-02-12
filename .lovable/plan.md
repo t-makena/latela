@@ -1,41 +1,40 @@
 
 
-# Fix: Savings Balance Using Wrong Available Balance Source
+# Fix: Savings Balance Chart Should Not Assume Previous Saved Amounts
 
 ## Problem
-The Savings Balance chart and status section is calculating "Available Balance" from transaction net totals (`calculateFinancialMetrics(transactions).netBalance`) instead of using the actual sum of account balances. This is a recurring regression.
+The chart spreads the current `totalSaved` (sum of all `goal.amountSaved`) backwards across past months using a `progressRatio`. If you only saved R5,000 this month, the chart incorrectly shows R833 in month 1, R1,667 in month 2, etc., instead of showing R0 for all past months and R5,000 only for the current month.
 
 ## Root Cause
-In `src/hooks/useSavingsAdjustment.ts` (line 68):
+In `GoalsSavingsBalanceChart.tsx`, lines 76-91:
 ```typescript
-const { netBalance } = calculateFinancialMetrics(transactions);
+const progressRatio = monthsFromStart / monthCount;
+const actualSavingsAtPoint = totalSaved * progressRatio;
 ```
-This derives the balance from transaction math, which is inaccurate. The correct source is the sum of `accounts.current_balance` via the `useAccounts` hook.
+This linear interpolation assumes savings were accumulated evenly over the entire period, which is incorrect.
 
 ## Fix
 
-**File: `src/hooks/useSavingsAdjustment.ts`**
+**File: `src/components/goals/GoalsSavingsBalanceChart.tsx`**
 
-1. Import `useAccounts` instead of relying on `useTransactions` for balance
-2. Replace the `netBalance` calculation with the sum of actual account balances:
+Replace the interpolation logic with point-in-time data:
+- **Past months**: Show R0 savings (we have no historical savings snapshots, so we cannot assume any savings existed)
+- **Current month**: Show the actual `totalSaved` value (sum of `goal.amountSaved`)
 
+The updated logic for the savings line:
 ```typescript
-// Before:
-const { transactions } = useTransactions();
-const { netBalance } = calculateFinancialMetrics(transactions);
-const availableBalance = netBalance;
-
-// After:
-const { accounts } = useAccounts();
-const availableBalance = useMemo(() => {
-  return accounts.reduce((sum, account) => sum + account.balance, 0);
-}, [accounts]);
+let savingsBalance: number;
+if (isCurrentMonth) {
+  savingsBalance = totalSaved;
+} else {
+  savingsBalance = 0;
+}
 ```
 
-3. Remove the now-unused `useTransactions` import and `calculateFinancialMetrics` import (if no longer needed elsewhere in the hook)
+This is the simplest correct approach given there's no historical savings snapshot data. The chart will show R0 for all past months and the real total saved for the current month, accurately reflecting what was actually saved.
 
-## Technical Details
-- The `useAccounts` hook already converts `current_balance` from cents to Rands (line 34 of `useAccounts.ts`)
-- This aligns with the established data model: Available Balance = sum of `accounts.current_balance`
-- The `generateChartData` function in the same hook also uses `availableBalance` and will automatically use the corrected value
+## Scope
+- One file changed: `src/components/goals/GoalsSavingsBalanceChart.tsx`
+- Only the `savingsBalance` calculation within the `chartData` memo changes
+- No hook or data model changes needed
 
