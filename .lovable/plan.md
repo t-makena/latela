@@ -1,41 +1,42 @@
 
-# Fix Legend Spacing and Horizontal Score Card Layout
+# Use Week-Based Labels for 1M Period in Balance and Savings Balance Cards
 
-## 1. Savings Balance Chart — More legend spacing
-**File: `src/components/goals/GoalsSavingsBalanceChart.tsx`**
+## What Changes
 
-Increase the bottom margin on the `<LineChart>` from `20` to `40` to push the legend further below the chart lines, especially visible in longer time periods.
+Both the **Balance** card (in `FinancialInsightContent.tsx`) and the **Savings Balance** card (in `GoalsSavingsBalanceChart.tsx`) currently use incorrect/inconsistent labeling for the 1M period. The Spending Trend chart already uses the `dateFilterUtils` helper which produces labels like "Jan W3", "Jan W4", "Feb W1" -- these two cards need to match that format.
 
-```tsx
-<LineChart data={chartData} margin={{ bottom: 40 }}>
-```
+### 1. Balance card (`FinancialInsightContent.tsx`)
 
-## 2. Horizontal LatelaScoreCard — Fix score circle and risk alignment
-**File: `src/components/budget/LatelaScoreCard.tsx`**
+**Current behavior**: 1M period uses static labels `"Week 1", "Week 2", "Week 3", "Week 4"` and groups transactions by `Math.ceil(date.getDate() / 7)`.
 
-Current issue: The score circle uses `border-6` which isn't a standard Tailwind class (should be `border-[6px]`), and the risk status block sits too high relative to the right column's bottom metrics.
+**New behavior**: Use `get1MDateRange()` and `get1MLabels()` from `dateFilterUtils` to generate calendar-anchored week labels (e.g., "Jan W3", "Jan W4", "Feb W1"). Group transactions into those actual calendar weeks using `eachWeekOfInterval`.
 
-Changes to the horizontal layout (lines 118-183):
+Changes in `getNetBalanceData()` function (around lines 71-139):
+- Import and use `get1MDateRange()` to get the actual 4-week date range
+- Replace the static `"Week 1"..."Week 4"` labels with dynamic labels from `get1MLabels()`
+- Update the transaction grouping logic for `1M` to match transactions to actual calendar week intervals (same approach as `EnhancedSpendingChart`)
 
-- **Score circle**: Change `border-6` to `border-[6px]` to ensure the border renders properly as a visible circle outline.
-- **Restructure left column**: Keep the score circle at top with "out of 100" label, but move the risk status block further down by adding top margin (`mt-auto` or explicit `mt-4`) so it aligns vertically with the bottom row of metrics (Avg Daily Spend / Risk Ratio) in the middle column.
-- **Grid alignment**: Change the grid from `items-start` to `items-stretch` or keep `items-start` but use flexbox spacing within the left column to push risk status to the bottom.
+### 2. Savings Balance card (`GoalsSavingsBalanceChart.tsx`)
 
-Specifically:
-```tsx
-<div className="flex flex-col items-center gap-3 justify-between h-full">
-  {/* Score circle + label at top */}
-  <div className="flex flex-col items-center gap-1">
-    <div className="flex items-center justify-center w-24 h-24 rounded-full border-[6px] ...">
-      <span>{totalScore}</span>
-    </div>
-    <p className="text-xs ...">out of 100</p>
-  </div>
-  {/* Risk status pushed to bottom */}
-  <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/50 w-full">
-    ...
-  </div>
-</div>
-```
+**Current behavior**: 1M period maps to `monthCount = 1`, generating just 1 data point (current month name).
 
-This ensures the score circle border renders correctly, and the risk status aligns with the bottom metrics row.
+**New behavior**: When `selectedPeriod === '1M'`, generate 4 weekly data points using `eachWeekOfInterval` from `date-fns` and label them "Jan W3", "Jan W4", etc. -- matching the Spending Trend format.
+
+Changes in `chartData` useMemo (around lines 43-100):
+- Add a special branch for `'1M'` that generates weekly data points instead of monthly
+- Use `get1MDateRange()` from `dateFilterUtils` to get the 4-week window
+- Use `eachWeekOfInterval` to iterate over each week
+- Label each week as `"MMM W{n}"` (e.g., "Feb W1") matching the existing `get1MLabels()` format
+- For each week, calculate the expected and savings values using the same logic but scoped to that week's date range
+
+## Technical Details
+
+### Files to edit:
+1. **`src/components/financial-insight/FinancialInsightContent.tsx`** -- Update `getNetBalanceData()` to use calendar-anchored week labels for 1M
+2. **`src/components/goals/GoalsSavingsBalanceChart.tsx`** -- Update `chartData` useMemo to generate weekly data points for 1M
+
+### New imports needed:
+- Both files: `import { get1MDateRange, get1MLabels } from "@/lib/dateFilterUtils"` (or use inline `eachWeekOfInterval` + `format` from `date-fns`)
+- The `dateFilterUtils` already has `get1MLabels` which produces the correct format
+
+### No new dependencies required.
