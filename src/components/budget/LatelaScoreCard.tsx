@@ -121,13 +121,13 @@ export function LatelaScoreCard({ compact = false, horizontal = false }: LatelaS
         <CardContent className="pt-6 pb-4">
           <div className="grid grid-cols-3 gap-6 items-stretch">
             {/* Left: Score circle + Risk */}
-            <div className="flex flex-col items-center justify-between h-full">
+            <div className="flex flex-col items-center justify-center h-full gap-3">
               <div className="flex flex-col items-center gap-1">
                 <div className={cn(
-                  "flex items-center justify-center w-24 h-24 rounded-full border-[6px]",
+                  "flex items-center justify-center w-32 h-32 rounded-full border-[6px]",
                   getScoreBorderColor(totalScore)
                 )}>
-                  <span className={cn("text-3xl font-black", getScoreColor(totalScore))}>
+                  <span className={cn("text-5xl font-black", getScoreColor(totalScore))}>
                     {totalScore}
                   </span>
                 </div>
