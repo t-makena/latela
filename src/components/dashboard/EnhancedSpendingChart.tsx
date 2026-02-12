@@ -84,6 +84,12 @@ export const EnhancedSpendingChart = ({
     return chartData;
   };
 
+  const chartData = getChartData();
+  const allTotals = chartData.map((d: any) => d.total || d.amount || 0);
+  const minSpend = allTotals.length ? Math.min(...allTotals) : 0;
+  const maxSpend = allTotals.length ? Math.max(...allTotals) : 0;
+  const spendTicks = minSpend === maxSpend ? [minSpend] : [minSpend, maxSpend];
+
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
       const weekData = data.activePayload[0].payload;
@@ -152,25 +158,22 @@ export const EnhancedSpendingChart = ({
         <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
-            <BarChart data={getChartData()} onClick={handleBarClick} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
+            <BarChart data={chartData} onClick={handleBarClick} margin={{ left: 0, right: 0 }}>
               <XAxis 
                 dataKey={selectedPeriod === '1Y' ? "month" : selectedPeriod === '1W' || 
                   (selectedPeriod === 'custom' && xAxisLabels.length <= 14) ? "day" : "week"}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }}
-                angle={isMobile ? -45 : 0}
-                textAnchor={isMobile ? "end" : "middle"}
-                height={isMobile ? 60 : 30}
-                interval={isMobile ? "preserveStartEnd" : 0}
+                hide={true}
               />
               <YAxis 
-                label={isMobile ? undefined : { value: 'Amount Spent', angle: -90, position: 'insideLeft', style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 } }}
+                hide={false}
+                ticks={spendTicks}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }}
-                width={isMobile ? 45 : 60}
+                tickFormatter={(value: number) => `R${value.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`}
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={11}
+                width={70}
+                domain={[minSpend, maxSpend]}
               />
               <Tooltip 
                 cursor={false}
@@ -446,19 +449,18 @@ export const EnhancedSpendingChart = ({
               />
             </BarChart>
           ) : (
-            <LineChart data={getChartData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="month"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-              />
+            <LineChart data={chartData}>
+              <XAxis dataKey="month" hide={true} />
               <YAxis 
-                label={{ value: 'Amount Spent per Month', angle: -90, position: 'insideLeft', style: { fill: 'hsl(var(--muted-foreground))', fontSize: 12 } }}
+                hide={false}
+                ticks={spendTicks}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                tickFormatter={(value: number) => `R${value.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`}
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={11}
+                width={70}
+                domain={[minSpend, maxSpend]}
               />
               <Tooltip formatter={(value, name) => [
                 `${formatCurrency(value as number)}`, 
