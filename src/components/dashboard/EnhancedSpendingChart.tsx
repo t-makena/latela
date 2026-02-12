@@ -158,7 +158,7 @@ export const EnhancedSpendingChart = ({
         <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
-            <BarChart data={chartData} onClick={handleBarClick} margin={{ left: 0, right: 0 }}>
+            <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 40, left: 0, right: 0, bottom: 0 }}>
               <XAxis 
                 dataKey={selectedPeriod === '1Y' ? "month" : selectedPeriod === '1W' || 
                   (selectedPeriod === 'custom' && xAxisLabels.length <= 14) ? "day" : "week"}
@@ -449,7 +449,7 @@ export const EnhancedSpendingChart = ({
               />
             </BarChart>
           ) : (
-            <LineChart data={chartData}>
+            <LineChart data={chartData} margin={{ top: 40, left: 0, right: 0, bottom: 0 }}>
               <XAxis dataKey="month" hide={true} />
               <YAxis 
                 hide={false}

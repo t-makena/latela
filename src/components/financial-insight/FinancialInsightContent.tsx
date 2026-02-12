@@ -11,7 +11,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell
+  Cell,
+  Legend
 } from "recharts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useGoals } from "@/hooks/useGoals";
@@ -477,7 +478,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               const balanceTicks = minBalance === maxBalance ? [minBalance] : [minBalance, maxBalance];
               return (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={netBalanceData} margin={{ left: 0, right: 0 }}>
+              <LineChart data={netBalanceData} margin={{ top: 40, left: 0, right: 0, bottom: 5 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis 
                   hide={false}
@@ -515,9 +516,11 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
+                <Legend verticalAlign="bottom" height={24} iconType="line" formatter={(value: string) => value === 'netBalance' ? 'Available Balance' : 'Savings Balance'} />
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
+                  name="Available Balance"
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
                   dot={{ fill: 'hsl(var(--primary))', r: 4 }}
@@ -526,6 +529,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 <Line 
                   type="monotone" 
                   dataKey="budgetBalance" 
+                  name="Savings Balance"
                   stroke="#10B981" 
                   strokeWidth={2}
                   dot={{ fill: '#10B981', r: 4 }}
@@ -564,7 +568,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               const balanceTicks = minBalance === maxBalance ? [minBalance] : [minBalance, maxBalance];
               return (
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-              <LineChart data={netBalanceData} margin={{ left: 0, right: 0 }}>
+              <LineChart data={netBalanceData} margin={{ top: 40, left: 0, right: 0, bottom: 5 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis 
                   hide={false}
@@ -602,9 +606,11 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
+                <Legend verticalAlign="bottom" height={24} iconType="line" formatter={(value: string) => value === 'netBalance' ? 'Available Balance' : 'Savings Balance'} />
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
+                  name="Available Balance"
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
                   dot={{ fill: 'hsl(var(--primary))', r: 4 }}
@@ -613,6 +619,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 <Line 
                   type="monotone" 
                   dataKey="budgetBalance" 
+                  name="Savings Balance"
                   stroke="#10B981" 
                   strokeWidth={2}
                   dot={{ fill: '#10B981', r: 4 }}
