@@ -1,0 +1,39 @@
+{
+  "name": "latela-scrapers",
+  "version": "1.0.0",
+  "description": "AI-powered price scrapers for South African grocery stores",
+  "main": "index.ts",
+  "scripts": {
+    "test": "tsx test.ts",
+    "test:single": "tsx test.ts single",
+    "test:multiple": "tsx test.ts multiple",
+    "test:url": "tsx test.ts url",
+    "build": "tsc",
+    "dev": "tsx --watch test.ts"
+  },
+  "keywords": [
+    "scraping",
+    "ai",
+    "claude",
+    "anthropic",
+    "south-africa",
+    "grocery",
+    "prices"
+  ],
+  "author": "Latela Team",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "dotenv": "^16.4.7",
+    "puppeteer": "^23.11.1",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

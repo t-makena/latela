@@ -1,0 +1,537 @@
+{
+  "pnp:fresh vegetables": {
+    "url": "PnP/Fresh Vegetables",
+    "lastScrape": "2026-02-07T19:44:39.880Z",
+    "pageHash": "565b9b100b481edc",
+    "productCount": 4,
+    "products": {
+      "e49650ca7fb7d0f9": {
+        "product": {
+          "code": "pnp_1770493474501_qwaokf",
+          "name": "PnP English Cucumber",
+          "price_cents": 1399,
+          "category": "Fresh Vegetables",
+          "subcategory": "Fresh Vegetables",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": true,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:44:34.501Z",
+          "retailer": "pnp",
+          "unit_size": "",
+          "brand": "PnP"
+        },
+        "hash": "2d164d1dbf40",
+        "lastSeen": "2026-02-07T19:44:39.880Z",
+        "priceHistory": [
+          {
+            "price_cents": 1399,
+            "date": "2026-02-07T19:44:39.880Z"
+          }
+        ]
+      },
+      "c6185dd6d1737935": {
+        "product": {
+          "code": "pnp_1770493474503_10ax99",
+          "name": "PnP Sweetcorn 4 Pack",
+          "price_cents": 1599,
+          "category": "Fresh Vegetables",
+          "subcategory": "Fresh Vegetables",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:44:34.503Z",
+          "retailer": "pnp",
+          "unit_size": "4 Pack",
+          "brand": "PnP"
+        },
+        "hash": "e7f6ebbc0fe4",
+        "lastSeen": "2026-02-07T19:44:39.880Z",
+        "priceHistory": [
+          {
+            "price_cents": 1599,
+            "date": "2026-02-07T19:44:39.880Z"
+          }
+        ]
+      },
+      "6e951b62e3fd85bd": {
+        "product": {
+          "code": "pnp_1770493474503_a0rj50",
+          "name": "PnP Mini Cucumber",
+          "price_cents": 2199,
+          "category": "Fresh Vegetables",
+          "subcategory": "Fresh Vegetables",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:44:34.503Z",
+          "retailer": "pnp",
+          "unit_size": "",
+          "brand": "PnP"
+        },
+        "hash": "725ed253d71a",
+        "lastSeen": "2026-02-07T19:44:39.880Z",
+        "priceHistory": [
+          {
+            "price_cents": 2199,
+            "date": "2026-02-07T19:44:39.880Z"
+          }
+        ]
+      },
+      "b7d348738e69c189": {
+        "product": {
+          "code": "pnp_1770493474503_2vvchw",
+          "name": "PnP Onions 2kg",
+          "price_cents": 3299,
+          "category": "Fresh Vegetables",
+          "subcategory": "Fresh Vegetables",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:44:34.503Z",
+          "retailer": "pnp",
+          "unit_size": "2kg",
+          "brand": "PnP"
+        },
+        "hash": "164b6c0bcec6",
+        "lastSeen": "2026-02-07T19:44:39.880Z",
+        "priceHistory": [
+          {
+            "price_cents": 3299,
+            "date": "2026-02-07T19:44:39.880Z"
+          }
+        ]
+      }
+    }
+  },
+  "pnp:fresh poultry": {
+    "url": "PnP/Fresh Poultry",
+    "lastScrape": "2026-02-07T19:46:07.362Z",
+    "pageHash": "e3ad86a079acc2d9",
+    "productCount": 4,
+    "products": {
+      "07a4e556c8340c51": {
+        "product": {
+          "code": "pnp_1770493561158_4flkma",
+          "name": "PnP Chicken 4 Thighs & 4 Drumsticks",
+          "price_cents": 7299,
+          "category": "Fresh Poultry",
+          "subcategory": "Fresh Poultry",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:46:01.158Z",
+          "retailer": "pnp",
+          "unit_size": "",
+          "brand": "PnP"
+        },
+        "hash": "0631a4d18376",
+        "lastSeen": "2026-02-07T19:46:07.362Z",
+        "priceHistory": [
+          {
+            "price_cents": 7299,
+            "date": "2026-02-07T19:46:07.362Z"
+          }
+        ]
+      },
+      "54e0cba3b7e635fa": {
+        "product": {
+          "code": "pnp_1770493561158_3c1r4w",
+          "name": "PnP Chicken Stir Fry 400g",
+          "price_cents": 3499,
+          "category": "Fresh Poultry",
+          "subcategory": "Fresh Poultry",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:46:01.158Z",
+          "retailer": "pnp",
+          "unit_size": "400g",
+          "brand": "PnP"
+        },
+        "hash": "53004cea2eea",
+        "lastSeen": "2026-02-07T19:46:07.362Z",
+        "priceHistory": [
+          {
+            "price_cents": 3499,
+            "date": "2026-02-07T19:46:07.362Z"
+          }
+        ]
+      },
+      "1d18d5c537063675": {
+        "product": {
+          "code": "pnp_1770493561158_zd9mrf",
+          "name": "PnP Chicken Wings 12 Pack",
+          "price_cents": 3499,
+          "category": "Fresh Poultry",
+          "subcategory": "Fresh Poultry",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": true,
+          "original_price_cents": 4999,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:46:01.158Z",
+          "retailer": "pnp",
+          "unit_size": "12 Pack",
+          "brand": "PnP"
+        },
+        "hash": "96f552a0e8ab",
+        "lastSeen": "2026-02-07T19:46:07.362Z",
+        "priceHistory": [
+          {
+            "price_cents": 3499,
+            "date": "2026-02-07T19:46:07.362Z"
+          }
+        ]
+      },
+      "b6f4608b4d7996c6": {
+        "product": {
+          "code": "pnp_1770493561158_t4f0xf",
+          "name": "PnP Live Well Skinless Chicken Breast 4 Pack",
+          "price_cents": 7999,
+          "category": "Fresh Poultry",
+          "subcategory": "Fresh Poultry",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:46:01.158Z",
+          "retailer": "pnp",
+          "unit_size": "4 Pack",
+          "brand": "PnP Live Well"
+        },
+        "hash": "2742598e85c9",
+        "lastSeen": "2026-02-07T19:46:07.362Z",
+        "priceHistory": [
+          {
+            "price_cents": 7999,
+            "date": "2026-02-07T19:46:07.362Z"
+          }
+        ]
+      }
+    }
+  },
+  "pnp:milk, dairy & eggs": {
+    "url": "PnP/Milk, Dairy & Eggs",
+    "lastScrape": "2026-02-07T19:46:49.891Z",
+    "pageHash": "963cc39292ddfeea",
+    "productCount": 4,
+    "products": {
+      "b1cfe4458bff72fa": {
+        "product": {
+          "code": "pnp_1770493606000_0na9ss",
+          "name": "PnP UHT Full Cream Milk 6 x 1L",
+          "price_cents": 9499,
+          "category": "Milk, Dairy & Eggs",
+          "subcategory": "Milk, Dairy & Eggs",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": true,
+          "original_price_cents": 9899,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:46:46.000Z",
+          "retailer": "pnp",
+          "unit_size": "6 x 1L",
+          "brand": "PnP"
+        },
+        "hash": "8c7db059d2de",
+        "lastSeen": "2026-02-07T19:46:49.891Z",
+        "priceHistory": [
+          {
+            "price_cents": 9499,
+            "date": "2026-02-07T19:46:49.891Z"
+          }
+        ]
+      },
+      "ca065129a49ce75c": {
+        "product": {
+          "code": "pnp_1770493606000_qkoy54",
+          "name": "PnP Live Well Low Fat Long Life Milk 6 x 1L",
+          "price_cents": 9499,
+          "category": "Milk, Dairy & Eggs",
+          "subcategory": "Milk, Dairy & Eggs",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": true,
+          "original_price_cents": 9899,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:46:46.000Z",
+          "retailer": "pnp",
+          "unit_size": "6 x 1L",
+          "brand": "PnP"
+        },
+        "hash": "508d0a5ca8f4",
+        "lastSeen": "2026-02-07T19:46:49.891Z",
+        "priceHistory": [
+          {
+            "price_cents": 9499,
+            "date": "2026-02-07T19:46:49.891Z"
+          }
+        ]
+      },
+      "adbc183d6633bcf4": {
+        "product": {
+          "code": "pnp_1770493606000_265h6h",
+          "name": "Flora Light 40% Fat Spread 1kg",
+          "price_cents": 6999,
+          "category": "Milk, Dairy & Eggs",
+          "subcategory": "Milk, Dairy & Eggs",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:46:46.000Z",
+          "retailer": "pnp",
+          "unit_size": "1kg",
+          "brand": "Flora"
+        },
+        "hash": "434f4d8f13ea",
+        "lastSeen": "2026-02-07T19:46:49.891Z",
+        "priceHistory": [
+          {
+            "price_cents": 6999,
+            "date": "2026-02-07T19:46:49.891Z"
+          }
+        ]
+      },
+      "be1f4e250b7380cc": {
+        "product": {
+          "code": "pnp_1770493606000_vzhj0v",
+          "name": "Parmalat Sliced Processed Gouda Cheese 200g",
+          "price_cents": 4499,
+          "category": "Milk, Dairy & Eggs",
+          "subcategory": "Milk, Dairy & Eggs",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:46:46.000Z",
+          "retailer": "pnp",
+          "unit_size": "200g",
+          "brand": "Parmalat"
+        },
+        "hash": "b34d8f038f62",
+        "lastSeen": "2026-02-07T19:46:49.891Z",
+        "priceHistory": [
+          {
+            "price_cents": 4499,
+            "date": "2026-02-07T19:46:49.891Z"
+          }
+        ]
+      }
+    }
+  },
+  "pnp:bakery": {
+    "url": "PnP/Bakery",
+    "lastScrape": "2026-02-07T19:47:30.804Z",
+    "pageHash": "6fe0e25b4acff41d",
+    "productCount": 8,
+    "products": {
+      "0b285e9390e2fa27": {
+        "product": {
+          "code": "pnp_1770493628764_psu8bw",
+          "name": "Blue Ribbon Classic White Sliced Bread 700g",
+          "price_cents": 1599,
+          "category": "Bakery",
+          "subcategory": "Bakery",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:47:08.764Z",
+          "retailer": "pnp",
+          "unit_size": "700g",
+          "brand": "Blue Ribbon"
+        },
+        "hash": "4f2e0a10179a",
+        "lastSeen": "2026-02-07T19:47:30.803Z",
+        "priceHistory": [
+          {
+            "price_cents": 1599,
+            "date": "2026-02-07T19:47:30.803Z"
+          }
+        ]
+      },
+      "e4c8f33e7fa76169": {
+        "product": {
+          "code": "pnp_1770493628764_vfuuhu",
+          "name": "Albany Superior Sliced Brown Bread 700g",
+          "price_cents": 1599,
+          "category": "Bakery",
+          "subcategory": "Bakery",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:47:08.764Z",
+          "retailer": "pnp",
+          "unit_size": "700g",
+          "brand": "Albany"
+        },
+        "hash": "17f4aa19442c",
+        "lastSeen": "2026-02-07T19:47:30.804Z",
+        "priceHistory": [
+          {
+            "price_cents": 1599,
+            "date": "2026-02-07T19:47:30.804Z"
+          }
+        ]
+      },
+      "740769e1e619edfd": {
+        "product": {
+          "code": "pnp_1770493628764_g5tnad",
+          "name": "PnP Hotdog Rolls 6 Pack",
+          "price_cents": 1695,
+          "category": "Bakery",
+          "subcategory": "Bakery",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": true,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:47:08.764Z",
+          "retailer": "pnp",
+          "unit_size": "6 Pack",
+          "brand": "PnP"
+        },
+        "hash": "0c277dd39db7",
+        "lastSeen": "2026-02-07T19:47:30.804Z",
+        "priceHistory": [
+          {
+            "price_cents": 1695,
+            "date": "2026-02-07T19:47:30.804Z"
+          }
+        ]
+      },
+      "3d04768a328c6d05": {
+        "product": {
+          "code": "pnp_1770493628764_ue1r3d",
+          "name": "PnP Dessert Topped Buns 6 Pack",
+          "price_cents": 1695,
+          "category": "Bakery",
+          "subcategory": "Bakery",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": true,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:47:08.764Z",
+          "retailer": "pnp",
+          "unit_size": "6 Pack",
+          "brand": "PnP"
+        },
+        "hash": "94d689cded8a",
+        "lastSeen": "2026-02-07T19:47:30.804Z",
+        "priceHistory": [
+          {
+            "price_cents": 1695,
+            "date": "2026-02-07T19:47:30.804Z"
+          }
+        ]
+      },
+      "e2d5b1a655f17151": {
+        "product": {
+          "code": "pnp_1770493645506_xowqeb",
+          "name": "PnP Ciabatta Bread 400g",
+          "price_cents": 1499,
+          "category": "Bakery",
+          "subcategory": "Bakery",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:47:25.506Z",
+          "retailer": "pnp",
+          "unit_size": "400g",
+          "brand": "PnP"
+        },
+        "hash": "ec44dc90354f",
+        "lastSeen": "2026-02-07T19:47:30.804Z",
+        "priceHistory": [
+          {
+            "price_cents": 1499,
+            "date": "2026-02-07T19:47:30.804Z"
+          }
+        ]
+      },
+      "a8d6b668eaad5f3b": {
+        "product": {
+          "code": "pnp_1770493645506_n2ncp4",
+          "name": "PnP Bakehouse Lemon & Poppyseed Muffins 4 Pack",
+          "price_cents": 3999,
+          "category": "Bakery",
+          "subcategory": "Bakery",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:47:25.506Z",
+          "retailer": "pnp",
+          "unit_size": "4 Pack",
+          "brand": "PnP"
+        },
+        "hash": "69621d74ddab",
+        "lastSeen": "2026-02-07T19:47:30.804Z",
+        "priceHistory": [
+          {
+            "price_cents": 3999,
+            "date": "2026-02-07T19:47:30.804Z"
+          }
+        ]
+      },
+      "0c6356c65c5dd972": {
+        "product": {
+          "code": "pnp_1770493645506_kdm5bf",
+          "name": "PnP Assorted Muffins 12 Pack",
+          "price_cents": 7499,
+          "category": "Bakery",
+          "subcategory": "Bakery",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:47:25.506Z",
+          "retailer": "pnp",
+          "unit_size": "12 Pack",
+          "brand": "PnP"
+        },
+        "hash": "55a710488ac0",
+        "lastSeen": "2026-02-07T19:47:30.804Z",
+        "priceHistory": [
+          {
+            "price_cents": 7499,
+            "date": "2026-02-07T19:47:30.804Z"
+          }
+        ]
+      },
+      "f643f277e20cfef3": {
+        "product": {
+          "code": "pnp_1770493645506_i1wnbt",
+          "name": "PnP Caramel Vanilla Gateaux Cake",
+          "price_cents": 8999,
+          "category": "Bakery",
+          "subcategory": "Bakery",
+          "image_url": "",
+          "product_url": "",
+          "on_sale": false,
+          "in_stock": true,
+          "scraped_at": "2026-02-07T19:47:25.506Z",
+          "retailer": "pnp",
+          "unit_size": "",
+          "brand": "PnP"
+        },
+        "hash": "1445a6899f81",
+        "lastSeen": "2026-02-07T19:47:30.804Z",
+        "priceHistory": [
+          {
+            "price_cents": 8999,
+            "date": "2026-02-07T19:47:30.804Z"
+          }
+        ]
+      }
+    }
+  }
+}
