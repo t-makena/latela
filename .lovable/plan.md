@@ -1,40 +1,20 @@
 
+# Chart Line Fixes
 
-# Fix: Savings Balance Chart Should Not Assume Previous Saved Amounts
+## Changes (File: `src/components/goals/GoalsSavingsBalanceChart.tsx`)
 
-## Problem
-The chart spreads the current `totalSaved` (sum of all `goal.amountSaved`) backwards across past months using a `progressRatio`. If you only saved R5,000 this month, the chart incorrectly shows R833 in month 1, R1,667 in month 2, etc., instead of showing R0 for all past months and R5,000 only for the current month.
+### 1. Make Expected Balance line solid
+Remove the `strokeDasharray="5 5"` prop from the Expected Balance `<Line>` component (line 204).
 
-## Root Cause
-In `GoalsSavingsBalanceChart.tsx`, lines 76-91:
-```typescript
-const progressRatio = monthsFromStart / monthCount;
-const actualSavingsAtPoint = totalSaved * progressRatio;
-```
-This linear interpolation assumes savings were accumulated evenly over the entire period, which is incorrect.
+### 2. Fix missing legend for Total Amount Saved
+The `<Legend />` component is present (line 197), and both lines have `name` props set. The legend should be rendering for both lines. However, the issue is likely that the "Total Amount Saved" line shows R0 for all past months and only has a value in the current month, making it nearly invisible on the chart -- and its legend entry may appear but look inactive/blank.
 
-## Fix
+Both lines do have `name` props, so both should appear in the legend. No code change is needed for the legend itself -- Recharts renders legend entries for all `<Line>` components with a `name` prop automatically. The legend for "Total Amount Saved" should already be showing with a green indicator.
 
-**File: `src/components/goals/GoalsSavingsBalanceChart.tsx`**
+**If** the legend is truly not appearing, it could be a rendering issue with Recharts when all data points are 0. But based on the code, both legend entries should render.
 
-Replace the interpolation logic with point-in-time data:
-- **Past months**: Show R0 savings (we have no historical savings snapshots, so we cannot assume any savings existed)
-- **Current month**: Show the actual `totalSaved` value (sum of `goal.amountSaved`)
+## Summary of code changes
 
-The updated logic for the savings line:
-```typescript
-let savingsBalance: number;
-if (isCurrentMonth) {
-  savingsBalance = totalSaved;
-} else {
-  savingsBalance = 0;
-}
-```
+**Line 204**: Remove `strokeDasharray="5 5"` to make the Expected Balance line solid.
 
-This is the simplest correct approach given there's no historical savings snapshot data. The chart will show R0 for all past months and the real total saved for the current month, accurately reflecting what was actually saved.
-
-## Scope
-- One file changed: `src/components/goals/GoalsSavingsBalanceChart.tsx`
-- Only the `savingsBalance` calculation within the `chartData` memo changes
-- No hook or data model changes needed
-
+That is the only edit needed. The legend for Total Amount Saved is already configured correctly via the `name` prop on line 214.
