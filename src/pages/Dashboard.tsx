@@ -51,8 +51,8 @@ const Dashboard = () => {
       <MonthEndReviewDialog />
       {!isZeroBased && <FinancialSummary showExplanations={true} />}
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4 items-stretch">
-        <div className="lg:col-span-2 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4 items-start">
+        <div className="lg:col-span-2">
           <BudgetItemsCard />
         </div>
         {/* Latela Score Card for desktop */}
