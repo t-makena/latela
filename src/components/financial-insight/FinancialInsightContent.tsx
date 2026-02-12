@@ -20,7 +20,7 @@ import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown"
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
 import { EnhancedSpendingChart } from "@/components/dashboard/EnhancedSpendingChart";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
-import { getFilterDescription, DateRange, getDateRangeForFilter, getLabelsForFilter } from "@/lib/dateFilterUtils";
+import { getFilterDescription, DateRange, getDateRangeForFilter, getLabelsForFilter, get1MDateRange, get1MLabels } from "@/lib/dateFilterUtils";
 import { format, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, startOfDay, endOfDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,47 +79,57 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       })
       .sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
 
+    // Generate labels based on filter
+    const labels = getLabelsForFilter(netBalanceFilter, dateRange);
+
     if (filteredTransactions.length === 0) {
-      const labels = netBalanceFilter === '1W' ? 
-        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
-        netBalanceFilter === '1M' ? 
-          ["Week 1", "Week 2", "Week 3", "Week 4"] :
-          netBalanceFilter === '1Y' ?
-            ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
-            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       return labels.map((label) => ({ month: label, netBalance: 0, budgetBalance: 0 }));
     }
 
     // Group transactions by period and get the last balance for each period
     const balanceByPeriod: { [key: string]: number } = {};
     
-    filteredTransactions.forEach(t => {
-      const date = new Date(t.transaction_date);
-      let periodKey: string;
+    if (netBalanceFilter === '1M') {
+      // Use calendar-anchored weeks matching Spending Trend format
+      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
       
-      if (netBalanceFilter === '1W') {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        periodKey = days[date.getDay()];
-      } else if (netBalanceFilter === '1M') {
-        const weekNum = Math.ceil(date.getDate() / 7);
-        periodKey = `Week ${Math.min(weekNum, 4)}`;
-      } else {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        periodKey = months[date.getMonth()];
-      }
+      filteredTransactions.forEach(t => {
+        const date = new Date(t.transaction_date);
+        const matchingIndex = weeks.findIndex((weekStart, i) => {
+          const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : dateRange.to;
+          return date >= weekStart && date < weekEnd;
+        });
+        
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          balanceByPeriod[labels[matchingIndex]] = t.balance ?? 0;
+        }
+      });
+    } else if (netBalanceFilter === '1W') {
+      const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       
-      // Use the transaction's balance (last one for each period wins)
-      balanceByPeriod[periodKey] = t.balance ?? 0;
-    });
-
-    // Generate labels based on filter
-    const labels = netBalanceFilter === '1W' ? 
-      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : 
-      netBalanceFilter === '1M' ? 
-        ["Week 1", "Week 2", "Week 3", "Week 4"] :
-        netBalanceFilter === '1Y' ?
-          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
-          ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      filteredTransactions.forEach(t => {
+        const date = new Date(t.transaction_date);
+        const matchingIndex = days.findIndex(day => format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
+        
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          balanceByPeriod[labels[matchingIndex]] = t.balance ?? 0;
+        }
+      });
+    } else {
+      // 3M, 6M, 1Y - group by month
+      const months = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
+      
+      filteredTransactions.forEach(t => {
+        const date = new Date(t.transaction_date);
+        const matchingIndex = months.findIndex(monthStart => 
+          format(monthStart, 'yyyy-MM') === format(date, 'yyyy-MM')
+        );
+        
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          balanceByPeriod[labels[matchingIndex]] = t.balance ?? 0;
+        }
+      });
+    }
 
     // Calculate total amount saved from goals
     const totalAmountSaved = goals.reduce((total, goal) => total + goal.amountSaved, 0);
