@@ -74,16 +74,17 @@ export const AvatarPickerDialog = ({
 
       if (uploadError) throw uploadError;
 
-      // Get public URL with cache-busting timestamp
-      const { data: { publicUrl } } = supabase.storage
+      // Get signed URL (bucket is private)
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year expiry
 
-      // Add cache-busting timestamp to force browser to fetch new image
-      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
+      if (signedUrlError || !signedUrlData?.signedUrl) throw signedUrlError || new Error('Failed to get signed URL');
+
+      const avatarSignedUrl = signedUrlData.signedUrl;
 
       // Save immediately
-      await onSave('custom', undefined, urlWithCacheBust);
+      await onSave('custom', undefined, avatarSignedUrl);
       onOpenChange(false);
       toast.success('Avatar updated successfully!');
     } catch (error: any) {
