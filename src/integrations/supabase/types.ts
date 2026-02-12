@@ -135,36 +135,42 @@ export type Database = {
         Row: {
           amount: number
           amount_spent: number | null
+          auto_detected: boolean | null
           created_at: string
           days_per_week: number | null
           frequency: string
           id: string
           name: string
           parent_category_id: string | null
+          source_merchant_pattern: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           amount: number
           amount_spent?: number | null
+          auto_detected?: boolean | null
           created_at?: string
           days_per_week?: number | null
           frequency: string
           id?: string
           name: string
           parent_category_id?: string | null
+          source_merchant_pattern?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
           amount_spent?: number | null
+          auto_detected?: boolean | null
           created_at?: string
           days_per_week?: number | null
           frequency?: string
           id?: string
           name?: string
           parent_category_id?: string | null
+          source_merchant_pattern?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -380,6 +386,65 @@ export type Database = {
           },
         ]
       }
+      chat_conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           created_at: string | null
@@ -519,6 +584,8 @@ export type Database = {
         Row: {
           canonical_product_id: string | null
           id: string
+          on_sale: boolean | null
+          original_price_cents: number | null
           price_cents: number
           recorded_at: string | null
           store: string
@@ -526,6 +593,8 @@ export type Database = {
         Insert: {
           canonical_product_id?: string | null
           id?: string
+          on_sale?: boolean | null
+          original_price_cents?: number | null
           price_cents: number
           recorded_at?: string | null
           store: string
@@ -533,6 +602,8 @@ export type Database = {
         Update: {
           canonical_product_id?: string | null
           id?: string
+          on_sale?: boolean | null
+          original_price_cents?: number | null
           price_cents?: number
           recorded_at?: string | null
           store?: string
@@ -549,40 +620,70 @@ export type Database = {
       }
       product_offers: {
         Row: {
+          brand: string | null
           canonical_product_id: string | null
+          category: string | null
+          created_at: string | null
           id: string
+          image_url: string | null
           in_stock: boolean | null
+          last_seen_at: string | null
           on_sale: boolean | null
+          original_price_cents: number | null
           price_cents: number
+          product_name: string | null
           product_url: string | null
           promotion_text: string | null
           scraped_at: string | null
           store: string
+          store_product_code: string | null
+          subcategory: string | null
           unit_price_cents: number | null
+          updated_at: string | null
         }
         Insert: {
+          brand?: string | null
           canonical_product_id?: string | null
+          category?: string | null
+          created_at?: string | null
           id?: string
+          image_url?: string | null
           in_stock?: boolean | null
+          last_seen_at?: string | null
           on_sale?: boolean | null
+          original_price_cents?: number | null
           price_cents: number
+          product_name?: string | null
           product_url?: string | null
           promotion_text?: string | null
           scraped_at?: string | null
           store: string
+          store_product_code?: string | null
+          subcategory?: string | null
           unit_price_cents?: number | null
+          updated_at?: string | null
         }
         Update: {
+          brand?: string | null
           canonical_product_id?: string | null
+          category?: string | null
+          created_at?: string | null
           id?: string
+          image_url?: string | null
           in_stock?: boolean | null
+          last_seen_at?: string | null
           on_sale?: boolean | null
+          original_price_cents?: number | null
           price_cents?: number
+          product_name?: string | null
           product_url?: string | null
           promotion_text?: string | null
           scraped_at?: string | null
           store?: string
+          store_product_code?: string | null
+          subcategory?: string | null
           unit_price_cents?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -934,6 +1035,7 @@ export type Database = {
           default_account_id: string | null
           default_avatar_id: string | null
           display_name: string | null
+          email: string | null
           email_notifications: boolean | null
           email_verified: boolean | null
           financial_year_start: number | null
@@ -945,6 +1047,7 @@ export type Database = {
           last_active_at: string | null
           last_name: string | null
           marketing_consent: boolean | null
+          mobile: string | null
           needs_percentage: number
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
@@ -981,6 +1084,7 @@ export type Database = {
           default_account_id?: string | null
           default_avatar_id?: string | null
           display_name?: string | null
+          email?: string | null
           email_notifications?: boolean | null
           email_verified?: boolean | null
           financial_year_start?: number | null
@@ -992,6 +1096,7 @@ export type Database = {
           last_active_at?: string | null
           last_name?: string | null
           marketing_consent?: boolean | null
+          mobile?: string | null
           needs_percentage?: number
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
@@ -1028,6 +1133,7 @@ export type Database = {
           default_account_id?: string | null
           default_avatar_id?: string | null
           display_name?: string | null
+          email?: string | null
           email_notifications?: boolean | null
           email_verified?: boolean | null
           financial_year_start?: number | null
@@ -1039,6 +1145,7 @@ export type Database = {
           last_active_at?: string | null
           last_name?: string | null
           marketing_consent?: boolean | null
+          mobile?: string | null
           needs_percentage?: number
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
@@ -1211,6 +1318,24 @@ export type Database = {
           user_id: string | null
         }
         Relationships: []
+      }
+      v_daily_account_balances: {
+        Row: {
+          account_id: string | null
+          balance_date: string | null
+          daily_net: number | null
+          end_of_day_balance: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       v_transactions_with_details: {
         Row: {
