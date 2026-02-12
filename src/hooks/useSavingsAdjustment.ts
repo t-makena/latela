@@ -1,8 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { useGoals } from './useGoals';
 import { useUserSettings, SavingsAdjustmentStrategy } from './useUserSettings';
-import { useTransactions } from './useTransactions';
-import { calculateFinancialMetrics } from '@/lib/realData';
+import { useAccounts } from './useAccounts';
 
 export interface AdjustmentResult {
   goalId: string;
@@ -62,18 +61,17 @@ const calculateNewTimeline = (
 export const useSavingsAdjustment = () => {
   const { goals } = useGoals();
   const { savingsAdjustmentStrategy } = useUserSettings();
-  const { transactions } = useTransactions();
+  const { accounts } = useAccounts();
   
-  // Calculate available balance from transactions
-  const { netBalance } = calculateFinancialMetrics(transactions);
+  // Available balance = sum of actual account balances
+  const availableBalance = useMemo(() => {
+    return accounts.reduce((sum, account) => sum + account.balance, 0);
+  }, [accounts]);
   
   // Expected balance = sum of all monthly allocations (what user plans to save)
   const expectedBalance = useMemo(() => {
     return goals.reduce((sum, goal) => sum + goal.monthlyAllocation, 0);
   }, [goals]);
-  
-  // Current available balance
-  const availableBalance = netBalance;
   
   // Calculate shortfall
   const shortfall = useMemo(() => {
