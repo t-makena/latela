@@ -181,13 +181,14 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
           const allValues = chartData.flatMap(d => [d.expected, d.savings]);
           const minValue = Math.min(...allValues);
           const maxValue = Math.max(...allValues);
+          const ticks = minValue === maxValue ? [minValue] : [minValue, maxValue];
           return (
             <ResponsiveContainer width="100%" height={compact ? 200 : 250}>
-              <LineChart data={chartData}>
+              <LineChart data={chartData} margin={{ bottom: 20 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis 
                   hide={false}
-                  ticks={[minValue, maxValue]}
+                  ticks={ticks}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(value) => formatCurrency(value)}
