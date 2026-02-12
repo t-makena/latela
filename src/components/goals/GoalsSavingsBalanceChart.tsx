@@ -73,21 +73,14 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
       // If available balance >= expected for this month, show expected (target met)
       // Otherwise, show what we can calculate from actual savings progression
       const isCurrentMonth = i === 0;
-      const monthsFromStart = monthCount - i;
-      const progressRatio = monthsFromStart / monthCount;
-      const actualSavingsAtPoint = totalSaved * progressRatio;
       
-      // For current month: use actual available balance comparison
-      // For past months: interpolate savings progression
+      // Past months: no historical data, show 0
+      // Current month: show actual total saved
       let savingsBalance: number;
       if (isCurrentMonth) {
-        // Current month: if available >= expected, show expected; else show actual saved
-        savingsBalance = monthAvailableBalance >= expectedMonthlySavings 
-          ? cumulativeExpected 
-          : actualSavingsAtPoint;
+        savingsBalance = totalSaved;
       } else {
-        // Past months: interpolate from total saved
-        savingsBalance = actualSavingsAtPoint;
+        savingsBalance = 0;
       }
       
       data.push({
