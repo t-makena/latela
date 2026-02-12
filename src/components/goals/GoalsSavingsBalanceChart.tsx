@@ -10,6 +10,8 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useSavingsAdjustment } from "@/hooks/useSavingsAdjustment";
 import { useUserSettings, SavingsAdjustmentStrategy } from "@/hooks/useUserSettings";
 import { useLanguage } from "@/hooks/useLanguage";
+import { get1MDateRange, get1MLabels } from "@/lib/dateFilterUtils";
+import { eachWeekOfInterval, format, endOfDay } from "date-fns";
 import { ArrowRight, TrendingDown } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
@@ -42,11 +44,49 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
   // - Savings Balance (green): If available balance >= expected for that month, show expected; else show actual
   const chartData = useMemo(() => {
     const now = new Date();
-    const periods: Record<string, number> = { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 };
-    const monthCount = periods[selectedPeriod];
     const data = [];
     
-    // Track cumulative expected savings
+    if (selectedPeriod === '1M') {
+      // Weekly data points for 1M, matching Spending Trend format
+      const dateRange = get1MDateRange();
+      const labels = get1MLabels(dateRange);
+      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+      
+      let cumulativeExpected = 0;
+      const weeklyExpected = expectedMonthlySavings / weeks.length;
+      
+      for (let i = 0; i < weeks.length; i++) {
+        const weekStart = weeks[i];
+        const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : endOfDay(dateRange.to);
+        
+        cumulativeExpected += weeklyExpected;
+        
+        const isCurrentWeek = now >= weekStart && now < weekEnd;
+        const isPastWeek = now >= weekEnd;
+        
+        let savingsBalance: number;
+        if (isCurrentWeek || (i === weeks.length - 1 && now >= weekStart)) {
+          savingsBalance = totalSaved;
+        } else if (isPastWeek) {
+          savingsBalance = 0;
+        } else {
+          savingsBalance = 0;
+        }
+        
+        data.push({
+          month: labels[i] || format(weekStart, 'MMM') + ' W' + Math.ceil(weekStart.getDate() / 7),
+          expected: Math.round(cumulativeExpected),
+          savings: Math.round(savingsBalance),
+        });
+      }
+      
+      return data;
+    }
+    
+    // Monthly data points for 3M, 6M, 1Y
+    const periods: Record<string, number> = { '3M': 3, '6M': 6, '1Y': 12 };
+    const monthCount = periods[selectedPeriod] || 6;
+    
     let cumulativeExpected = 0;
     
     for (let i = monthCount - 1; i >= 0; i--) {
@@ -54,19 +94,6 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
       date.setMonth(date.getMonth() - i);
       const monthName = date.toLocaleDateString('en-US', { month: 'short' });
       
-      // Find transactions for this month
-      const monthTransactions = transactions.filter(tx => {
-        const txDate = new Date(tx.transaction_date);
-        return txDate.getMonth() === date.getMonth() && 
-               txDate.getFullYear() === date.getFullYear();
-      });
-      
-      // Calculate available balance at end of month
-      const monthAvailableBalance = monthTransactions.length > 0
-        ? Math.abs(monthTransactions[monthTransactions.length - 1]?.balance || 0)
-        : 0;
-      
-      // Expected balance: only accumulate allocations for goals that existed by this month
       const endOfThisMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
       const monthExpected = goals.reduce((sum, goal) => {
         const goalCreated = new Date(goal.createdAt);
@@ -77,13 +104,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
       }, 0);
       cumulativeExpected += monthExpected;
       
-      // KEY LOGIC: Savings balance
-      // If available balance >= expected for this month, show expected (target met)
-      // Otherwise, show what we can calculate from actual savings progression
       const isCurrentMonth = i === 0;
-      
-      // Past months: no historical data, show 0
-      // Current month: show actual total saved
       let savingsBalance: number;
       if (isCurrentMonth) {
         savingsBalance = totalSaved;
@@ -99,7 +120,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
     }
     
     return data;
-  }, [selectedPeriod, transactions, expectedMonthlySavings, totalSaved]);
+  }, [selectedPeriod, transactions, expectedMonthlySavings, totalSaved, goals]);
   
   const periods = [
     { key: '1M' as const, label: '1M' },
