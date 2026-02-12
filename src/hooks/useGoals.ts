@@ -28,6 +28,7 @@ interface TransformedGoal {
   monthsLeft: number;
   monthlyAllocation: number;
   isComplete: boolean;
+  createdAt: string;
 }
 
 // Calculate months left dynamically based on due_date
@@ -102,6 +103,7 @@ export const useGoals = () => {
         monthsLeft,
         monthlyAllocation,
         isComplete,
+        createdAt: goal.created_at,
       };
     });
   }, []);
