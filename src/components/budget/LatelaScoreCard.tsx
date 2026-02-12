@@ -8,9 +8,10 @@ import { Shield, TrendingUp, AlertTriangle, Flame, Calendar } from 'lucide-react
 
 interface LatelaScoreCardProps {
   compact?: boolean;
+  horizontal?: boolean;
 }
 
-export function LatelaScoreCard({ compact = false }: LatelaScoreCardProps) {
+export function LatelaScoreCard({ compact = false, horizontal = false }: LatelaScoreCardProps) {
   const { scoreData, loading, totalScore, pillars, metrics, riskLevel } = useBudgetScore();
   const { t } = useLanguage();
 
@@ -113,7 +114,76 @@ export function LatelaScoreCard({ compact = false }: LatelaScoreCardProps) {
     );
   }
 
-  // Full version
+  // Horizontal landscape version
+  if (horizontal) {
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6 pb-4">
+          <div className="grid grid-cols-3 gap-6 items-start">
+            {/* Left: Score circle + Risk */}
+            <div className="flex flex-col items-center gap-3">
+              <div className={cn(
+                "flex items-center justify-center w-24 h-24 rounded-full border-6 mb-1",
+                getScoreBorderColor(totalScore)
+              )}>
+                <span className={cn("text-3xl font-black", getScoreColor(totalScore))}>
+                  {totalScore}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">{t('score.outOf100') || 'out of 100'}</p>
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/50 w-full">
+                {getRiskIcon()}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-foreground capitalize">{getRiskLabel()}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{getRiskMessage()}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle: Safe to spend + days */}
+            <div className="flex flex-col gap-3">
+              <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <p className="text-sm text-muted-foreground mb-1">
+                  {t('score.safeToSpend') || 'You can safely spend'}
+                </p>
+                <p className="text-2xl font-black text-primary">
+                  {formatCurrency(metrics.safeToSpendPerDay)}
+                  <span className="text-base font-normal text-muted-foreground">/{t('score.perDay') || 'day'}</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('score.forNextDays')?.replace('{{days}}', String(metrics.daysUntilPayday)) || 
+                    `for the next ${metrics.daysUntilPayday} days`}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <MetricBox label={t('finance.availableBalance') || 'Available Balance'} value={formatCurrency(metrics.remainingBalance)} />
+                <MetricBox label={t('score.expectedSpend') || 'Expected Spend'} value={formatCurrency(metrics.expectedSpendToPayday)} />
+                <MetricBox label={t('score.avgDailySpend') || 'Avg Daily Spend'} value={formatCurrency(metrics.avgDailySpend)} />
+                <MetricBox label={t('score.riskRatio') || 'Risk Ratio'} value={`${metrics.riskRatio.toFixed(2)}x`} />
+              </div>
+            </div>
+
+            {/* Right: Pillars + header */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="heading-main text-sm">{t('score.latelaScore') || 'Latela Score'}</h4>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  <span>{metrics.daysUntilPayday} {t('score.daysToPayday') || 'days to payday'}</span>
+                </div>
+              </div>
+              <PillarProgress label={t('score.budgetCompliance') || 'Budget Compliance'} value={pillars.budgetCompliance} weight={40} />
+              <PillarProgress label={t('score.spendingConsistency') || 'Spending Consistency'} value={pillars.spendingConsistency} weight={25} />
+              <PillarProgress label={t('score.savingsHealth') || 'Savings Health'} value={pillars.savingsHealth} weight={25} />
+              <PillarProgress label={t('score.cashSurvival') || 'Cash Survival'} value={pillars.cashSurvivalRisk} weight={10} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Full vertical version
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -170,46 +240,18 @@ export function LatelaScoreCard({ compact = false }: LatelaScoreCardProps) {
           <h4 className="text-sm font-semibold text-foreground">
             {t('score.scoreBreakdown') || 'Score Breakdown'}
           </h4>
-          <PillarProgress 
-            label={t('score.budgetCompliance') || 'Budget Compliance'} 
-            value={pillars.budgetCompliance} 
-            weight={40} 
-          />
-          <PillarProgress 
-            label={t('score.spendingConsistency') || 'Spending Consistency'} 
-            value={pillars.spendingConsistency} 
-            weight={25} 
-          />
-          <PillarProgress 
-            label={t('score.savingsHealth') || 'Savings Health'} 
-            value={pillars.savingsHealth} 
-            weight={25} 
-          />
-          <PillarProgress 
-            label={t('score.cashSurvival') || 'Cash Survival'} 
-            value={pillars.cashSurvivalRisk} 
-            weight={10} 
-          />
+          <PillarProgress label={t('score.budgetCompliance') || 'Budget Compliance'} value={pillars.budgetCompliance} weight={40} />
+          <PillarProgress label={t('score.spendingConsistency') || 'Spending Consistency'} value={pillars.spendingConsistency} weight={25} />
+          <PillarProgress label={t('score.savingsHealth') || 'Savings Health'} value={pillars.savingsHealth} weight={25} />
+          <PillarProgress label={t('score.cashSurvival') || 'Cash Survival'} value={pillars.cashSurvivalRisk} weight={10} />
         </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-2 gap-3 pt-2">
-          <MetricBox 
-            label={t('finance.availableBalance') || 'Available Balance'} 
-            value={formatCurrency(metrics.remainingBalance)} 
-          />
-          <MetricBox 
-            label={t('score.expectedSpend') || 'Expected Spend'} 
-            value={formatCurrency(metrics.expectedSpendToPayday)} 
-          />
-          <MetricBox 
-            label={t('score.avgDailySpend') || 'Avg Daily Spend'} 
-            value={formatCurrency(metrics.avgDailySpend)} 
-          />
-          <MetricBox 
-            label={t('score.riskRatio') || 'Risk Ratio'} 
-            value={`${metrics.riskRatio.toFixed(2)}x`} 
-          />
+          <MetricBox label={t('finance.availableBalance') || 'Available Balance'} value={formatCurrency(metrics.remainingBalance)} />
+          <MetricBox label={t('score.expectedSpend') || 'Expected Spend'} value={formatCurrency(metrics.expectedSpendToPayday)} />
+          <MetricBox label={t('score.avgDailySpend') || 'Avg Daily Spend'} value={formatCurrency(metrics.avgDailySpend)} />
+          <MetricBox label={t('score.riskRatio') || 'Risk Ratio'} value={`${metrics.riskRatio.toFixed(2)}x`} />
         </div>
       </CardContent>
     </Card>

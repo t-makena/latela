@@ -12,6 +12,7 @@ import { GoalsSavingsBalanceChart } from "@/components/goals/GoalsSavingsBalance
 import { LatelaScoreCard } from "@/components/budget/LatelaScoreCard";
 import { MonthEndReviewDialog } from "@/components/goals/MonthEndReviewDialog";
 import { useBudgetMethod } from "@/hooks/useBudgetMethod";
+import { useBudgetItems } from "@/hooks/useBudgetItems";
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -20,6 +21,8 @@ const Dashboard = () => {
   const { t } = useLanguage();
   const { budgetMethod } = useBudgetMethod();
   const isZeroBased = budgetMethod === 'zero_based';
+  const { budgetItems } = useBudgetItems();
+  const fewItems = budgetItems.length < 6;
 
   const availableBalance = netBalance;
   const budgetBalance = monthlyIncome * 0.3;
@@ -51,13 +54,19 @@ const Dashboard = () => {
       <MonthEndReviewDialog />
       {!isZeroBased && <FinancialSummary showExplanations={true} />}
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4 items-start">
-        <div className="lg:col-span-2">
+      {fewItems ? (
+        <div className="space-y-6 mt-4">
           <BudgetItemsCard />
+          <LatelaScoreCard horizontal />
         </div>
-        {/* Latela Score Card for desktop */}
-        <LatelaScoreCard />
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4 items-start">
+          <div className="lg:col-span-2">
+            <BudgetItemsCard />
+          </div>
+          <LatelaScoreCard />
+        </div>
+      )}
 
       {/* Savings Balance Chart with Status */}
       <div className="mt-4">
