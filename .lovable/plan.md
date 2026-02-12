@@ -1,68 +1,50 @@
 
-# Responsive Budget Plan + Latela Score Layout
+# Simplify Savings Balance Card Layout
 
-## Problem
-Currently the Budget Plan card and Latela Score card always sit side-by-side in a 2:1 grid. When there are fewer than 6 budget items, the Budget Plan card is short and the side-by-side layout wastes space. The user wants the Budget Plan to stretch full-width and the Score card to sit below it in a horizontal/landscape orientation when items are few.
+## What Changes
 
-## Behavior
+1. **Remove the "Savings Status" section** (lines 228-305) -- the block showing Expected Balance, Available Balance, and shortfall values. Only the **alert system** (shortfall detection + adjustment preview + apply button) remains, triggered when `savingsStatus.hasShortfall` is true.
 
-```text
-< 6 items:
-+----------------------------------------------+
-|           Budget Plan (full width)            |
-+----------------------------------------------+
-|     Latela Score (landscape / horizontal)     |
-+----------------------------------------------+
+2. **Keep the Legend** below the chart (already present via `<Legend />`).
 
-6+ items:
-+------------------------------+---------------+
-|    Budget Plan (2 cols)      | Latela Score   |
-|                              | (vertical)     |
-+------------------------------+---------------+
+3. **Remove X and Y axes** from the chart -- hide the axis lines, ticks, and labels by setting `hide={true}` on both `<XAxis>` and `<YAxis>`.
+
+4. **Show highest and lowest amounts on Y axis area** -- instead of full axis ticks, display only the max and min values from the dataset as reference labels using `<ReferenceLine>` or custom Y-axis ticks limited to just two values.
+
+5. **Tooltip shows amount and date on hover** -- already works via `<Tooltip>`, just ensure it displays clearly with the month label and formatted currency.
+
+## Technical Details
+
+### File: `src/components/goals/GoalsSavingsBalanceChart.tsx`
+
+**Chart axis changes:**
+- `<XAxis>`: add `hide={true}` to remove the x-axis entirely (dates shown on hover via tooltip)
+- `<YAxis>`: replace full tick marks with only two ticks showing the min and max values from the data. Use `ticks={[minValue, maxValue]}` and keep `axisLine={false}`, `tickLine={false}` for a clean look
+- Compute `minValue` and `maxValue` from chartData across both `expected` and `savings` fields
+- Remove `<CartesianGrid>` for a cleaner minimal look (or keep very subtle)
+
+**Remove Savings Status section:**
+- Delete the entire `<div className="border-t pt-4">` block (lines 229-305)
+- Re-add only the shortfall alert portion: the strategy info, adjustment preview, and apply button -- wrapped in a conditional `{savingsStatus.hasShortfall && (...)}` block
+- This means when there's no shortfall, the card just shows the chart + legend
+- When there IS a shortfall, the card expands to show the alert with adjustments
+
+**Structure after changes:**
+```
++----------------------------------+
+| Savings Balance    [1M 3M 6M 1Y] |
+|                                  |
+| R15k               (max label)  |
+|    ~~~chart lines~~~             |
+| R0                  (min label)  |
+|                                  |
+| [Legend: Expected | Saved]       |
+|                                  |
+| (only if shortfall:)            |
+| Strategy: Prioritize important  |
+| [Adjustment Preview items]      |
+| [Apply Adjustments button]      |
++----------------------------------+
 ```
 
-## Changes
-
-### 1. Dashboard.tsx -- Conditional grid layout
-- Import `useBudgetItems` to access the budget items array and its length
-- If `budgetItems.length < 6`: render Budget Plan full-width, then Latela Score below it with a `horizontal` prop
-- If `budgetItems.length >= 6`: keep current 3-column grid with Budget Plan spanning 2 columns and Score on the right
-
-### 2. LatelaScoreCard.tsx -- Add `horizontal` prop
-- Add an optional `horizontal` boolean prop alongside the existing `compact` prop
-- When `horizontal` is true, restructure the full card layout to be landscape-oriented:
-  - Use a horizontal flex layout instead of vertical stacking
-  - Score circle, risk status, and safe-to-spend sit in a row
-  - Pillar breakdown and key metrics flow beside them
-  - This creates a wider, shorter card that fits naturally below the full-width Budget Plan
-
-### Technical Detail
-
-**Dashboard.tsx:**
-```tsx
-const { budgetItems } = useBudgetItems();
-const fewItems = budgetItems.length < 6;
-
-// Desktop section becomes:
-{fewItems ? (
-  <>
-    <BudgetItemsCard />
-    <LatelaScoreCard horizontal />
-  </>
-) : (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4 items-start">
-    <div className="lg:col-span-2">
-      <BudgetItemsCard />
-    </div>
-    <LatelaScoreCard />
-  </div>
-)}
-```
-
-**LatelaScoreCard.tsx:**
-- Accept `horizontal?: boolean` prop
-- When horizontal, the card uses a grid/flex row layout:
-  - Left section: score circle + risk status
-  - Middle section: safe-to-spend block
-  - Right section: pillar breakdowns + key metrics in a compact 2x2 grid
-- This keeps all existing content but arranges it horizontally to match the full-width Budget Plan above it
+Single file edit, no new dependencies.
