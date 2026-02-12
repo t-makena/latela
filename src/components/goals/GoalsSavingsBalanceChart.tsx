@@ -201,7 +201,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
               dataKey="expected" 
               stroke="hsl(var(--foreground))" 
               strokeWidth={2} 
-              strokeDasharray="5 5"
+              
               name={t('goals.expectedBalance') || 'Expected Balance'}
               dot={{ fill: 'hsl(var(--foreground))' }}
             />
