@@ -119,18 +119,20 @@ export function LatelaScoreCard({ compact = false, horizontal = false }: LatelaS
     return (
       <Card className="w-full">
         <CardContent className="pt-6 pb-4">
-          <div className="grid grid-cols-3 gap-6 items-start">
+          <div className="grid grid-cols-3 gap-6 items-stretch">
             {/* Left: Score circle + Risk */}
-            <div className="flex flex-col items-center gap-3">
-              <div className={cn(
-                "flex items-center justify-center w-24 h-24 rounded-full border-6 mb-1",
-                getScoreBorderColor(totalScore)
-              )}>
-                <span className={cn("text-3xl font-black", getScoreColor(totalScore))}>
-                  {totalScore}
-                </span>
+            <div className="flex flex-col items-center justify-between h-full">
+              <div className="flex flex-col items-center gap-1">
+                <div className={cn(
+                  "flex items-center justify-center w-24 h-24 rounded-full border-[6px]",
+                  getScoreBorderColor(totalScore)
+                )}>
+                  <span className={cn("text-3xl font-black", getScoreColor(totalScore))}>
+                    {totalScore}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">{t('score.outOf100') || 'out of 100'}</p>
               </div>
-              <p className="text-xs text-muted-foreground">{t('score.outOf100') || 'out of 100'}</p>
               <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/50 w-full">
                 {getRiskIcon()}
                 <div className="flex-1 min-w-0">

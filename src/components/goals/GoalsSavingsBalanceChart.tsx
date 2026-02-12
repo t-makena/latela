@@ -184,7 +184,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
           const ticks = minValue === maxValue ? [minValue] : [minValue, maxValue];
           return (
             <ResponsiveContainer width="100%" height={compact ? 200 : 250}>
-              <LineChart data={chartData} margin={{ bottom: 20 }}>
+              <LineChart data={chartData} margin={{ bottom: 40 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis 
                   hide={false}
