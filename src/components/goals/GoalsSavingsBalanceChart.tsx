@@ -66,8 +66,16 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
         ? Math.abs(monthTransactions[monthTransactions.length - 1]?.balance || 0)
         : 0;
       
-      // Expected balance: accumulating expected savings each month
-      cumulativeExpected += expectedMonthlySavings;
+      // Expected balance: only accumulate allocations for goals that existed by this month
+      const endOfThisMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      const monthExpected = goals.reduce((sum, goal) => {
+        const goalCreated = new Date(goal.createdAt);
+        if (goalCreated <= endOfThisMonth) {
+          return sum + goal.monthlyAllocation;
+        }
+        return sum;
+      }, 0);
+      cumulativeExpected += monthExpected;
       
       // KEY LOGIC: Savings balance
       // If available balance >= expected for this month, show expected (target met)
@@ -209,10 +217,10 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
             <Line 
               type="monotone" 
               dataKey="savings" 
-              stroke="hsl(var(--positive))" 
+              stroke="#22c55e" 
               strokeWidth={2} 
               name={t('goals.totalAmountSaved') || 'Total Amount Saved'}
-              dot={{ fill: 'hsl(var(--positive))' }}
+              dot={{ fill: '#22c55e' }}
             />
           </LineChart>
         </ResponsiveContainer>
