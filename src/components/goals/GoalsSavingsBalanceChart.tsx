@@ -231,7 +231,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                     borderRadius: '0.5rem'
                   }}
                 />
-                <Legend verticalAlign="bottom" height={24} iconType="line" />
+                <Legend verticalAlign="bottom" height={24} iconType="line" wrapperStyle={{ paddingTop: 16 }} />
                 <Line 
                   type="monotone" 
                   dataKey="expected" 
