@@ -1,66 +1,62 @@
 
-## Fix Balance Chart Line Titles and Add Area Fills
 
-### Changes
+## Floating Budget Buddy Mini-Chat
 
-**File: `src/components/financial-insight/FinancialInsightContent.tsx`**
+### Overview
+Add a persistent, floating Budget Buddy chat panel that launches when users long-press the Sparkles icon in the navigation. The panel sits at the bottom of the screen as an overlay, allowing users to chat while viewing any page. It persists across route changes.
 
-#### 1. Update imports
-Add `Area`, `ComposedChart` from recharts (replacing `LineChart` usage for the Balance charts), or add `defs`, `linearGradient`, and `Area` components. The simplest approach: switch the Balance charts from `LineChart` + `Line` to `ComposedChart` + `Line` + `Area`, which allows mixing line strokes with filled areas beneath.
+### Architecture
 
-#### 2. Fix tooltip labels
-In both mobile (line 509) and desktop (line 594) formatter functions, change:
-- `'Available Balance'` stays as-is (already correct)
-- `'Savings Balance'` to `"Saving's Balance"`
+The floating chat will live at the App level (above routes) so it survives navigation. A React context will manage the open/close state, accessible from the Navbar for the long-press trigger.
 
-Update the `name` prop on both `Line` components (mobile lines 526/535, desktop lines 611/620):
-- `name="Available Balance"` -- already correct
-- `name="Savings Balance"` to `name="Saving's Balance"`
+### New Files
 
-#### 3. Add area fills beneath the lines
-For each Balance chart (mobile and desktop), replace `LineChart` with `ComposedChart` and add `Area` components:
+**1. `src/contexts/FloatingChatContext.tsx`**
+- Context with `isOpen`, `open()`, `close()`, `toggle()` state
+- Provider wraps the app at the same level as other providers
 
-- **Available Balance area**: filled with `#292929` at ~20% opacity, keyed to `netBalance`
-- **Saving's Balance area**: filled with `#05ff86` at ~20% opacity, keyed to `budgetBalance`
+**2. `src/components/chat/FloatingChat.tsx`**
+- A fixed-position panel at the bottom of the screen (`fixed bottom-0 right-0 left-0 md:left-auto md:right-4 md:bottom-4 md:w-[420px]`)
+- Contains a simplified version of the Chat page logic: message list, input, streaming, conversation persistence
+- Header with "Budget Buddy" title, minimize/close buttons
+- Glassmorphism styling consistent with the full chat page
+- Height: ~60% of viewport on mobile, ~500px on desktop
+- Smooth slide-up animation
+- No chat history sidebar (keeps it compact); uses the most recent conversation or creates a new one
 
-Each area uses `<defs>` with `<linearGradient>` for a fade-to-transparent effect (solid at top, transparent at bottom), giving a polished gradient fill.
+### Changes to Existing Files
 
-The `<Line>` components remain for the stroke; the `<Area>` components add the fill beneath.
+**3. `src/components/layout/Navbar.tsx`**
+- Add long-press detection on the Budget Buddy nav item (both mobile and desktop)
+- On long-press: call `open()` from FloatingChatContext instead of navigating
+- On normal click/tap: navigate to `/chat` as before
+- Implementation: `onTouchStart`/`onTouchEnd` with a 500ms timer for mobile; `onMouseDown`/`onMouseUp` for desktop
 
-#### 4. Specific code structure per chart
+**4. `src/App.tsx`**
+- Wrap with `FloatingChatProvider`
+- Render `<FloatingChat />` inside the BrowserRouter (so it persists across routes) but outside `<Routes>`
 
-```tsx
-import { ComposedChart, Area } from "recharts"; // add to imports
+**5. `src/components/layout/Layout.tsx`**
+- No changes needed; the floating chat is positioned fixed and overlays everything
 
-// Inside each Balance chart, replace <LineChart> with <ComposedChart>
-<ComposedChart data={netBalanceData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
-  <defs>
-    <linearGradient id="fillAvailable" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#292929" stopOpacity={0.3} />
-      <stop offset="100%" stopColor="#292929" stopOpacity={0.05} />
-    </linearGradient>
-    <linearGradient id="fillSavings" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#05ff86" stopOpacity={0.3} />
-      <stop offset="100%" stopColor="#05ff86" stopOpacity={0.05} />
-    </linearGradient>
-  </defs>
-  <XAxis ... />
-  <YAxis ... />
-  <Tooltip ... formatter with "Saving's Balance" ... />
-  <ReferenceDot ... />
-  <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailable)" stroke="none" />
-  <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavings)" stroke="none" />
-  <Line type="monotone" dataKey="netBalance" name="Available Balance" stroke="#292929" ... />
-  <Line type="monotone" dataKey="budgetBalance" name="Saving's Balance" stroke="#05ff86" ... />
-</ComposedChart>
+### Technical Details
+
+**Long-press detection:**
+```typescript
+// Custom hook: useOnLongPress(callback, delay = 500)
+// Sets a timeout on pointer down, clears on pointer up/leave
+// If timeout fires, calls callback and sets a flag to prevent the click/navigation
 ```
 
-Note: The Available Balance stroke color will also change to `#292929` and Saving's Balance stroke to `#05ff86` to match their respective fill colors.
+**Floating chat panel behavior:**
+- Opens with a slide-up animation (translate-y transition)
+- Closes with slide-down
+- On mobile: full-width at bottom, ~60vh height
+- On desktop: 420px wide, anchored bottom-right, ~500px height
+- Uses the same streaming logic and edge function (`chat-financial`) as the full Chat page
+- Shares conversation data via Supabase (same tables), so conversations started in the floating chat appear in the full chat page too
+- When on the `/chat` route, the floating chat auto-closes (no need for both)
 
-### Summary of edits
-
-| Location | What changes |
-|---|---|
-| Import (line 4-16) | Add `ComposedChart`, `Area` |
-| Mobile Balance (lines 484-541) | `LineChart` to `ComposedChart`, add gradient defs + Areas, fix name/labels |
-| Desktop Balance (lines 569-626) | Same changes |
+**State persistence across navigation:**
+- The FloatingChatContext and FloatingChat component live above the router's `<Routes>`, so they are never unmounted during navigation
+- Message state is held in the FloatingChat component's local state
