@@ -33,7 +33,7 @@ interface FinancialInsightContentProps {
 }
 
 export const FinancialInsightContent = ({ accountId }: FinancialInsightContentProps) => {
-  const { transactions: allTransactions, loading } = useTransactions();
+  const { transactions: allTransactions, loading } = useTransactions({ currentMonthOnly: false, limit: 2000 });
   const { goals } = useGoals();
   const location = useLocation();
   const [categoryFilter, setCategoryFilter] = useState<DateFilterOption>("1W");
