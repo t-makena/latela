@@ -19,8 +19,9 @@ export default {
 			}
 		},
 	extend: {
-			fontFamily: {
-				'cooper': ['Cooper BT', 'serif'],
+		fontFamily: {
+				'brand': ['"Cooper BT"', '"Cooper Black"', 'serif'],
+				'sans': ['Inter', 'system-ui', 'sans-serif'],
 			},
 			fontSize: {
 				'heading-main': 'var(--text-heading-main)',

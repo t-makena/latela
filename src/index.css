@@ -160,9 +160,13 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Cooper BT', serif;
+    font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Cooper BT', 'Cooper Black', serif;
   }
 }
 
@@ -202,6 +206,7 @@ a {
 
 /* Heading Styles */
 .heading-main {
+  font-family: 'Cooper BT', 'Cooper Black', serif;
   font-size: var(--text-heading-main);
   font-weight: 700;
   line-height: 1.2;
@@ -210,6 +215,7 @@ a {
 }
 
 .heading-card {
+  font-family: 'Cooper BT', 'Cooper Black', serif;
   font-size: var(--text-heading-card);
   font-weight: 700;
   line-height: 1.25;
