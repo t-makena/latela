@@ -5,7 +5,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { 
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, 
-  CartesianGrid, Tooltip
+  CartesianGrid, Tooltip, ReferenceDot
 } from "recharts";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
 import { 
@@ -132,7 +132,7 @@ export const EnhancedSpendingChart = ({
         <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
-            <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+            <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 5, right: 24, left: 24, bottom: 0 }}>
               <XAxis 
                 dataKey={selectedPeriod === '1Y' ? "month" : selectedPeriod === '1W' || 
                   (selectedPeriod === 'custom' && xAxisLabels.length <= 14) ? "day" : "week"}
@@ -413,19 +413,31 @@ export const EnhancedSpendingChart = ({
               />
             </BarChart>
           ) : (
-            <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+            <LineChart data={chartData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
               <XAxis dataKey="month" hide={true} />
               <YAxis hide={true} domain={[0, 'auto']} />
               <Tooltip formatter={(value, name) => [
                 `${formatCurrency(value as number)}`, 
                 'Amount Spent'
               ]} />
+              {(() => {
+                const maxPoint = chartData.reduce((max: any, d: any) => (d.amount || 0) > max.value ? { month: d.month, value: d.amount || 0 } : max, { month: '', value: 0 });
+                return maxPoint.value > 0 ? (
+                  <ReferenceDot x={maxPoint.month} y={maxPoint.value} r={0}>
+                    <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                      {formatCurrency(maxPoint.value)}
+                    </text>
+                  </ReferenceDot>
+                ) : null;
+              })()}
               <Line 
                 type="monotone" 
                 dataKey="amount" 
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2} 
                 name="Amount Spent"
+                dot={false}
+                activeDot={{ r: 3 }}
               />
             </LineChart>
           )}

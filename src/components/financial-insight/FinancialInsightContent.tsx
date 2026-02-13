@@ -11,7 +11,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell
+  Cell,
+  ReferenceDot
 } from "recharts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useGoals } from "@/hooks/useGoals";
@@ -481,7 +482,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             {(() => {
               return (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
+              <LineChart data={netBalanceData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
@@ -509,13 +510,23 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
+                {(() => {
+                  const maxPoint = netBalanceData.reduce((max, d) => d.netBalance > max.value ? { month: d.month, value: d.netBalance } : max, { month: '', value: 0 });
+                  return maxPoint.value > 0 ? (
+                    <ReferenceDot x={maxPoint.month} y={maxPoint.value} r={0}>
+                      <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                        {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                      </text>
+                    </ReferenceDot>
+                  ) : null;
+                })()}
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
                   name="Available Balance"
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
-                  dot={{ fill: 'hsl(var(--primary))', r: 1.5 }}
+                  dot={false}
                   activeDot={{ r: 3 }}
                 />
                 <Line 
@@ -524,7 +535,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                   name="Savings Balance"
                   stroke="#10B981" 
                   strokeWidth={2}
-                  dot={{ fill: '#10B981', r: 1.5 }}
+                  dot={false}
                   activeDot={{ r: 3 }}
                 />
               </LineChart>
@@ -556,7 +567,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             {(() => {
               return (
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-              <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
+              <LineChart data={netBalanceData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
@@ -584,13 +595,23 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
+                {(() => {
+                  const maxPoint = netBalanceData.reduce((max, d) => d.netBalance > max.value ? { month: d.month, value: d.netBalance } : max, { month: '', value: 0 });
+                  return maxPoint.value > 0 ? (
+                    <ReferenceDot x={maxPoint.month} y={maxPoint.value} r={0}>
+                      <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                        {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                      </text>
+                    </ReferenceDot>
+                  ) : null;
+                })()}
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
                   name="Available Balance"
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
-                  dot={{ fill: 'hsl(var(--primary))', r: 1.5 }}
+                  dot={false}
                   activeDot={{ r: 3 }}
                 />
                 <Line 
@@ -599,7 +620,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                   name="Savings Balance"
                   stroke="#10B981" 
                   strokeWidth={2}
-                  dot={{ fill: '#10B981', r: 1.5 }}
+                  dot={false}
                   activeDot={{ r: 3 }}
                 />
               </LineChart>
@@ -662,7 +683,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <div>
             <ResponsiveContainer width="100%" height={300}>
               {selectedCategoryForGraph ? (
-                <LineChart data={categoryLineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                <LineChart data={categoryLineData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
                   <XAxis dataKey="period" hide={true} />
                   <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
@@ -687,17 +708,27 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
                     cursor={false}
                   />
+                  {(() => {
+                    const maxPoint = categoryLineData.reduce((max, d) => d.amount > max.value ? { period: d.period, value: d.amount } : max, { period: '', value: 0 });
+                    return maxPoint.value > 0 ? (
+                      <ReferenceDot x={maxPoint.period} y={maxPoint.value} r={0}>
+                        <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                          {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                        </text>
+                      </ReferenceDot>
+                    ) : null;
+                  })()}
                   <Line 
                     type="monotone" 
                     dataKey="amount" 
                     stroke={categoryColors[selectedCategoryForGraph]} 
                     strokeWidth={2}
-                    dot={{ fill: categoryColors[selectedCategoryForGraph], r: 1.5 }}
+                    dot={false}
                     activeDot={{ r: 3 }}
                   />
                 </LineChart>
               ) : (
-                <BarChart data={categoryData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} onClick={handleBarClick}>
+                <BarChart data={categoryData} margin={{ top: 5, right: 24, left: 24, bottom: 0 }} onClick={handleBarClick}>
                   <XAxis dataKey="category" hide={true} />
                   <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
@@ -782,7 +813,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <CardContent className="px-0">
             <ResponsiveContainer width="100%" height={300}>
               {selectedCategoryForGraph ? (
-                <LineChart data={categoryLineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                <LineChart data={categoryLineData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
                   <XAxis dataKey="period" hide={true} />
                   <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
@@ -807,17 +838,27 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
                     cursor={false}
                   />
+                  {(() => {
+                    const maxPoint = categoryLineData.reduce((max, d) => d.amount > max.value ? { period: d.period, value: d.amount } : max, { period: '', value: 0 });
+                    return maxPoint.value > 0 ? (
+                      <ReferenceDot x={maxPoint.period} y={maxPoint.value} r={0}>
+                        <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                          {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                        </text>
+                      </ReferenceDot>
+                    ) : null;
+                  })()}
                   <Line 
                     type="monotone" 
                     dataKey="amount" 
                     stroke={categoryColors[selectedCategoryForGraph]} 
                     strokeWidth={2}
-                    dot={{ fill: categoryColors[selectedCategoryForGraph], r: 1.5 }}
+                    dot={false}
                     activeDot={{ r: 3 }}
                   />
                 </LineChart>
               ) : (
-                <BarChart data={categoryData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} onClick={handleBarClick}>
+                <BarChart data={categoryData} margin={{ top: 5, right: 24, left: 24, bottom: 0 }} onClick={handleBarClick}>
                   <XAxis dataKey="category" hide={true} />
                   <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
