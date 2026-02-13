@@ -4,7 +4,7 @@
     "budget": "Tekanyetso",
     "compare": "Bapisa Litheko",
     "scan": "Skena Lenane",
-    "groceryBudget": "Tekanyetso ya Lijo",
+    "groceryBudget": "Cart Explorer",
     "goals": "Maikemisetso",
     "calendar": "Khalendara",
     "settings": "Ditlhophiso",
@@ -212,7 +212,7 @@
     "scanAnother": "Skena e 'ngoe"
   },
   "groceryBudget": {
-    "title": "Tekanyetso ya Lijo",
+    "title": "Cart Explorer",
     "searchTab": "Batla",
     "myListTab": "Lenane la Ka",
     "searchPlaceholder": "Batla lijo...",

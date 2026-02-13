@@ -4,7 +4,7 @@
     "budget": "Isabelomali",
     "compare": "Qhathanisa Amanani",
     "scan": "Skena Uhlu",
-    "groceryBudget": "Isabelomali Sokudla",
+    "groceryBudget": "Cart Explorer",
     "goals": "Izinjongo",
     "calendar": "Ikhalenda",
     "settings": "Izilungiselelo",
@@ -212,7 +212,7 @@
     "scanAnother": "Skena Okunye"
   },
   "groceryBudget": {
-    "title": "Isabelomali Sokudla",
+    "title": "Cart Explorer",
     "searchTab": "Sesha",
     "myListTab": "Uhlu Lwami",
     "searchPlaceholder": "Sesha ukudla...",

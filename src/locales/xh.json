@@ -4,7 +4,7 @@
     "budget": "Ibhajethi",
     "compare": "Thelekisa Amaxabiso",
     "scan": "Skena Uluhlu",
-    "groceryBudget": "Ibhajethi Yokutya",
+    "groceryBudget": "Cart Explorer",
     "goals": "Iinjongo",
     "calendar": "Ikhalenda",
     "settings": "Useto",
@@ -212,7 +212,7 @@
     "scanAnother": "Skena Enye"
   },
   "groceryBudget": {
-    "title": "Ibhajethi Yokutya",
+    "title": "Cart Explorer",
     "searchTab": "Khangela",
     "myListTab": "Uluhlu Lwam",
     "searchPlaceholder": "Khangela ukutya...",

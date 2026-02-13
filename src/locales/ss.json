@@ -4,7 +4,7 @@
     "budget": "Imali lekhelethiwe",
     "compare": "Cisanisa Tintengo",
     "scan": "Skena Luhla",
-    "groceryBudget": "Imali Yekudla",
+    "groceryBudget": "Cart Explorer",
     "goals": "Tinjongo",
     "calendar": "Likhalenda",
     "settings": "Tilungiselelo",
@@ -185,7 +185,7 @@
     }
   },
   "groceryBudget": {
-    "title": "Imali Yekudla",
+    "title": "Cart Explorer",
     "searchTab": "Funa",
     "myListTab": "Luhla Lwami",
     "searchPlaceholder": "Funa kudla...",

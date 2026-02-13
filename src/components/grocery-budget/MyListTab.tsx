@@ -1,4 +1,5 @@
-import { Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItem } from '@/hooks/useGroceryCart';
 import { ProductOffer } from '@/hooks/usePriceSearch';
@@ -6,6 +7,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { formatPriceCents } from '@/lib/storeColors';
 import { CartItemCard } from './CartItemCard';
 import { ScanListDialog } from './ScanListDialog';
+import { AddManualItemDialog } from './AddManualItemDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +44,11 @@ interface MyListTabProps {
       product_url: string | null;
     }>;
   }>) => void;
+  onAddManualItem: (name: string, merchant: string, priceCents: number) => void;
+  onMarkAsPurchased: (itemId: string) => void;
+  onMarkAsBudgeted: (itemId: string) => void;
+  onReAddItem: (itemId: string) => void;
+  onAddToBudgetPlan?: (store: string, totalCents: number) => void;
   totalCents?: number;
   itemCount?: number;
 }
@@ -53,16 +60,48 @@ export const MyListTab = ({
   onRemove, 
   onClearCart,
   onAddScannedItems,
+  onAddManualItem,
+  onMarkAsPurchased,
+  onMarkAsBudgeted,
+  onReAddItem,
+  onAddToBudgetPlan,
   totalCents = 0,
   itemCount = 0,
 }: MyListTabProps) => {
   const { t } = useLanguage();
+  const [purchasedExpanded, setPurchasedExpanded] = useState(false);
+
+  const consideringItems = useMemo(() => items.filter(i => i.status === 'considering'), [items]);
+  const budgetedItems = useMemo(() => items.filter(i => i.status === 'budgeted'), [items]);
+  const purchasedItems = useMemo(() => items.filter(i => i.status === 'purchased'), [items]);
+
+  const handleAddToBudget = (item: CartItem) => {
+    const store = item.selectedOffer.store_display_name || item.selectedOffer.store;
+    
+    // Group all considering items from same merchant
+    const sameStoreItems = consideringItems.filter(
+      i => (i.selectedOffer.store_display_name || i.selectedOffer.store) === store
+    );
+    
+    const totalForStore = sameStoreItems.reduce(
+      (sum, i) => sum + (i.selectedOffer.price_cents * i.quantity), 0
+    );
+    
+    // Mark all same-store items as budgeted
+    sameStoreItems.forEach(i => onMarkAsBudgeted(i.id));
+    
+    // Add to budget plan if callback provided
+    if (onAddToBudgetPlan) {
+      onAddToBudgetPlan(store, totalForStore);
+    }
+  };
   
   if (items.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-center">
+        <div className="flex gap-2 justify-center">
           <ScanListDialog onAddItems={onAddScannedItems} />
+          <AddManualItemDialog onAdd={onAddManualItem} />
         </div>
         
         <div className="text-center py-12">
@@ -73,11 +112,58 @@ export const MyListTab = ({
     );
   }
 
+  const renderSection = (
+    title: string, 
+    sectionItems: CartItem[], 
+    showBudgetAction: boolean,
+    collapsed?: boolean,
+    onToggleCollapse?: () => void
+  ) => {
+    if (sectionItems.length === 0) return null;
+    
+    return (
+      <div className="space-y-3">
+        <button 
+          className="flex items-center gap-2 w-full"
+          onClick={onToggleCollapse}
+          disabled={!onToggleCollapse}
+        >
+          {onToggleCollapse && (
+            collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />
+          )}
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+            {title} ({sectionItems.length})
+          </h3>
+        </button>
+        
+        {(!collapsed || !onToggleCollapse) && (
+          <div className="space-y-3">
+            {sectionItems.map((item) => (
+              <CartItemCard
+                key={item.id}
+                item={item}
+                onUpdateQuantity={(qty) => onUpdateQuantity(item.id, qty)}
+                onUpdateStore={(offer) => onUpdateStore(item.id, offer)}
+                onRemove={() => onRemove(item.id)}
+                onTogglePurchased={() => onMarkAsPurchased(item.id)}
+                onAddToBudget={showBudgetAction ? () => handleAddToBudget(item) : undefined}
+                onReAdd={() => onReAddItem(item.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {/* Actions Row */}
       <div className="flex items-center justify-between">
-        <ScanListDialog onAddItems={onAddScannedItems} />
+        <div className="flex gap-2">
+          <ScanListDialog onAddItems={onAddScannedItems} />
+          <AddManualItemDialog onAdd={onAddManualItem} />
+        </div>
         
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -101,18 +187,20 @@ export const MyListTab = ({
         </AlertDialog>
       </div>
       
-      {/* Cart Items */}
-      <div className="space-y-3">
-        {items.map((item) => (
-          <CartItemCard
-            key={item.id}
-            item={item}
-            onUpdateQuantity={(qty) => onUpdateQuantity(item.id, qty)}
-            onUpdateStore={(offer) => onUpdateStore(item.id, offer)}
-            onRemove={() => onRemove(item.id)}
-          />
-        ))}
-      </div>
+      {/* Considering Section */}
+      {renderSection(t('groceryBudget.considering'), consideringItems, true)}
+      
+      {/* Budgeted Section */}
+      {renderSection(t('groceryBudget.budgeted'), budgetedItems, false)}
+      
+      {/* Purchased Section (collapsible) */}
+      {renderSection(
+        t('groceryBudget.purchased'), 
+        purchasedItems, 
+        false,
+        !purchasedExpanded,
+        () => setPurchasedExpanded(!purchasedExpanded)
+      )}
 
       {/* Total at end of list */}
       {itemCount > 0 && (

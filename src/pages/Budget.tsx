@@ -63,9 +63,49 @@ const Budget = () => {
     updateStore,
     removeFromCart,
     clearCart,
+    markAsBudgeted,
+    markAsPurchased,
+    reAddItem,
+    markMerchantAsBudgeted,
     itemCount: groceryItemCount,
     totalCents: groceryTotalCents,
   } = useGroceryCart();
+
+  const GROCERY_RETAILERS = ['woolworths', 'checkers', 'pnp', 'pick n pay', 'makro', 'shoprite', 'spar', 'usave'];
+
+  const handleAddManualItem = (name: string, merchant: string, priceCents: number) => {
+    addToCart({
+      productId: `manual-${Date.now()}`,
+      productName: name,
+      brand: null,
+      imageUrl: null,
+      quantityValue: null,
+      quantityUnit: null,
+      offers: [{
+        store: merchant,
+        store_display_name: merchant,
+        price_cents: priceCents,
+        unit_price_cents: null,
+        in_stock: true,
+        on_sale: false,
+        promotion_text: null,
+        product_url: null,
+      }],
+    });
+    toast.success(t('groceryBudget.addedToList'));
+  };
+
+  const handleAddToBudgetPlan = async (store: string, totalCents: number) => {
+    const isGrocery = GROCERY_RETAILERS.some(r => store.toLowerCase().includes(r));
+    const frequency = isGrocery ? 'Monthly' : 'Once-off';
+    const amountRands = totalCents / 100;
+    
+    try {
+      await addBudgetItem(store, frequency, amountRands);
+    } catch (error) {
+      console.error('Failed to add to budget plan:', error);
+    }
+  };
 
   const handleAddToCart = (product: SearchProduct, selectedOffer?: ProductOffer) => {
     addToCart({
@@ -286,6 +326,11 @@ const Budget = () => {
             onRemove={removeFromCart}
             onClearCart={clearCart}
             onAddScannedItems={handleAddScannedItems}
+            onAddManualItem={handleAddManualItem}
+            onMarkAsPurchased={markAsPurchased}
+            onMarkAsBudgeted={markAsBudgeted}
+            onReAddItem={reAddItem}
+            onAddToBudgetPlan={handleAddToBudgetPlan}
             totalCents={groceryTotalCents}
             itemCount={groceryItemCount}
           />

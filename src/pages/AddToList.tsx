@@ -63,6 +63,7 @@ const AddToList = () => {
         availableOffers: [offer],
         quantity: 1,
         addedAt: now,
+        status: 'considering',
       };
 
       const updatedItems = [...existingItems, newItem];

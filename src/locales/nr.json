@@ -4,7 +4,7 @@
     "budget": "Isabelomali",
     "compare": "Madelanisa Amanani",
     "scan": "Skena Irhelo",
-    "groceryBudget": "Isabelomali Sokudla",
+    "groceryBudget": "Cart Explorer",
     "goals": "Iinjongo",
     "calendar": "Ikhalenda",
     "settings": "Izilungiselelo",
@@ -185,7 +185,7 @@
     }
   },
   "groceryBudget": {
-    "title": "Isabelomali Sokudla",
+    "title": "Cart Explorer",
     "searchTab": "Funana",
     "myListTab": "Irhelo Lami",
     "searchPlaceholder": "Funana ukudla...",

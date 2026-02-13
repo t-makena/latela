@@ -4,7 +4,7 @@
     "budget": "Begroting",
     "compare": "Vergelyk Pryse",
     "scan": "Skandeer Lys",
-    "groceryBudget": "Kruideniersbegroting",
+    "groceryBudget": "Waentjie Verkenner",
     "goals": "Doelwitte",
     "calendar": "Kalender",
     "settings": "Instellings",
@@ -212,7 +212,7 @@
     "scanAnother": "Skandeer Nog Een"
   },
   "groceryBudget": {
-    "title": "Kruideniersbegroting",
+    "title": "Waentjie Verkenner",
     "searchTab": "Soek",
     "myListTab": "My Lys",
     "searchPlaceholder": "Soek kruideniersware...",
