@@ -196,6 +196,16 @@ export default function Chat() {
               if (actionType.includes('calendar_event')) {
                 queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
               }
+              if (actionType.includes('settings')) {
+                queryClient.invalidateQueries({ queryKey: ['user-settings'] });
+              }
+              if (actionType.includes('account')) {
+                queryClient.invalidateQueries({ queryKey: ['accounts'] });
+              }
+              if (actionType.includes('profile')) {
+                queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+                queryClient.invalidateQueries({ queryKey: ['user-settings'] });
+              }
               continue;
             }
             const content = parsed.choices?.[0]?.delta?.content;
