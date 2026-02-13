@@ -112,7 +112,7 @@ export const Navbar = () => {
                   )}
                 >
                   <item.icon size={22} className="shrink-0" />
-                  <span className="truncate">{item.name}</span>
+                  <span className="truncate font-brand">{item.name}</span>
                 </Button>
               ) : (
                 <div className={cn(
@@ -139,7 +139,7 @@ export const Navbar = () => {
                 )}
               >
                 <Wallet size={22} className="shrink-0" />
-                <span className="truncate flex-1 text-left">{t('nav.accounts')}</span>
+                <span className="truncate flex-1 text-left font-brand">{t('nav.accounts')}</span>
                 <ChevronDown className={cn("h-4 w-4 transition-transform", accountsOpen && "rotate-180")} />
               </Button>
             </CollapsibleTrigger>
@@ -200,7 +200,7 @@ export const Navbar = () => {
                   )}
                 >
                   <item.icon size={22} className="shrink-0" {...(item.icon === Sparkles ? { fill: "currentColor", strokeWidth: 1.5 } : {})} />
-                  <span className="truncate">{item.name}</span>
+                  <span className="truncate font-brand">{item.name}</span>
                 </Button>
               ) : (
                 <div className={cn(
@@ -222,7 +222,7 @@ export const Navbar = () => {
             className="w-full gap-3 text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all mt-auto justify-start"
           >
             <LogOut size={22} className="shrink-0" />
-            <span className="truncate">{t('nav.logout')}</span>
+            <span className="truncate font-brand">{t('nav.logout')}</span>
           </Button>
         ) : (
           <button
@@ -250,7 +250,7 @@ export const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right">
                 <div className="flex flex-col items-center mb-6 pt-4">
-                  <h2 className="text-2xl font-bold">Latela</h2>
+                <h2 className="text-2xl font-bold font-brand">Latela</h2>
                 </div>
                 <div className="py-2">
                   <NavContent showLabels={true} />
@@ -276,7 +276,7 @@ export const Navbar = () => {
           )}>
             {isExpanded ? (
               <>
-                <h2 className="text-2xl font-bold">Latela</h2>
+                <h2 className="text-2xl font-bold font-brand">Latela</h2>
                 <Button 
                   variant="ghost" 
                   size="icon"
