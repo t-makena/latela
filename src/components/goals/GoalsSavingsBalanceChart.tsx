@@ -186,9 +186,9 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
         {(() => {
           return (
             <ResponsiveContainer width="100%" height={compact ? 200 : 250}>
-              <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
                 <XAxis dataKey="month" hide={true} />
-                <YAxis hide={true} />
+                <YAxis hide={true} domain={[-5, 'auto']} />
                 <Tooltip 
                   formatter={(value: number, name: string) => [
                     formatCurrency(value), 
