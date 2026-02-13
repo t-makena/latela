@@ -37,6 +37,7 @@ export default function Chat() {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastActivityRef = useRef<number>(Date.now());
 
   // Load conversations
   const loadConversations = useCallback(async () => {
@@ -68,6 +69,17 @@ export default function Chat() {
       if (data) setMessages(data as Message[]);
     })();
   }, [activeConversationId]);
+
+  // Auto-clear after 5 minutes of inactivity
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivityRef.current >= 300000) {
+        startNewConversation();
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [messages.length]);
 
   // Auto-scroll
   useEffect(() => {
@@ -116,6 +128,7 @@ export default function Chat() {
     const text = input.trim();
     if (!text || isLoading) return;
 
+    lastActivityRef.current = Date.now();
     setInput("");
     const userMsg: Message = { role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
@@ -436,7 +449,7 @@ export default function Chat() {
             <Input
               ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { setInput(e.target.value); lastActivityRef.current = Date.now(); }}
               placeholder="Ask Budget Buddy..."
               disabled={isLoading}
               className="flex-1 bg-background/80"

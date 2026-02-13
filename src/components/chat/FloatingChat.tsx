@@ -31,6 +31,18 @@ export default function FloatingChat() {
   const [minimized, setMinimized] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastActivityRef = useRef<number>(Date.now());
+
+  // Auto-clear after 5 minutes of inactivity
+  useEffect(() => {
+    if (!isOpen || messages.length === 0) return;
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivityRef.current >= 300000) {
+        handleNewConversation();
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [isOpen, messages.length]);
 
   // Auto-close when navigating to /chat
   useEffect(() => {
@@ -104,6 +116,7 @@ export default function FloatingChat() {
     const text = input.trim();
     if (!text || isLoading) return;
 
+    lastActivityRef.current = Date.now();
     setInput("");
     const userMsg: Message = { role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
@@ -334,7 +347,7 @@ export default function FloatingChat() {
           <Input
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => { setInput(e.target.value); lastActivityRef.current = Date.now(); }}
             placeholder="Ask Budget Buddy..."
             disabled={isLoading}
             className="flex-1 bg-background/80 h-9 text-xs"
