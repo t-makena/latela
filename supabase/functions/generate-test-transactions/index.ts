@@ -48,11 +48,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Block in production environment
-    const environment = Deno.env.get('ENVIRONMENT') || '';
-    if (environment === 'production') {
+    // Block unless explicitly running in development/staging (fail-closed)
+    const environment = (Deno.env.get('ENVIRONMENT') || '').toLowerCase();
+    if (environment !== 'development' && environment !== 'staging') {
       return new Response(
-        JSON.stringify({ error: 'Not available in production' }),
+        JSON.stringify({ error: 'Not available in this environment' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
