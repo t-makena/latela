@@ -472,8 +472,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <div className="pb-2 mb-2 px-3">
             <div className="flex flex-col gap-1">
               <div>
-                <div className="text-base font-medium">Balance</div>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
+                <div className="heading-card">Balance</div>
+                <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
               </div>
             </div>
           </div>
@@ -548,8 +548,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
         <Card>
           <CardHeader className={isMobile ? "pb-2" : ""}>
             <div>
-              <CardTitle className="text-base">Balance</CardTitle>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
+              <CardTitle className="heading-main">Balance</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
             </div>
           </CardHeader>
           <CardContent className="px-0">
@@ -640,12 +640,12 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           <div className="pb-2 mb-2 px-3">
             <div className="flex flex-col gap-1">
               <div>
-                <div className="text-base font-medium">
+                <div className="heading-card">
                   {selectedCategoryForGraph 
                     ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
                     : "Spending by Category"}
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               </div>
               {selectedCategoryForGraph && (
                 <Button
@@ -761,12 +761,12 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
         <Card>
           <CardHeader>
             <div>
-              <CardTitle className="text-base">
+              <CardTitle className="heading-main">
                 {selectedCategoryForGraph 
                   ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
                   : "Spending by Category"}
               </CardTitle>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               {selectedCategoryForGraph && (
                 <Button
                   variant="outline"

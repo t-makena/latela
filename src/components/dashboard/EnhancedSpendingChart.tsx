@@ -123,8 +123,8 @@ export const EnhancedSpendingChart = ({
       <div className={isMobile ? "" : "p-6"}>
         {showTitle && (
           <div className={isMobile ? "mb-3 px-3" : "mb-4"}>
-            <h3 className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>{title}</h3>
-            <p className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
+            <h3 className={isMobile ? "heading-card" : "heading-main"}>{title}</h3>
+            <p className="text-xs text-muted-foreground">
               {getFilterDescription(selectedPeriod)}
             </p>
           </div>
