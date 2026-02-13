@@ -521,7 +521,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     color: 'hsl(var(--foreground))'
                   }}
                   formatter={(value: number, name: string) => {
-                    const label = name === 'netBalance' ? 'Available Balance' : "Saving's Balance";
+                    const label = name === 'Available Balance' ? 'Available Balance' : "Saving's Balance";
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
@@ -630,7 +630,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     color: 'hsl(var(--foreground))'
                   }}
                   formatter={(value: number, name: string) => {
-                    const label = name === 'netBalance' ? 'Available Balance' : "Saving's Balance";
+                    const label = name === 'Available Balance' ? 'Available Balance' : "Saving's Balance";
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
