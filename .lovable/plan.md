@@ -1,45 +1,48 @@
 
-## Dual-Font Typography System: Cooper BT + Inter
 
-### Overview
-Set Inter as the default body/UI font across the entire app, and reserve Cooper BT for brand elements (logo, nav items, page headings, section titles). This is achieved primarily through global CSS changes with minimal component edits.
+## Redesign Period Filter to Minimal Text Style
 
-### Changes
+### What Changes
+Replace the current button-based period filter with a clean, minimal text-based design matching the reference image. The selected option gets a filled dark circle/pill indicator behind it (like the "1M" in the screenshot), while unselected options are plain text.
 
-**1. Add Inter from Google Fonts (`index.html`)**
-- Add the Google Fonts `<link>` tag for Inter (weights 400, 500, 600, 700) in the `<head>`.
-
-**2. Update Tailwind config (`tailwind.config.ts`)**
-- Change `fontFamily` to define two families:
-  - `'brand'`: `['"Cooper BT"', '"Cooper Black"', 'serif']` -- for headings and nav
-  - `'sans'`: `['Inter', 'system-ui', 'sans-serif']` -- becomes the default body font
-
-**3. Update global CSS (`src/index.css`)**
-- Change the `body` rule from `font-family: 'Cooper BT', serif` to `font-family: 'Inter', system-ui, sans-serif`
-- Add brand font rules for headings and nav items:
-  ```css
-  h1, h2, h3, .heading-main, .heading-card, .page-title, .section-title {
-    font-family: 'Cooper BT', 'Cooper Black', serif;
-  }
-  ```
-- Update the existing `.heading-main` and `.heading-card` utility classes to include `font-family: 'Cooper BT', 'Cooper Black', serif`
-
-**4. Navbar component (`src/components/layout/Navbar.tsx`)**
-- Add `font-brand` class to the "Latela" logo text (`<h2>` on lines 253 and 279)
-- Add `font-brand` class to nav item `<span>` elements (lines 115, 142, 203, 225) so nav labels use Cooper BT
-
-**5. No other component changes needed**
-- The `heading-main` CSS class (used in BudgetItemsCard, LatelaScoreCard, Dashboard, etc.) will inherit Cooper BT from the global CSS rule
-- All other text (tables, labels, numbers, buttons, body text) will automatically use Inter as the new body default
-- The `<CardTitle>` elements that use `heading-main` class already get Cooper BT
-- Score numbers, currency values, metric labels, table content, buttons -- all inherit Inter from body
+### Visual Design
+- Options displayed as plain text labels spaced evenly: `1W  1M  3M  6M  1Y  Custom`
+- The **active** option has a dark filled circle (black background, white text, rounded-full)
+- Unselected options are plain text in muted foreground color
+- No borders, no outline buttons -- just text and one pill highlight
+- "Custom" remains text-based but still opens the calendar popover on click
+- Font: Inter (inherits from body), medium weight
 
 ### Technical Details
 
-Files to edit:
-- `index.html` -- add 1 line (Google Fonts link)
-- `tailwind.config.ts` -- update `fontFamily` object (2 entries)
-- `src/index.css` -- change body font-family, add heading font rules (~5 lines)
-- `src/components/layout/Navbar.tsx` -- add `font-brand` to logo and nav item text (~4 spots)
+**File: `src/components/common/DateFilter.tsx`**
 
-No new dependencies. No structural changes. The approach uses CSS cascade so Inter becomes the default everywhere, and Cooper BT is applied only to brand elements via class or element selectors.
+Replace the repeated `<Button>` elements with a single map over filter options. Each option renders as a `<button>` (not the shadcn Button) with:
+- Base styles: `text-sm font-medium text-muted-foreground cursor-pointer transition-colors`
+- Active styles: `bg-foreground text-background rounded-full w-8 h-8 flex items-center justify-center` (the filled circle pill)
+- Inactive styles: `hover:text-foreground`
+
+The "Custom" option keeps the `Popover` wrapper but uses the same text styling instead of a bordered button. When custom is active and a range is selected, it shows the date range text below or beside.
+
+Structure:
+```
+<div className="flex items-center justify-center gap-6">
+  {filters.map(filter => (
+    <button
+      key={filter}
+      onClick={...}
+      className={cn(
+        "text-sm font-medium transition-all",
+        isActive
+          ? "bg-foreground text-background rounded-full w-8 h-8 flex items-center justify-center"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      {label}
+    </button>
+  ))}
+</div>
+```
+
+No other files need changes -- the DateFilter component is self-contained and used via props everywhere.
+
