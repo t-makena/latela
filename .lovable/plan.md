@@ -1,36 +1,80 @@
 
 
-## Fix: Account Insight Showing All Zeros
+## Fix: Balance Graph Savings Line
 
-### Problem
-The Account Insight table on the Accounts page shows R0,00 for all three metrics (Available Balance, Budget Balance, Spending). This is caused by three issues in how `FinancialInsightContent.tsx` sources its data:
+### Problems
 
-1. **No current-month transactions exist**: All 130 transactions are from January 2026, but the current date is February 2026. `calculateFinancialMetrics()` filters for the current month and gets an empty array.
-2. **Wrong data source for Available Balance**: The Dashboard correctly uses `useAccounts` (actual bank balances from the `accounts` table: R15,951.28). But the Accounts page derives Available Balance from transaction net totals, which are zero.
-3. **Wrong `monthlySpending` indexing**: The code uses `monthlySpending[length - 1]` (always December) instead of the current month's index.
+**In `src/components/financial-insight/FinancialInsightContent.tsx`, function `getNetBalanceData()`:**
+
+1. **1W shows flat 0**: When there are no transactions in the selected period, line 103-105 returns early with `budgetBalance: 0` for all points, ignoring goal savings entirely.
+
+2. **All other periods show flat R2,000 everywhere**: Line 164 sets `budgetBalance: totalAmountSaved` as a constant for every data point regardless of when the goal was created. So Dec, Jan, and Feb all show R2,000 even though the goal was only created on Feb 13.
+
+### Correct Behavior
+
+- **1W** (Feb 7-13): The goal was created Feb 13 (today), so the savings line should show R2,000 for today and 0 for prior days.
+- **1M** (approx Jan W3 to Feb W2): Should be 0 for all weeks before Feb W2, then R2,000 from Feb W2 onward.
+- **3M/6M/1Y**: Should show 0 for all months before Feb 2026, then R2,000 for Feb 2026.
 
 ### Solution
-Update `FinancialInsightContent.tsx` to match the Dashboard's data sourcing pattern:
 
-- **Available Balance**: Use `useAccounts` to sum actual account balances (same as Dashboard's `FinancialSummary`)
-- **Budget Balance**: Use `useBudgetItems.calculateTotalMonthly()` plus upcoming calendar events (same as Dashboard)
-- **Spending**: Sum negative transactions for the current month directly from the transactions array, falling back to the latest month with data if current month is empty
-- **Historical comparisons**: Use `v_daily_account_balances` view data for Available Balance history (per existing memory), and direct transaction aggregation for spending comparisons, instead of the broken `monthlySpending` array indexing
-
-### Technical Changes
+Update `getNetBalanceData()` to compute per-period savings based on each goal's `createdAt` date instead of using a flat total.
 
 **File: `src/components/financial-insight/FinancialInsightContent.tsx`**
 
-1. Add imports for `useAccounts`, `useBudgetItems`, and `useCalendarEvents`
-2. Replace the `calculateFinancialMetrics`-derived metrics (lines 162-170) with:
-   - `availableBalance` = sum of all `account.balance` values from `useAccounts`
-   - `budgetBalance` = `calculateTotalMonthly()` + upcoming events total
-   - `spending` = sum of negative transaction amounts for current month (or latest month with data)
-3. Fix historical comparison data (lines 162-166) to:
-   - Use correct month indexing (`new Date().getMonth()` instead of `length - 1`)
-   - Compute previous/3M/6M spending by directly filtering and summing transactions for those periods
-   - Use account balance history from `v_daily_account_balances` for Available Balance comparisons
-4. Remove unused `calculateFinancialMetrics` import if no longer needed in this component
+#### Change 1: Fix the early return (line 103-105)
 
-This aligns the Accounts page with the Dashboard, ensuring both pages show the same Available Balance (R15,951.28) and Budget Balance figures sourced from the same hooks.
+Remove `budgetBalance: 0` from the no-transactions fallback. Instead, compute savings per-label using the same goal-date logic below.
+
+#### Change 2: Replace flat `totalAmountSaved` (line 153 + 164)
+
+Instead of:
+```js
+const totalAmountSaved = goals.reduce(...);
+// ...
+budgetBalance: totalAmountSaved
+```
+
+For each data point, calculate savings as the sum of `goal.amountSaved` for goals created on or before that period's end date:
+
+```js
+// For each period, compute savings based on goal creation dates
+const getSavingsForDate = (periodEnd: Date) => {
+  return goals.reduce((sum, goal) => {
+    const created = new Date(goal.createdAt);
+    return created <= periodEnd ? sum + goal.amountSaved : sum;
+  }, 0);
+};
+```
+
+#### Change 3: Track actual period dates alongside labels
+
+The current code generates string labels but loses the actual dates. Refactor to retain the period end date for each label so `getSavingsForDate` can be called per data point:
+
+- **1W**: Each label maps to a day -- use that day as the period date
+- **1M**: Each label maps to a week interval -- use the week's end date
+- **3M/6M/1Y**: Each label maps to a month -- use end of that month
+
+Then in the final `labels.map()` (line 157), replace:
+```js
+budgetBalance: totalAmountSaved
+```
+with:
+```js
+budgetBalance: getSavingsForDate(periodEndDates[index])
+```
+
+And similarly in the no-transactions path, return savings based on goal dates instead of 0.
+
+### Visual Result
+
+```text
+Before (6M view, goal created Feb 13 with R2,000):
+Savings: R2,000 -> R2,000 -> R2,000 -> R2,000 -> R2,000 -> R2,000
+         Sep      Oct       Nov       Dec       Jan       Feb
+
+After:
+Savings: R0     -> R0      -> R0      -> R0      -> R0      -> R2,000
+         Sep      Oct       Nov       Dec       Jan       Feb
+```
 
