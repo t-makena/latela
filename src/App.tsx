@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { ColorPaletteProvider } from "@/contexts/ColorPaletteContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { FloatingChatProvider } from "@/contexts/FloatingChatContext";
+import FloatingChat from "@/components/chat/FloatingChat";
 import { Layout } from "./components/layout/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -34,6 +36,8 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <FloatingChatProvider>
+              <FloatingChat />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/" element={
@@ -116,6 +120,7 @@ const App = () => (
                 } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </FloatingChatProvider>
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>

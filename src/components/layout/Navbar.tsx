@@ -15,6 +15,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarComponent } from "@/components/avatars/DefaultAvatars";
+import { useFloatingChat } from "@/contexts/FloatingChatContext";
+import { useLongPress } from "@/hooks/useLongPress";
 export const Navbar = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -24,6 +26,8 @@ export const Navbar = () => {
   const { accounts } = useAccounts();
   const { t } = useLanguage();
   const { profile, getInitials, getDisplayName } = useUserProfile();
+  const { open: openFloatingChat } = useFloatingChat();
+  const longPressHandlers = useLongPress(openFloatingChat, 500);
 
   const UserAvatar = ({ showLabels = true }: { showLabels?: boolean }) => {
     const DefaultAvatarComponent = getAvatarComponent(profile?.default_avatar_id || null);
@@ -188,8 +192,10 @@ export const Navbar = () => {
         {/* Remaining Nav Items */}
         {navItems.slice(1).map((item) => {
           const isActive = location.pathname === item.href;
+          const isBudgetBuddy = item.href === "/chat";
+          const linkProps = isBudgetBuddy ? longPressHandlers : {};
           return (
-            <Link to={item.href} key={item.name}>
+            <Link to={item.href} key={item.name} {...linkProps}>
               {showLabels ? (
                 <Button
                   variant={isActive ? "default" : "ghost"}
