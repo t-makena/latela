@@ -51,6 +51,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   const [lastClickedCategory, setLastClickedCategory] = useState<string | null>(null);
   const [isDetailed, setIsDetailed] = useState(false);
+  const [categoryChartMode, setCategoryChartMode] = useState<'bar' | 'line'>('bar');
   const [categoryAllocationFilter, setCategoryAllocationFilter] = useState<DateFilterOption>("1M");
   const [customAllocationRange, setCustomAllocationRange] = useState<DateRange | undefined>();
   const isMobile = useIsMobile();
@@ -389,6 +390,69 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
 
   const categoryLineData = getCategoryLineData();
 
+  // Generate total spending time-series data for line chart mode
+  const getTotalSpendingLineData = () => {
+    const dateRange = customCategoryRange || getDateRangeForFilter(categoryFilter);
+    const rangeFrom = startOfDay(dateRange.from);
+    const rangeTo = endOfDay(dateRange.to);
+    
+    const filteredTransactions = transactions.filter(t => {
+      const transactionDate = startOfDay(new Date(t.transaction_date));
+      if (t.amount >= 0) return false;
+      return transactionDate >= rangeFrom && transactionDate <= rangeTo;
+    });
+
+    const labels = getLabelsForFilter(categoryFilter, dateRange);
+    const periodAmounts: { [key: string]: number } = {};
+    labels.forEach(label => { periodAmounts[label] = 0; });
+
+    if (categoryFilter === '1W' || categoryFilter === 'custom') {
+      const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
+      filteredTransactions.forEach(t => {
+        const transactionDate = format(new Date(t.transaction_date), 'yyyy-MM-dd');
+        const matchingIndex = days.findIndex(day => format(day, 'yyyy-MM-dd') === transactionDate);
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          periodAmounts[labels[matchingIndex]] += Math.abs(t.amount);
+        }
+      });
+    } else if (categoryFilter === '1M') {
+      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+      filteredTransactions.forEach(t => {
+        const transactionDate = new Date(t.transaction_date);
+        const matchingIndex = weeks.findIndex((weekStart, i) => {
+          const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : dateRange.to;
+          return transactionDate >= weekStart && transactionDate < weekEnd;
+        });
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          periodAmounts[labels[matchingIndex]] += Math.abs(t.amount);
+        }
+      });
+    } else {
+      const months = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
+      filteredTransactions.forEach(t => {
+        const transactionDate = new Date(t.transaction_date);
+        const matchingIndex = months.findIndex(monthStart => 
+          format(monthStart, 'yyyy-MM') === format(transactionDate, 'yyyy-MM')
+        );
+        if (matchingIndex !== -1 && labels[matchingIndex]) {
+          periodAmounts[labels[matchingIndex]] += Math.abs(t.amount);
+        }
+      });
+    }
+
+    return labels.map(label => ({
+      period: label,
+      amount: periodAmounts[label]
+    }));
+  };
+
+  const totalSpendingLineData = getTotalSpendingLineData();
+
+  // Determine dominant category color (highest spending category)
+  const dominantCategory = categoryData.reduce((max, d) => 
+    d.amount > max.amount ? d : max, categoryData[0]);
+  const dominantColor = dominantCategory?.color || '#1e65ff';
+
   return (
     <div className="space-y-6 relative z-10">
       {/* Budget Insight Card */}
@@ -708,15 +772,23 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       {/* Spending by Category Chart */}
       {isMobile ? (
         <div className="mt-4 -mx-3">
-          <div className="pb-2 mb-2 px-3">
+         <div className="pb-2 mb-2 px-3">
             <div className="flex flex-col gap-1">
-              <div>
-                <div className="heading-card">
-                  {selectedCategoryForGraph 
-                    ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
-                    : "Spending by Category"}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="heading-card">
+                    {selectedCategoryForGraph 
+                      ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
+                      : "Spending by Category"}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
+                {!selectedCategoryForGraph && (
+                  <div className="flex gap-1">
+                    <Button variant={categoryChartMode === 'bar' ? 'default' : 'outline'} size="sm" onClick={() => setCategoryChartMode('bar')} className="text-xs h-7 px-2">Bar</Button>
+                    <Button variant={categoryChartMode === 'line' ? 'default' : 'outline'} size="sm" onClick={() => setCategoryChartMode('line')} className="text-xs h-7 px-2">Line</Button>
+                  </div>
+                )}
               </div>
               {selectedCategoryForGraph && (
                 <Button
@@ -744,17 +816,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                       padding: '12px',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                     }}
-                    labelStyle={{ 
-                      fontSize: '14px', 
-                      fontWeight: '600',
-                      marginBottom: '8px',
-                      color: 'hsl(var(--foreground))'
-                    }}
-                    itemStyle={{ 
-                      fontSize: '14px',
-                      padding: '4px 0',
-                      color: 'hsl(var(--foreground))'
-                    }}
+                    labelStyle={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ fontSize: '14px', padding: '4px 0', color: 'hsl(var(--foreground))' }}
                     formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
                     cursor={false}
                   />
@@ -768,38 +831,58 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                       </ReferenceDot>
                     ) : null;
                   })()}
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke={categoryColors[selectedCategoryForGraph]} 
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 3 }}
-                  />
+                  <Line type="monotone" dataKey="amount" stroke={categoryColors[selectedCategoryForGraph]} strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
                 </LineChart>
+              ) : categoryChartMode === 'line' ? (
+                <ComposedChart data={totalSpendingLineData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="fillCategorySpendMobile" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={dominantColor} stopOpacity={0.3} />
+                      <stop offset="100%" stopColor={dominantColor} stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="period" hide={true} />
+                  <YAxis hide={true} domain={[0, 'auto']} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                    labelStyle={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ fontSize: '14px', padding: '4px 0', color: 'hsl(var(--foreground))' }}
+                    formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Total Spending']}
+                    cursor={false}
+                  />
+                  {(() => {
+                    const maxPoint = totalSpendingLineData.reduce((max, d) => d.amount > max.value ? { period: d.period, value: d.amount } : max, { period: '', value: 0 });
+                    const minPoint = totalSpendingLineData.reduce((min, d) => d.amount < min.value ? { period: d.period, value: d.amount } : min, { period: totalSpendingLineData[0]?.period ?? '', value: totalSpendingLineData[0]?.amount ?? Infinity });
+                    return (
+                      <>
+                        {maxPoint.value > 0 && (
+                          <ReferenceDot x={maxPoint.period} y={maxPoint.value} r={0}>
+                            <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                              {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                            </text>
+                          </ReferenceDot>
+                        )}
+                        {minPoint.value < Infinity && minPoint.period !== maxPoint.period && (
+                          <ReferenceDot x={minPoint.period} y={minPoint.value} r={0}>
+                            <text x={0} y={16} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                              {`R${minPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                            </text>
+                          </ReferenceDot>
+                        )}
+                      </>
+                    );
+                  })()}
+                  <Area type="monotone" dataKey="amount" fill="url(#fillCategorySpendMobile)" stroke="none" tooltipType="none" />
+                  <Line type="monotone" dataKey="amount" name="Total Spending" stroke={dominantColor} strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                </ComposedChart>
               ) : (
                 <BarChart data={categoryData} margin={{ top: 5, right: 24, left: 24, bottom: 0 }} onClick={handleBarClick}>
                   <XAxis dataKey="category" hide={true} />
                   <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                    }}
-                    labelStyle={{ 
-                      fontSize: '14px', 
-                      fontWeight: '600',
-                      marginBottom: '8px',
-                      color: 'hsl(var(--foreground))'
-                    }}
-                    itemStyle={{ 
-                      fontSize: '14px',
-                      padding: '4px 0',
-                      color: 'hsl(var(--foreground))'
-                    }}
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                    labelStyle={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ fontSize: '14px', padding: '4px 0', color: 'hsl(var(--foreground))' }}
                     formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
                     labelFormatter={(label: string) => categoryLabels[label] || label}
                     cursor={false}
@@ -840,7 +923,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
         </div>
       ) : (
         <Card>
-          <CardHeader>
+           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="heading-main">
                 {selectedCategoryForGraph 
@@ -859,6 +942,12 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 </Button>
               )}
             </div>
+            {!selectedCategoryForGraph && (
+              <div className="flex gap-1">
+                <Button variant={categoryChartMode === 'bar' ? 'default' : 'outline'} size="sm" onClick={() => setCategoryChartMode('bar')} className="text-xs">Bar</Button>
+                <Button variant={categoryChartMode === 'line' ? 'default' : 'outline'} size="sm" onClick={() => setCategoryChartMode('line')} className="text-xs">Line</Button>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="px-0">
             <ResponsiveContainer width="100%" height={300}>
@@ -867,24 +956,9 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                   <XAxis dataKey="period" hide={true} />
                   <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                    }}
-                    labelStyle={{ 
-                      fontSize: '14px', 
-                      fontWeight: '600',
-                      marginBottom: '8px',
-                      color: 'hsl(var(--foreground))'
-                    }}
-                    itemStyle={{ 
-                      fontSize: '14px',
-                      padding: '4px 0',
-                      color: 'hsl(var(--foreground))'
-                    }}
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                    labelStyle={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ fontSize: '14px', padding: '4px 0', color: 'hsl(var(--foreground))' }}
                     formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
                     cursor={false}
                   />
@@ -898,38 +972,58 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                       </ReferenceDot>
                     ) : null;
                   })()}
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke={categoryColors[selectedCategoryForGraph]} 
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 3 }}
-                  />
+                  <Line type="monotone" dataKey="amount" stroke={categoryColors[selectedCategoryForGraph]} strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
                 </LineChart>
+              ) : categoryChartMode === 'line' ? (
+                <ComposedChart data={totalSpendingLineData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="fillCategorySpendDesktop" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={dominantColor} stopOpacity={0.3} />
+                      <stop offset="100%" stopColor={dominantColor} stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="period" hide={true} />
+                  <YAxis hide={true} domain={[0, 'auto']} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                    labelStyle={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ fontSize: '14px', padding: '4px 0', color: 'hsl(var(--foreground))' }}
+                    formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Total Spending']}
+                    cursor={false}
+                  />
+                  {(() => {
+                    const maxPoint = totalSpendingLineData.reduce((max, d) => d.amount > max.value ? { period: d.period, value: d.amount } : max, { period: '', value: 0 });
+                    const minPoint = totalSpendingLineData.reduce((min, d) => d.amount < min.value ? { period: d.period, value: d.amount } : min, { period: totalSpendingLineData[0]?.period ?? '', value: totalSpendingLineData[0]?.amount ?? Infinity });
+                    return (
+                      <>
+                        {maxPoint.value > 0 && (
+                          <ReferenceDot x={maxPoint.period} y={maxPoint.value} r={0}>
+                            <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                              {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                            </text>
+                          </ReferenceDot>
+                        )}
+                        {minPoint.value < Infinity && minPoint.period !== maxPoint.period && (
+                          <ReferenceDot x={minPoint.period} y={minPoint.value} r={0}>
+                            <text x={0} y={16} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                              {`R${minPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                            </text>
+                          </ReferenceDot>
+                        )}
+                      </>
+                    );
+                  })()}
+                  <Area type="monotone" dataKey="amount" fill="url(#fillCategorySpendDesktop)" stroke="none" tooltipType="none" />
+                  <Line type="monotone" dataKey="amount" name="Total Spending" stroke={dominantColor} strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                </ComposedChart>
               ) : (
                 <BarChart data={categoryData} margin={{ top: 5, right: 24, left: 24, bottom: 0 }} onClick={handleBarClick}>
                   <XAxis dataKey="category" hide={true} />
                   <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                    }}
-                    labelStyle={{ 
-                      fontSize: '14px', 
-                      fontWeight: '600',
-                      marginBottom: '8px',
-                      color: 'hsl(var(--foreground))'
-                    }}
-                    itemStyle={{ 
-                      fontSize: '14px',
-                      padding: '4px 0',
-                      color: 'hsl(var(--foreground))'
-                    }}
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                    labelStyle={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ fontSize: '14px', padding: '4px 0', color: 'hsl(var(--foreground))' }}
                     formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Amount']}
                     labelFormatter={(label: string) => categoryLabels[label] || label}
                     cursor={false}
