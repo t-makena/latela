@@ -16,4 +16,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.scan-grocery-list]
-verify_jwt = true
+verify_jwt = false
+
+[functions.chat-financial]
+verify_jwt = false
