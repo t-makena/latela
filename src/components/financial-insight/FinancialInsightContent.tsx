@@ -481,7 +481,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             {(() => {
               return (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+              <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
@@ -556,7 +556,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             {(() => {
               return (
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-              <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+              <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
