@@ -1,28 +1,45 @@
 
-## Budget Buddy Chat: 3 Fixes
+## Dual-Font Typography System: Cooper BT + Inter
 
-### 1. Fix sidebar close button on desktop
+### Overview
+Set Inter as the default body/UI font across the entire app, and reserve Cooper BT for brand elements (logo, nav items, page headings, section titles). This is achieved primarily through global CSS changes with minimal component edits.
 
-The close button calls `setSidebarOpen(false)`, but the desktop sidebar rendering ignores `sidebarOpen` -- it always shows `w-72 shrink-0`. Fix: make the desktop sidebar also conditional on `sidebarOpen`, toggling between `w-72` and `w-0 overflow-hidden`.
+### Changes
 
-### 2. Use PanelLeftClose icon for sidebar toggle
+**1. Add Inter from Google Fonts (`index.html`)**
+- Add the Google Fonts `<link>` tag for Inter (weights 400, 500, 600, 700) in the `<head>`.
 
-Replace the `X` close icon in the sidebar header with `PanelLeftClose` (already imported in Navbar). Also add a `PanelLeftClose` (or menu/open) button in the main header to reopen the sidebar when it's collapsed (on both mobile and desktop).
+**2. Update Tailwind config (`tailwind.config.ts`)**
+- Change `fontFamily` to define two families:
+  - `'brand'`: `['"Cooper BT"', '"Cooper Black"', 'serif']` -- for headings and nav
+  - `'sans'`: `['Inter', 'system-ui', 'sans-serif']` -- becomes the default body font
 
-### 3. Remove the back button
+**3. Update global CSS (`src/index.css`)**
+- Change the `body` rule from `font-family: 'Cooper BT', serif` to `font-family: 'Inter', system-ui, sans-serif`
+- Add brand font rules for headings and nav items:
+  ```css
+  h1, h2, h3, .heading-main, .heading-card, .page-title, .section-title {
+    font-family: 'Cooper BT', 'Cooper Black', serif;
+  }
+  ```
+- Update the existing `.heading-main` and `.heading-card` utility classes to include `font-family: 'Cooper BT', 'Cooper Black', serif`
 
-Remove the `ArrowLeft` back button from the chat header entirely. Users navigate via the main navbar.
+**4. Navbar component (`src/components/layout/Navbar.tsx`)**
+- Add `font-brand` class to the "Latela" logo text (`<h2>` on lines 253 and 279)
+- Add `font-brand` class to nav item `<span>` elements (lines 115, 142, 203, 225) so nav labels use Cooper BT
+
+**5. No other component changes needed**
+- The `heading-main` CSS class (used in BudgetItemsCard, LatelaScoreCard, Dashboard, etc.) will inherit Cooper BT from the global CSS rule
+- All other text (tables, labels, numbers, buttons, body text) will automatically use Inter as the new body default
+- The `<CardTitle>` elements that use `heading-main` class already get Cooper BT
+- Score numbers, currency values, metric labels, table content, buttons -- all inherit Inter from body
 
 ### Technical Details
 
-**`src/pages/Chat.tsx`:**
+Files to edit:
+- `index.html` -- add 1 line (Google Fonts link)
+- `tailwind.config.ts` -- update `fontFamily` object (2 entries)
+- `src/index.css` -- change body font-family, add heading font rules (~5 lines)
+- `src/components/layout/Navbar.tsx` -- add `font-brand` to logo and nav item text (~4 spots)
 
-- **Sidebar className** (line ~265-270): Change desktop branch from `"w-72 shrink-0"` to check `sidebarOpen`:
-  - When open: `"w-72 shrink-0"`
-  - When closed: `"w-0 overflow-hidden"`
-- **Sidebar close button** (line ~278-280): Replace `X` icon with `PanelLeftClose`
-- **Header** (line ~326-338):
-  - Remove the `ArrowLeft` back button entirely (lines 332-334)
-  - Change the menu button to show on both mobile and desktop when sidebar is closed (remove `isMobile &&` guard), using `PanelLeftClose` rotated or `Menu` icon
-- **Imports** (line ~11): Add `PanelLeftClose` to lucide imports, remove `ArrowLeft`
-- **Initial state**: Change `sidebarOpen` default to `!isMobile` (already the case)
+No new dependencies. No structural changes. The approach uses CSS cascade so Inter becomes the default everywhere, and Cooper BT is applied only to brand elements via class or element selectors.
