@@ -100,8 +100,37 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     // Generate labels based on filter
     const labels = getLabelsForFilter(netBalanceFilter, dateRange);
 
+    // Compute period end dates for each label so we can check goal creation dates
+    let periodEndDates: Date[] = [];
+    if (netBalanceFilter === '1W') {
+      periodEndDates = eachDayOfInterval({ start: dateRange.from, end: dateRange.to })
+        .map(day => endOfDay(day));
+    } else if (netBalanceFilter === '1M') {
+      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+      periodEndDates = weeks.map((weekStart, i) => {
+        const weekEnd = i < weeks.length - 1 ? new Date(weeks[i + 1].getTime() - 1) : endOfDay(dateRange.to);
+        return weekEnd;
+      });
+    } else {
+      // 3M, 6M, 1Y - each label is a month
+      const months = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
+      periodEndDates = months.map(m => endOfDay(new Date(m.getFullYear(), m.getMonth() + 1, 0))); // end of month
+    }
+
+    // Calculate savings for a specific period end date based on goal creation dates
+    const getSavingsForDate = (periodEnd: Date) => {
+      return goals.reduce((sum, goal) => {
+        const created = new Date(goal.createdAt);
+        return created <= periodEnd ? sum + goal.amountSaved : sum;
+      }, 0);
+    };
+
     if (filteredTransactions.length === 0) {
-      return labels.map((label) => ({ month: label, netBalance: 0, budgetBalance: 0 }));
+      return labels.map((label, index) => ({
+        month: label,
+        netBalance: 0,
+        budgetBalance: getSavingsForDate(periodEndDates[index])
+      }));
     }
 
     // Group transactions by period and get the last balance for each period
@@ -149,19 +178,16 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       });
     }
 
-    // Calculate total amount saved from goals
-    const totalAmountSaved = goals.reduce((total, goal) => total + goal.amountSaved, 0);
-
     // Fill in missing periods with previous balance
     let lastBalance = 0;
-    return labels.map((label) => {
+    return labels.map((label, index) => {
       if (balanceByPeriod[label] !== undefined) {
         lastBalance = balanceByPeriod[label];
       }
       return {
         month: label,
         netBalance: lastBalance,
-        budgetBalance: totalAmountSaved // Connected to actual goals savings
+        budgetBalance: getSavingsForDate(periodEndDates[index])
       };
     });
   };
