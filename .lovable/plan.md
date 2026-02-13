@@ -1,66 +1,35 @@
 
 
-## Convert "Spending by Category" to Line Graph View
+## Move Bar/Line Toggle from "Spending by Category" to "Spending Trend"
 
-### Overview
-Add a toggle to switch the "Spending by Category" chart between the existing bar chart and a new line graph view. The line graph shows total spending over time (like the Balance chart) with a gradient area fill below. The line and fill color dynamically match the category with the highest total spending in the selected filter period.
+### What's Changing
+The Bar/Line toggle was mistakenly added to the "Spending by Category" chart on the Analytics page. It should instead be on the "Spending Trend" chart (`EnhancedSpendingChart.tsx`), which appears on the Accounts page.
 
-### How It Works
-- A new toggle button ("Bar" / "Line") appears next to the chart title
-- When "Line" is selected, the chart renders a `ComposedChart` with `Area` + `Line` (same pattern as the Balance chart)
-- The dominant category color is determined by finding which category has the highest total in `categoryData`
-- The gradient fill uses that color at 0.3 opacity fading to 0.05
-- High/low ReferenceDot labels are shown (matching the Balance chart style)
-- Double-click drill-down into a single category still works from bar view
+### Changes
 
-### File: `src/components/financial-insight/FinancialInsightContent.tsx`
+#### 1. Remove toggle from FinancialInsightContent.tsx (Analytics page)
+- Remove the `categoryChartMode` state variable (line 54)
+- Remove the `getTotalSpendingLineData()` function and its result (lines 393-449)
+- Remove the Bar/Line toggle buttons in both mobile (lines 786-791) and desktop (lines 945-950) sections
+- Remove the `ComposedChart` line chart branches in both mobile and desktop chart rendering (the `categoryChartMode === 'line'` conditional blocks)
+- Keep everything else intact (bar chart, category drill-down line graph on double-click, etc.)
 
-#### 1. New state variable (~line 53)
-```tsx
-const [categoryChartMode, setCategoryChartMode] = useState<'bar' | 'line'>('bar');
-```
+#### 2. Add toggle to EnhancedSpendingChart.tsx (Spending Trend)
+- Add imports: `ComposedChart`, `Area`, `Button`
+- Add `chartMode` state: `useState<'bar' | 'line'>('bar')`
+- Add `getLineData()` function that aggregates all expense transactions into time-period buckets (daily/weekly/monthly) using the existing `dateRange` and period logic
+- Compute the dominant category color from `chartData` -- find which category key has the highest total across all data points and use its color from `categoryColors`
+- Add Bar/Line toggle buttons next to the "Spending Trend" title
+- When `chartMode === 'line'`, render a `ComposedChart` with:
+  - A `linearGradient` using the dominant color (0.3 to 0.05 opacity)
+  - An `Area` for the gradient fill (`tooltipType="none"`)
+  - A `Line` with `dot={false}`, `strokeWidth={2}`, matching the Balance chart aesthetic
+  - `ReferenceDot` labels for highest and lowest spending points
+  - Hidden axes
 
-#### 2. New function: generate total spending time-series data (~line 389)
-Reuse the same logic as `getCategoryLineData()` but without filtering to a single category -- aggregate ALL expense transactions into period buckets.
+### Files Modified
 
-#### 3. Determine dominant category color
-```tsx
-const dominantCategory = categoryData.reduce((max, d) => 
-  d.amount > max.amount ? d : max, categoryData[0]);
-const dominantColor = dominantCategory?.color || '#1e65ff';
-```
-
-#### 4. Update chart rendering (both mobile ~line 734 and desktop ~line 864)
-When `categoryChartMode === 'line'` and no `selectedCategoryForGraph`:
-- Render a `ComposedChart` with:
-  - `defs` for a `linearGradient` using `dominantColor`
-  - `Area` with `fill="url(#gradientId)"`, `stroke="none"`, `tooltipType="none"`
-  - `Line` with `stroke={dominantColor}`, `strokeWidth={2}`, `dot={false}`
-  - `ReferenceDot` for max and min points with currency labels
-  - Hidden axes, matching the Balance chart aesthetic
-
-#### 5. Add toggle button in the header
-Next to the title "Spending by Category", add a small segmented toggle:
-```tsx
-<div className="flex gap-1">
-  <Button variant={categoryChartMode === 'bar' ? 'default' : 'outline'} size="sm" 
-    onClick={() => setCategoryChartMode('bar')}>Bar</Button>
-  <Button variant={categoryChartMode === 'line' ? 'default' : 'outline'} size="sm" 
-    onClick={() => setCategoryChartMode('line')}>Line</Button>
-</div>
-```
-
-### Summary of Changes
-
-| Location | Change |
+| File | Action |
 |---|---|
-| Line ~53 | Add `categoryChartMode` state |
-| Line ~389 | Add `getTotalSpendingLineData()` function |
-| Line ~292 | Compute `dominantColor` from `categoryData` |
-| Lines 710-731 (mobile header) | Add Bar/Line toggle buttons |
-| Lines 734-813 (mobile chart) | Add line chart branch when `categoryChartMode === 'line'` |
-| Lines 843-861 (desktop header) | Add Bar/Line toggle buttons |
-| Lines 864-943 (desktop chart) | Add line chart branch when `categoryChartMode === 'line'` |
-
-Only one file is modified: `src/components/financial-insight/FinancialInsightContent.tsx`
-
+| `src/components/financial-insight/FinancialInsightContent.tsx` | Remove toggle, line mode state, and line chart branches |
+| `src/components/dashboard/EnhancedSpendingChart.tsx` | Add toggle, line data function, and line chart rendering |
