@@ -1,77 +1,66 @@
 
+## Fix Balance Chart Line Titles and Add Area Fills
 
-## Chart Visual Improvements
+### Changes
 
-Three changes across all line charts (Balance, Savings Balance, Spending Trend, and Spending by Category line view):
+**File: `src/components/financial-insight/FinancialInsightContent.tsx`**
 
-### 1. Graph padding at p-6 (24px) on left and right edges
+#### 1. Update imports
+Add `Area`, `ComposedChart` from recharts (replacing `LineChart` usage for the Balance charts), or add `defs`, `linearGradient`, and `Area` components. The simplest approach: switch the Balance charts from `LineChart` + `Line` to `ComposedChart` + `Line` + `Area`, which allows mixing line strokes with filled areas beneath.
 
-Currently charts use `margin={{ ... right: 0, left: 0 ... }}`. Update all chart margins to `right: 24, left: 24` so the graph lines start and end with 24px (p-6) inset from the card edges.
+#### 2. Fix tooltip labels
+In both mobile (line 509) and desktop (line 594) formatter functions, change:
+- `'Available Balance'` stays as-is (already correct)
+- `'Savings Balance'` to `"Saving's Balance"`
 
-### 2. Remove dots from line graphs
+Update the `name` prop on both `Line` components (mobile lines 526/535, desktop lines 611/620):
+- `name="Available Balance"` -- already correct
+- `name="Savings Balance"` to `name="Saving's Balance"`
 
-Currently all `<Line>` components have `dot={{ fill: '...', r: 1.5 }}`. Change to `dot={false}` on all Line components, keeping only `activeDot={{ r: 3 }}` for hover interaction.
+#### 3. Add area fills beneath the lines
+For each Balance chart (mobile and desktop), replace `LineChart` with `ComposedChart` and add `Area` components:
 
-### 3. Show highest value label on the chart
+- **Available Balance area**: filled with `#292929` at ~20% opacity, keyed to `netBalance`
+- **Saving's Balance area**: filled with `#05ff86` at ~20% opacity, keyed to `budgetBalance`
 
-Add a Recharts `<ReferenceDot>` at the data point with the highest value, displaying a formatted currency label (e.g., "R5,000.00") positioned above or to the side of the point, similar to the Coinbase/Zcash style in the reference image. Each chart will compute its max data point and render the label.
+Each area uses `<defs>` with `<linearGradient>` for a fade-to-transparent effect (solid at top, transparent at bottom), giving a polished gradient fill.
 
-### Files to Change
+The `<Line>` components remain for the stroke; the `<Area>` components add the fill beneath.
 
-**`src/components/financial-insight/FinancialInsightContent.tsx`**
+#### 4. Specific code structure per chart
 
-Balance chart (mobile, lines 484-529):
-- Margin: `left: 0, right: 0` to `left: 24, right: 24`
-- Two `<Line>` components: change `dot={{ fill: '...', r: 1.5 }}` to `dot={false}`
-- Add `<ReferenceDot>` at the highest `netBalance` point with a currency label
-
-Balance chart (desktop, lines 559-604):
-- Same three changes as mobile
-
-Spending by Category line view (mobile, line 665):
-- Margin: `left: 0, right: 0` to `left: 24, right: 24`
-- Line dot to `dot={false}`
-- Add `<ReferenceDot>` at max `amount`
-
-Spending by Category line view (desktop, line 785):
-- Same three changes
-
-Bar charts (lines 700, 820, and EnhancedSpendingChart line 135): Only apply margin changes (left/right: 24). No dot or label changes for bar charts.
-
-**`src/components/dashboard/EnhancedSpendingChart.tsx`**
-
-- BarChart margin (line 135): `left: 0, right: 0` to `left: 24, right: 24`
-- LineChart fallback (line 416): same margin change, remove default dots, add `<ReferenceDot>` at max
-
-**`src/components/goals/GoalsSavingsBalanceChart.tsx`**
-
-- Margin (line 193): `left: 0, right: 0` to `left: 24, right: 24`
-- Both `<Line>` components (lines 215, 224): `dot` to `false`
-- Add `<ReferenceDot>` at the highest `savings` value with currency label
-
-### Technical Detail: ReferenceDot Implementation
-
-Import `ReferenceDot` from `recharts`. For each line chart, compute the max data point:
-
-```typescript
-const maxPoint = chartData.reduce((max, d) => d.netBalance > max.value 
-  ? { month: d.month, value: d.netBalance } : max, 
-  { month: '', value: 0 });
-```
-
-Then render inside the `<LineChart>`:
 ```tsx
-<ReferenceDot
-  x={maxPoint.month}
-  y={maxPoint.value}
-  r={0}
-  label={{
-    value: formatCurrency(maxPoint.value),
-    position: 'top',
-    style: { fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }
-  }}
-/>
+import { ComposedChart, Area } from "recharts"; // add to imports
+
+// Inside each Balance chart, replace <LineChart> with <ComposedChart>
+<ComposedChart data={netBalanceData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
+  <defs>
+    <linearGradient id="fillAvailable" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#292929" stopOpacity={0.3} />
+      <stop offset="100%" stopColor="#292929" stopOpacity={0.05} />
+    </linearGradient>
+    <linearGradient id="fillSavings" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#05ff86" stopOpacity={0.3} />
+      <stop offset="100%" stopColor="#05ff86" stopOpacity={0.05} />
+    </linearGradient>
+  </defs>
+  <XAxis ... />
+  <YAxis ... />
+  <Tooltip ... formatter with "Saving's Balance" ... />
+  <ReferenceDot ... />
+  <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailable)" stroke="none" />
+  <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavings)" stroke="none" />
+  <Line type="monotone" dataKey="netBalance" name="Available Balance" stroke="#292929" ... />
+  <Line type="monotone" dataKey="budgetBalance" name="Saving's Balance" stroke="#05ff86" ... />
+</ComposedChart>
 ```
 
-The label will float above the highest point, matching the Zcash-style reference image. If the max point is near the right edge, position will adjust to `'left'`; if near the left edge, `'right'`.
+Note: The Available Balance stroke color will also change to `#292929` and Saving's Balance stroke to `#05ff86` to match their respective fill colors.
 
+### Summary of edits
+
+| Location | What changes |
+|---|---|
+| Import (line 4-16) | Add `ComposedChart`, `Area` |
+| Mobile Balance (lines 484-541) | `LineChart` to `ComposedChart`, add gradient defs + Areas, fix name/labels |
+| Desktop Balance (lines 569-626) | Same changes |
