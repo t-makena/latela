@@ -483,7 +483,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                 <XAxis dataKey="month" hide={true} />
-                <YAxis hide={true} />
+                <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--background))',
@@ -558,7 +558,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
               <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                 <XAxis dataKey="month" hide={true} />
-                <YAxis hide={true} />
+                <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--background))',
@@ -664,7 +664,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               {selectedCategoryForGraph ? (
                 <LineChart data={categoryLineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                   <XAxis dataKey="period" hide={true} />
-                  <YAxis hide={true} />
+                  <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
@@ -699,7 +699,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               ) : (
                 <BarChart data={categoryData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} onClick={handleBarClick}>
                   <XAxis dataKey="category" hide={true} />
-                  <YAxis hide={true} />
+                  <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
@@ -784,7 +784,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               {selectedCategoryForGraph ? (
                 <LineChart data={categoryLineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                   <XAxis dataKey="period" hide={true} />
-                  <YAxis hide={true} />
+                  <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
@@ -819,7 +819,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               ) : (
                 <BarChart data={categoryData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} onClick={handleBarClick}>
                   <XAxis dataKey="category" hide={true} />
-                  <YAxis hide={true} />
+                  <YAxis hide={true} domain={[0, 'auto']} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',

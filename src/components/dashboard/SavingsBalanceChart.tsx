@@ -42,7 +42,7 @@ export const SavingsBalanceChart = () => {
         <LineChart data={getChartData()}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />
-          <YAxis />
+          <YAxis domain={[0, 'auto']} />
           <Tooltip formatter={(value, name) => [
             `${formatCurrency(value as number)}`, 
             name === 'balance' ? 'Balance' : 'Transfers Out'

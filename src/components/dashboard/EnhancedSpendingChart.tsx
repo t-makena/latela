@@ -138,7 +138,7 @@ export const EnhancedSpendingChart = ({
                   (selectedPeriod === 'custom' && xAxisLabels.length <= 14) ? "day" : "week"}
                 hide={true}
               />
-              <YAxis hide={true} />
+              <YAxis hide={true} domain={[0, 'auto']} />
               <Tooltip 
                 cursor={false}
                 contentStyle={{ 
@@ -415,7 +415,7 @@ export const EnhancedSpendingChart = ({
           ) : (
             <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
               <XAxis dataKey="month" hide={true} />
-              <YAxis hide={true} />
+              <YAxis hide={true} domain={[0, 'auto']} />
               <Tooltip formatter={(value, name) => [
                 `${formatCurrency(value as number)}`, 
                 'Amount Spent'
