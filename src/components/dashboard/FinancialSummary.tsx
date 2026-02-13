@@ -8,6 +8,7 @@ import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useBudgetMethod } from "@/hooks/useBudgetMethod";
+import { useBudgetScore } from "@/hooks/useBudgetScore";
 
 interface FinancialSummaryProps {
   showExplanations?: boolean;
@@ -21,6 +22,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   const { calculateTotalMonthly, loading: budgetLoading } = useBudgetItems();
   const { t } = useLanguage();
   const { budgetMethod, loading: budgetMethodLoading } = useBudgetMethod();
+  const { riskLevel, loading: scoreLoading } = useBudgetScore();
   const currentDate = new Date();
   const { upcomingEvents, isLoading: eventsLoading } = useCalendarEvents({
     year: currentDate.getFullYear(),
@@ -34,7 +36,7 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   console.log('FinancialSummary - loading:', loading);
   console.log('FinancialSummary - error:', error);
 
-  if (loading || budgetLoading || eventsLoading || accountsLoading || budgetMethodLoading) {
+  if (loading || budgetLoading || eventsLoading || accountsLoading || budgetMethodLoading || scoreLoading) {
     if (minimal) {
       return (
         <div className="animate-pulse">
@@ -155,11 +157,15 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   // Calculate flexible balance (available balance - budget balance)
   const flexibleBalance = availableBalance - budgetBalance;
 
-  // Determine budget status
-  const budgetStatus = flexibleBalance >= 0 ? 'good' : 'bad';
-  const budgetStatusDescription = budgetStatus === 'good' 
-    ? t('finance.onTrack')
-    : t('finance.atRisk');
+  // Map risk level to color classes and labels
+  const riskColorMap: Record<string, string> = {
+    safe: 'text-green-600',
+    mild: 'text-[#fff500]',
+    moderate: 'text-[#f85f00]',
+    high: 'text-[#ff3132]',
+    critical: 'text-[#ff3132]',
+  };
+  const riskColor = riskColorMap[riskLevel] || 'text-foreground';
 
   // Minimal view for mobile redesign - Neo-brutalist style
   if (minimal) {
@@ -246,12 +252,12 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           <div className="label-text mb-1">
             {t('finance.budgetStatus')}
           </div>
-          <div className="text-balance-secondary font-bold mb-1">
-            {t(`finance.${budgetStatus}`)}
+          <div className={`text-balance-secondary font-bold mb-1 ${riskColor}`}>
+            {t(`score.riskLevels.${riskLevel}`)}
           </div>
           {showExplanations && (
             <p className="text-transaction-date text-text-faint">
-              {budgetStatusDescription}
+              {t(`score.riskMessages.${riskLevel}`)}
             </p>
           )}
         </div>
