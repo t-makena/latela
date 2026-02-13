@@ -8,7 +8,7 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
   
   // Filter transactions for current month
   const currentMonthTransactions = transactions.filter(t => {
-    const transactionDate = new Date(t.created_at);
+    const transactionDate = new Date(t.transaction_date);
     return transactionDate.getMonth() === currentMonth && 
            transactionDate.getFullYear() === currentYear;
   });
@@ -82,7 +82,7 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
   const monthlySpending = Array.from({ length: 12 }, (_, i) => {
     const month = new Date(currentYear, i, 1).toLocaleDateString('en-US', { month: 'short' });
     const monthTransactions = transactions.filter(t => {
-      const transactionDate = new Date(t.created_at);
+      const transactionDate = new Date(t.transaction_date);
       return transactionDate.getMonth() === i && transactionDate.getFullYear() === currentYear;
     });
     
