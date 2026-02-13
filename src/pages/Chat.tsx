@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Send, Plus, MessageSquare, Trash2, ArrowLeft, Menu, X } from "lucide-react";
+import { Send, Plus, MessageSquare, Trash2, Menu, PanelLeftClose } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -266,7 +266,7 @@ export default function Chat() {
           "border-r border-border bg-background/80 backdrop-blur-md flex flex-col transition-all duration-300",
           isMobile
             ? cn("absolute inset-y-0 left-0 z-20 w-72", sidebarOpen ? "translate-x-0" : "-translate-x-full")
-            : "w-72 shrink-0"
+            : sidebarOpen ? "w-72 shrink-0" : "w-0 overflow-hidden"
         )}
       >
         <div className="p-3 border-b border-border flex items-center justify-between">
@@ -276,7 +276,7 @@ export default function Chat() {
               <Plus size={16} />
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(false)}>
-              <X size={16} />
+              <PanelLeftClose size={16} />
             </Button>
           </div>
         </div>
@@ -324,14 +324,11 @@ export default function Chat() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <div className="p-3 border-b border-border flex items-center gap-3 bg-background/50 backdrop-blur-sm">
-          {isMobile && (
+          {!sidebarOpen && (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
               <Menu size={18} />
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)}>
-            <ArrowLeft size={18} />
-          </Button>
           <div>
             <h2 className="font-bold text-base">Budget Buddy</h2>
             <p className="text-xs text-muted-foreground">Your AI financial advisor</p>
