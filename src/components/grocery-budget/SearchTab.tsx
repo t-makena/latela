@@ -1,13 +1,22 @@
 import { useState, useMemo } from 'react';
-import { Search, Flame } from 'lucide-react';
+import { Search, SlidersHorizontal, Flame } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { usePriceSearch, SearchProduct, ProductOffer } from '@/hooks/usePriceSearch';
 import { useLanguage } from '@/hooks/useLanguage';
-import { StoreFilterPills, StoreFilter } from './StoreFilterPills';
+import { type StoreFilter } from './StoreFilterPills';
 import { GrocerySearchResultCard } from './GrocerySearchResultCard';
 import { cn } from '@/lib/utils';
+
+const stores: { key: StoreFilter; label: string; tKey?: string }[] = [
+  { key: 'all', label: 'All', tKey: 'groceryBudget.filterAll' },
+  { key: 'checkers', label: 'Checkers' },
+  { key: 'makro', label: 'Makro' },
+  { key: 'pnp', label: 'PnP' },
+  { key: 'woolworths', label: 'Woolies' },
+];
 
 interface SearchTabProps {
   onAddToCart: (product: SearchProduct, selectedOffer?: ProductOffer) => void;
@@ -19,20 +28,17 @@ export const SearchTab = ({ onAddToCart }: SearchTabProps) => {
   const [selectedStore, setSelectedStore] = useState<StoreFilter>('all');
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   
+  const hasActiveFilter = selectedStore !== 'all' || onSaleOnly;
+
   // Filter products based on store and sale filters
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      // Filter offers based on selected store
       const storeFilteredOffers = selectedStore === 'all'
         ? product.offers
         : product.offers.filter(offer => offer.store.toLowerCase() === selectedStore);
-      
-      // Filter by on sale if enabled
       const saleFilteredOffers = onSaleOnly
         ? storeFilteredOffers.filter(offer => offer.on_sale)
         : storeFilteredOffers;
-      
-      // Only include products that have offers after filtering
       return saleFilteredOffers.length > 0;
     });
   }, [products, selectedStore, onSaleOnly]);
@@ -42,36 +48,57 @@ export const SearchTab = ({ onAddToCart }: SearchTabProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-        <Input
-          placeholder={t('groceryBudget.searchPlaceholder')}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-      
-      {/* Filters Row */}
-      <div className="flex flex-wrap items-center gap-3">
-        <StoreFilterPills 
-          selectedStore={selectedStore} 
-          onStoreChange={setSelectedStore} 
-        />
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setOnSaleOnly(!onSaleOnly)}
-          className={cn(
-            "gap-1.5 rounded-full",
-            onSaleOnly && "bg-orange-100 border-orange-300 text-orange-800"
-          )}
-        >
-          <Flame size={14} />
-          {t('groceryBudget.onSaleOnly')}
-        </Button>
+      {/* Search Input + Filter Button */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+          <Input
+            placeholder={t('groceryBudget.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="relative shrink-0">
+              <SlidersHorizontal size={18} />
+              {hasActiveFilter && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border border-foreground" />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-48 bg-card border-foreground p-2 z-50">
+            <div className="space-y-1">
+              {stores.map((store) => (
+                <button
+                  key={store.key}
+                  onClick={() => setSelectedStore(store.key)}
+                  className={cn(
+                    "w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    selectedStore === store.key
+                      ? "bg-foreground text-background"
+                      : "hover:bg-accent"
+                  )}
+                >
+                  {store.tKey ? t(store.tKey) : store.label}
+                </button>
+              ))}
+            </div>
+            <div className="border-t border-border mt-2 pt-2">
+              <button
+                onClick={() => setOnSaleOnly(!onSaleOnly)}
+                className={cn(
+                  "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  onSaleOnly ? "bg-orange-100 text-orange-800" : "hover:bg-accent"
+                )}
+              >
+                <Flame size={14} />
+                {t('groceryBudget.onSaleOnly')}
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       
       {/* Results */}
