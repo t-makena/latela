@@ -1,9 +1,12 @@
+import { startOfDay, endOfDay } from "date-fns";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { DateFilterOption } from "@/components/common/DateFilter";
+import { getDateRangeForFilter, DateRange } from "@/lib/dateFilterUtils";
 
 interface Transaction {
   description: string;
@@ -49,6 +52,8 @@ interface BudgetBreakdownProps {
   showOnlyOneMonth?: boolean;
   transactions?: Transaction[];
   isDetailed?: boolean;
+  dateFilter?: DateFilterOption;
+  customDateRange?: DateRange;
 }
 
 export const BudgetBreakdown = ({ 
@@ -63,7 +68,9 @@ export const BudgetBreakdown = ({
   showOnlyTable = false,
   showOnlyOneMonth = false,
   transactions = [],
-  isDetailed: externalIsDetailed
+  isDetailed: externalIsDetailed,
+  dateFilter,
+  customDateRange
 }: BudgetBreakdownProps) => {
   const isMobile = useIsMobile();
   const { t } = useLanguage();
@@ -72,6 +79,16 @@ export const BudgetBreakdown = ({
   // Use external isDetailed if provided, otherwise use internal state
   const isDetailed = externalIsDetailed !== undefined ? externalIsDetailed : internalIsDetailed;
   const setIsDetailed = externalIsDetailed !== undefined ? () => {} : setInternalIsDetailed;
+
+  // Filter transactions by date if dateFilter is provided
+  const filteredTransactions = (() => {
+    if (!dateFilter) return transactions;
+    const range = customDateRange ? { from: customDateRange.from, to: customDateRange.to } : getDateRangeForFilter(dateFilter);
+    return transactions.filter(t => {
+      const d = new Date(t.transaction_date);
+      return d >= startOfDay(range.from) && d <= endOfDay(range.to);
+    });
+  })();
   
   // Calculate percentage changes for 1 month
   const availableChange = previousMonth.availableBalance 
@@ -160,7 +177,7 @@ export const BudgetBreakdown = ({
       "Savings": 0
     };
 
-    transactions.forEach(transaction => {
+    filteredTransactions.forEach(transaction => {
       // Only count expenses for spending allocation (excluding income)
       if (transaction.type === 'expense' && transaction.parent_category_name) {
         const amount = Math.abs(transaction.amount);
@@ -186,7 +203,7 @@ export const BudgetBreakdown = ({
   const getDetailedCategoryData = () => {
     const subcategoryTotals: Record<string, { value: number; color: string }> = {};
 
-    transactions.forEach(transaction => {
+    filteredTransactions.forEach(transaction => {
       if (transaction.type === 'expense') {
         // Use display_subcategory_name first (which includes custom categories), 
         // then fall back to subcategory_name

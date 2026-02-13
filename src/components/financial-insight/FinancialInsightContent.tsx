@@ -11,8 +11,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
-  Legend
+  Cell
 } from "recharts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useGoals } from "@/hooks/useGoals";
@@ -48,6 +47,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   const [lastClickedCategory, setLastClickedCategory] = useState<string | null>(null);
   const [isDetailed, setIsDetailed] = useState(false);
+  const [categoryAllocationFilter, setCategoryAllocationFilter] = useState<DateFilterOption>("1M");
+  const [customAllocationRange, setCustomAllocationRange] = useState<DateRange | undefined>();
   const isMobile = useIsMobile();
 
   // Filter transactions by account if accountId is provided
@@ -433,7 +434,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             {isDetailed ? "Simple" : "Detailed"}
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           <BudgetBreakdown 
             availableBalance={availableBalance}
             budgetBalance={budgetBalance}
@@ -446,7 +447,20 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             showOnlyPieChart={true}
             transactions={transactions}
             isDetailed={isDetailed}
+            dateFilter={categoryAllocationFilter}
+            customDateRange={customAllocationRange}
           />
+          <div className="flex justify-center mt-4 px-6">
+            <DateFilter 
+              selectedFilter={categoryAllocationFilter}
+              onFilterChange={(filter, dateRange) => {
+                setCategoryAllocationFilter(filter);
+                if (dateRange) {
+                  setCustomAllocationRange(dateRange);
+                }
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -459,38 +473,15 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 <div className="text-base font-medium">Balance</div>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
               </div>
-              <DateFilter 
-                selectedFilter={netBalanceFilter}
-                onFilterChange={(filter, dateRange) => {
-                  setNetBalanceFilter(filter);
-                  if (dateRange) {
-                    setCustomNetBalanceRange(dateRange);
-                  }
-                }}
-              />
             </div>
           </div>
           <div>
             {(() => {
-              const allBalanceValues = netBalanceData.flatMap(d => [d.netBalance, d.budgetBalance]);
-              const minBalance = allBalanceValues.length ? Math.min(...allBalanceValues) : 0;
-              const maxBalance = allBalanceValues.length ? Math.max(...allBalanceValues) : 0;
-              const balanceTicks = minBalance === maxBalance ? [minBalance] : [minBalance, maxBalance];
               return (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={netBalanceData} margin={{ bottom: 40 }}>
+              <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                 <XAxis dataKey="month" hide={true} />
-                <YAxis 
-                  hide={false}
-                  ticks={balanceTicks}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(value: number) => `R${value.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`}
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={11}
-                  width={70}
-                  domain={[minBalance, maxBalance]}
-                />
+                <YAxis hide={true} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--background))',
@@ -516,15 +507,14 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
-                <Legend verticalAlign="bottom" height={24} iconType="line" formatter={(value: string) => value === 'netBalance' ? 'Available Balance' : 'Savings Balance'} />
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
                   name="Available Balance"
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
-                  dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: 'hsl(var(--primary))', r: 1.5 }}
+                  activeDot={{ r: 3 }}
                 />
                 <Line 
                   type="monotone" 
@@ -532,55 +522,41 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                   name="Savings Balance"
                   stroke="#10B981" 
                   strokeWidth={2}
-                  dot={{ fill: '#10B981', r: 4 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: '#10B981', r: 1.5 }}
+                  activeDot={{ r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
               );
             })()}
+            <div className="flex justify-center mt-4 px-3">
+              <DateFilter 
+                selectedFilter={netBalanceFilter}
+                onFilterChange={(filter, dateRange) => {
+                  setNetBalanceFilter(filter);
+                  if (dateRange) {
+                    setCustomNetBalanceRange(dateRange);
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
       ) : (
         <Card>
           <CardHeader className={isMobile ? "pb-2" : ""}>
-            <div className={isMobile ? "flex flex-col gap-2" : "flex items-center justify-between"}>
-              <div>
-                <CardTitle className="text-base">Balance</CardTitle>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
-              </div>
-              <DateFilter 
-                selectedFilter={netBalanceFilter}
-                onFilterChange={(filter, dateRange) => {
-                  setNetBalanceFilter(filter);
-                  if (dateRange) {
-                    setCustomNetBalanceRange(dateRange);
-                  }
-                }}
-              />
+            <div>
+              <CardTitle className="text-base">Balance</CardTitle>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(netBalanceFilter)}</p>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-0">
             {(() => {
-              const allBalanceValues = netBalanceData.flatMap(d => [d.netBalance, d.budgetBalance]);
-              const minBalance = allBalanceValues.length ? Math.min(...allBalanceValues) : 0;
-              const maxBalance = allBalanceValues.length ? Math.max(...allBalanceValues) : 0;
-              const balanceTicks = minBalance === maxBalance ? [minBalance] : [minBalance, maxBalance];
               return (
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-              <LineChart data={netBalanceData} margin={{ bottom: 40 }}>
+              <LineChart data={netBalanceData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                 <XAxis dataKey="month" hide={true} />
-                <YAxis 
-                  hide={false}
-                  ticks={balanceTicks}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(value: number) => `R${value.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`}
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={11}
-                  width={70}
-                  domain={[minBalance, maxBalance]}
-                />
+                <YAxis hide={true} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--background))',
@@ -606,15 +582,14 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
-                <Legend verticalAlign="bottom" height={24} iconType="line" formatter={(value: string) => value === 'netBalance' ? 'Available Balance' : 'Savings Balance'} />
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
                   name="Available Balance"
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
-                  dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: 'hsl(var(--primary))', r: 1.5 }}
+                  activeDot={{ r: 3 }}
                 />
                 <Line 
                   type="monotone" 
@@ -622,13 +597,24 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                   name="Savings Balance"
                   stroke="#10B981" 
                   strokeWidth={2}
-                  dot={{ fill: '#10B981', r: 4 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: '#10B981', r: 1.5 }}
+                  activeDot={{ r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
               );
             })()}
+            <div className="flex justify-center mt-4 px-6">
+              <DateFilter 
+                selectedFilter={netBalanceFilter}
+                onFilterChange={(filter, dateRange) => {
+                  setNetBalanceFilter(filter);
+                  if (dateRange) {
+                    setCustomNetBalanceRange(dateRange);
+                  }
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
       )}
@@ -659,47 +645,24 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <DateFilter 
-                  selectedFilter={categoryFilter}
-                  onFilterChange={(filter, dateRange) => {
-                    setCategoryFilter(filter);
-                    if (dateRange) {
-                      setCustomCategoryRange(dateRange);
-                    }
-                  }}
-                />
-                {selectedCategoryForGraph && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedCategoryForGraph(null)}
-                    className="text-xs"
-                  >
-                    Back
-                  </Button>
-                )}
-              </div>
+              {selectedCategoryForGraph && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedCategoryForGraph(null)}
+                  className="text-xs w-fit"
+                >
+                  Back
+                </Button>
+              )}
             </div>
           </div>
           <div>
             <ResponsiveContainer width="100%" height={300}>
               {selectedCategoryForGraph ? (
-                <LineChart data={categoryLineData} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                  <XAxis 
-                    dataKey="period" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    width={45}
-                  />
+                <LineChart data={categoryLineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                  <XAxis dataKey="period" hide={true} />
+                  <YAxis hide={true} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
@@ -727,26 +690,14 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     dataKey="amount" 
                     stroke={categoryColors[selectedCategoryForGraph]} 
                     strokeWidth={2}
-                    dot={{ fill: categoryColors[selectedCategoryForGraph], r: 4 }}
-                    activeDot={{ r: 6 }}
+                    dot={{ fill: categoryColors[selectedCategoryForGraph], r: 1.5 }}
+                    activeDot={{ r: 3 }}
                   />
                 </LineChart>
               ) : (
-                <BarChart data={categoryData} margin={{ left: isMobile ? 0 : 20, right: isMobile ? 0 : 20 }} onClick={handleBarClick}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                  <XAxis 
-                    dataKey="category" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    width={45}
-                  />
+                <BarChart data={categoryData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} onClick={handleBarClick}>
+                  <XAxis dataKey="category" hide={true} />
+                  <YAxis hide={true} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
@@ -778,8 +729,19 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 </BarChart>
               )}
             </ResponsiveContainer>
+            <div className="flex justify-center mt-4 px-3">
+              <DateFilter 
+                selectedFilter={categoryFilter}
+                onFilterChange={(filter, dateRange) => {
+                  setCategoryFilter(filter);
+                  if (dateRange) {
+                    setCustomCategoryRange(dateRange);
+                  }
+                }}
+              />
+            </div>
             {!selectedCategoryForGraph && (
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center mt-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -796,59 +758,31 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       ) : (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base">
-                  {selectedCategoryForGraph 
-                    ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
-                    : "Spending by Category"}
-                </CardTitle>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <DateFilter 
-                  selectedFilter={categoryFilter}
-                  onFilterChange={(filter, dateRange) => {
-                    setCategoryFilter(filter);
-                    if (dateRange) {
-                      setCustomCategoryRange(dateRange);
-                    }
-                  }}
-                />
-                {selectedCategoryForGraph && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedCategoryForGraph(null)}
-                    className="text-xs"
-                  >
-                    Back
-                  </Button>
-                )}
-              </div>
+            <div>
+              <CardTitle className="text-base">
+                {selectedCategoryForGraph 
+                  ? `${categoryLabels[selectedCategoryForGraph]} Spending` 
+                  : "Spending by Category"}
+              </CardTitle>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{getFilterDescription(categoryFilter)}</p>
+              {selectedCategoryForGraph && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedCategoryForGraph(null)}
+                  className="text-xs mt-2"
+                >
+                  Back
+                </Button>
+              )}
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-0">
             <ResponsiveContainer width="100%" height={300}>
               {selectedCategoryForGraph ? (
-                <LineChart data={categoryLineData} margin={{ left: 20, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                  <XAxis 
-                    dataKey="period" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                  />
-                  <YAxis 
-                    label={{ 
-                      value: 'Amount (R)', 
-                      angle: -90, 
-                      position: 'insideLeft',
-                      style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                    }}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    width={60}
-                  />
+                <LineChart data={categoryLineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                  <XAxis dataKey="period" hide={true} />
+                  <YAxis hide={true} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
@@ -876,29 +810,14 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     dataKey="amount" 
                     stroke={categoryColors[selectedCategoryForGraph]} 
                     strokeWidth={2}
-                    dot={{ fill: categoryColors[selectedCategoryForGraph], r: 4 }}
-                    activeDot={{ r: 6 }}
+                    dot={{ fill: categoryColors[selectedCategoryForGraph], r: 1.5 }}
+                    activeDot={{ r: 3 }}
                   />
                 </LineChart>
               ) : (
-                <BarChart data={categoryData} margin={{ left: 20, right: 20 }} onClick={handleBarClick}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                  <XAxis 
-                    dataKey="category" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                  />
-                  <YAxis 
-                    label={{ 
-                      value: 'Amount (R)', 
-                      angle: -90, 
-                      position: 'insideLeft',
-                      style: { fill: 'hsl(var(--muted-foreground))', fontSize: 11 }
-                    }}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    width={60}
-                  />
+                <BarChart data={categoryData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} onClick={handleBarClick}>
+                  <XAxis dataKey="category" hide={true} />
+                  <YAxis hide={true} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
@@ -930,8 +849,19 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 </BarChart>
               )}
             </ResponsiveContainer>
+            <div className="flex justify-center mt-4 px-6">
+              <DateFilter 
+                selectedFilter={categoryFilter}
+                onFilterChange={(filter, dateRange) => {
+                  setCategoryFilter(filter);
+                  if (dateRange) {
+                    setCustomCategoryRange(dateRange);
+                  }
+                }}
+              />
+            </div>
             {!selectedCategoryForGraph && (
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center mt-2 px-6">
                 <Button 
                   variant="outline" 
                   size="sm" 

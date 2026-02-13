@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend
+  Tooltip
 } from "recharts";
 import { useGoals } from "@/hooks/useGoals";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -179,8 +179,52 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
   return (
     <Card className="bg-card border border-border w-full">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="heading-main">{t('goals.savingsBalance') || 'Savings Balance'}</CardTitle>
+        <CardTitle className="heading-main">{t('goals.savingsBalance') || 'Savings Balance'}</CardTitle>
+      </CardHeader>
+      <CardContent className="px-0 space-y-4">
+        {/* Chart */}
+        {(() => {
+          return (
+            <ResponsiveContainer width="100%" height={compact ? 200 : 250}>
+              <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                <XAxis dataKey="month" hide={true} />
+                <YAxis hide={true} />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    formatCurrency(value), 
+                    name === 'expected' ? (t('goals.expectedBalance') || 'Expected Balance') : 
+                    (t('goals.totalAmountSaved') || 'Total Amount Saved')
+                  ]}
+                  labelFormatter={(label) => label}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '0.5rem'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="expected" 
+                  stroke="hsl(var(--muted-foreground))" 
+                  strokeWidth={2} 
+                  name={t('goals.expectedBalance') || 'Expected Balance'}
+                  dot={{ fill: 'hsl(var(--muted-foreground))', r: 1.5 }}
+                  activeDot={{ r: 3 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="savings" 
+                  stroke="#22c55e" 
+                  strokeWidth={2} 
+                  name={t('goals.totalAmountSaved') || 'Total Amount Saved'}
+                  dot={{ fill: '#22c55e', r: 1.5 }}
+                  activeDot={{ r: 3 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          );
+        })()}
+        <div className="flex justify-center px-6">
           <div className="flex gap-1">
             {periods.map(period => (
               <Button
@@ -195,63 +239,6 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
             ))}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Chart */}
-        {(() => {
-          const allValues = chartData.flatMap(d => [d.expected, d.savings]);
-          const minValue = Math.min(...allValues);
-          const maxValue = Math.max(...allValues);
-          const ticks = minValue === maxValue ? [minValue] : [minValue, maxValue];
-          return (
-            <ResponsiveContainer width="100%" height={compact ? 200 : 250}>
-              <LineChart data={chartData} margin={{ bottom: 40 }}>
-                <XAxis dataKey="month" hide={true} />
-                <YAxis 
-                  hide={false}
-                  ticks={ticks}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(value) => formatCurrency(value)}
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={11}
-                  width={70}
-                  domain={[minValue, maxValue]}
-                />
-                <Tooltip 
-                  formatter={(value: number, name: string) => [
-                    formatCurrency(value), 
-                    name === 'expected' ? (t('goals.expectedBalance') || 'Expected Balance') : 
-                    (t('goals.totalAmountSaved') || 'Total Amount Saved')
-                  ]}
-                  labelFormatter={(label) => label}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '0.5rem'
-                  }}
-                />
-                <Legend verticalAlign="bottom" height={24} iconType="line" wrapperStyle={{ paddingTop: 16 }} />
-                <Line 
-                  type="monotone" 
-                  dataKey="expected" 
-                  stroke="hsl(var(--muted-foreground))" 
-                  strokeWidth={2} 
-                  name={t('goals.expectedBalance') || 'Expected Balance'}
-                  dot={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="savings" 
-                  stroke="#22c55e" 
-                  strokeWidth={2} 
-                  name={t('goals.totalAmountSaved') || 'Total Amount Saved'}
-                  dot={{ fill: '#22c55e' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          );
-        })()}
         
         {/* Shortfall Alert - only shown when there's a shortfall */}
         {savingsStatus.hasShortfall && (
