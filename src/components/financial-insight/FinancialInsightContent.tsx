@@ -524,16 +524,28 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 />
                 {(() => {
                   const maxPoint = netBalanceData.reduce((max, d) => d.netBalance > max.value ? { month: d.month, value: d.netBalance } : max, { month: '', value: 0 });
-                  return maxPoint.value > 0 ? (
-                    <ReferenceDot x={maxPoint.month} y={maxPoint.value} r={0}>
-                      <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
-                        {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
-                      </text>
-                    </ReferenceDot>
-                  ) : null;
+                  const minPoint = netBalanceData.reduce((min, d) => d.netBalance < min.value ? { month: d.month, value: d.netBalance } : min, { month: netBalanceData[0]?.month ?? '', value: netBalanceData[0]?.netBalance ?? Infinity });
+                  return (
+                    <>
+                      {maxPoint.value > 0 && (
+                        <ReferenceDot x={maxPoint.month} y={maxPoint.value} r={0}>
+                          <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                            {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                          </text>
+                        </ReferenceDot>
+                      )}
+                      {minPoint.value < Infinity && minPoint.month !== maxPoint.month && (
+                        <ReferenceDot x={minPoint.month} y={minPoint.value} r={0}>
+                          <text x={0} y={16} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                            {`R${minPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                          </text>
+                        </ReferenceDot>
+                      )}
+                    </>
+                  );
                 })()}
-                <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailableMobile)" stroke="none" />
-                <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavingsMobile)" stroke="none" />
+                <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailableMobile)" stroke="none" tooltipType="none" />
+                <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavingsMobile)" stroke="none" tooltipType="none" />
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
@@ -621,16 +633,28 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 />
                 {(() => {
                   const maxPoint = netBalanceData.reduce((max, d) => d.netBalance > max.value ? { month: d.month, value: d.netBalance } : max, { month: '', value: 0 });
-                  return maxPoint.value > 0 ? (
-                    <ReferenceDot x={maxPoint.month} y={maxPoint.value} r={0}>
-                      <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
-                        {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
-                      </text>
-                    </ReferenceDot>
-                  ) : null;
+                  const minPoint = netBalanceData.reduce((min, d) => d.netBalance < min.value ? { month: d.month, value: d.netBalance } : min, { month: netBalanceData[0]?.month ?? '', value: netBalanceData[0]?.netBalance ?? Infinity });
+                  return (
+                    <>
+                      {maxPoint.value > 0 && (
+                        <ReferenceDot x={maxPoint.month} y={maxPoint.value} r={0}>
+                          <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                            {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                          </text>
+                        </ReferenceDot>
+                      )}
+                      {minPoint.value < Infinity && minPoint.month !== maxPoint.month && (
+                        <ReferenceDot x={minPoint.month} y={minPoint.value} r={0}>
+                          <text x={0} y={16} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                            {`R${minPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                          </text>
+                        </ReferenceDot>
+                      )}
+                    </>
+                  );
                 })()}
-                <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailableDesktop)" stroke="none" />
-                <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavingsDesktop)" stroke="none" />
+                <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailableDesktop)" stroke="none" tooltipType="none" />
+                <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavingsDesktop)" stroke="none" tooltipType="none" />
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
