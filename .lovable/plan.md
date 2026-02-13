@@ -1,41 +1,44 @@
 
 
-## Replace All Backgrounds with Uploaded SVG
+## Change "Budget Insight" to "Account Insight" on Accounts Page
 
 ### What Changes
 
-Replace the four existing PNG background images (multicolor light/dark, black-white light/dark) with the single uploaded SVG. The SVG will be used for all theme/palette combinations, rotated -90 degrees on all viewports.
+The heading "Budget Insight" will become "Account Insight" on the Accounts page (both mobile and desktop), while remaining "Budget Insight" on the Dashboard.
 
-### File Changes
+### Approach
 
-**1. Copy the SVG into the project**
+Add a new translation key `finance.accountInsight` ("Account Insight") to all locale files. Then pass the title as a prop or use context to differentiate:
 
-Copy `user-uploads://Colorful_Simple_Abstract_Phone_Wallpaper_1.svg` to `src/assets/backgrounds/bg-main.svg`.
+**1. All locale files (en.json, af.json, zu.json, etc.)** -- Add new key
 
-**2. Simplify `src/components/layout/BackgroundProvider.tsx`**
+Add `"accountInsight": "Account Insight"` (and translated equivalents) under the `finance` section of each locale file.
 
-- Remove all four PNG imports and the `backgrounds` map
-- Remove the `useColorPalette` and `useTheme` hooks (no longer needed for background selection)
-- Import the single SVG: `import bgMain from '@/assets/backgrounds/bg-main.svg'`
-- Both mobile and desktop render the same SVG with `transform: rotate(-90deg)`, using the existing `img` approach with swapped viewport dimensions to ensure full coverage
+**2. `src/components/financial-insight/BudgetBreakdown.tsx`** -- Accept optional `titleKey` prop
 
-The simplified component:
+Add an optional `titleKey?: string` prop (defaulting to `'finance.budgetInsight'`). Use it in the h3 heading instead of the hardcoded `t('finance.budgetInsight')`.
 
-```text
-BackgroundProvider
-  - Import bgMain SVG
-  - Render a fixed full-screen container
-  - Display the SVG as an <img> rotated -90deg
-  - Use width: 100vh, height: 100vw to cover the viewport after rotation
-```
+**3. `src/components/financial-insight/FinancialInsightContent.tsx`** -- Pass `titleKey`
 
-**3. Old PNG files can optionally be removed**
+When rendering `BudgetBreakdown`, pass `titleKey="finance.accountInsight"` since this component is only used on the Accounts page.
 
-The four files in `src/assets/backgrounds/` (bg-multicolor-light.png, bg-multicolor-dark.png, bg-bw-light.png, bg-bw-dark.png) will no longer be imported anywhere and can be deleted to reduce bundle size.
+**4. `src/components/accounts/MobileBudgetInsightCard.tsx`** -- Use new key
 
-### Technical Notes
+Change the h2 from `t('finance.budgetInsight')` to `t('finance.accountInsight')`.
 
-- The SVG is 1080x1920 (portrait phone wallpaper), so the -90deg rotation makes it landscape-oriented, which works well for desktop. On mobile, the same rotation applies per the user's request.
-- `object-cover` on the img ensures no gaps regardless of viewport aspect ratio.
-- No database or dependency changes needed.
+### Dashboard remains unchanged
 
+- The Dashboard's mobile view uses `MobileBudgetInsightCard` directly -- this will also need to stay as "Budget Insight" there. To handle this, `MobileBudgetInsightCard` will accept an optional `titleKey` prop defaulting to `'finance.budgetInsight'`, and the Accounts page will pass `titleKey="finance.accountInsight"`.
+- The Dashboard desktop view does not use BudgetBreakdown, so no changes needed there.
+
+### Technical Summary
+
+| File | Change |
+|------|--------|
+| All 11 locale JSON files | Add `finance.accountInsight` key |
+| `BudgetBreakdown.tsx` | Add optional `titleKey` prop, default `'finance.budgetInsight'` |
+| `FinancialInsightContent.tsx` | Pass `titleKey="finance.accountInsight"` to BudgetBreakdown |
+| `MobileBudgetInsightCard.tsx` | Add optional `titleKey` prop, default `'finance.budgetInsight'` |
+| `Accounts.tsx` (mobile) | Pass `titleKey="finance.accountInsight"` to MobileBudgetInsightCard |
+
+No database or dependency changes needed.
