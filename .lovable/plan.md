@@ -1,29 +1,29 @@
 
-## Grocery Budget UI Fixes
+## Add Neo-Brutalist Card Wrapper to Grocery Sub-View
 
-### 1. Background visibility
-The grocery sub-view wrapper on mobile (`<div className="min-h-screen py-6 animate-fade-in">`) lacks transparency -- it needs to match other pages by not having a solid background. The desktop grocery view also needs the same treatment. This aligns with the existing pattern where Dashboard and Budget mobile views use transparent wrappers.
+### Problem
+The Grocery Budget sub-view renders its content (search, my list) without the neo-brutalist card styling used everywhere else in the app -- no `bg-card`, no `border border-foreground`, no `4px 4px 0px #000000` box-shadow.
 
-### 2. Replace tab buttons with header icon toggle
-Remove the "Search" and "My List" tab buttons entirely. Instead:
-- **When on Search tab**: Show "Grocery Budget" title on the left, and a ShoppingCart icon (with item count badge) in the top-right corner. Tapping the cart icon switches to the list view.
-- **When on My List tab**: Show "Grocery Budget" title on the left (or "My List"), and a Search icon in the top-right corner. Tapping the search icon switches back to search.
+### Solution
+Wrap the `GrocerySubView` content (below the header row) in a neo-brutalist card container matching the Budget Plan card style.
 
-This replaces the two-button tab navigation with a single contextual icon in the header row.
-
-### 3. Move total to end of list, remove sticky footer
-Remove the sticky bottom footer bar from the grocery sub-view. Instead, the items total / estimated budget line will be rendered at the bottom of the MyListTab component, after all cart item cards.
-
-### Technical Details
+### Changes
 
 **File: `src/pages/Budget.tsx`**
-- In the `GrocerySubView` component:
-  - Remove the entire tab navigation `<div>` (lines 251-277)
-  - Update the header row: keep ArrowLeft + title on the left, add a toggle icon button on the right (ShoppingCart when on search, Search when on list, with item count badge on cart icon)
-  - Remove the sticky footer `<div>` (lines 295-314)
-  - Pass `groceryItemCount` and `groceryTotalCents` to `MyListTab` so it can render the total at the bottom
 
-**File: `src/components/grocery-budget/MyListTab.tsx`**
-- Accept new props: `totalCents` and `itemCount`
-- After the cart items list, render the total line (e.g., "3 items: R129.99") using `formatPriceCents`
-- When the list is empty, show nothing for the total
+In the `GrocerySubView` component (around line 236), wrap the tab content area (the `<div className="flex-1">` block containing `SearchTab` / `MyListTab`) inside a card-styled container:
+
+```tsx
+<div 
+  className="bg-card rounded-3xl border border-foreground p-5 w-full"
+  style={{ boxShadow: '4px 4px 0px #000000' }}
+>
+  {groceryTab === 'search' ? (
+    <SearchTab ... />
+  ) : (
+    <MyListTab ... />
+  )}
+</div>
+```
+
+This applies to both mobile and desktop since `GrocerySubView` is shared. The header (back arrow + title + toggle icon) stays outside the card, matching how other pages show a heading above their card content.
