@@ -52,14 +52,18 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
       const labels = get1MLabels(dateRange);
       const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
       
-      let cumulativeExpected = 0;
-      const weeklyExpected = expectedMonthlySavings / weeks.length;
-      
       for (let i = 0; i < weeks.length; i++) {
         const weekStart = weeks[i];
         const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : endOfDay(dateRange.to);
         
-        cumulativeExpected += weeklyExpected;
+        // Flat expected: total monthly allocation for goals that existed by this week
+        const expectedForWeek = goals.reduce((sum, goal) => {
+          const goalCreated = new Date(goal.createdAt);
+          if (goalCreated <= weekEnd) {
+            return sum + goal.monthlyAllocation;
+          }
+          return sum;
+        }, 0);
         
         const isCurrentWeek = now >= weekStart && now < weekEnd;
         const isPastWeek = now >= weekEnd;
@@ -75,7 +79,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
         
         data.push({
           month: labels[i] || format(weekStart, 'MMM') + ' W' + Math.ceil(weekStart.getDate() / 7),
-          expected: Math.round(cumulativeExpected),
+          expected: Math.round(expectedForWeek),
           savings: Math.round(savingsBalance),
         });
       }
