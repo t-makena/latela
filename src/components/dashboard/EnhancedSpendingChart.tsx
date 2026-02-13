@@ -122,59 +122,23 @@ export const EnhancedSpendingChart = ({
     <>
       <div className={isMobile ? "" : "p-6"}>
         {showTitle && (
-          <div className={isMobile ? "mb-3 px-3" : "mb-4 flex items-start justify-between"}>
-            <div>
-              <h3 className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>{title}</h3>
-              <p className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
-                {getFilterDescription(selectedPeriod)}
-              </p>
-            </div>
-            {!isMobile && (
-              <DateFilter 
-                selectedFilter={selectedPeriod}
-                onFilterChange={(filter, dateRange) => {
-                  setSelectedPeriod(filter);
-                  if (dateRange) {
-                    setCustomDateRange(dateRange);
-                  }
-                }}
-              />
-            )}
-          </div>
-        )}
-        {isMobile && (
-          <div className="flex flex-col gap-2 mb-3 px-3">
-            <DateFilter 
-              selectedFilter={selectedPeriod}
-              onFilterChange={(filter, dateRange) => {
-                setSelectedPeriod(filter);
-                if (dateRange) {
-                  setCustomDateRange(dateRange);
-                }
-              }}
-            />
+          <div className={isMobile ? "mb-3 px-3" : "mb-4"}>
+            <h3 className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>{title}</h3>
+            <p className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
+              {getFilterDescription(selectedPeriod)}
+            </p>
           </div>
         )}
         <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
           {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
-            <BarChart data={chartData} onClick={handleBarClick} margin={{ bottom: 40 }}>
+            <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
               <XAxis 
                 dataKey={selectedPeriod === '1Y' ? "month" : selectedPeriod === '1W' || 
                   (selectedPeriod === 'custom' && xAxisLabels.length <= 14) ? "day" : "week"}
                 hide={true}
               />
-              <YAxis 
-                hide={false}
-                ticks={spendTicks}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value: number) => `R${value.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`}
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
-                width={70}
-                domain={[minSpend, maxSpend]}
-              />
+              <YAxis hide={true} />
               <Tooltip 
                 cursor={false}
                 contentStyle={{ 
@@ -449,19 +413,9 @@ export const EnhancedSpendingChart = ({
               />
             </BarChart>
           ) : (
-            <LineChart data={chartData} margin={{ bottom: 40 }}>
+            <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
               <XAxis dataKey="month" hide={true} />
-              <YAxis 
-                hide={false}
-                ticks={spendTicks}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value: number) => `R${value.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`}
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
-                width={70}
-                domain={[minSpend, maxSpend]}
-              />
+              <YAxis hide={true} />
               <Tooltip formatter={(value, name) => [
                 `${formatCurrency(value as number)}`, 
                 'Amount Spent'
@@ -476,6 +430,17 @@ export const EnhancedSpendingChart = ({
             </LineChart>
           )}
         </ResponsiveContainer>
+        <div className="flex justify-center mt-4 px-6">
+          <DateFilter 
+            selectedFilter={selectedPeriod}
+            onFilterChange={(filter, dateRange) => {
+              setSelectedPeriod(filter);
+              if (dateRange) {
+                setCustomDateRange(dateRange);
+              }
+            }}
+          />
+        </div>
       </div>
 
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
