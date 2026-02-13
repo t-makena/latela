@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, 
-  Tooltip
+  Tooltip, ReferenceDot
 } from "recharts";
 import { useGoals } from "@/hooks/useGoals";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -190,7 +190,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
         {(() => {
           return (
             <ResponsiveContainer width="100%" height={compact ? 200 : 250}>
-              <LineChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
@@ -206,13 +206,23 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                     borderRadius: '0.5rem'
                   }}
                 />
+                {(() => {
+                  const maxPoint = chartData.reduce((max, d) => d.savings > max.value ? { month: d.month, value: d.savings } : max, { month: '', value: 0 });
+                  return maxPoint.value > 0 ? (
+                    <ReferenceDot x={maxPoint.month} y={maxPoint.value} r={0}>
+                      <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                        {formatCurrency(maxPoint.value)}
+                      </text>
+                    </ReferenceDot>
+                  ) : null;
+                })()}
                 <Line 
                   type="monotone" 
                   dataKey="expected" 
                   stroke="hsl(var(--muted-foreground))" 
                   strokeWidth={2} 
                   name={t('goals.expectedBalance') || 'Expected Balance'}
-                  dot={{ fill: 'hsl(var(--muted-foreground))', r: 1.5 }}
+                  dot={false}
                   activeDot={{ r: 3 }}
                 />
                 <Line 
@@ -221,7 +231,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                   stroke="#22c55e" 
                   strokeWidth={2} 
                   name={t('goals.totalAmountSaved') || 'Total Amount Saved'}
-                  dot={{ fill: '#22c55e', r: 1.5 }}
+                  dot={false}
                   activeDot={{ r: 3 }}
                 />
               </LineChart>
