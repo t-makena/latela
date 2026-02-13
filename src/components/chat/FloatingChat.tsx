@@ -233,7 +233,7 @@ export default function FloatingChat() {
   return (
     <div
       className={cn(
-        "fixed z-50 flex flex-col bg-background/95 backdrop-blur-xl border border-border shadow-2xl transition-all duration-300 ease-out",
+        "fixed z-50 flex flex-col bg-background/60 backdrop-blur-xl border border-border shadow-2xl transition-all duration-300 ease-out",
         isMobile
           ? "bottom-0 left-0 right-0 h-[60vh] rounded-t-2xl"
           : "bottom-4 right-4 w-[420px] h-[500px] rounded-2xl"

@@ -295,7 +295,7 @@ export default function Chat() {
             : sidebarOpen ? "w-72 shrink-0" : "w-0 overflow-hidden"
         )}
       >
-        <div className="p-3 border-b border-border flex items-center justify-between">
+        <div className="p-3 border-b border-border flex h-14 items-center justify-between">
           <h3 className="font-bold text-sm">Chat History</h3>
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={startNewConversation}>
@@ -349,7 +349,7 @@ export default function Chat() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="p-3 border-b border-border flex items-center gap-3 bg-background/50 backdrop-blur-sm">
+        <div className="p-3 border-b border-border flex h-14 items-center gap-3 bg-background/50 backdrop-blur-sm">
           {!sidebarOpen && (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
               <Menu size={18} />
