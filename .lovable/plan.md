@@ -1,31 +1,20 @@
 
-## Fix 1M Expected Balance Line
+
+## Fix Balance Graph Zero Line Clipping
 
 ### Problem
-In the 1M (one month) view of the Savings Balance chart, the Expected Balance line accumulates weekly -- it starts near zero in Week 1 and ramps up to the full monthly amount by Week 4. This incorrectly implies that a portion of savings should have already been set aside in earlier weeks. The Expected Balance should be a flat line representing the total monthly savings target.
+The Balance graph's zero-value line is partially covered/clipped at the bottom edge of the chart, the same issue the Savings Balance chart previously had.
 
-### Solution
-Change the 1M chart logic so Expected Balance is a flat value (the full monthly expected savings) across all weeks, rather than a cumulative weekly ramp.
+### Root Cause
+The Balance chart (both mobile and desktop in `FinancialInsightContent.tsx`) uses `margin={{ top: 5, right: 0, left: 0, bottom: 0 }}`, which leaves no breathing room at the bottom. The Savings Balance chart was fixed by using `bottom: 5`.
 
-### File to Change
+### Fix
+Update the `bottom` margin from `0` to `5` on both Balance `LineChart` instances in `FinancialInsightContent.tsx`:
 
-**`src/components/goals/GoalsSavingsBalanceChart.tsx`** (lines 55-81)
+**`src/components/financial-insight/FinancialInsightContent.tsx`**
 
-Replace the cumulative weekly logic:
-```
-cumulativeExpected += weeklyExpected;
-```
+1. **Mobile Balance chart (line 484)**: Change `margin={{ top: 5, right: 0, left: 0, bottom: 0 }}` to `margin={{ top: 5, right: 0, left: 0, bottom: 5 }}`
 
-With a flat expected value that accounts for which goals existed at each week:
-```
-// Calculate expected as total monthly allocation for goals that existed by this week
-const expectedForWeek = goals.reduce((sum, goal) => {
-  const goalCreated = new Date(goal.createdAt);
-  if (goalCreated <= weekEnd) {
-    return sum + goal.monthlyAllocation;
-  }
-  return sum;
-}, 0);
-```
+2. **Desktop Balance chart (line 559)**: Change `margin={{ top: 5, right: 0, left: 0, bottom: 0 }}` to `margin={{ top: 5, right: 0, left: 0, bottom: 5 }}`
 
-Each week's `expected` value will be the flat monthly target (not divided or accumulated), so the orange line stays level across the chart, showing the user what they need to reach by month-end.
+This matches the Savings Balance chart's margin configuration and ensures the zero line is fully visible.
