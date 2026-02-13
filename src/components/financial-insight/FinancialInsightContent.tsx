@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { categorizeTransaction } from "@/lib/transactionCategories";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface FinancialInsightContentProps {
   accountId?: string;
@@ -50,6 +51,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const [categoryAllocationFilter, setCategoryAllocationFilter] = useState<DateFilterOption>("1M");
   const [customAllocationRange, setCustomAllocationRange] = useState<DateRange | undefined>();
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
 
   // Filter transactions by account if accountId is provided
   const transactions = accountId 
@@ -389,7 +391,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       {/* Budget Insight Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="heading-main">Budget Insight</CardTitle>
+          <CardTitle className="heading-main">{t('finance.accountInsight')}</CardTitle>
         </CardHeader>
         <CardContent>
           <BudgetBreakdown 

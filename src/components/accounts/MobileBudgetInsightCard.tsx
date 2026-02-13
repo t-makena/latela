@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 
 type PeriodOption = "1 Mth" | "3 Mth" | "6 Mth" | "1 Yr";
 
-export const MobileBudgetInsightCard = () => {
+export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: { titleKey?: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("1 Mth");
   const { t } = useLanguage();
   
@@ -141,7 +141,7 @@ export const MobileBudgetInsightCard = () => {
       <div 
         className="bg-card rounded-3xl border border-foreground p-5 w-full"
       >
-        <h2 className="heading-card mb-4">{t('finance.budgetInsight')}</h2>
+        <h2 className="heading-card mb-4">{t(titleKey)}</h2>
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">

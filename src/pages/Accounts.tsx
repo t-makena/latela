@@ -51,7 +51,7 @@ const Accounts = () => {
     return (
       <div className="min-h-screen py-6 space-y-5 animate-fade-in">
         <MobileAccountCard account={accounts[0]} />
-        <MobileBudgetInsightCard />
+        <MobileBudgetInsightCard titleKey="finance.accountInsight" />
         
         <StatementUploadDialog 
           open={addAccountOpen} 
