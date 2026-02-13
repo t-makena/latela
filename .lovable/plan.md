@@ -1,67 +1,95 @@
 
-## Move Store Filters into a Dropdown Button
 
-### Problem
-The store filter pills (All, Checkers, Makro, PnP, Woolies) and the "On Sale" button take up a full row below the search bar, cluttering the UI on mobile.
+## Coinbase-Style Chart Refinements
 
-### Solution
-Replace the standalone filter pills row with a single **filter button** placed at the right end of the search bar. Tapping it opens a dropdown/popover showing the store options and the "On Sale" toggle. The button shows a visual indicator when a non-default filter is active.
+### Overview
+Apply 5 changes across all chart cards on the Accounts page: edge-to-edge graphs, remove legends, smaller data dots, relocate period filters below charts, and add a period filter to Budget Allocation.
 
-### Changes
+### Affected Components
+- **FinancialInsightContent.tsx** -- Balance chart (mobile + desktop), Spending by Category chart (mobile + desktop)
+- **EnhancedSpendingChart.tsx** -- Spending Trend chart
+- **GoalsSavingsBalanceChart.tsx** -- Savings Balance chart (Goals page, but same pattern)
 
-**File: `src/components/grocery-budget/SearchTab.tsx`**
-- Import `Popover`, `PopoverTrigger`, `PopoverContent` from `@/components/ui/popover` and `SlidersHorizontal` icon from lucide
-- Replace the search input `<div className="relative">` with a flex row containing the search input (flex-1) and a filter button on the right
-- The filter button uses `SlidersHorizontal` icon; when a filter is active (store not "all" or onSaleOnly is true), show a small colored dot badge on the button
-- Remove the entire "Filters Row" `<div>` (lines 57-75)
-- Inside the `PopoverContent`, render the store options as a vertical list of buttons (similar styling to current pills) plus the "On Sale" toggle at the bottom
-- Give the popover `bg-card` background and high z-index for visibility
+---
 
-**File: `src/components/grocery-budget/StoreFilterPills.tsx`**
-- Keep the component and its `StoreFilter` type export (still used for the filter logic)
-- Optionally refactor to a vertical layout variant, or inline the store list directly in SearchTab
+### Change 1: Edge-to-edge graphs (Coinbase alignment)
+Remove left/right padding so chart lines/bars start and end flush with the card edges.
 
-### Layout
+- **All LineCharts/BarCharts**: Set `margin={{ top: 5, right: 0, left: 0, bottom: 0 }}` (remove the current `bottom: 40` and any `left: 20, right: 20` margins)
+- **YAxis**: Set `width={0}` and `hide={true}` (the min/max ticks currently take up ~70px on the left). The Y-axis reference values are no longer needed since hover tooltips show amounts.
+- **CardContent**: Remove horizontal padding on chart containers -- use `px-0` so the ResponsiveContainer fills the full card width. Keep vertical padding.
+- Applies to: Balance chart (lines 480-538 mobile, 570-628 desktop), Spending Trend (line 161 BarChart, line 452 LineChart), Spending by Category (lines 686-778 mobile, 832-931 desktop), Savings Balance (lines 207-252).
 
-```text
-Before:
-[🔍  Search groceries...              ]
-[All] [Checkers] [Makro] [PnP] [Woolies] [🔥 On Sale]
+### Change 2: Remove legends
+Delete all `<Legend>` components from charts. The tooltip on hover already differentiates data series by name and color.
 
-After:
-[🔍  Search groceries...              ] [⚙ Filter]
-                                          ┌──────────┐
-                                          │ All      │
-                                          │ Checkers │
-                                          │ Makro    │
-                                          │ PnP      │
-                                          │ Woolies  │
-                                          │──────────│
-                                          │ 🔥 Sale  │
-                                          └──────────┘
-```
+- **Balance chart**: Remove `<Legend>` at lines 519 (mobile) and 609 (desktop)
+- **Savings Balance chart**: Remove `<Legend>` at line 234
+- **Spending Trend / Category charts**: These don't currently have `<Legend>` components (they use custom tooltips), so no change needed
+
+### Change 3: Smaller data point dots
+Reduce `dot` radius from `r: 4` to `r: 1.5` and `activeDot` from `r: 6` to `r: 3` on all Line components.
+
+- **Balance chart**: Lines 526-527, 534-535 (mobile) and 616-617, 624-625 (desktop) -- change `dot={{ r: 4 }}` to `dot={{ r: 1.5 }}`, `activeDot={{ r: 3 }}`
+- **Savings Balance chart**: Lines 241, 249 -- change `dot={{ fill: '...', r: 4 }}` to `dot={{ fill: '...', r: 1.5 }}`
+- **Category line chart**: Lines 730, 879 -- change `dot={{ r: 4 }}` to `dot={{ r: 1.5 }}`, `activeDot={{ r: 3 }}`
+
+### Change 4: Move period filters below charts
+Relocate `<DateFilter>` from the card header area to below the chart, centered, where the legend used to sit. This matches the Coinbase reference image where `1H 1D 1W 1M 1Y All` sits below the graph.
+
+- **Balance chart (desktop)**: Move `<DateFilter>` from `CardHeader` (line 552-560) to after the `ResponsiveContainer` closing tag inside `CardContent`, wrapped in a centered `div` with `mt-4`
+- **Balance chart (mobile)**: Move `<DateFilter>` from the header area (line 462-469) to after the chart `ResponsiveContainer`
+- **Spending Trend**: Move `<DateFilter>` from the title area (lines 132-142 desktop, 146-156 mobile) to after the `ResponsiveContainer`
+- **Spending by Category**: Move `<DateFilter>` from header area to below chart for both mobile (lines 663-671) and desktop (lines 808-817)
+- **Savings Balance**: Move period buttons from `CardHeader` (lines 184-196) to below chart
+
+### Change 5: Add period filter to Budget Allocation card
+The Budget Allocation card (pie chart rendered by `BudgetBreakdown`) currently has no time filter. Add a `categoryAllocationFilter` state (default `"1M"`) and a `<DateFilter>` below the pie chart. Pass the selected filter to `BudgetBreakdown` so it filters transactions by the chosen period when generating the pie chart data.
+
+- **FinancialInsightContent.tsx**: Add new state `categoryAllocationFilter` and `customAllocationRange`
+- Pass `dateFilter` and `customDateRange` props to `BudgetBreakdown` when `showOnlyPieChart` is true
+- Add `<DateFilter>` component below the pie chart content in `CardContent`
+- **BudgetBreakdown.tsx**: Accept optional `dateFilter` and `customDateRange` props, and use them to filter `transactions` by date before generating the pie chart data (similar to how `getCategoryData` works in the parent)
 
 ### Technical Details
 
-**SearchTab.tsx** updated structure:
+**Files to modify:**
+1. `src/components/financial-insight/FinancialInsightContent.tsx` -- All 5 changes
+2. `src/components/dashboard/EnhancedSpendingChart.tsx` -- Changes 1, 4
+3. `src/components/goals/GoalsSavingsBalanceChart.tsx` -- Changes 1, 2, 3, 4
+4. `src/components/financial-insight/BudgetBreakdown.tsx` -- Change 5 (accept filter props, filter transactions)
+
+**Margin pattern for edge-to-edge (all charts):**
 ```tsx
-<div className="flex items-center gap-2">
-  <div className="relative flex-1">
-    <Search ... />
-    <Input ... />
-  </div>
-  <Popover>
-    <PopoverTrigger asChild>
-      <Button variant="outline" size="icon" className="relative shrink-0">
-        <SlidersHorizontal size={18} />
-        {hasActiveFilter && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full" />}
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent align="end" className="w-48 bg-card border-foreground p-2 z-50">
-      {/* Store buttons + On Sale toggle */}
-    </PopoverContent>
-  </Popover>
-</div>
+// Before
+<LineChart data={data} margin={{ bottom: 40 }}>
+  <YAxis hide={false} ticks={ticks} width={70} ... />
+
+// After  
+<LineChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+  <YAxis hide={true} />
 ```
 
-The active filter indicator dot lets users know a filter is applied even when the popover is closed. Selecting "All" with sale off returns to default (no dot).
+**DateFilter relocation pattern:**
+```tsx
+// Before (in CardHeader)
+<CardHeader>
+  <CardTitle>Balance</CardTitle>
+  <DateFilter ... />
+</CardHeader>
+<CardContent>
+  <ResponsiveContainer>...</ResponsiveContainer>
+</CardContent>
+
+// After (below chart)
+<CardHeader>
+  <CardTitle>Balance</CardTitle>
+</CardHeader>
+<CardContent className="px-0">
+  <ResponsiveContainer>...</ResponsiveContainer>
+  <div className="flex justify-center mt-4 px-6">
+    <DateFilter ... />
+  </div>
+</CardContent>
+```
+
