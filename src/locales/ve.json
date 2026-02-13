@@ -4,7 +4,7 @@
     "budget": "Bajete",
     "compare": "Vhambedza Mutengo",
     "scan": "Skena Tshithu",
-    "groceryBudget": "Bajete ya Zwiḽiwa",
+    "groceryBudget": "Cart Explorer",
     "goals": "Zwipikwa",
     "calendar": "Khalendara",
     "settings": "Zwidodombedzwa",
@@ -185,7 +185,7 @@
     }
   },
   "groceryBudget": {
-    "title": "Bajete ya Zwiḽiwa",
+    "title": "Cart Explorer",
     "searchTab": "Ṱoḓa",
     "myListTab": "Tshiṱangano Tshanga",
     "searchPlaceholder": "Ṱoḓa zwiḽiwa...",

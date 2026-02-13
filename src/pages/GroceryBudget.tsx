@@ -24,6 +24,9 @@ const GroceryBudget = () => {
     updateStore,
     removeFromCart,
     clearCart,
+    markAsBudgeted,
+    markAsPurchased,
+    reAddItem,
     itemCount,
     totalCents,
   } = useGroceryCart();
@@ -73,6 +76,27 @@ const GroceryBudget = () => {
     });
   };
 
+  const handleAddManualItem = (name: string, merchant: string, priceCents: number) => {
+    addToCart({
+      productId: `manual-${Date.now()}`,
+      productName: name,
+      brand: null,
+      imageUrl: null,
+      quantityValue: null,
+      quantityUnit: null,
+      offers: [{
+        store: merchant,
+        store_display_name: merchant,
+        price_cents: priceCents,
+        unit_price_cents: null,
+        in_stock: true,
+        on_sale: false,
+        promotion_text: null,
+        product_url: null,
+      }],
+    });
+    toast.success(t('groceryBudget.addedToList'));
+  };
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Header */}
@@ -122,6 +146,10 @@ const GroceryBudget = () => {
             onRemove={removeFromCart}
             onClearCart={clearCart}
             onAddScannedItems={handleAddScannedItems}
+            onAddManualItem={handleAddManualItem}
+            onMarkAsPurchased={markAsPurchased}
+            onMarkAsBudgeted={markAsBudgeted}
+            onReAddItem={reAddItem}
           />
         )}
       </div>

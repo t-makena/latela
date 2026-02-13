@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ProductOffer } from './usePriceSearch';
 
+export type CartItemStatus = 'considering' | 'budgeted' | 'purchased';
+
 export interface CartItem {
   id: string;
   productId: string;
@@ -13,6 +15,7 @@ export interface CartItem {
   availableOffers: ProductOffer[];
   quantity: number;
   addedAt: number;
+  status: CartItemStatus;
 }
 
 interface AddToCartParams {
@@ -32,13 +35,18 @@ export const useGroceryCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount, migrate old items without status
   useEffect(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        setItems(parsed);
+        // Migration: add status field to old items
+        const migrated = parsed.map((item: any) => ({
+          ...item,
+          status: item.status || 'considering',
+        }));
+        setItems(migrated);
       }
     } catch (error) {
       console.error('Failed to load cart from localStorage:', error);
@@ -95,6 +103,7 @@ export const useGroceryCart = () => {
         availableOffers: offers,
         quantity: 1,
         addedAt: Date.now(),
+        status: 'considering',
       };
       
       return [...prev, newItem];
@@ -121,6 +130,32 @@ export const useGroceryCart = () => {
 
   const clearCart = useCallback(() => {
     setItems([]);
+  }, []);
+
+  const markAsBudgeted = useCallback((itemId: string) => {
+    setItems(prev => prev.map(item => 
+      item.id === itemId ? { ...item, status: 'budgeted' as CartItemStatus } : item
+    ));
+  }, []);
+
+  const markAsPurchased = useCallback((itemId: string) => {
+    setItems(prev => prev.map(item => 
+      item.id === itemId ? { ...item, status: 'purchased' as CartItemStatus } : item
+    ));
+  }, []);
+
+  const reAddItem = useCallback((itemId: string) => {
+    setItems(prev => prev.map(item => 
+      item.id === itemId ? { ...item, status: 'considering' as CartItemStatus } : item
+    ));
+  }, []);
+
+  const markMerchantAsBudgeted = useCallback((store: string) => {
+    setItems(prev => prev.map(item => 
+      item.selectedOffer.store === store && item.status === 'considering'
+        ? { ...item, status: 'budgeted' as CartItemStatus }
+        : item
+    ));
   }, []);
 
   const itemCount = useMemo(() => 
@@ -155,6 +190,10 @@ export const useGroceryCart = () => {
     updateStore,
     removeFromCart,
     clearCart,
+    markAsBudgeted,
+    markAsPurchased,
+    reAddItem,
+    markMerchantAsBudgeted,
     itemCount,
     totalCents,
     storeBreakdown,

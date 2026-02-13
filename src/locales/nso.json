@@ -4,7 +4,7 @@
     "budget": "Tekanyetšo",
     "compare": "Bapetša Ditheko",
     "scan": "Skena Lenaneo",
-    "groceryBudget": "Tekanyetšo ya Dijo",
+    "groceryBudget": "Cart Explorer",
     "goals": "Maikemišetšo",
     "calendar": "Khalendara",
     "settings": "Ditlhophiso",
@@ -212,7 +212,7 @@
     "scanAnother": "Skena ye nngwe"
   },
   "groceryBudget": {
-    "title": "Tekanyetšo ya Dijo",
+    "title": "Cart Explorer",
     "searchTab": "Nyaka",
     "myListTab": "Lenaneo la Ka",
     "searchPlaceholder": "Nyaka dijo...",

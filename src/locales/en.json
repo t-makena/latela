@@ -4,7 +4,7 @@
     "budget": "Budget",
     "compare": "Compare Prices",
     "scan": "Scan List",
-    "groceryBudget": "Grocery Budget",
+    "groceryBudget": "Cart Explorer",
     "goals": "Goals",
     "calendar": "Calendar",
     "settings": "Settings",
@@ -316,7 +316,7 @@
     "scanAnother": "Scan Another"
   },
   "groceryBudget": {
-    "title": "Grocery Budget",
+    "title": "Cart Explorer",
     "searchTab": "Search",
     "myListTab": "My List",
     "searchPlaceholder": "Search groceries...",
@@ -335,8 +335,17 @@
     "itemsAdded": "Added {{count}} items to your list",
     "changeStore": "Change store",
     "emptyList": "Your list is empty",
-    "emptyListHint": "Search for items or scan a grocery list",
+    "emptyListHint": "Search for items, scan a grocery list, or add manually",
     "clearList": "Clear List",
-    "confirmClear": "Are you sure you want to clear your list?"
+    "confirmClear": "Are you sure you want to clear your list?",
+    "addItem": "Add Item",
+    "itemName": "Item Name",
+    "itemNamePlaceholder": "e.g. Milk, Bread...",
+    "merchant": "Merchant/Store",
+    "merchantPlaceholder": "e.g. Woolworths, Zara...",
+    "priceRands": "Price (Rands)",
+    "considering": "Considering",
+    "budgeted": "Budgeted",
+    "purchased": "Purchased"
   }
 }

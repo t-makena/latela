@@ -4,7 +4,7 @@
     "budget": "Bajete",
     "compare": "Pimanyisa Mitsengo",
     "scan": "Skena Nxaxamelo",
-    "groceryBudget": "Bajete ya Swakudya",
+    "groceryBudget": "Cart Explorer",
     "goals": "Swikongomelelo",
     "calendar": "Khalendara",
     "settings": "Tiyimiselo",
@@ -185,7 +185,7 @@
     }
   },
   "groceryBudget": {
-    "title": "Bajete ya Swakudya",
+    "title": "Cart Explorer",
     "searchTab": "Lava",
     "myListTab": "Nxaxamelo wa Mina",
     "searchPlaceholder": "Lava swakudya...",
