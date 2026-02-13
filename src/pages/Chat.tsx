@@ -10,6 +10,7 @@ import { Send, Plus, MessageSquare, Trash2, Menu, PanelLeftClose } from "lucide-
 import { toast } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -27,6 +28,7 @@ export default function Chat() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -182,6 +184,20 @@ export default function Chat() {
           if (jsonStr === "[DONE]") break;
           try {
             const parsed = JSON.parse(jsonStr);
+            // Handle action events from tool execution
+            if (parsed.action) {
+              const actionType = parsed.action as string;
+              if (actionType.includes('goal')) {
+                queryClient.invalidateQueries({ queryKey: ['goals'] });
+              }
+              if (actionType.includes('budget_item')) {
+                queryClient.invalidateQueries({ queryKey: ['budget-items'] });
+              }
+              if (actionType.includes('calendar_event')) {
+                queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+              }
+              continue;
+            }
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) upsertAssistant(content);
           } catch {
