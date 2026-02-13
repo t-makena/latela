@@ -1,10 +1,11 @@
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 import { 
-  LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, 
+  LineChart, Line, BarChart, Bar, ComposedChart, Area, ResponsiveContainer, XAxis, YAxis, 
   CartesianGrid, Tooltip, ReferenceDot
 } from "recharts";
 import { DateFilter, DateFilterOption } from "@/components/common/DateFilter";
@@ -16,6 +17,7 @@ import {
 } from "@/lib/dateFilterUtils";
 import { generateChartDataFromTransactions } from "@/lib/chartDataUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { format, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, startOfDay, endOfDay } from "date-fns";
 
 interface EnhancedSpendingChartProps {
   accountSpecific?: boolean;
@@ -56,6 +58,7 @@ export const EnhancedSpendingChart = ({
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
   const [selectedBarData, setSelectedBarData] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [chartMode, setChartMode] = useState<'bar' | 'line'>('bar');
   const isMobile = useIsMobile();
 
   const dateRange = getDateRangeForFilter(selectedPeriod, customDateRange);
@@ -90,6 +93,70 @@ export const EnhancedSpendingChart = ({
   const maxSpend = allTotals.length ? Math.max(...allTotals) : 0;
   const spendTicks = minSpend === maxSpend ? [minSpend] : [minSpend, maxSpend];
 
+  // Compute dominant category color from chart data
+  const getDominantColor = () => {
+    const categoryTotals: Record<string, number> = {};
+    const categories = Object.keys(categoryColors);
+    categories.forEach(cat => {
+      categoryTotals[cat] = chartData.reduce((sum: number, d: any) => sum + (d[cat] || 0), 0);
+    });
+    let maxCat = categories[0];
+    let maxVal = 0;
+    categories.forEach(cat => {
+      if (categoryTotals[cat] > maxVal) {
+        maxVal = categoryTotals[cat];
+        maxCat = cat;
+      }
+    });
+    return categoryColors[maxCat as keyof typeof categoryColors] || '#1e65ff';
+  };
+  const dominantColor = getDominantColor();
+
+  // Generate line data for line chart mode
+  const getLineData = () => {
+    const rangeFrom = startOfDay(dateRange.from);
+    const rangeTo = endOfDay(dateRange.to);
+    
+    const filteredTransactions = transactions.filter(t => {
+      const d = startOfDay(new Date(t.transaction_date));
+      return t.amount < 0 && d >= rangeFrom && d <= rangeTo;
+    });
+
+    const labels = xAxisLabels;
+    const periodAmounts: Record<string, number> = {};
+    labels.forEach(l => { periodAmounts[l] = 0; });
+
+    if (selectedPeriod === '1W' || (selectedPeriod === 'custom' && labels.length <= 14)) {
+      const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
+      filteredTransactions.forEach(t => {
+        const td = format(new Date(t.transaction_date), 'yyyy-MM-dd');
+        const idx = days.findIndex(day => format(day, 'yyyy-MM-dd') === td);
+        if (idx !== -1 && labels[idx]) periodAmounts[labels[idx]] += Math.abs(t.amount);
+      });
+    } else if (selectedPeriod === '1M' || (selectedPeriod === 'custom' && labels.length <= 30)) {
+      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+      filteredTransactions.forEach(t => {
+        const td = new Date(t.transaction_date);
+        const idx = weeks.findIndex((ws, i) => {
+          const we = i < weeks.length - 1 ? weeks[i + 1] : dateRange.to;
+          return td >= ws && td < we;
+        });
+        if (idx !== -1 && labels[idx]) periodAmounts[labels[idx]] += Math.abs(t.amount);
+      });
+    } else {
+      const months = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
+      filteredTransactions.forEach(t => {
+        const td = new Date(t.transaction_date);
+        const idx = months.findIndex(ms => format(ms, 'yyyy-MM') === format(td, 'yyyy-MM'));
+        if (idx !== -1 && labels[idx]) periodAmounts[labels[idx]] += Math.abs(t.amount);
+      });
+    }
+
+    return labels.map(l => ({ period: l, amount: periodAmounts[l] }));
+  };
+
+  const lineData = chartMode === 'line' ? getLineData() : [];
+
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
       const weekData = data.activePayload[0].payload;
@@ -123,14 +190,64 @@ export const EnhancedSpendingChart = ({
       <div className={isMobile ? "" : "p-6"}>
         {showTitle && (
           <div className={isMobile ? "mb-3 px-3" : "mb-4"}>
-            <h3 className={isMobile ? "heading-card" : "heading-main"}>{title}</h3>
-            <p className="text-xs text-muted-foreground">
-              {getFilterDescription(selectedPeriod)}
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className={isMobile ? "heading-card" : "heading-main"}>{title}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {getFilterDescription(selectedPeriod)}
+                </p>
+              </div>
+              <div className="flex gap-1">
+                <Button variant={chartMode === 'bar' ? 'default' : 'outline'} size="sm" onClick={() => setChartMode('bar')} className="text-xs h-7 px-2">Bar</Button>
+                <Button variant={chartMode === 'line' ? 'default' : 'outline'} size="sm" onClick={() => setChartMode('line')} className="text-xs h-7 px-2">Line</Button>
+              </div>
+            </div>
           </div>
         )}
         <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-          {selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
+          {chartMode === 'line' ? (
+            <ComposedChart data={lineData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
+              <defs>
+                <linearGradient id="fillSpendingTrend" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={dominantColor} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={dominantColor} stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="period" hide={true} />
+              <YAxis hide={true} domain={[0, 'auto']} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                labelStyle={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'hsl(var(--foreground))' }}
+                itemStyle={{ fontSize: '14px', padding: '4px 0', color: 'hsl(var(--foreground))' }}
+                formatter={(value: number) => [`R${Number(value).toFixed(2)}`, 'Total Spending']}
+                cursor={false}
+              />
+              {(() => {
+                const maxPoint = lineData.reduce((max, d) => d.amount > max.value ? { period: d.period, value: d.amount } : max, { period: '', value: 0 });
+                const minPoint = lineData.reduce((min, d) => d.amount < min.value ? { period: d.period, value: d.amount } : min, { period: lineData[0]?.period ?? '', value: lineData[0]?.amount ?? Infinity });
+                return (
+                  <>
+                    {maxPoint.value > 0 && (
+                      <ReferenceDot x={maxPoint.period} y={maxPoint.value} r={0}>
+                        <text x={0} y={-8} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                          {`R${maxPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                        </text>
+                      </ReferenceDot>
+                    )}
+                    {minPoint.value < Infinity && minPoint.period !== maxPoint.period && (
+                      <ReferenceDot x={minPoint.period} y={minPoint.value} r={0}>
+                        <text x={0} y={16} textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: 'hsl(var(--foreground))' }}>
+                          {`R${minPoint.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
+                        </text>
+                      </ReferenceDot>
+                    )}
+                  </>
+                );
+              })()}
+              <Area type="monotone" dataKey="amount" fill="url(#fillSpendingTrend)" stroke="none" tooltipType="none" />
+              <Line type="monotone" dataKey="amount" name="Total Spending" stroke={dominantColor} strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+            </ComposedChart>
+          ) : selectedPeriod === '1W' || selectedPeriod === '1M' || selectedPeriod === '1Y' ||
            (selectedPeriod === 'custom' && xAxisLabels.length <= 30) ? (
             <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 5, right: 24, left: 24, bottom: 0 }}>
               <XAxis 
