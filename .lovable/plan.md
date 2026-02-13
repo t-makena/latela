@@ -1,31 +1,66 @@
 
 
-## Align Header Dividers and Add Glass Effect to Floating Chat
+## Convert "Spending by Category" to Line Graph View
 
-### 1. Align the header divider lines (Chat.tsx)
+### Overview
+Add a toggle to switch the "Spending by Category" chart between the existing bar chart and a new line graph view. The line graph shows total spending over time (like the Balance chart) with a gradient area fill below. The line and fill color dynamically match the category with the highest total spending in the selected filter period.
 
-The "Chat History" sidebar header and "Budget Buddy / Your AI financial advisor" main header both use `p-3` padding and `border-b`, but the sidebar header height differs due to its button row. To align the bottom border lines visually:
+### How It Works
+- A new toggle button ("Bar" / "Line") appears next to the chart title
+- When "Line" is selected, the chart renders a `ComposedChart` with `Area` + `Line` (same pattern as the Balance chart)
+- The dominant category color is determined by finding which category has the highest total in `categoryData`
+- The gradient fill uses that color at 0.3 opacity fading to 0.05
+- High/low ReferenceDot labels are shown (matching the Balance chart style)
+- Double-click drill-down into a single category still works from bar view
 
-- Make both headers use the same fixed height (e.g., `h-14`) so their bottom borders sit at the same vertical position regardless of content differences.
+### File: `src/components/financial-insight/FinancialInsightContent.tsx`
 
-**File: `src/pages/Chat.tsx`**
-- Line 298: Add `h-14 items-center` to the sidebar header div
-- Line 352: Add `h-14 items-center` to the main chat header div
+#### 1. New state variable (~line 53)
+```tsx
+const [categoryChartMode, setCategoryChartMode] = useState<'bar' | 'line'>('bar');
+```
 
-### 2. Glassmorphism for FloatingChat (FloatingChat.tsx)
+#### 2. New function: generate total spending time-series data (~line 389)
+Reuse the same logic as `getCategoryLineData()` but without filtering to a single category -- aggregate ALL expense transactions into period buckets.
 
-Update the floating chat container to use the same glass effect as the full Chat page.
+#### 3. Determine dominant category color
+```tsx
+const dominantCategory = categoryData.reduce((max, d) => 
+  d.amount > max.amount ? d : max, categoryData[0]);
+const dominantColor = dominantCategory?.color || '#1e65ff';
+```
 
-**File: `src/components/chat/FloatingChat.tsx`**
-- Line 236: Change `bg-background/95 backdrop-blur-xl` to `bg-background/60 backdrop-blur-xl` to match the transparency level of the full chat page
-- Line 244: The header already has `bg-background/50 backdrop-blur-sm` which is consistent
-- Line 332: The input area already has `bg-background/50 backdrop-blur-sm` which is consistent
+#### 4. Update chart rendering (both mobile ~line 734 and desktop ~line 864)
+When `categoryChartMode === 'line'` and no `selectedCategoryForGraph`:
+- Render a `ComposedChart` with:
+  - `defs` for a `linearGradient` using `dominantColor`
+  - `Area` with `fill="url(#gradientId)"`, `stroke="none"`, `tooltipType="none"`
+  - `Line` with `stroke={dominantColor}`, `strokeWidth={2}`, `dot={false}`
+  - `ReferenceDot` for max and min points with currency labels
+  - Hidden axes, matching the Balance chart aesthetic
 
-### Summary
+#### 5. Add toggle button in the header
+Next to the title "Spending by Category", add a small segmented toggle:
+```tsx
+<div className="flex gap-1">
+  <Button variant={categoryChartMode === 'bar' ? 'default' : 'outline'} size="sm" 
+    onClick={() => setCategoryChartMode('bar')}>Bar</Button>
+  <Button variant={categoryChartMode === 'line' ? 'default' : 'outline'} size="sm" 
+    onClick={() => setCategoryChartMode('line')}>Line</Button>
+</div>
+```
 
-| File | Line | Change |
-|---|---|---|
-| `src/pages/Chat.tsx` | 298 | Add fixed height to sidebar header |
-| `src/pages/Chat.tsx` | 352 | Add matching fixed height to main header |
-| `src/components/chat/FloatingChat.tsx` | 236 | Change `bg-background/95` to `bg-background/60` |
+### Summary of Changes
+
+| Location | Change |
+|---|---|
+| Line ~53 | Add `categoryChartMode` state |
+| Line ~389 | Add `getTotalSpendingLineData()` function |
+| Line ~292 | Compute `dominantColor` from `categoryData` |
+| Lines 710-731 (mobile header) | Add Bar/Line toggle buttons |
+| Lines 734-813 (mobile chart) | Add line chart branch when `categoryChartMode === 'line'` |
+| Lines 843-861 (desktop header) | Add Bar/Line toggle buttons |
+| Lines 864-943 (desktop chart) | Add line chart branch when `categoryChartMode === 'line'` |
+
+Only one file is modified: `src/components/financial-insight/FinancialInsightContent.tsx`
 
