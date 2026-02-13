@@ -12,7 +12,7 @@ interface Transaction {
   description: string;
   amount: number;
   transaction_date: string;
-  type: string;
+  
   category_id?: string | null;
   subcategory_id?: string | null;
   parent_category_name?: string | null;
@@ -179,7 +179,7 @@ export const BudgetBreakdown = ({
 
     filteredTransactions.forEach(transaction => {
       // Only count expenses for spending allocation (excluding income)
-      if (transaction.type === 'expense' && transaction.parent_category_name) {
+      if (transaction.amount < 0 && transaction.parent_category_name) {
         const amount = Math.abs(transaction.amount);
         const parentCategory = transaction.parent_category_name;
         if (parentCategoryTotals.hasOwnProperty(parentCategory)) {
@@ -204,7 +204,7 @@ export const BudgetBreakdown = ({
     const subcategoryTotals: Record<string, { value: number; color: string }> = {};
 
     filteredTransactions.forEach(transaction => {
-      if (transaction.type === 'expense') {
+      if (transaction.amount < 0) {
         // Use display_subcategory_name first (which includes custom categories), 
         // then fall back to subcategory_name
         const subcategoryName = transaction.display_subcategory_name || 
