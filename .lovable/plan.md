@@ -1,42 +1,53 @@
 
 
-## System Check Results
+## Accounts Page Graphs Not Fetching Historic Data
 
-### Status: Mostly Healthy -- 1 Cleanup Item Found
+### Root Cause
 
-All core logic across connected features is functioning correctly. One cleanup issue was identified.
+Every graph on the Accounts page calls `useTransactions()` with **no arguments**, which defaults to `currentMonthOnly: true`. This means only the current month's transactions are fetched from the database, so when you select 3M, 6M, or 1Y filters, there is simply no data to display.
 
----
+**Affected components (all fetching current-month-only data):**
 
-### Issue: Dead Code -- `src/pages/GroceryBudget.tsx`
+| Component | Location | Issue |
+|-----------|----------|-------|
+| `FinancialInsightContent` | Line 36 | `useTransactions()` -- defaults to current month |
+| `EnhancedSpendingChart` | Line 47 | `useTransactions()` -- defaults to current month |
 
-This file is completely unused. It is not imported by any file, and the `/grocery-budget` route in `App.tsx` redirects to `/budget`. The `Budget.tsx` page now hosts the Cart Explorer sub-view with full functionality (including the `onAddToBudgetPlan` callback).
+This cascades to **all 4 graph cards** on the Accounts page:
+1. **Budget Insight** -- comparison periods (3M, 6M, 1Y) have no data
+2. **Budget Allocation** -- pie chart shows nothing for longer periods
+3. **Balance** -- flat/zero lines for 3M, 6M, 1Y
+4. **Spending Trend** -- empty bars for historical periods
+5. **Spending by Category** -- zero amounts for historical periods
 
-`GroceryBudget.tsx` is a stale copy that is missing key props (`onAddToBudgetPlan`, `totalCents`, `itemCount`) and would not work correctly if ever used.
+### Fix
 
-**Recommended action:** Delete `src/pages/GroceryBudget.tsx` to avoid confusion.
+**File: `src/components/financial-insight/FinancialInsightContent.tsx`** (line 36)
 
----
+Change:
+```typescript
+const { transactions: allTransactions, loading } = useTransactions();
+```
+To:
+```typescript
+const { transactions: allTransactions, loading } = useTransactions({ currentMonthOnly: false, limit: 2000 });
+```
 
-### Verified (No Issues)
+**File: `src/components/dashboard/EnhancedSpendingChart.tsx`** (line 47)
 
-| Area | Status |
-|------|--------|
-| Cart status transitions (considering/budgeted/purchased) | OK |
-| localStorage migration for old items | OK |
-| Merchant-level budget grouping logic | OK |
-| Grocery vs non-grocery frequency assignment | OK |
-| Manual item entry dialog | OK |
-| Deep link `/add-to-list` with status field | OK |
-| CartItemCard checkbox, re-add, budget actions | OK |
-| MyListTab sections and collapsible purchased | OK |
-| Budget Plan integration in `Budget.tsx` | OK |
-| Dashboard `BudgetItemsCard` frequency display fix | OK |
-| Goals page typography and Target Total Savings | OK |
-| Rename to "Cart Explorer" across all 11 locale files | OK |
-| Route redirects and protection | OK |
+Change:
+```typescript
+const { transactions: allTransactions } = useTransactions();
+```
+To:
+```typescript
+const { transactions: allTransactions } = useTransactions({ currentMonthOnly: false, limit: 2000 });
+```
 
-### Proposed Change
+### Why `limit: 2000`
 
-**Delete `src/pages/GroceryBudget.tsx`** -- Remove this orphaned file since all its functionality is now handled within `src/pages/Budget.tsx`.
+The default limit is 500 rows. For a 1-year view, a user might have 30+ transactions per month across multiple accounts, easily exceeding 500. A limit of 2000 covers roughly 1 year of dense transaction history without overloading the query. The Supabase hard cap is 1000 rows per query by default, so the limit may also need a server-side adjustment if transactions exceed 1000 -- but 2000 as a client-side request will return up to whatever the server allows.
 
+### Summary
+
+Two one-line changes. Both components need `{ currentMonthOnly: false, limit: 2000 }` passed to `useTransactions()` so the date filters on the Accounts page actually have historical data to work with.
