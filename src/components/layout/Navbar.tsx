@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Wallet, Calendar, Settings, Menu, Target, LogOut, PanelLeftClose, Calculator, ChevronDown } from "lucide-react";
+import { Home, Wallet, Calendar, Settings, Menu, Target, LogOut, PanelLeftClose, Calculator, ChevronDown, MessageSquare } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -79,6 +79,7 @@ export const Navbar = () => {
     { name: t('nav.budget'), href: "/budget", icon: Calculator },
     { name: t('nav.goals'), href: "/goals", icon: Target },
     { name: t('nav.calendar'), href: "/calendar", icon: Calendar },
+    { name: "Budget Buddy", href: "/chat", icon: MessageSquare },
     { name: t('nav.settings'), href: "/settings", icon: Settings },
   ];
 
