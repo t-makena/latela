@@ -1,44 +1,31 @@
 
 
-## Fix Balance Chart Tooltip Duplicates and Add High/Low Labels
+## Align Header Dividers and Add Glass Effect to Floating Chat
 
-### Problem 1: Duplicate tooltip entries
-The `<Area>` components for `netBalance` and `budgetBalance` use the same `dataKey` as their corresponding `<Line>` components. Recharts includes all series in the tooltip by default, so each data key appears twice (once for Area, once for Line).
+### 1. Align the header divider lines (Chat.tsx)
 
-**Fix**: Add `tooltipType="none"` to all four `<Area>` components (mobile and desktop) so they are excluded from the tooltip.
+The "Chat History" sidebar header and "Budget Buddy / Your AI financial advisor" main header both use `p-3` padding and `border-b`, but the sidebar header height differs due to its button row. To align the bottom border lines visually:
 
-### Problem 2: Highest and lowest amounts missing values
-The current implementation only shows a `<ReferenceDot>` for the highest `netBalance` point but no label for the lowest, and no labels for the savings line.
+- Make both headers use the same fixed height (e.g., `h-14`) so their bottom borders sit at the same vertical position regardless of content differences.
 
-**Fix**: Add `<ReferenceDot>` labels for:
-- Highest Available Balance value
-- Lowest Available Balance value (when different from highest)
+**File: `src/pages/Chat.tsx`**
+- Line 298: Add `h-14 items-center` to the sidebar header div
+- Line 352: Add `h-14 items-center` to the main chat header div
 
-Each label shows the formatted currency amount (e.g., "R5,000.00") positioned above for max and below for min.
+### 2. Glassmorphism for FloatingChat (FloatingChat.tsx)
 
-### File: `src/components/financial-insight/FinancialInsightContent.tsx`
+Update the floating chat container to use the same glass effect as the full Chat page.
 
-#### Changes (applied to both mobile and desktop chart blocks):
+**File: `src/components/chat/FloatingChat.tsx`**
+- Line 236: Change `bg-background/95 backdrop-blur-xl` to `bg-background/60 backdrop-blur-xl` to match the transparency level of the full chat page
+- Line 244: The header already has `bg-background/50 backdrop-blur-sm` which is consistent
+- Line 332: The input area already has `bg-background/50 backdrop-blur-sm` which is consistent
 
-1. **Area components** (lines 535-536, 632-633): Add `tooltipType="none"` prop
-   ```tsx
-   <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailable...)" stroke="none" tooltipType="none" />
-   <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavings...)" stroke="none" tooltipType="none" />
-   ```
+### Summary
 
-2. **ReferenceDot for min point**: Add a second ReferenceDot for the lowest `netBalance` value, with the label positioned below the point
-   ```tsx
-   // Compute min point alongside max point
-   const minPoint = netBalanceData.reduce((min, d) => 
-     d.netBalance < min.value ? { month: d.month, value: d.netBalance } : min, 
-     { month: netBalanceData[0]?.month, value: netBalanceData[0]?.netBalance ?? Infinity });
-   ```
+| File | Line | Change |
+|---|---|---|
+| `src/pages/Chat.tsx` | 298 | Add fixed height to sidebar header |
+| `src/pages/Chat.tsx` | 352 | Add matching fixed height to main header |
+| `src/components/chat/FloatingChat.tsx` | 236 | Change `bg-background/95` to `bg-background/60` |
 
-### Summary of edits
-
-| Location | Change |
-|---|---|
-| Mobile Area (line 535-536) | Add `tooltipType="none"` |
-| Desktop Area (line 632-633) | Add `tooltipType="none"` |
-| Mobile ReferenceDot block (525-534) | Add min point ReferenceDot with label below |
-| Desktop ReferenceDot block (622-631) | Add min point ReferenceDot with label below |
