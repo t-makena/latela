@@ -256,7 +256,7 @@ export default function Chat() {
   const grouped = groupConversations(conversations);
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] md:h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border-2 border-foreground relative">
+    <div className="flex h-[calc(100vh-5rem)] md:h-[calc(100vh-2rem)] overflow-hidden rounded-2xl relative">
       {/* Glassmorphism background */}
       <div className="absolute inset-0 bg-background/60 backdrop-blur-xl rounded-2xl -z-10" />
 
