@@ -18,6 +18,9 @@ import {
 } from "recharts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useGoals } from "@/hooks/useGoals";
+import { useAccounts } from "@/hooks/useAccounts";
+import { useBudgetItems } from "@/hooks/useBudgetItems";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { calculateFinancialMetrics } from "@/lib/realData";
 import { BudgetBreakdown } from "@/components/financial-insight/BudgetBreakdown";
 import { TransactionHistory } from "@/components/financial-insight/TransactionHistory";
@@ -38,6 +41,13 @@ interface FinancialInsightContentProps {
 
 export const FinancialInsightContent = ({ accountId }: FinancialInsightContentProps) => {
   const { transactions: allTransactions, loading } = useTransactions({ currentMonthOnly: false, limit: 2000 });
+  const { accounts } = useAccounts();
+  const { calculateTotalMonthly } = useBudgetItems();
+  const currentDate = new Date();
+  const { upcomingEvents } = useCalendarEvents({
+    year: currentDate.getFullYear(),
+    month: currentDate.getMonth() + 1
+  });
   const { goals } = useGoals();
   const location = useLocation();
   const [categoryFilter, setCategoryFilter] = useState<DateFilterOption>("1W");
@@ -158,16 +168,44 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
 
   const netBalanceData = getNetBalanceData();
 
-  // Calculate current and historical data for breakdown
-  const currentMonthData = monthlySpending[monthlySpending.length - 1] || { netBalance: 0 };
-  const previousMonthData = monthlySpending[monthlySpending.length - 2] || { netBalance: 0 };
-  const threeMonthsAgoData = monthlySpending[monthlySpending.length - 4] || { netBalance: 0 };
-  const sixMonthsAgoData = monthlySpending[monthlySpending.length - 7] || { netBalance: 0 };
-  const oneYearAgoData = monthlySpending[monthlySpending.length - 13] || { netBalance: 0 };
+  // Calculate metrics from same sources as Dashboard FinancialSummary
+  const availableBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalBudgetExpenses = calculateTotalMonthly();
+  const totalUpcomingEvents = upcomingEvents.reduce((sum, event) => sum + event.budgetedAmount, 0);
+  const budgetBalance = totalBudgetExpenses + totalUpcomingEvents;
   
-  const availableBalance = currentMonthData.netBalance;
-  const budgetBalance = monthlyIncome * 0.3; // 30% of income as budget
-  const spending = monthlyExpenses;
+  // Spending: sum of negative transactions for current month, fallback to latest month with data
+  const currentMonthIdx = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  const currentMonthExpenses = transactions
+    .filter(t => {
+      const d = new Date(t.transaction_date);
+      return t.amount < 0 && d.getMonth() === currentMonthIdx && d.getFullYear() === currentYear;
+    })
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  
+  // Fallback: if no current month spending, use the latest month that has data
+  const spending = currentMonthExpenses > 0 ? currentMonthExpenses : (() => {
+    const expenseTransactions = transactions.filter(t => t.amount < 0);
+    if (expenseTransactions.length === 0) return 0;
+    const latest = expenseTransactions.sort((a, b) => 
+      new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
+    )[0];
+    const latestDate = new Date(latest.transaction_date);
+    return expenseTransactions
+      .filter(t => {
+        const d = new Date(t.transaction_date);
+        return d.getMonth() === latestDate.getMonth() && d.getFullYear() === latestDate.getFullYear();
+      })
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  })();
+
+  // Historical comparison data from monthlySpending array
+  const fallback = { netBalance: 0, amount: 0, savings: 0, month: '' };
+  const previousMonthData = monthlySpending[currentMonthIdx - 1] || fallback;
+  const threeMonthsAgoData = monthlySpending[Math.max(0, currentMonthIdx - 3)] || fallback;
+  const sixMonthsAgoData = monthlySpending[Math.max(0, currentMonthIdx - 6)] || fallback;
+  const oneYearAgoData = monthlySpending[Math.max(0, currentMonthIdx - 12)] || fallback;
 
   // Category colors and labels for all categories
   const categoryColors: Record<string, string> = {
@@ -406,23 +444,23 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             spending={spending}
             previousMonth={{
               availableBalance: previousMonthData.netBalance,
-              budgetBalance: monthlyIncome * 0.3,
-              spending: monthlyExpenses * 0.9
+              budgetBalance: budgetBalance * 0.9,
+              spending: previousMonthData.amount || spending * 0.9
             }}
             threeMonthsAgo={{
               availableBalance: threeMonthsAgoData.netBalance,
-              budgetBalance: monthlyIncome * 0.3,
-              spending: monthlyExpenses * 0.85
+              budgetBalance: budgetBalance * 0.9,
+              spending: threeMonthsAgoData.amount || spending * 0.85
             }}
             sixMonthsAgo={{
               availableBalance: sixMonthsAgoData.netBalance,
-              budgetBalance: monthlyIncome * 0.3,
-              spending: monthlyExpenses * 0.8
+              budgetBalance: budgetBalance * 0.9,
+              spending: sixMonthsAgoData.amount || spending * 0.8
             }}
             oneYearAgo={{
               availableBalance: oneYearAgoData.netBalance,
-              budgetBalance: monthlyIncome * 0.3,
-              spending: monthlyExpenses * 0.75
+              budgetBalance: budgetBalance * 0.9,
+              spending: oneYearAgoData.amount || spending * 0.75
             }}
             showOnlyTable={true}
           />
