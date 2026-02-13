@@ -1,26 +1,31 @@
 
-
-## Match Chart Card Title Sizes to "Account Insight"
+## Fix 1M Expected Balance Line
 
 ### Problem
-The chart card titles ("Balance", "Spending by Category", "Spending Trend") use smaller font sizes (`text-base` / `text-lg`) compared to the "Account Insight" card which uses the `heading-main` class (27px desktop / 19px mobile, Cooper BT font). The subtitles also need proportional sizing.
+In the 1M (one month) view of the Savings Balance chart, the Expected Balance line accumulates weekly -- it starts near zero in Week 1 and ramps up to the full monthly amount by Week 4. This incorrectly implies that a portion of savings should have already been set aside in earlier weeks. The Expected Balance should be a flat line representing the total monthly savings target.
 
-### Changes
+### Solution
+Change the 1M chart logic so Expected Balance is a flat value (the full monthly expected savings) across all weeks, rather than a cumulative weekly ramp.
 
-**1. `src/components/financial-insight/FinancialInsightContent.tsx`**
+### File to Change
 
-- **Balance card (desktop, line 551)**: Change `className="text-base"` to `className="heading-main"` on the CardTitle
-- **Balance card (mobile, line 475)**: Change `className="text-base font-medium"` to `className="heading-card"` on the div
-- **Balance subtitle (desktop, line 552)**: Change `text-[10px]` to `text-xs`
-- **Balance subtitle (mobile, line 476)**: Change `text-[10px]` to `text-xs`
-- **Spending by Category card (desktop, line 764)**: Change `className="text-base"` to `className="heading-main"` on the CardTitle
-- **Spending by Category (mobile, line 643)**: Change `className="text-base font-medium"` to `className="heading-card"`
-- **Spending by Category subtitle (desktop, line 769)**: Change `text-[10px]` to `text-xs`
-- **Spending by Category subtitle (mobile, line 648)**: Change `text-[10px]` to `text-xs`
+**`src/components/goals/GoalsSavingsBalanceChart.tsx`** (lines 55-81)
 
-**2. `src/components/dashboard/EnhancedSpendingChart.tsx`**
+Replace the cumulative weekly logic:
+```
+cumulativeExpected += weeklyExpected;
+```
 
-- **Spending Trend title (line 126)**: Change desktop class from `text-lg font-semibold` to `heading-main`, and mobile from `text-base font-semibold` to `heading-card`
-- **Spending Trend subtitle (line 127)**: Change desktop from `text-sm` to `text-xs`, mobile stays `text-xs`
+With a flat expected value that accounts for which goals existed at each week:
+```
+// Calculate expected as total monthly allocation for goals that existed by this week
+const expectedForWeek = goals.reduce((sum, goal) => {
+  const goalCreated = new Date(goal.createdAt);
+  if (goalCreated <= weekEnd) {
+    return sum + goal.monthlyAllocation;
+  }
+  return sum;
+}, 0);
+```
 
-This ensures all chart section titles use the same Cooper BT heading style as "Account Insight", with appropriately scaled subtitles.
+Each week's `expected` value will be the flat monthly target (not divided or accumulated), so the orange line stays level across the chart, showing the user what they need to reach by month-end.
