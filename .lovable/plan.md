@@ -1,25 +1,41 @@
 
-## Replace Budget Status "Good/Bad" with Latela Score Risk Levels
+
+## Replace All Backgrounds with Uploaded SVG
 
 ### What Changes
 
-The Financial Overview card currently shows **Budget Status** as either "Good" or "Bad" based on whether flexible balance is positive. This will be replaced with the same 5-tier risk levels used by the Latela Score: **Safe, Mild Risk, Moderate Risk, High Risk, Critical**.
+Replace the four existing PNG background images (multicolor light/dark, black-white light/dark) with the single uploaded SVG. The SVG will be used for all theme/palette combinations, rotated -90 degrees on all viewports.
 
-### File: `src/components/dashboard/FinancialSummary.tsx`
+### File Changes
 
-1. **Import `useBudgetScore`** hook to access the calculated `riskLevel` from the budget score system
-2. **Remove** the simple `good`/`bad` logic (`flexibleBalance >= 0 ? 'good' : 'bad'`)
-3. **Replace** the Budget Status display with the risk level label and description from the Latela Score, reusing the same mapping pattern from `LatelaScoreCard`:
-   - `safe` → "Safe" / "You're on track to make it to payday comfortably"
-   - `mild` → "Mild Risk" / "Slight caution advised"
-   - `moderate` → "Moderate Risk" / "Consider reducing spending"
-   - `high` → "High Risk" / "High risk of running short before payday"
-   - `critical` → "Critical" / "Urgent: You may not have enough to last"
-4. **Add color coding** to the status text matching the Latela Score colors (green for safe, yellow for mild, orange for moderate, red for high/critical)
+**1. Copy the SVG into the project**
 
-### Technical Details
+Copy `user-uploads://Colorful_Simple_Abstract_Phone_Wallpaper_1.svg` to `src/assets/backgrounds/bg-main.svg`.
 
-- The `useBudgetScore` hook is already available and returns `riskLevel` from the budget score calculator
-- The existing translation keys (`score.riskLevels.*`) will be reused for the status label
-- The `budgetStatusDescription` will map to the risk messages (`score.riskMessages.*`)
-- The loading state will also account for `useBudgetScore` loading
+**2. Simplify `src/components/layout/BackgroundProvider.tsx`**
+
+- Remove all four PNG imports and the `backgrounds` map
+- Remove the `useColorPalette` and `useTheme` hooks (no longer needed for background selection)
+- Import the single SVG: `import bgMain from '@/assets/backgrounds/bg-main.svg'`
+- Both mobile and desktop render the same SVG with `transform: rotate(-90deg)`, using the existing `img` approach with swapped viewport dimensions to ensure full coverage
+
+The simplified component:
+
+```text
+BackgroundProvider
+  - Import bgMain SVG
+  - Render a fixed full-screen container
+  - Display the SVG as an <img> rotated -90deg
+  - Use width: 100vh, height: 100vw to cover the viewport after rotation
+```
+
+**3. Old PNG files can optionally be removed**
+
+The four files in `src/assets/backgrounds/` (bg-multicolor-light.png, bg-multicolor-dark.png, bg-bw-light.png, bg-bw-dark.png) will no longer be imported anywhere and can be deleted to reduce bundle size.
+
+### Technical Notes
+
+- The SVG is 1080x1920 (portrait phone wallpaper), so the -90deg rotation makes it landscape-oriented, which works well for desktop. On mobile, the same rotation applies per the user's request.
+- `object-cover` on the img ensures no gaps regardless of viewport aspect ratio.
+- No database or dependency changes needed.
+
