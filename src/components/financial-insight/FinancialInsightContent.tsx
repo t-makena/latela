@@ -4,8 +4,10 @@ import { useLocation } from "react-router-dom";
 import {
   BarChart,
   Bar,
+  ComposedChart,
   LineChart,
   Line,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -482,7 +484,17 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             {(() => {
               return (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={netBalanceData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
+              <ComposedChart data={netBalanceData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="fillAvailableMobile" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#292929" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#292929" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="fillSavingsMobile" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#05ff86" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#05ff86" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
@@ -506,7 +518,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     color: 'hsl(var(--foreground))'
                   }}
                   formatter={(value: number, name: string) => {
-                    const label = name === 'netBalance' ? 'Available Balance' : 'Savings Balance';
+                    const label = name === 'netBalance' ? 'Available Balance' : "Saving's Balance";
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
@@ -520,11 +532,13 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     </ReferenceDot>
                   ) : null;
                 })()}
+                <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailableMobile)" stroke="none" />
+                <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavingsMobile)" stroke="none" />
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
                   name="Available Balance"
-                  stroke="hsl(var(--primary))" 
+                  stroke="#292929" 
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 3 }}
@@ -532,13 +546,13 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 <Line 
                   type="monotone" 
                   dataKey="budgetBalance" 
-                  name="Savings Balance"
-                  stroke="#10B981" 
+                  name="Saving's Balance"
+                  stroke="#05ff86" 
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 3 }}
                 />
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
               );
             })()}
@@ -567,7 +581,17 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             {(() => {
               return (
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-              <LineChart data={netBalanceData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
+              <ComposedChart data={netBalanceData} margin={{ top: 20, right: 24, left: 24, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="fillAvailableDesktop" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#292929" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#292929" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="fillSavingsDesktop" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#05ff86" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#05ff86" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
                 <XAxis dataKey="month" hide={true} />
                 <YAxis hide={true} domain={[0, 'auto']} />
                 <Tooltip 
@@ -591,7 +615,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     color: 'hsl(var(--foreground))'
                   }}
                   formatter={(value: number, name: string) => {
-                    const label = name === 'netBalance' ? 'Available Balance' : 'Savings Balance';
+                    const label = name === 'netBalance' ? 'Available Balance' : "Saving's Balance";
                     return [`R${Number(value).toFixed(2)}`, label];
                   }}
                 />
@@ -605,11 +629,13 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                     </ReferenceDot>
                   ) : null;
                 })()}
+                <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailableDesktop)" stroke="none" />
+                <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavingsDesktop)" stroke="none" />
                 <Line 
                   type="monotone" 
                   dataKey="netBalance" 
                   name="Available Balance"
-                  stroke="hsl(var(--primary))" 
+                  stroke="#292929" 
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 3 }}
@@ -617,13 +643,13 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
                 <Line 
                   type="monotone" 
                   dataKey="budgetBalance" 
-                  name="Savings Balance"
-                  stroke="#10B981" 
+                  name="Saving's Balance"
+                  stroke="#05ff86" 
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 3 }}
                 />
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
               );
             })()}
