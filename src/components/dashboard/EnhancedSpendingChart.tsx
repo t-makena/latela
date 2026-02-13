@@ -44,7 +44,7 @@ export const EnhancedSpendingChart = ({
   title = "Spending Trend",
   showTitle = true
 }: EnhancedSpendingChartProps) => {
-  const { transactions: allTransactions } = useTransactions();
+  const { transactions: allTransactions } = useTransactions({ currentMonthOnly: false, limit: 2000 });
   
   // Filter transactions by account if accountId is provided
   const transactions = accountId 
