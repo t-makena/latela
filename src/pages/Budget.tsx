@@ -234,46 +234,41 @@ const Budget = () => {
 
   // Grocery sub-view content
   const GrocerySubView = () => (
-    <div className="flex flex-col min-h-full pb-20">
-      {/* Back Header */}
-      <div className="flex items-center gap-3 mb-6">
+    <div className="flex flex-col min-h-full pb-6">
+      {/* Back Header with contextual toggle icon */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setView('budget')}
+            className="rounded-full"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">{t('groceryBudget.title')}</h1>
+        </div>
+        
+        {/* Toggle icon: cart when on search, search when on list */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setView('budget')}
-          className="rounded-full"
+          onClick={() => setGroceryTab(groceryTab === 'search' ? 'list' : 'search')}
+          className="rounded-full relative"
         >
-          <ArrowLeft className="h-5 w-5" />
+          {groceryTab === 'search' ? (
+            <>
+              <ShoppingCart className="h-5 w-5" />
+              {groceryItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {groceryItemCount}
+                </span>
+              )}
+            </>
+          ) : (
+            <Search className="h-5 w-5" />
+          )}
         </Button>
-        <h1 className="text-2xl font-bold">{t('groceryBudget.title')}</h1>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => setGroceryTab('search')}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors border-2",
-            groceryTab === 'search'
-              ? "bg-foreground text-background border-foreground"
-              : "bg-background text-foreground border-foreground hover:bg-accent"
-          )}
-        >
-          <Search size={18} />
-          {t('groceryBudget.searchTab')}
-        </button>
-        <button
-          onClick={() => setGroceryTab('list')}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors border-2",
-            groceryTab === 'list'
-              ? "bg-foreground text-background border-foreground"
-              : "bg-background text-foreground border-foreground hover:bg-accent"
-          )}
-        >
-          <ShoppingCart size={18} />
-          {t('groceryBudget.myListTab')} ({groceryItemCount})
-        </button>
       </div>
 
       {/* Tab Content */}
@@ -288,29 +283,10 @@ const Budget = () => {
             onRemove={removeFromCart}
             onClearCart={clearCart}
             onAddScannedItems={handleAddScannedItems}
+            totalCents={groceryTotalCents}
+            itemCount={groceryItemCount}
           />
         )}
-      </div>
-
-      {/* Sticky Footer */}
-      <div
-        className={cn(
-          "fixed bottom-0 left-0 right-0 bg-background border-t-2 border-foreground py-4 px-6",
-          isMobile ? "" : "ml-24 lg:ml-64"
-        )}
-        style={{ boxShadow: '0 -4px 0px 0px rgba(0,0,0,1)' }}
-      >
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          {groceryItemCount === 0 ? (
-            <span className="text-muted-foreground">
-              {t('groceryBudget.estMonthlyBudget')}: R0.00
-            </span>
-          ) : (
-            <span className="font-semibold">
-              {t('groceryBudget.itemsTotal').replace('{{count}}', groceryItemCount.toString())}: {formatPriceCents(groceryTotalCents)}
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );
@@ -338,7 +314,7 @@ const Budget = () => {
   // Mobile layout - separate path without container wrapper
   if (isMobile) {
     if (view === 'grocery') {
-      return <div className="min-h-screen py-6 animate-fade-in"><GrocerySubView /></div>;
+      return <div className="py-6 animate-fade-in"><GrocerySubView /></div>;
     }
 
     return (
@@ -475,7 +451,7 @@ const Budget = () => {
   // Desktop layout
   if (view === 'grocery') {
     return (
-      <div className="container mx-auto p-6 animate-fade-in">
+      <div className="p-6 animate-fade-in">
         <GrocerySubView />
       </div>
     );

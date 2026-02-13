@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { CartItem } from '@/hooks/useGroceryCart';
 import { ProductOffer } from '@/hooks/usePriceSearch';
 import { useLanguage } from '@/hooks/useLanguage';
+import { formatPriceCents } from '@/lib/storeColors';
 import { CartItemCard } from './CartItemCard';
 import { ScanListDialog } from './ScanListDialog';
 import {
@@ -41,6 +42,8 @@ interface MyListTabProps {
       product_url: string | null;
     }>;
   }>) => void;
+  totalCents?: number;
+  itemCount?: number;
 }
 
 export const MyListTab = ({ 
@@ -49,7 +52,9 @@ export const MyListTab = ({
   onUpdateStore, 
   onRemove, 
   onClearCart,
-  onAddScannedItems 
+  onAddScannedItems,
+  totalCents = 0,
+  itemCount = 0,
 }: MyListTabProps) => {
   const { t } = useLanguage();
   
@@ -108,6 +113,20 @@ export const MyListTab = ({
           />
         ))}
       </div>
+
+      {/* Total at end of list */}
+      {itemCount > 0 && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-foreground">
+              {t('groceryBudget.itemsTotal').replace('{{count}}', itemCount.toString())}
+            </span>
+            <span className="font-bold text-lg text-foreground">
+              {formatPriceCents(totalCents)}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
