@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, ShoppingCart, ChevronRight, ArrowLeft, Search } from 'lucide-react';
@@ -34,11 +35,26 @@ type GroceryTabType = 'search' | 'list';
 
 const Budget = () => {
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [view, setView] = useState<'budget' | 'grocery'>('budget');
   const [groceryTab, setGroceryTab] = useState<GroceryTabType>('search');
   const currentDate = new Date();
   const { t } = useLanguage();
+
+  // Read URL search params on mount for deep link support
+  useEffect(() => {
+    const viewParam = searchParams.get('view');
+    const tabParam = searchParams.get('tab');
+    if (viewParam === 'grocery') {
+      setView('grocery');
+      if (tabParam === 'list') {
+        setGroceryTab('list');
+      }
+      // Clean up URL params
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
 
   const {
     items: groceryItems,

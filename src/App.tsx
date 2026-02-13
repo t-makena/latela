@@ -20,6 +20,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
+import AddToList from "./pages/AddToList";
 
 
 const queryClient = new QueryClient();
@@ -78,6 +79,13 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/grocery-budget" element={<Navigate to="/budget" replace />} />
+                <Route path="/add-to-list" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AddToList />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
                 <Route path="/chat" element={
                   <ProtectedRoute>
                     <Layout>
