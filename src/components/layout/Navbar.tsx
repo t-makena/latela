@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Wallet, Calendar, Settings, Menu, Target, LogOut, PanelLeftClose, Calculator, ChevronDown, MessageSquare } from "lucide-react";
+import { Home, Wallet, Calendar, Settings, Menu, Target, LogOut, PanelLeftClose, Calculator, ChevronDown, Sparkles } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -77,9 +77,9 @@ export const Navbar = () => {
   const navItems = [
     { name: t('nav.dashboard'), href: "/", icon: Home },
     { name: t('nav.budget'), href: "/budget", icon: Calculator },
+    { name: "Budget Buddy", href: "/chat", icon: Sparkles },
     { name: t('nav.goals'), href: "/goals", icon: Target },
     { name: t('nav.calendar'), href: "/calendar", icon: Calendar },
-    { name: "Budget Buddy", href: "/chat", icon: MessageSquare },
     { name: t('nav.settings'), href: "/settings", icon: Settings },
   ];
 
@@ -199,7 +199,7 @@ export const Navbar = () => {
                     isActive ? "bg-primary text-primary-foreground" : ""
                   )}
                 >
-                  <item.icon size={22} className="shrink-0" />
+                  <item.icon size={22} className="shrink-0" {...(item.icon === Sparkles ? { fill: "currentColor", strokeWidth: 1.5 } : {})} />
                   <span className="truncate">{item.name}</span>
                 </Button>
               ) : (
@@ -207,7 +207,7 @@ export const Navbar = () => {
                   "w-full flex items-center justify-center py-3 transition-colors cursor-pointer rounded-lg",
                   isActive ? "bg-foreground text-background" : "text-foreground hover:bg-accent"
                 )}>
-                  <item.icon size={20} className="shrink-0" />
+                  <item.icon size={20} className="shrink-0" {...(item.icon === Sparkles ? { fill: "currentColor", strokeWidth: 1.5 } : {})} />
                 </div>
               )}
             </Link>

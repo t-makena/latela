@@ -275,11 +275,9 @@ export default function Chat() {
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={startNewConversation}>
               <Plus size={16} />
             </Button>
-            {isMobile && (
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(false)}>
-                <X size={16} />
-              </Button>
-            )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(false)}>
+              <X size={16} />
+            </Button>
           </div>
         </div>
         <ScrollArea className="flex-1">
