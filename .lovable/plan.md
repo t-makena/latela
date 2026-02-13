@@ -1,26 +1,26 @@
 
 
-## Align Zero Line to Bottom of Chart Area
+## Match Chart Card Title Sizes to "Account Insight"
 
 ### Problem
-The green zero-value line floats above the bottom edge of the chart. The zero line should sit exactly at the bottom of the visible chart area across all line charts.
+The chart card titles ("Balance", "Spending by Category", "Spending Trend") use smaller font sizes (`text-base` / `text-lg`) compared to the "Account Insight" card which uses the `heading-main` class (27px desktop / 19px mobile, Cooper BT font). The subtitles also need proportional sizing.
 
-### Solution
-Set `domain={[0, 'auto']}` on all hidden `YAxis` components so zero maps to the very bottom of the chart. Remove the current `-2` negative offset on the Savings Balance chart.
+### Changes
 
-### Files to Change
+**1. `src/components/financial-insight/FinancialInsightContent.tsx`**
 
-**1. `src/components/goals/GoalsSavingsBalanceChart.tsx`**
-- Change `domain={[-2, 'auto']}` to `domain={[0, 'auto']}`
+- **Balance card (desktop, line 551)**: Change `className="text-base"` to `className="heading-main"` on the CardTitle
+- **Balance card (mobile, line 475)**: Change `className="text-base font-medium"` to `className="heading-card"` on the div
+- **Balance subtitle (desktop, line 552)**: Change `text-[10px]` to `text-xs`
+- **Balance subtitle (mobile, line 476)**: Change `text-[10px]` to `text-xs`
+- **Spending by Category card (desktop, line 764)**: Change `className="text-base"` to `className="heading-main"` on the CardTitle
+- **Spending by Category (mobile, line 643)**: Change `className="text-base font-medium"` to `className="heading-card"`
+- **Spending by Category subtitle (desktop, line 769)**: Change `text-[10px]` to `text-xs`
+- **Spending by Category subtitle (mobile, line 648)**: Change `text-[10px]` to `text-xs`
 
-**2. `src/components/financial-insight/FinancialInsightContent.tsx`**
-- Add `domain={[0, 'auto']}` to all `<YAxis hide={true} />` instances (6 occurrences -- both line charts and bar charts)
+**2. `src/components/dashboard/EnhancedSpendingChart.tsx`**
 
-**3. `src/components/dashboard/EnhancedSpendingChart.tsx`**
-- Add `domain={[0, 'auto']}` to both `<YAxis hide={true} />` instances
+- **Spending Trend title (line 126)**: Change desktop class from `text-lg font-semibold` to `heading-main`, and mobile from `text-base font-semibold` to `heading-card`
+- **Spending Trend subtitle (line 127)**: Change desktop from `text-sm` to `text-xs`, mobile stays `text-xs`
 
-**4. `src/components/dashboard/SavingsBalanceChart.tsx`**
-- Add `domain={[0, 'auto']}` to its `<YAxis />` (this one has visible axes but same principle applies)
-
-### Why This Works
-By default, Recharts adds padding below zero on the Y-axis. Setting `domain={[0, 'auto']}` forces the axis to start exactly at zero, placing the zero-value data points flush with the bottom of the chart area.
+This ensures all chart section titles use the same Cooper BT heading style as "Account Insight", with appropriately scaled subtitles.
