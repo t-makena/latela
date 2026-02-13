@@ -128,7 +128,7 @@ export const BudgetItemsCard = () => {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{getDisplayName(item.name)}</TableCell>
                       <TableCell>
-                        {t(`budget.${item.frequency.toLowerCase().replace('-', '')}`)}
+                        {item.frequency}
                         {item.frequency === 'Daily' && item.days_per_week && (
                           <span className="text-xs text-muted-foreground ml-1">
                             ({item.days_per_week}x/{t('budget.weekly').toLowerCase().slice(0, 4)})
