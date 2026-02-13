@@ -121,8 +121,9 @@ export function LatelaScoreCard({ compact = false, horizontal = false }: LatelaS
         <CardContent className="pt-6 pb-4">
           <div className="grid grid-cols-3 gap-6 items-stretch">
             {/* Left: Score circle + Risk */}
-            <div className="flex flex-col items-center justify-center h-full gap-3">
-              <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center h-full">
+              <h4 className="heading-main text-sm mb-3">{t('score.latelaScore') || 'Latela Score'}</h4>
+              <div className="flex-1 flex flex-col items-center justify-center">
                 <div className={cn(
                   "flex items-center justify-center w-32 h-32 rounded-full border-[6px]",
                   getScoreBorderColor(totalScore)
@@ -131,9 +132,9 @@ export function LatelaScoreCard({ compact = false, horizontal = false }: LatelaS
                     {totalScore}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">{t('score.outOf100') || 'out of 100'}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('score.outOf100') || 'out of 100'}</p>
               </div>
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/50 w-full">
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 w-full mt-auto">
                 {getRiskIcon()}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-foreground capitalize">{getRiskLabel()}</p>
@@ -142,7 +143,7 @@ export function LatelaScoreCard({ compact = false, horizontal = false }: LatelaS
               </div>
             </div>
 
-            {/* Middle: Safe to spend + days */}
+            {/* Middle: Safe to spend + metrics */}
             <div className="flex flex-col gap-3">
               <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/20">
                 <p className="text-sm text-muted-foreground mb-1">
@@ -165,10 +166,10 @@ export function LatelaScoreCard({ compact = false, horizontal = false }: LatelaS
               </div>
             </div>
 
-            {/* Right: Pillars + header */}
+            {/* Right: Pillars */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="heading-main text-sm">{t('score.latelaScore') || 'Latela Score'}</h4>
+                <h4 className="heading-main text-sm">{t('score.scoreBreakdown') || 'Score Breakdown'}</h4>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3" />
                   <span>{metrics.daysUntilPayday} {t('score.daysToPayday') || 'days to payday'}</span>
