@@ -59,6 +59,9 @@ const Goals = () => {
   // Calculate total monthly allocation (sum of all goals' monthly allocations)
   const totalMonthlyAllocation = goals.reduce((total, goal) => total + goal.monthlyAllocation, 0);
   
+  // Calculate total target savings
+  const totalTargetSavings = goals.reduce((total, goal) => total + goal.target, 0);
+  
   // Format currency
   const formatCurrency = (amount: number) => {
     return `R${amount.toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -147,16 +150,17 @@ const Goals = () => {
           <div className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-4">
-              {/* Target Saving - Left */}
               <div className="flex-1">
                 <p className="label-text mb-1">{t('goals.targetMonthlySaving')}</p>
-                <p className="balance-secondary currency">{formatCurrency(totalMonthlyAllocation)}</p>
+                <p className="heading-main currency">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
-              
-              {/* Total Amount Saved - Right */}
-              <div className="flex-1 text-right">
+              <div className="flex-1 text-center">
                 <p className="label-text mb-1">{t('goals.totalAmountSaved')}</p>
-                <p className="balance-secondary currency">{formatCurrency(totalAmountSaved)}</p>
+                <p className="heading-main currency">{formatCurrency(totalAmountSaved)}</p>
+              </div>
+              <div className="flex-1 text-right">
+                <p className="label-text mb-1">Target Total Savings</p>
+                <p className="heading-main currency">{formatCurrency(totalTargetSavings)}</p>
               </div>
             </div>
             
@@ -262,16 +266,17 @@ const Goals = () => {
           <CardContent className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-8">
-              {/* Target Saving - Left */}
               <div className="flex-1">
                 <p className="label-text mb-1">{t('goals.targetMonthlySaving')}</p>
-                <p className="balance-primary currency">{formatCurrency(totalMonthlyAllocation)}</p>
+                <p className="heading-main currency">{formatCurrency(totalMonthlyAllocation)}</p>
               </div>
-              
-              {/* Total Amount Saved - Right */}
-              <div className="flex-1 text-right">
+              <div className="flex-1 text-center">
                 <p className="label-text mb-1">{t('goals.totalAmountSaved')}</p>
-                <p className="balance-primary currency">{formatCurrency(totalAmountSaved)}</p>
+                <p className="heading-main currency">{formatCurrency(totalAmountSaved)}</p>
+              </div>
+              <div className="flex-1 text-right">
+                <p className="label-text mb-1">Target Total Savings</p>
+                <p className="heading-main currency">{formatCurrency(totalTargetSavings)}</p>
               </div>
             </div>
             
