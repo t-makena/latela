@@ -271,8 +271,11 @@ const Budget = () => {
         </Button>
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1">
+      {/* Tab Content in neo-brutalist card */}
+      <div 
+        className="bg-card rounded-3xl border border-foreground p-5 w-full flex-1"
+        style={{ boxShadow: '4px 4px 0px #000000' }}
+      >
         {groceryTab === 'search' ? (
           <SearchTab onAddToCart={handleAddToCart} />
         ) : (
