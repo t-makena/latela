@@ -1,62 +1,44 @@
 
 
-## Floating Budget Buddy Mini-Chat
+## Fix Balance Chart Tooltip Duplicates and Add High/Low Labels
 
-### Overview
-Add a persistent, floating Budget Buddy chat panel that launches when users long-press the Sparkles icon in the navigation. The panel sits at the bottom of the screen as an overlay, allowing users to chat while viewing any page. It persists across route changes.
+### Problem 1: Duplicate tooltip entries
+The `<Area>` components for `netBalance` and `budgetBalance` use the same `dataKey` as their corresponding `<Line>` components. Recharts includes all series in the tooltip by default, so each data key appears twice (once for Area, once for Line).
 
-### Architecture
+**Fix**: Add `tooltipType="none"` to all four `<Area>` components (mobile and desktop) so they are excluded from the tooltip.
 
-The floating chat will live at the App level (above routes) so it survives navigation. A React context will manage the open/close state, accessible from the Navbar for the long-press trigger.
+### Problem 2: Highest and lowest amounts missing values
+The current implementation only shows a `<ReferenceDot>` for the highest `netBalance` point but no label for the lowest, and no labels for the savings line.
 
-### New Files
+**Fix**: Add `<ReferenceDot>` labels for:
+- Highest Available Balance value
+- Lowest Available Balance value (when different from highest)
 
-**1. `src/contexts/FloatingChatContext.tsx`**
-- Context with `isOpen`, `open()`, `close()`, `toggle()` state
-- Provider wraps the app at the same level as other providers
+Each label shows the formatted currency amount (e.g., "R5,000.00") positioned above for max and below for min.
 
-**2. `src/components/chat/FloatingChat.tsx`**
-- A fixed-position panel at the bottom of the screen (`fixed bottom-0 right-0 left-0 md:left-auto md:right-4 md:bottom-4 md:w-[420px]`)
-- Contains a simplified version of the Chat page logic: message list, input, streaming, conversation persistence
-- Header with "Budget Buddy" title, minimize/close buttons
-- Glassmorphism styling consistent with the full chat page
-- Height: ~60% of viewport on mobile, ~500px on desktop
-- Smooth slide-up animation
-- No chat history sidebar (keeps it compact); uses the most recent conversation or creates a new one
+### File: `src/components/financial-insight/FinancialInsightContent.tsx`
 
-### Changes to Existing Files
+#### Changes (applied to both mobile and desktop chart blocks):
 
-**3. `src/components/layout/Navbar.tsx`**
-- Add long-press detection on the Budget Buddy nav item (both mobile and desktop)
-- On long-press: call `open()` from FloatingChatContext instead of navigating
-- On normal click/tap: navigate to `/chat` as before
-- Implementation: `onTouchStart`/`onTouchEnd` with a 500ms timer for mobile; `onMouseDown`/`onMouseUp` for desktop
+1. **Area components** (lines 535-536, 632-633): Add `tooltipType="none"` prop
+   ```tsx
+   <Area type="monotone" dataKey="netBalance" fill="url(#fillAvailable...)" stroke="none" tooltipType="none" />
+   <Area type="monotone" dataKey="budgetBalance" fill="url(#fillSavings...)" stroke="none" tooltipType="none" />
+   ```
 
-**4. `src/App.tsx`**
-- Wrap with `FloatingChatProvider`
-- Render `<FloatingChat />` inside the BrowserRouter (so it persists across routes) but outside `<Routes>`
+2. **ReferenceDot for min point**: Add a second ReferenceDot for the lowest `netBalance` value, with the label positioned below the point
+   ```tsx
+   // Compute min point alongside max point
+   const minPoint = netBalanceData.reduce((min, d) => 
+     d.netBalance < min.value ? { month: d.month, value: d.netBalance } : min, 
+     { month: netBalanceData[0]?.month, value: netBalanceData[0]?.netBalance ?? Infinity });
+   ```
 
-**5. `src/components/layout/Layout.tsx`**
-- No changes needed; the floating chat is positioned fixed and overlays everything
+### Summary of edits
 
-### Technical Details
-
-**Long-press detection:**
-```typescript
-// Custom hook: useOnLongPress(callback, delay = 500)
-// Sets a timeout on pointer down, clears on pointer up/leave
-// If timeout fires, calls callback and sets a flag to prevent the click/navigation
-```
-
-**Floating chat panel behavior:**
-- Opens with a slide-up animation (translate-y transition)
-- Closes with slide-down
-- On mobile: full-width at bottom, ~60vh height
-- On desktop: 420px wide, anchored bottom-right, ~500px height
-- Uses the same streaming logic and edge function (`chat-financial`) as the full Chat page
-- Shares conversation data via Supabase (same tables), so conversations started in the floating chat appear in the full chat page too
-- When on the `/chat` route, the floating chat auto-closes (no need for both)
-
-**State persistence across navigation:**
-- The FloatingChatContext and FloatingChat component live above the router's `<Routes>`, so they are never unmounted during navigation
-- Message state is held in the FloatingChat component's local state
+| Location | Change |
+|---|---|
+| Mobile Area (line 535-536) | Add `tooltipType="none"` |
+| Desktop Area (line 632-633) | Add `tooltipType="none"` |
+| Mobile ReferenceDot block (525-534) | Add min point ReferenceDot with label below |
+| Desktop ReferenceDot block (622-631) | Add min point ReferenceDot with label below |
