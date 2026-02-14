@@ -125,10 +125,16 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       }, 0);
     };
 
+    // Find the last known balance before the date range for baseline
+    const latestBeforeRange = transactions
+      .filter(t => new Date(t.transaction_date) < dateRange.from)
+      .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())[0];
+    const baselineBalance = latestBeforeRange?.balance ?? 0;
+
     if (filteredTransactions.length === 0) {
       return labels.map((label, index) => ({
         month: label,
-        netBalance: 0,
+        netBalance: baselineBalance,
         budgetBalance: getSavingsForDate(periodEndDates[index])
       }));
     }
@@ -179,7 +185,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     }
 
     // Fill in missing periods with previous balance
-    let lastBalance = 0;
+    let lastBalance = baselineBalance;
     return labels.map((label, index) => {
       if (balanceByPeriod[label] !== undefined) {
         lastBalance = balanceByPeriod[label];
