@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Send, Plus, MessageSquare, Trash2, Menu, PanelLeftClose } from "lucide-react";
+import { Send, Plus, MessageSquare, Sparkles, Trash2, Menu, PanelLeftClose } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -370,7 +370,7 @@ export default function Chat() {
           )}
           <div>
             <h2 className="font-bold text-base">Budget Buddy</h2>
-            <p className="text-xs text-muted-foreground">Your AI financial advisor</p>
+            <p className="text-xs text-muted-foreground">Your AI financial assistant</p>
           </div>
         </div>
 
@@ -379,10 +379,10 @@ export default function Chat() {
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <MessageSquare size={28} className="text-primary" />
+                <Sparkles size={28} className="text-primary" fill="currentColor" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="font-bold text-lg">Hey! I'm Budget Buddy 👋</h3>
+                <h3 className="font-bold text-lg">Hey! I'm Budget Buddy</h3>
                 <p className="text-sm text-muted-foreground max-w-md mt-1">
                   Ask me anything about your finances — budgets, spending, savings goals, or just general money advice.
                 </p>
