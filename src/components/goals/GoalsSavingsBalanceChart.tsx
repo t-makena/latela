@@ -59,7 +59,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
       const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
       
       // Flat expected = total monthly allocation (per memory)
-      const flatExpected = expectedMonthlySavings;
+      const flatExpected = totalSaved;
       
       for (let i = 0; i < weeks.length; i++) {
         const weekStart = weeks[i];
@@ -211,7 +211,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                 <Tooltip 
                   formatter={(value: number, name: string) => [
                     formatCurrency(value), 
-                    name === 'expected' ? (t('goals.expectedBalance') || 'Expected Balance') : 
+                    name === 'Expected Balance' ? (t('goals.expectedBalance') || 'Expected Balance') : 
                     "Saving's Balance"
                   ]}
                   labelFormatter={(label) => label}
