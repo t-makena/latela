@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
 import AddToList from "./pages/AddToList";
+import Reports from "./pages/Reports";
 
 
 const queryClient = new QueryClient();
@@ -101,6 +102,13 @@ const App = () => (
                   <ProtectedRoute>
                     <Layout>
                       <Goals />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/reports" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Reports />
                     </Layout>
                   </ProtectedRoute>
                 } />
