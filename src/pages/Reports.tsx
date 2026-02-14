@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { FileText, Download, Table2, Sheet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,8 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { useBudgetScore } from "@/hooks/useBudgetScore";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
-import { useBudgetMethod } from "@/hooks/useBudgetMethod";
 import { PrintableReport } from "@/components/reports/PrintableReport";
+import { categorizeTransaction } from "@/lib/chartDataUtils";
 import {
   downloadCSV,
   downloadExcel,
@@ -22,6 +22,20 @@ import {
 import { toast } from "@/components/ui/sonner";
 
 type TimePeriod = "1M" | "3M" | "6M" | "1Y" | "All";
+
+const CATEGORY_COLORS: Record<string, string> = {
+  "Housing & Utilities": "#2563eb",
+  "Savings & Investments": "#10b981",
+  "Personal & Lifestyle": "#f59e0b",
+  "Food & Groceries": "#ef4444",
+  "Transportation & Fuel": "#8b5cf6",
+  "Dining & Restaurants": "#ec4899",
+  "Shopping & Retail": "#06b6d4",
+  "Entertainment & Recreation": "#84cc16",
+  "Healthcare & Medical": "#f97316",
+  "Bills & Subscriptions": "#6366f1",
+  Miscellaneous: "#64748b",
+};
 
 const Reports = () => {
   const printRef = useRef<HTMLDivElement>(null);
@@ -37,7 +51,7 @@ const Reports = () => {
   const now = new Date();
   const { events } = useCalendarEvents({ year: now.getFullYear(), month: now.getMonth() + 1 });
 
-  // Compute financial summary
+  // ── Financial summary ──
   const availableBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
   const totalMonthlyBudget = calculateTotalMonthly();
   const upcomingEventsTotal = (events || [])
@@ -47,16 +61,81 @@ const Reports = () => {
   const totalMonthlySavings = goals.reduce((sum, g) => sum + g.monthlyAllocation, 0);
   const flexibleBalance = availableBalance - totalMonthlySavings - budgetBalance;
 
-  // Filter transactions by period
-  const filteredTransactions = (() => {
+  // ── Filter transactions by period ──
+  const filteredTransactions = useMemo(() => {
     if (txPeriod === "All") return transactions;
-    const now = new Date();
     const months = { "1M": 1, "3M": 3, "6M": 6, "1Y": 12 }[txPeriod];
     const cutoff = new Date(now.getFullYear(), now.getMonth() - months, now.getDate());
     return transactions.filter(t => new Date(t.transaction_date) >= cutoff);
-  })();
+  }, [transactions, txPeriod]);
 
-  // Prepared export data
+  // ── Computed chart data for PDF ──
+  const categoryBreakdown = useMemo(() => {
+    const expenses = transactions.filter(t => t.amount < 0);
+    const totals: Record<string, number> = {};
+    expenses.forEach(t => {
+      const cat = categorizeTransaction(t as any);
+      totals[cat] = (totals[cat] || 0) + Math.abs(t.amount);
+    });
+    return Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([name, value]) => ({
+        name,
+        value,
+        color: CATEGORY_COLORS[name] || "#64748b",
+      }));
+  }, [transactions]);
+
+  const spendingChartData = useMemo(() => {
+    const monthMap: Record<string, number> = {};
+    transactions
+      .filter(t => t.amount < 0)
+      .forEach(t => {
+        const d = new Date(t.transaction_date);
+        const key = `${d.toLocaleDateString("en-US", { month: "short" })} '${d.getFullYear().toString().slice(-2)}`;
+        monthMap[key] = (monthMap[key] || 0) + Math.abs(t.amount);
+      });
+    return Object.entries(monthMap)
+      .map(([month, total]) => ({ month, total }))
+      .slice(-12);
+  }, [transactions]);
+
+  const balanceChartData = useMemo(() => {
+    const monthMap: Record<string, { income: number; expense: number }> = {};
+    transactions.forEach(t => {
+      const d = new Date(t.transaction_date);
+      const key = `${d.toLocaleDateString("en-US", { month: "short" })} '${d.getFullYear().toString().slice(-2)}`;
+      if (!monthMap[key]) monthMap[key] = { income: 0, expense: 0 };
+      if (t.amount > 0) monthMap[key].income += t.amount;
+      else monthMap[key].expense += Math.abs(t.amount);
+    });
+    let running = 0;
+    return Object.entries(monthMap)
+      .slice(-12)
+      .map(([month, { income, expense }]) => {
+        running += income - expense;
+        return {
+          month,
+          availableBalance: Math.round(running),
+          savingsBalance: Math.round(totalMonthlySavings),
+        };
+      });
+  }, [transactions, totalMonthlySavings]);
+
+  const transactionRows = useMemo(
+    () =>
+      transactions.slice(0, 50).map(t => ({
+        date: t.transaction_date,
+        description: t.description || "",
+        category: categorizeTransaction(t as any),
+        amount: t.amount,
+        balance: t.balance,
+      })),
+    [transactions]
+  );
+
+  // ── Prepared export data ──
   const budgetItemRows = budgetItems.map(item => ({
     name: item.name,
     frequency: item.frequency,
@@ -139,7 +218,7 @@ const Reports = () => {
               Full Financial Report
             </CardTitle>
             <CardDescription>
-              Download a complete PDF report with your financial overview, budget plan, savings goals, and Latela Score.
+              Download a complete PDF report with your financial overview, budget plan, savings goals, charts, and Latela Score.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -166,7 +245,6 @@ const Reports = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* Period filter */}
                 <div className="flex gap-1 flex-wrap">
                   {periods.map(p => (
                     <Button
@@ -219,7 +297,7 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Hidden printable report */}
+      {/* Hidden printable report — visible only during print */}
       <PrintableReport
         ref={printRef}
         userName={getDisplayName() || "User"}
@@ -234,6 +312,10 @@ const Reports = () => {
         goals={goalRows}
         totalMonthlyBudget={totalMonthlyBudget}
         totalMonthlySavings={totalMonthlySavings}
+        categoryBreakdown={categoryBreakdown}
+        spendingChartData={spendingChartData}
+        balanceChartData={balanceChartData}
+        transactions={transactionRows}
       />
     </>
   );

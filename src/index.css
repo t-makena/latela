@@ -455,6 +455,17 @@ a {
     print-color-adjust: exact;
   }
 
+  /* Ensure SVG chart colors render in print */
+  svg {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Page breaks between report sections */
+  .break-before-page {
+    break-before: page;
+  }
+
   /* Hide everything except the printable report */
   .sidebar-nav,
   nav,
