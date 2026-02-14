@@ -479,8 +479,7 @@ a {
   }
 
   /* Hide the main app content during print */
-  main,
-  .container {
+  .print-hide {
     display: none !important;
   }
 

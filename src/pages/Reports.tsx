@@ -125,7 +125,7 @@ const Reports = () => {
 
   return (
     <>
-      <div className="space-y-6 pb-8">
+      <div className="space-y-6 pb-8 print:hidden">
         <div>
           <h1 className="heading-main">Reports</h1>
           <p className="label-text mt-1">Download reports and export your financial data</p>
