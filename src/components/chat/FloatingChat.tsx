@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Send, X, Minus, Sparkles, MessageSquare } from "lucide-react";
+import { Send, X, Minus, Sparkles } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQueryClient } from "@tanstack/react-query";
@@ -78,6 +78,7 @@ export default function FloatingChat() {
         .single();
       if (data) {
         setConversationId(data.id);
+        lastActivityRef.current = Date.now();
         const { data: msgs } = await supabase
           .from("chat_messages")
           .select("role, content")
@@ -261,13 +262,10 @@ export default function FloatingChat() {
           </div>
           <div>
             <h3 className="font-bold text-sm">Budget Buddy</h3>
-            <p className="text-[10px] text-muted-foreground">AI financial advisor</p>
+            <p className="text-[10px] text-muted-foreground">Your AI financial assistant</p>
           </div>
         </div>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewConversation}>
-            <MessageSquare size={14} />
-          </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setMinimized(true)}>
             <Minus size={14} />
           </Button>
@@ -285,7 +283,7 @@ export default function FloatingChat() {
               <Sparkles size={22} className="text-primary" fill="currentColor" strokeWidth={1.5} />
             </div>
             <div>
-              <h4 className="font-bold text-sm">Hey! I'm Budget Buddy 👋</h4>
+              <h4 className="font-bold text-sm">Hey! I'm Budget Buddy</h4>
               <p className="text-xs text-muted-foreground max-w-[280px] mt-1">
                 Ask me anything about your finances.
               </p>
