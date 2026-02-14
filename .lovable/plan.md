@@ -1,55 +1,40 @@
 
 
-## Fix: Available Balance showing R0 in 1W view
+## Fix: Empty PDF Report
 
-### Root Cause
+### Problem
+The `PrintableReport` component sits inside the `<main>` element (rendered by Layout). The print CSS rule `main { display: none !important; }` hides `<main>` entirely, which also hides the `PrintableReport` inside it -- a child cannot override a hidden parent.
 
-In `src/components/financial-insight/FinancialInsightContent.tsx`, the `getNetBalanceData()` function has two problems:
+### Fix (2 files)
 
-1. **Empty range early return (line 128-134)**: When no transactions fall within the 1W date range (Feb 8-14), it returns `netBalance: 0` for every label -- ignoring older transactions entirely.
+**File 1: `src/index.css`**
+- Remove `main` and `.container` from the print hide rule
+- Instead, add a `.print-hide` class that hides non-report content:
 
-2. **Baseline starts at 0 (line 182)**: Even when some transactions exist in the range, `lastBalance` is initialized to `0` instead of the most recent balance before the range starts.
+```css
+@media print {
+  /* Hide non-report UI */
+  .sidebar-nav, nav, header, .fixed, .sticky, footer,
+  .sonner-toast, [data-sonner-toaster],
+  .print-hide {
+    display: none !important;
+  }
 
-### Fix
-
-**File**: `src/components/financial-insight/FinancialInsightContent.tsx`
-
-**Step 1** -- After filtering transactions to the date range (line 93-98), find the most recent transaction balance *before* the range starts:
-
-```ts
-// Find the last known balance before the date range
-const latestBeforeRange = transactions
-  .filter(t => new Date(t.transaction_date) < dateRange.from)
-  .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())[0];
-
-const baselineBalance = latestBeforeRange?.balance ?? 0;
-```
-
-**Step 2** -- Update the empty-range early return (line 128-134) to use `baselineBalance` instead of `0`:
-
-```ts
-if (filteredTransactions.length === 0) {
-  return labels.map((label, index) => ({
-    month: label,
-    netBalance: baselineBalance,
-    budgetBalance: getSavingsForDate(periodEndDates[index])
-  }));
+  /* Show the printable report */
+  .printable-report {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20mm;
+  }
 }
 ```
 
-**Step 3** -- Update the `lastBalance` initialization (line 182) to use `baselineBalance`:
+**File 2: `src/pages/Reports.tsx`**
+- Add `print:hidden` (Tailwind utility) to the visible Reports page content wrapper so it hides during print
+- The `PrintableReport` already uses `hidden print:block` so it will become visible
 
-```ts
-let lastBalance = baselineBalance;
-```
-
-### Result
-
-- When no transactions exist in the 1W window, the chart shows a flat line at the last known balance (R15,951.28) instead of R0.
-- When some days have transactions and some don't, the carry-forward logic starts from the correct baseline rather than 0.
-- All other time filters (1M, 3M, 6M, 1Y) also benefit from this fix.
-
-### Scope
-
-Only one file changes: `src/components/financial-insight/FinancialInsightContent.tsx`, three small edits within `getNetBalanceData()`.
+This way `<main>` stays visible during print, allowing the `PrintableReport` inside it to render.
 
