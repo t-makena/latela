@@ -444,3 +444,49 @@ a {
     padding-right: 0.5rem;
   }
 }
+
+/* =====================================================
+   PRINT STYLES — PDF Report Export
+   ===================================================== */
+@media print {
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide everything except the printable report */
+  .sidebar-nav,
+  nav,
+  header,
+  .fixed,
+  .sticky,
+  footer,
+  .sonner-toast,
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  /* Show the printable report */
+  .printable-report {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20mm;
+    box-sizing: border-box;
+  }
+
+  /* Hide the main app content during print */
+  main,
+  .container {
+    display: none !important;
+  }
+
+  /* Reset backgrounds */
+  .bg-background,
+  [class*="bg-"] {
+    background: transparent !important;
+  }
+}
