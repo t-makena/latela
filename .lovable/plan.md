@@ -1,23 +1,50 @@
 
 
-## Budget Buddy UI Updates
+## Update Budget Buddy System Prompt for FAIS Compliance
 
-### Changes across two files
+### Overview
 
-**File 1: `src/pages/Chat.tsx` (Full-page chat)**
+Update the system prompt in `supabase/functions/chat-financial/index.ts` to redefine Budget Buddy as a **financial education assistant** (not advisor) in compliance with South Africa's Financial Advisory and Intermediary Services (FAIS) Act.
 
-1. **Description**: Change "Your AI financial advisor" (line 373) to "Your AI financial assistant"
-2. **Remove emoji**: Change "Hey! I'm Budget Buddy &wave;" (line 385) to "Hey! I'm Budget Buddy"
-3. **Replace icon**: Change the `MessageSquare` icon in the empty state circle (line 382) to `Sparkles` with `fill="currentColor" strokeWidth={1.5}` to match the brand spec. Add `Sparkles` to imports (line 9) and remove `MessageSquare` from imports if no longer used elsewhere -- but it is still used in the sidebar (line 338), so keep it.
+### Changes
 
-**File 2: `src/components/chat/FloatingChat.tsx` (Floating mini-chat)**
+**File: `supabase/functions/chat-financial/index.ts`** (lines 648-690)
 
-4. **Description**: Change "AI financial advisor" (line 264) to "Your AI financial assistant"
-5. **Remove emoji**: Change "Hey! I'm Budget Buddy &wave;" (line 288) to "Hey! I'm Budget Buddy"
-6. **Remove redundant MessageSquare button**: Delete the `MessageSquare` button block (lines 268-270) -- the new conversation button next to minimize and close. Remove `MessageSquare` from the import (line 10) since it's no longer used in this file.
-7. **Auto-clear fix**: The existing 5-minute inactivity timer (lines 37-45) already calls `handleNewConversation()`. However, `handleNewConversation` is referenced inside the `useEffect` but not listed in its dependency array, and `lastActivityRef` is not reset when a new conversation loads. Will ensure the timer resets `lastActivityRef` on conversation load (line 89) so the 5-minute countdown restarts properly when reopening or loading a conversation.
+Replace the system prompt to incorporate the full regulatory framework:
 
-### Summary of icon changes
-- Full-page Chat empty state: `MessageSquare` replaced with `Sparkles` (filled, 1.5 stroke)
-- Floating Chat empty state: Already uses `Sparkles` -- no change needed
-- Floating Chat header: Remove the `MessageSquare` new-conversation button (keep only minimize and close)
+1. **Identity change**: "financial advisor chatbot" becomes "financial education assistant"
+2. **Core compliance rules added**:
+   - Cannot recommend specific investments, shares, ETFs, crypto, forex, insurance, or retirement products
+   - Cannot advise on buy/sell timing
+   - Cannot assess suitability based on personal circumstances
+   - Cannot build personalized portfolios or suggest allocation percentages as advice
+   - Cannot provide tailored tax strategies
+3. **Permitted actions defined**:
+   - Explain how financial products work
+   - Compare asset classes at a high level
+   - Explain risk concepts and long-term investing principles
+   - Discuss budgeting and financial literacy
+   - Describe South African regulation
+   - Provide historical/macroeconomic context
+4. **Language guidance**:
+   - Use: "Generally...", "Many investors consider...", "One factor to evaluate is...", "Historically..."
+   - Avoid: "You should...", "I recommend...", "Buy...", "Sell...", "This is the best option for you..."
+5. **High-risk topic rules** (crypto, forex, leveraged trading, CFDs, options, day trading):
+   - Clearly highlight risk
+   - No profit projections, trade signals, or position sizing
+6. **Structured refusal templates** for:
+   - Direct investment recommendations
+   - Portfolio construction requests
+   - Buy/sell timing questions
+   - Suitability/personal circumstances questions
+   - High-risk trading signal requests
+7. **Refusal tone**: Calm, respectful, non-preachy, brief but clear; never imply licensing or authority to advise
+
+### Important Note
+
+The existing tool-calling capabilities (add goals, budget items, calendar events, etc.) remain unchanged -- these are budgeting/planning features, not financial advice. The compliance rules specifically target investment advice and product recommendations.
+
+### Deployment
+
+The edge function `chat-financial` will be redeployed after the update.
+
