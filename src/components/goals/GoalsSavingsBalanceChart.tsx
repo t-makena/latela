@@ -38,93 +38,108 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
     return goals.reduce((sum, goal) => sum + goal.amountSaved, 0);
   }, [goals]);
   
-  // Generate chart data based on period
-  // Logic: 
-  // - Expected Balance (orange): Shows the cumulative expected savings for each month
-  // - Savings Balance (green): If available balance >= expected for that month, show expected; else show actual
+  // Earliest goal creation date
+  const earliestGoalDate = useMemo(() => {
+    if (goals.length === 0) return null;
+    return goals.reduce((earliest, goal) => {
+      const d = new Date(goal.createdAt);
+      return d < earliest ? d : earliest;
+    }, new Date(goals[0].createdAt));
+  }, [goals]);
+
+  // Generate chart data: past + future projection
   const chartData = useMemo(() => {
     const now = new Date();
-    const data = [];
+    const data: { month: string; expected: number; savings: number | null }[] = [];
     
     if (selectedPeriod === '1M') {
-      // Weekly data points for 1M, matching Spending Trend format
+      // Weekly data points for 1M
       const dateRange = get1MDateRange();
       const labels = get1MLabels(dateRange);
       const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+      
+      // Flat expected = total monthly allocation (per memory)
+      const flatExpected = expectedMonthlySavings;
       
       for (let i = 0; i < weeks.length; i++) {
         const weekStart = weeks[i];
         const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : endOfDay(dateRange.to);
         
-        // Flat expected: total monthly allocation for goals that existed by this week
-        const expectedForWeek = goals.reduce((sum, goal) => {
-          const goalCreated = new Date(goal.createdAt);
-          if (goalCreated <= weekEnd) {
-            return sum + goal.monthlyAllocation;
-          }
-          return sum;
-        }, 0);
-        
+        const anyGoalExisted = earliestGoalDate ? earliestGoalDate <= weekEnd : false;
         const isCurrentWeek = now >= weekStart && now < weekEnd;
-        const isPastWeek = now >= weekEnd;
+        const isPastOrCurrent = now >= weekStart;
         
-        let savingsBalance: number;
-        if (isCurrentWeek || (i === weeks.length - 1 && now >= weekStart)) {
+        let savingsBalance: number | null;
+        if (!anyGoalExisted) {
+          savingsBalance = 0;
+        } else if (isCurrentWeek || (i === weeks.length - 1 && now >= weekStart)) {
           savingsBalance = totalSaved;
-        } else if (isPastWeek) {
+        } else if (isPastOrCurrent) {
           savingsBalance = 0;
         } else {
-          savingsBalance = 0;
+          savingsBalance = null; // future
         }
         
         data.push({
           month: labels[i] || format(weekStart, 'MMM') + ' W' + Math.ceil(weekStart.getDate() / 7),
-          expected: Math.round(expectedForWeek),
-          savings: Math.round(savingsBalance),
+          expected: anyGoalExisted ? Math.round(flatExpected) : 0,
+          savings: savingsBalance !== null ? Math.round(savingsBalance) : null,
         });
       }
       
       return data;
     }
     
-    // Monthly data points for 3M, 6M, 1Y
-    const periods: Record<string, number> = { '3M': 3, '6M': 6, '1Y': 12 };
-    const monthCount = periods[selectedPeriod] || 6;
+    // Monthly data points for 3M, 6M, 1Y — split half back, half forward
+    const periodSplits: Record<string, { back: number; forward: number }> = {
+      '3M': { back: 1, forward: 2 },
+      '6M': { back: 3, forward: 3 },
+      '1Y': { back: 6, forward: 6 },
+    };
+    const { back, forward } = periodSplits[selectedPeriod] || { back: 3, forward: 3 };
     
-    let cumulativeExpected = 0;
-    
-    for (let i = monthCount - 1; i >= 0; i--) {
-      const date = new Date(now);
-      date.setMonth(date.getMonth() - i);
+    for (let i = -back; i <= forward; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
       const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-      
       const endOfThisMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      const monthExpected = goals.reduce((sum, goal) => {
-        const goalCreated = new Date(goal.createdAt);
-        if (goalCreated <= endOfThisMonth) {
-          return sum + goal.monthlyAllocation;
-        }
-        return sum;
-      }, 0);
-      cumulativeExpected += monthExpected;
       
       const isCurrentMonth = i === 0;
-      let savingsBalance: number;
-      if (isCurrentMonth) {
-        savingsBalance = totalSaved;
+      const isFuture = i > 0;
+      const anyGoalExisted = earliestGoalDate ? earliestGoalDate <= endOfThisMonth : false;
+      
+      // Expected Balance: forward projection from totalSaved
+      let expected: number;
+      if (!anyGoalExisted) {
+        expected = 0;
+      } else if (isCurrentMonth) {
+        expected = totalSaved;
+      } else if (isFuture) {
+        expected = totalSaved + (expectedMonthlySavings * i);
       } else {
-        savingsBalance = 0;
+        expected = 0; // past before current month
+      }
+      
+      // Saving's Balance: only show for current and past months where goals existed
+      let savings: number | null;
+      if (isFuture) {
+        savings = null; // no future data
+      } else if (!anyGoalExisted) {
+        savings = 0;
+      } else if (isCurrentMonth) {
+        savings = totalSaved;
+      } else {
+        savings = 0;
       }
       
       data.push({
         month: monthName,
-        expected: Math.round(cumulativeExpected),
-        savings: Math.round(savingsBalance),
+        expected: Math.round(expected),
+        savings: savings !== null ? Math.round(savings) : null,
       });
     }
     
     return data;
-  }, [selectedPeriod, transactions, expectedMonthlySavings, totalSaved, goals]);
+  }, [selectedPeriod, transactions, expectedMonthlySavings, totalSaved, goals, earliestGoalDate]);
   
   const periods = [
     { key: '1M' as const, label: '1M' },
@@ -197,7 +212,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                   formatter={(value: number, name: string) => [
                     formatCurrency(value), 
                     name === 'expected' ? (t('goals.expectedBalance') || 'Expected Balance') : 
-                    (t('goals.totalAmountSaved') || 'Total Amount Saved')
+                    "Saving's Balance"
                   ]}
                   labelFormatter={(label) => label}
                   contentStyle={{ 
@@ -221,7 +236,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                   dataKey="expected" 
                   stroke="hsl(var(--muted-foreground))" 
                   strokeWidth={2} 
-                  name={t('goals.expectedBalance') || 'Expected Balance'}
+                  name="Expected Balance"
                   dot={false}
                   activeDot={{ r: 3 }}
                 />
@@ -230,7 +245,7 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
                   dataKey="savings" 
                   stroke="#22c55e" 
                   strokeWidth={2} 
-                  name={t('goals.totalAmountSaved') || 'Total Amount Saved'}
+                  name="Saving's Balance"
                   dot={false}
                   activeDot={{ r: 3 }}
                 />
