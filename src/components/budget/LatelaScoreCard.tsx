@@ -33,26 +33,26 @@ export function LatelaScoreCard({ compact = false, horizontal = false }: LatelaS
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600 dark:text-green-400';
-    if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
-    if (score >= 40) return 'text-orange-500 dark:text-orange-400';
-    return 'text-red-600 dark:text-red-400';
+    if (score >= 60) return 'text-[#fff500]';
+    if (score >= 40) return 'text-[#f85f00]';
+    return 'text-[#ff3132]';
   };
 
   const getScoreBorderColor = (score: number) => {
     if (score >= 80) return 'border-green-500';
-    if (score >= 60) return 'border-yellow-500';
-    if (score >= 40) return 'border-orange-500';
-    return 'border-red-500';
+    if (score >= 60) return 'border-[#fff500]';
+    if (score >= 40) return 'border-[#f85f00]';
+    return 'border-[#ff3132]';
   };
 
   const getRiskIcon = () => {
     const iconClass = "h-5 w-5";
     switch (riskLevel) {
       case 'safe': return <Shield className={cn(iconClass, "text-green-600 dark:text-green-400")} />;
-      case 'mild': return <TrendingUp className={cn(iconClass, "text-yellow-600 dark:text-yellow-400")} />;
-      case 'moderate': return <AlertTriangle className={cn(iconClass, "text-orange-500 dark:text-orange-400")} />;
-      case 'high': return <AlertTriangle className={cn(iconClass, "text-red-500 dark:text-red-400")} />;
-      case 'critical': return <Flame className={cn(iconClass, "text-red-700 dark:text-red-500")} />;
+      case 'mild': return <TrendingUp className={cn(iconClass, "text-[#fff500]")} />;
+      case 'moderate': return <AlertTriangle className={cn(iconClass, "text-[#f85f00]")} />;
+      case 'high': return <AlertTriangle className={cn(iconClass, "text-[#ff3132]")} />;
+      case 'critical': return <Flame className={cn(iconClass, "text-[#ff3132]")} />;
     }
   };
 
@@ -266,9 +266,9 @@ function PillarProgress({ label, value, weight }: { label: string; value: number
   
   const getProgressColor = (pct: number) => {
     if (pct >= 80) return 'bg-green-500';
-    if (pct >= 60) return 'bg-yellow-500';
-    if (pct >= 40) return 'bg-orange-500';
-    return 'bg-red-500';
+    if (pct >= 60) return 'bg-[#fff500]';
+    if (pct >= 40) return 'bg-[#f85f00]';
+    return 'bg-[#ff3132]';
   };
   
   return (
