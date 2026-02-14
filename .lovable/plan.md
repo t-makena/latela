@@ -1,83 +1,55 @@
 
 
-## Reports Page — PDF Report and Spreadsheet Exports
+## Fix: Available Balance showing R0 in 1W view
 
-### Overview
-Add a dedicated **Reports** page (`/reports`) to the main navigation where users can download a full PDF financial report and export data as CSV, Excel, or Google Sheets.
+### Root Cause
 
-### What You'll Get
+In `src/components/financial-insight/FinancialInsightContent.tsx`, the `getNetBalanceData()` function has two problems:
 
-**PDF Report** — A downloadable document containing:
-- Financial Overview (Available Balance, Budget Balance, Flexible Balance, Budget Status)
-- Budget Plan table with amounts and spending
-- Savings Goals table with progress
-- Savings Balance chart data summary
-- Latela Score summary
+1. **Empty range early return (line 128-134)**: When no transactions fall within the 1W date range (Feb 8-14), it returns `netBalance: 0` for every label -- ignoring older transactions entirely.
 
-**Spreadsheet Exports** (CSV / Excel / Google Sheets):
-- Transactions — full history with date, merchant, category, amount, balance
-- Budget Items — name, frequency, budgeted amount, amount spent
-- Goals — name, allocation, saved, target, timeline, progress %
+2. **Baseline starts at 0 (line 182)**: Even when some transactions exist in the range, `lastBalance` is initialized to `0` instead of the most recent balance before the range starts.
 
----
+### Fix
 
-### Technical Plan
+**File**: `src/components/financial-insight/FinancialInsightContent.tsx`
 
-#### 1. New file: `src/lib/exportUtils.ts`
+**Step 1** -- After filtering transactions to the date range (line 93-98), find the most recent transaction balance *before* the range starts:
 
-Utility functions for all export logic:
-- **CSV generation**: Convert arrays of objects to CSV strings, trigger download
-- **Excel generation**: Use the same CSV approach with `.xls` extension (no heavy library needed for basic tabular data) or optionally use a lightweight lib
-- **Google Sheets**: Generate a Google Sheets URL that opens with pre-filled CSV data via the `gviz` import URL pattern
-- **PDF generation**: Use the browser's `window.print()` with a styled print-friendly layout, or build a simple HTML-to-PDF approach using a hidden iframe
+```ts
+// Find the last known balance before the date range
+const latestBeforeRange = transactions
+  .filter(t => new Date(t.transaction_date) < dateRange.from)
+  .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())[0];
 
-#### 2. New file: `src/pages/Reports.tsx`
+const baselineBalance = latestBeforeRange?.balance ?? 0;
+```
 
-The Reports page with two sections:
+**Step 2** -- Update the empty-range early return (line 128-134) to use `baselineBalance` instead of `0`:
 
-**Section A: Full PDF Report**
-- A card with a "Download PDF Report" button
-- Clicking it renders a print-friendly version of all financial data and triggers `window.print()` (saves as PDF)
-- Includes: Financial Summary, Budget Plan table, Goals table, Latela Score
+```ts
+if (filteredTransactions.length === 0) {
+  return labels.map((label, index) => ({
+    month: label,
+    netBalance: baselineBalance,
+    budgetBalance: getSavingsForDate(periodEndDates[index])
+  }));
+}
+```
 
-**Section B: Spreadsheet Exports**
-- Three export cards, one for each dataset:
-  - **Transactions** — with period filter (1M, 3M, 6M, 1Y, All)
-  - **Budget Items** — current budget plan
-  - **Goals** — all savings goals
-- Each card has three buttons: CSV, Excel, Google Sheets
+**Step 3** -- Update the `lastBalance` initialization (line 182) to use `baselineBalance`:
 
-#### 3. New file: `src/components/reports/PrintableReport.tsx`
+```ts
+let lastBalance = baselineBalance;
+```
 
-A hidden, print-optimized component that renders the full financial report:
-- Uses `@media print` CSS for clean output
-- Includes the Latela logo, date, user name
-- Structured sections with tables and summary numbers
-- Rendered in a hidden div, shown only when printing
+### Result
 
-#### 4. Update: `src/components/layout/Navbar.tsx`
+- When no transactions exist in the 1W window, the chart shows a flat line at the last known balance (R15,951.28) instead of R0.
+- When some days have transactions and some don't, the carry-forward logic starts from the correct baseline rather than 0.
+- All other time filters (1M, 3M, 6M, 1Y) also benefit from this fix.
 
-Add a "Reports" nav item with a `FileText` icon between Goals and Calendar in the navigation.
+### Scope
 
-#### 5. Update: `src/App.tsx`
-
-Add the `/reports` route.
-
-#### 6. Update: `src/index.css`
-
-Add print-specific CSS rules (`@media print`) to hide the navbar, background, and other non-report elements during PDF export.
-
-### Data Flow
-
-- Transactions: fetched via `useTransactions()` hook (from `v_transactions_with_details` view)
-- Budget Items: fetched via `useBudgetItems()` hook
-- Goals: fetched via `useGoals()` hook
-- Financial metrics: calculated via `calculateFinancialMetrics()` and account balances from `useAccounts()`
-- Latela Score: from `useBudgetScore()` hook
-
-All data stays client-side — no new edge functions or database changes needed.
-
-### No Database Changes Required
-
-All export logic runs in the browser using existing data from hooks. No new tables, migrations, or edge functions.
+Only one file changes: `src/components/financial-insight/FinancialInsightContent.tsx`, three small edits within `getNetBalanceData()`.
 
