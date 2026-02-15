@@ -1041,6 +1041,7 @@ export type Database = {
           financial_year_start: number | null
           first_name: string | null
           gender: string | null
+          google_sheets_refresh_token: string | null
           id: string
           income_frequency: string | null
           language: string | null
@@ -1090,6 +1091,7 @@ export type Database = {
           financial_year_start?: number | null
           first_name?: string | null
           gender?: string | null
+          google_sheets_refresh_token?: string | null
           id?: string
           income_frequency?: string | null
           language?: string | null
@@ -1139,6 +1141,7 @@ export type Database = {
           financial_year_start?: number | null
           first_name?: string | null
           gender?: string | null
+          google_sheets_refresh_token?: string | null
           id?: string
           income_frequency?: string | null
           language?: string | null

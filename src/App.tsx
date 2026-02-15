@@ -24,6 +24,7 @@ import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
 import AddToList from "./pages/AddToList";
 import Reports from "./pages/Reports";
+import GoogleSheetsCallback from "./pages/GoogleSheetsCallback";
 
 
 const queryClient = new QueryClient();
@@ -124,6 +125,11 @@ const App = () => (
                     <Layout>
                       <Settings />
                     </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/auth/google-sheets/callback" element={
+                  <ProtectedRoute>
+                    <GoogleSheetsCallback />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />

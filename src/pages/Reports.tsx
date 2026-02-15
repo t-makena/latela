@@ -203,8 +203,16 @@ const Reports = () => {
         toast.success("Excel file downloaded");
         break;
       case "sheets":
-        await openInGoogleSheets(data);
-        toast.success("Data copied to clipboard — paste it into the Google Sheet (Ctrl+V)");
+        try {
+          const result = await openInGoogleSheets(data, filename);
+          if (result?.url) {
+            toast.success("Spreadsheet created and opened in a new tab");
+          } else if (result?.needsAuth) {
+            toast.info("Redirecting to Google for authorization...");
+          }
+        } catch (err: any) {
+          toast.error(err.message || "Failed to export to Google Sheets");
+        }
         break;
     }
   };
