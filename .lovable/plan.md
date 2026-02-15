@@ -1,48 +1,18 @@
 
 
-## Update Sign Up Form: Add First/Last Name, Remove ID Field
+## Remove Reports from Navigation
 
-### What changes
+A single change to `src/components/layout/Navbar.tsx`: remove the "Reports" entry from the `navItems` array.
 
-The signup form currently has: Username, Mobile, Email, ID/Passport, Password, Confirm Password.
+### Technical Details
 
-After this change it will have: **First Name**, **Last Name**, Mobile, Email, Password, Confirm Password.
+In `src/components/layout/Navbar.tsx`, the `navItems` array currently includes:
 
-- The "Username" field is replaced by separate "First Name" and "Last Name" fields
-- The "ID/Passport Number" field is completely removed
-- The auth metadata sent to Supabase will include `first_name` and `last_name` instead of `username` and `id_passport`
-- The `handle_new_user` trigger already supports `first_name` and `last_name` from metadata, so no database changes are needed
-
-### File changed
-
-| File | What changes |
-|------|-------------|
-| `src/pages/Auth.tsx` | Replace `username` and `idPassport` in signup state with `firstName` and `lastName`. Update form fields, validation, and the `signUp` metadata payload. |
-
-### Technical details
-
-**State change:**
-```
-// Before
-{ username, mobile, email, idPassport, password, confirmPassword }
-
-// After
-{ firstName, lastName, mobile, email, password, confirmPassword }
+```typescript
+{ name: "Reports", href: "/reports", icon: FileText },
 ```
 
-**Auth metadata change:**
-```
-// Before
-data: { username: signupData.username, mobile, id_passport }
+This line will be removed. The route in `App.tsx` and the `Reports.tsx` page file stay intact so the infrastructure remains available for future use -- it just won't be reachable from the sidebar.
 
-// After
-data: { first_name: signupData.firstName, last_name: signupData.lastName, username: `${firstName} ${lastName}`, mobile }
-```
-
-The `username` metadata field is kept as a concatenation of first + last name for backward compatibility with existing code that reads `user_metadata.username` (e.g., the backfill logic in `useUserProfile`).
-
-**Validation:**
-- First Name: required, non-empty
-- Last Name: required, non-empty
-- ID/Passport validation removed entirely
+The `FileText` import from `lucide-react` will also be removed since it's no longer used.
 
