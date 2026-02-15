@@ -1,56 +1,82 @@
 
 
-## Update 1M Period to Show 30 Individual Days
+## Fix: Signup Flow, Profile Data, and Remove Color Palette
 
-### Overview
-Change the 1M (one month) filter from displaying ~4 weekly buckets ("Jan W3", "Feb W1") to showing 30 individual daily data points, matching the same day-by-day format used by the 1W filter but over a longer range.
+### Issue 1: Auto-login after signup
 
-### Changes
+**Problem**: After signing up, the user may be required to confirm their email before they can use the app. The Supabase project likely has email confirmation enabled, which means `signUp()` creates the user but doesn't return an active session until the email is confirmed.
 
-#### 1. `src/lib/dateFilterUtils.ts` — Core date/label logic
+**Fix in `src/pages/Auth.tsx`**:
+- After successful signup, check if a session was returned (meaning email confirmation is disabled or auto-confirm is on). If so, navigate to `/` immediately (this already works).
+- If no session but a user exists (email confirmation required), show a toast saying "Check your email to confirm your account" instead of navigating away.
+- To enable immediate access without email confirmation, disable email confirmation in the Supabase Auth settings (Dashboard > Authentication > Providers > Email > toggle off "Confirm email"). This is the recommended approach for this app.
 
-- **`get1MDateRange()`**: Change from "past 4 weeks" to "past 30 days" using `subDays(today, 29)` (29 days ago + today = 30 days).
-- **`get1MLabels()`**: Change from week labels ("Jan W3") to daily labels. Use a compact format like `"dd MMM"` (e.g., "15 Jan", "16 Jan") to fit 30 points on the x-axis.
+No code change is needed if email confirmation is disabled in the dashboard -- the existing code already navigates to `/` on successful signup with a session. The `onAuthStateChange` listener also handles this.
 
-#### 2. `src/components/financial-insight/FinancialInsightContent.tsx` — Balance and Category charts
+### Issue 2: Profile fields showing hardcoded values instead of actual user data
 
-- **`getNetBalanceData()`** (around lines 108-113 and 145-159): Replace the `1M` week-based grouping with day-based grouping (same logic as the `1W` branch but using the 30-day range).
-- **`getCategoryLineData()`** (around lines 425-438): Replace the `1M` week-based grouping with day-based grouping.
+**Problem**: The Settings page Profile card uses hardcoded defaults:
+- First Name: `defaultValue="John"` (line 257)
+- Last Name: `defaultValue="Doe"` (line 261)
+- Email: `useState("john.doe@example.com")` (line 58)
+- Mobile: `useState("+27 81 234 5678")` (line 62)
 
-#### 3. `src/components/dashboard/EnhancedSpendingChart.tsx` — Spending Trend chart
+These never read from the `user_settings` table or from the auth user object. The `useUserProfile` hook is imported and used for avatar only, but its data is ignored for name/email/mobile fields.
 
-- **`getChartData()`** (line 73-74): Change `periodType` for 1M from `'week'` to `'day'`.
-- **`getLineData()`** (lines 136-145): Replace the 1M week-based grouping with day-based grouping.
+**Fix in `src/pages/Settings.tsx`**:
+- Use the `profile` object from `useUserProfile()` to initialize first name, last name, email, and mobile fields.
+- Also read the auth user's email from `useAuth()` as fallback.
+- Add state variables for `firstName` and `lastName` initialized from `profile`.
+- Wire up the save handlers for email and mobile to actually persist changes to `user_settings` via Supabase (currently they only update local state).
+- Use a `useEffect` to populate state once `profile` loads.
 
-#### 4. `src/lib/chartDataUtils.ts` — Shared chart data generator
+**Fix in `src/hooks/useUserProfile.ts`**:
+- Add an `updateProfile` method that persists first name, last name, email, and mobile changes to the `user_settings` table.
 
-- Update the week-based logic branch (lines 92-97) so that when `periodType` is `'day'` with 30 labels, it correctly maps transactions to daily buckets (this should already work since the `'day'` branch handles this).
+### Issue 3: Remove Color Palette option from Preferences
 
-#### 5. `src/components/goals/GoalsSavingsBalanceChart.tsx` — Goals Savings chart
+**Problem**: The user wants the Color Palette radio group (lines 658-684 in Settings.tsx) removed from the Preferences card.
 
-- **1M branch** (lines 55-91): Replace week-based data points with daily data points over 30 days. Each day shows the savings balance and expected balance using the same day-by-day logic.
+**Fix in `src/pages/Settings.tsx`**:
+- Remove the entire Color Palette section (the `<div className="border-t...">` block containing the RadioGroup for multicolor/blackwhite).
+- Remove the `useColorPalette` import and hook call since it's no longer used on this page.
 
-#### 6. `src/pages/Reports.tsx` — PDF report
+---
 
-- The PDF report currently uses monthly aggregation for all charts. Update it so charts default to 1M (30-day) view with daily granularity, matching the in-app display.
+### Summary of File Changes
+
+| File | Change |
+|------|--------|
+| `src/pages/Settings.tsx` | Load profile data into form fields; persist edits to `user_settings`; remove Color Palette section and its import |
+| `src/hooks/useUserProfile.ts` | Add `updateProfile()` method for saving name/email/mobile |
+| `src/pages/Auth.tsx` | Handle the case where signup succeeds but no session is returned (email confirmation enabled) -- show appropriate message instead of silently failing |
 
 ### Technical Details
 
-**New `get1MDateRange`:**
-```
-from = startOfDay(subDays(today, 29))
-to = endOfDay(today)
+**Settings.tsx profile loading:**
+```tsx
+const { user } = useAuth();
+const [firstName, setFirstName] = useState("");
+const [lastName, setLastName] = useState("");
+
+useEffect(() => {
+  if (profile) {
+    setFirstName(profile.first_name || "");
+    setLastName(profile.last_name || "");
+    setEmail(profile.email || user?.email || "");
+    setMobile(profile.mobile || "");
+  }
+}, [profile]);
 ```
 
-**New `get1MLabels`:**
+**Auth.tsx signup session handling:**
+```tsx
+if (data.user && !data.session) {
+  // Email confirmation required
+  toast({ title: "Check your email", description: "Please confirm your email to continue" });
+} else if (data.session) {
+  // Auto-confirmed, go straight in
+  navigate("/");
+}
 ```
-eachDayOfInterval -> format(day, "dd MMM")   // e.g. "15 Jan"
-```
-
-**X-axis readability**: With 30 labels, the x-axis will be dense. Labels will use a compact format and charts may show every 5th label using `interval={4}` on the XAxis component to avoid overlap.
-
-### Scope
-- 5 source files modified
-- All in-app charts (Balance, Spending Trend, Category, Goals Savings) will show 30 daily data points for 1M
-- PDF report charts will default to the same 30-day daily view
 
