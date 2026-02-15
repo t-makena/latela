@@ -280,30 +280,18 @@ const Settings = () => {
                 <Label htmlFor="firstName">First Name</Label>
                 <Input 
                   id="firstName" 
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  onBlur={async () => {
-                    try {
-                      await updateProfile({ first_name: firstName });
-                    } catch (error) {
-                      toast.error("Failed to update first name");
-                    }
-                  }}
+                  value={profile?.first_name || ""}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input 
                   id="lastName" 
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  onBlur={async () => {
-                    try {
-                      await updateProfile({ last_name: lastName });
-                    } catch (error) {
-                      toast.error("Failed to update last name");
-                    }
-                  }}
+                  value={profile?.last_name || ""}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
             </div>
@@ -322,7 +310,7 @@ const Settings = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Input id="email" type="email" value={email} disabled />
+                  <Input id="email" type="email" value={email} disabled placeholder="Not provided" />
                   <Button 
                     size="icon" 
                     variant="ghost" 
@@ -349,7 +337,7 @@ const Settings = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Input id="mobile" type="tel" value={mobile} disabled />
+                  <Input id="mobile" type="tel" value={mobile} disabled placeholder="Not provided" />
                   <Button 
                     size="icon" 
                     variant="ghost" 
