@@ -1,56 +1,38 @@
 
 
-## Seamless Google Sheets Export (No Pasting Required)
+## Auto-populate Profile Name from Auth Metadata
 
-### What will happen
-When you click the "Sheets" export button, your data will automatically appear in a new Google Spreadsheet -- fully populated, no copying or pasting needed. The first time you use it, Google will ask you to grant permission (one-time only). After that, every export is instant.
+### The Problem
 
-### How it works
+When you signed up, you provided "Tumišo Makena" as your username in the auth metadata. However, nothing copies that into your `user_settings` table's `first_name` and `last_name` columns -- they remain empty.
 
-1. **New Edge Function: `export-to-sheets`**
-   - Receives export data (transactions, budget items, or goals) from the app
-   - Checks if you've already authorized Google (stored refresh token in `user_settings`)
-   - If not authorized: returns a Google authorization URL for you to grant access
-   - If authorized: uses the Google Sheets API to create a new spreadsheet, populate it with your data, make it accessible, and return the URL
+### The Fix
 
-2. **One-time Google authorization flow**
-   - First click on "Sheets" redirects to Google's consent screen
-   - After you approve, Google redirects back to the app
-   - The app stores your Google refresh token so you never have to authorize again
-   - The pending export automatically completes
+Two changes are needed:
 
-3. **Every subsequent export**
-   - Click "Sheets" -> a new tab opens with your fully populated spreadsheet (2-3 seconds)
+**1. Database trigger (new users going forward)**
 
-### Files to create/modify
+Create a trigger on `auth.users` that, when a new user signs up, automatically populates the `user_settings` row with `first_name` and `last_name` parsed from the `username` metadata field (or email as fallback).
 
-| File | What changes |
-|------|-------------|
-| `supabase/functions/export-to-sheets/index.ts` | New edge function handling OAuth token exchange and Google Sheets API calls |
-| `supabase/config.toml` | Add `export-to-sheets` function config |
-| `src/lib/exportUtils.ts` | Rewrite `openInGoogleSheets` to call the edge function instead of clipboard |
-| `src/pages/Reports.tsx` | Handle the OAuth callback redirect and update toast messages |
-| `src/pages/GoogleSheetsCallback.tsx` | New page to handle the Google OAuth redirect |
-| `src/App.tsx` | Add route for `/auth/google-sheets/callback` |
-| Database migration | Add `google_sheets_refresh_token` column to `user_settings` table |
+**2. Backfill your existing profile (one-time fix)**
 
-### Technical details
+Update the `useUserProfile` hook so that when it loads a profile with empty `first_name`/`last_name`, it checks the auth user metadata for a name and writes it back to `user_settings`. This handles your existing account without needing a manual SQL update.
 
-**Edge Function endpoints:**
+### Technical Details
 
-- `POST { action: "export", data, headers, title }` -- Creates a spreadsheet and returns `{ url }`. Uses stored refresh token.
-- `POST { action: "get-auth-url", redirectUri }` -- Returns `{ authUrl }` for first-time authorization.
-- `POST { action: "exchange-code", code, redirectUri }` -- Exchanges the OAuth code for tokens, stores refresh token, returns success.
+| Change | File |
+|--------|------|
+| Database migration | New trigger `handle_new_user_settings` on `auth.users` AFTER INSERT -- parses `raw_user_meta_data->>'username'` into first/last name and inserts into `user_settings` |
+| Frontend backfill | `src/hooks/useUserProfile.ts` -- in `fetchProfile`, if `first_name` is empty and auth metadata has a username, call `updateProfile` to save parsed name |
 
-**OAuth redirect URI:** `https://latela.lovable.app/auth/google-sheets/callback`
+**Trigger logic:**
+- Takes `raw_user_meta_data->>'username'` (e.g. "Tumišo Makena")
+- Splits on space: first word = `first_name`, rest = `last_name`
+- Falls back to email prefix if no username metadata exists
 
-**Google API scopes:** `https://www.googleapis.com/auth/spreadsheets` (create and edit sheets only)
-
-**Security:**
-- Refresh tokens stored in the `user_settings` table (protected by existing RLS policies -- only the user can read/write their own row)
-- Edge function validates JWT authentication before any operation
-- Google Client ID and Secret stored as Supabase secrets (already configured)
-
-**Database change:**
-- Add `google_sheets_refresh_token TEXT` column to `user_settings` (nullable, default null)
+**Frontend backfill logic (in `fetchProfile`):**
+- After fetching the profile, check if `first_name` is null/empty
+- If so, read the auth user's `user_metadata.username`
+- Split it into first/last name and call `updateProfile` to persist
+- This runs once and self-heals -- next load the data is already there
 
