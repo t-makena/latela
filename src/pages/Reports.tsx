@@ -88,39 +88,48 @@ const Reports = () => {
   }, [transactions]);
 
   const spendingChartData = useMemo(() => {
-    const monthMap: Record<string, number> = {};
+    // 30-day daily view
+    const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+    const dayMap: Record<string, number> = {};
     transactions
-      .filter(t => t.amount < 0)
+      .filter(t => t.amount < 0 && new Date(t.transaction_date) >= cutoff)
       .forEach(t => {
         const d = new Date(t.transaction_date);
-        const key = `${d.toLocaleDateString("en-US", { month: "short" })} '${d.getFullYear().toString().slice(-2)}`;
-        monthMap[key] = (monthMap[key] || 0) + Math.abs(t.amount);
+        const key = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleDateString("en-US", { month: "short" })}`;
+        dayMap[key] = (dayMap[key] || 0) + Math.abs(t.amount);
       });
-    return Object.entries(monthMap)
-      .map(([month, total]) => ({ month, total }))
-      .slice(-12);
+    // Build all 30 days
+    const result: { month: string; total: number }[] = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(cutoff.getTime() + i * 86400000);
+      const key = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleDateString("en-US", { month: "short" })}`;
+      result.push({ month: key, total: dayMap[key] || 0 });
+    }
+    return result;
   }, [transactions]);
 
   const balanceChartData = useMemo(() => {
-    const monthMap: Record<string, { income: number; expense: number }> = {};
-    transactions.forEach(t => {
+    // 30-day daily view
+    const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+    const sorted = [...transactions].sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+    const lastBefore = sorted.filter(t => new Date(t.transaction_date) < cutoff).pop();
+    let running = lastBefore?.balance ?? 0;
+
+    const dayBalances: Record<string, number> = {};
+    sorted.filter(t => new Date(t.transaction_date) >= cutoff).forEach(t => {
       const d = new Date(t.transaction_date);
-      const key = `${d.toLocaleDateString("en-US", { month: "short" })} '${d.getFullYear().toString().slice(-2)}`;
-      if (!monthMap[key]) monthMap[key] = { income: 0, expense: 0 };
-      if (t.amount > 0) monthMap[key].income += t.amount;
-      else monthMap[key].expense += Math.abs(t.amount);
+      const key = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleDateString("en-US", { month: "short" })}`;
+      dayBalances[key] = t.balance;
     });
-    let running = 0;
-    return Object.entries(monthMap)
-      .slice(-12)
-      .map(([month, { income, expense }]) => {
-        running += income - expense;
-        return {
-          month,
-          availableBalance: Math.round(running),
-          savingsBalance: Math.round(totalMonthlySavings),
-        };
-      });
+
+    const result: { month: string; availableBalance: number; savingsBalance: number }[] = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(cutoff.getTime() + i * 86400000);
+      const key = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleDateString("en-US", { month: "short" })}`;
+      if (dayBalances[key] !== undefined) running = dayBalances[key];
+      result.push({ month: key, availableBalance: Math.round(running), savingsBalance: Math.round(totalMonthlySavings) });
+    }
+    return result;
   }, [transactions, totalMonthlySavings]);
 
   const transactionRows = useMemo(

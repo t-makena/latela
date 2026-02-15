@@ -106,11 +106,8 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       periodEndDates = eachDayOfInterval({ start: dateRange.from, end: dateRange.to })
         .map(day => endOfDay(day));
     } else if (netBalanceFilter === '1M') {
-      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
-      periodEndDates = weeks.map((weekStart, i) => {
-        const weekEnd = i < weeks.length - 1 ? new Date(weeks[i + 1].getTime() - 1) : endOfDay(dateRange.to);
-        return weekEnd;
-      });
+      periodEndDates = eachDayOfInterval({ start: dateRange.from, end: dateRange.to })
+        .map(day => endOfDay(day));
     } else {
       // 3M, 6M, 1Y - each label is a month
       const months = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
@@ -142,22 +139,19 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     // Group transactions by period and get the last balance for each period
     const balanceByPeriod: { [key: string]: number } = {};
     
-    if (netBalanceFilter === '1M') {
-      // Use calendar-anchored weeks matching Spending Trend format
-      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+    if (netBalanceFilter === '1M' || netBalanceFilter === '1W') {
+      const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       
       filteredTransactions.forEach(t => {
         const date = new Date(t.transaction_date);
-        const matchingIndex = weeks.findIndex((weekStart, i) => {
-          const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : dateRange.to;
-          return date >= weekStart && date < weekEnd;
-        });
+        const matchingIndex = days.findIndex(day => format(day, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
         
         if (matchingIndex !== -1 && labels[matchingIndex]) {
           balanceByPeriod[labels[matchingIndex]] = t.balance ?? 0;
         }
       });
-    } else if (netBalanceFilter === '1W') {
+    } else if (false) {
+      // removed - 1M now uses day-based grouping above
       const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       
       filteredTransactions.forEach(t => {
@@ -423,14 +417,11 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
         }
       });
     } else if (categoryFilter === '1M') {
-      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+      const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       
       filteredTransactions.forEach(t => {
-        const transactionDate = new Date(t.transaction_date);
-        const matchingIndex = weeks.findIndex((weekStart, i) => {
-          const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : dateRange.to;
-          return transactionDate >= weekStart && transactionDate < weekEnd;
-        });
+        const transactionDate = format(new Date(t.transaction_date), 'yyyy-MM-dd');
+        const matchingIndex = days.findIndex(day => format(day, 'yyyy-MM-dd') === transactionDate);
         
         if (matchingIndex !== -1 && labels[matchingIndex]) {
           periodAmounts[labels[matchingIndex]] += Math.abs(t.amount);
