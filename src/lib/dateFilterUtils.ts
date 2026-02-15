@@ -1,7 +1,6 @@
 import { 
   format, 
   subDays, 
-  subWeeks, 
   subMonths, 
   startOfWeek, 
   endOfWeek,
@@ -37,7 +36,7 @@ export const get1WDateRange = (): DateRange => {
 export const get1MDateRange = (): DateRange => {
   const today = new Date();
   const to = endOfDay(today);
-  const from = startOfWeek(subWeeks(today, 3), { weekStartsOn: 1 }); // 3 weeks ago + current week = 4 weeks
+  const from = startOfDay(subDays(today, 29)); // 29 days ago + today = 30 days
   return { from, to };
 };
 
@@ -83,16 +82,8 @@ export const get1WLabels = (dateRange: DateRange): string[] => {
  * Get x-axis labels for 1M filter (week labels: Sep W3, Oct W1, etc.)
  */
 export const get1MLabels = (dateRange: DateRange): string[] => {
-  const weeks = eachWeekOfInterval(
-    { start: dateRange.from, end: dateRange.to },
-    { weekStartsOn: 1 }
-  );
-  
-  return weeks.map(weekStart => {
-    const monthAbbr = format(weekStart, "MMM");
-    const weekOfMonth = Math.ceil(weekStart.getDate() / 7);
-    return `${monthAbbr} W${weekOfMonth}`;
-  });
+  const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
+  return days.map(day => format(day, "dd MMM")); // e.g. "15 Jan"
 };
 
 /**

@@ -17,7 +17,7 @@ import {
 } from "@/lib/dateFilterUtils";
 import { generateChartDataFromTransactions } from "@/lib/chartDataUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { format, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, startOfDay, endOfDay } from "date-fns";
+import { format, eachDayOfInterval, eachMonthOfInterval, startOfDay, endOfDay } from "date-fns";
 
 interface EnhancedSpendingChartProps {
   accountSpecific?: boolean;
@@ -71,7 +71,7 @@ export const EnhancedSpendingChart = ({
     if (selectedPeriod === '1W' || (selectedPeriod === 'custom' && xAxisLabels.length <= 14)) {
       periodType = 'day';
     } else if (selectedPeriod === '1M' || (selectedPeriod === 'custom' && xAxisLabels.length <= 30)) {
-      periodType = 'week';
+      periodType = 'day';
     } else {
       periodType = 'month';
     }
@@ -134,13 +134,10 @@ export const EnhancedSpendingChart = ({
         if (idx !== -1 && labels[idx]) periodAmounts[labels[idx]] += Math.abs(t.amount);
       });
     } else if (selectedPeriod === '1M' || (selectedPeriod === 'custom' && labels.length <= 30)) {
-      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+      const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       filteredTransactions.forEach(t => {
-        const td = new Date(t.transaction_date);
-        const idx = weeks.findIndex((ws, i) => {
-          const we = i < weeks.length - 1 ? weeks[i + 1] : dateRange.to;
-          return td >= ws && td < we;
-        });
+        const td = format(new Date(t.transaction_date), 'yyyy-MM-dd');
+        const idx = days.findIndex(day => format(day, 'yyyy-MM-dd') === td);
         if (idx !== -1 && labels[idx]) periodAmounts[labels[idx]] += Math.abs(t.amount);
       });
     } else {

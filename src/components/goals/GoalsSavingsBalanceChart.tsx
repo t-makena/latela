@@ -11,7 +11,7 @@ import { useSavingsAdjustment } from "@/hooks/useSavingsAdjustment";
 import { useUserSettings, SavingsAdjustmentStrategy } from "@/hooks/useUserSettings";
 import { useLanguage } from "@/hooks/useLanguage";
 import { get1MDateRange, get1MLabels } from "@/lib/dateFilterUtils";
-import { eachWeekOfInterval, format, endOfDay } from "date-fns";
+import { eachDayOfInterval, format, endOfDay } from "date-fns";
 import { ArrowRight, TrendingDown } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
@@ -53,35 +53,34 @@ export const GoalsSavingsBalanceChart = ({ compact = false }: GoalsSavingsBalanc
     const data: { month: string; expected: number; savings: number | null }[] = [];
     
     if (selectedPeriod === '1M') {
-      // Weekly data points for 1M
+      // Daily data points for 1M (30 days)
       const dateRange = get1MDateRange();
       const labels = get1MLabels(dateRange);
-      const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+      const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       
-      // Flat expected = total monthly allocation (per memory)
       const flatExpected = totalSaved;
       
-      for (let i = 0; i < weeks.length; i++) {
-        const weekStart = weeks[i];
-        const weekEnd = i < weeks.length - 1 ? weeks[i + 1] : endOfDay(dateRange.to);
+      for (let i = 0; i < days.length; i++) {
+        const day = days[i];
+        const dayEnd = endOfDay(day);
         
-        const anyGoalExisted = earliestGoalDate ? earliestGoalDate <= weekEnd : false;
-        const isCurrentWeek = now >= weekStart && now < weekEnd;
-        const isPastOrCurrent = now >= weekStart;
+        const anyGoalExisted = earliestGoalDate ? earliestGoalDate <= dayEnd : false;
+        const isToday = format(day, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
+        const isPast = day < now;
         
         let savingsBalance: number | null;
         if (!anyGoalExisted) {
           savingsBalance = 0;
-        } else if (isCurrentWeek || (i === weeks.length - 1 && now >= weekStart)) {
+        } else if (isToday) {
           savingsBalance = totalSaved;
-        } else if (isPastOrCurrent) {
+        } else if (isPast) {
           savingsBalance = 0;
         } else {
           savingsBalance = null; // future
         }
         
         data.push({
-          month: labels[i] || format(weekStart, 'MMM') + ' W' + Math.ceil(weekStart.getDate() / 7),
+          month: labels[i] || format(day, 'dd MMM'),
           expected: anyGoalExisted ? Math.round(flatExpected) : 0,
           savings: savingsBalance !== null ? Math.round(savingsBalance) : null,
         });
