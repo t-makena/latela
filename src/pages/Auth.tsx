@@ -24,10 +24,10 @@ const Auth = () => {
   });
 
   const [signupData, setSignupData] = useState({
-    username: "",
+    firstName: "",
+    lastName: "",
     mobile: "",
     email: "",
-    idPassport: "",
     password: "",
     confirmPassword: "",
   });
@@ -71,11 +71,6 @@ const Auth = () => {
     return mobileRegex.test(mobile);
   };
 
-  const validateIdNumber = (id: string) => {
-    // South African ID: 13 digits
-    const idRegex = /^\d{13}$/;
-    return idRegex.test(id.replace(/\s/g, ""));
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,8 +115,12 @@ const Auth = () => {
     
     const newErrors: Record<string, string> = {};
     
-    if (!signupData.username.trim()) {
-      newErrors.username = "Username is required";
+    if (!signupData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+
+    if (!signupData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
     }
 
     if (!signupData.mobile.trim()) {
@@ -134,12 +133,6 @@ const Auth = () => {
       newErrors.email = "Email is required";
     } else if (!validateEmail(signupData.email)) {
       newErrors.email = "Invalid email address";
-    }
-
-    if (!signupData.idPassport.trim()) {
-      newErrors.idPassport = "ID/Passport number is required";
-    } else if (!validateIdNumber(signupData.idPassport)) {
-      newErrors.idPassport = "Invalid ID number (13 digits required)";
     }
 
     if (!signupData.password) {
@@ -170,9 +163,10 @@ const Auth = () => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            username: signupData.username,
+            first_name: signupData.firstName,
+            last_name: signupData.lastName,
+            username: `${signupData.firstName} ${signupData.lastName}`,
             mobile: signupData.mobile,
-            id_passport: signupData.idPassport,
           },
         },
       });
@@ -477,20 +471,38 @@ const Auth = () => {
             </div>
             <form onSubmit={handleSignup} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="signup-username" className="font-bold text-sm">
-                  Username
+                <Label htmlFor="signup-firstName" className="font-bold text-sm">
+                  First Name
                 </Label>
                 <Input
-                  id="signup-username"
-                  placeholder="Tumiso Makena"
-                  value={signupData.username}
+                  id="signup-firstName"
+                  placeholder="Tumiso"
+                  value={signupData.firstName}
                   onChange={(e) =>
-                    handleInputChange("username", e.target.value, "signup")
+                    handleInputChange("firstName", e.target.value, "signup")
                   }
                   className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
                 />
-                {errors.username && (
-                  <p className="text-sm text-destructive">{errors.username}</p>
+                {errors.firstName && (
+                  <p className="text-sm text-destructive">{errors.firstName}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-lastName" className="font-bold text-sm">
+                  Last Name
+                </Label>
+                <Input
+                  id="signup-lastName"
+                  placeholder="Makena"
+                  value={signupData.lastName}
+                  onChange={(e) =>
+                    handleInputChange("lastName", e.target.value, "signup")
+                  }
+                  className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                />
+                {errors.lastName && (
+                  <p className="text-sm text-destructive">{errors.lastName}</p>
                 )}
               </div>
 
@@ -531,23 +543,6 @@ const Auth = () => {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="signup-idPassport" className="font-bold text-sm">
-                  ID/Passport Number
-                </Label>
-                <Input
-                  id="signup-idPassport"
-                  placeholder="030720xxxxxxx"
-                  value={signupData.idPassport}
-                  onChange={(e) =>
-                    handleInputChange("idPassport", e.target.value, "signup")
-                  }
-                  className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
-                />
-                {errors.idPassport && (
-                  <p className="text-sm text-destructive">{errors.idPassport}</p>
-                )}
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="signup-password" className="font-bold text-sm">
