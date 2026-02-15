@@ -9,6 +9,8 @@ interface UserProfile {
   last_name: string | null;
   display_name: string | null;
   username: string | null;
+  email: string | null;
+  mobile: string | null;
 }
 
 export const useUserProfile = () => {
@@ -27,7 +29,7 @@ export const useUserProfile = () => {
 
       const { data, error } = await supabase
         .from('user_settings')
-        .select('avatar_url, avatar_type, default_avatar_id, first_name, last_name, display_name, username')
+        .select('avatar_url, avatar_type, default_avatar_id, first_name, last_name, display_name, username, email, mobile')
         .eq('user_id', user.id)
         .single();
 
@@ -121,12 +123,27 @@ export const useUserProfile = () => {
     return '';
   };
 
+  const updateProfile = async (fields: { first_name?: string; last_name?: string; email?: string; mobile?: string }) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('user_settings')
+      .update(fields)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    setProfile(prev => prev ? { ...prev, ...fields } : null);
+  };
+
   return {
     profile,
     loading,
     getInitials,
     getDisplayName,
     updateAvatar,
+    updateProfile,
     refetch: fetchProfile,
   };
 };
