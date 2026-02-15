@@ -1,81 +1,56 @@
 
 
-## Fix: Google Sheets Export Producing Empty Results
+## Seamless Google Sheets Export (No Pasting Required)
 
-### Root Cause
+### What will happen
+When you click the "Sheets" export button, your data will automatically appear in a new Google Spreadsheet -- fully populated, no copying or pasting needed. The first time you use it, Google will ask you to grant permission (one-time only). After that, every export is instant.
 
-The current `openInGoogleSheets()` function does two disconnected things:
-1. Downloads a CSV file to the user's computer
-2. Opens `https://sheets.google.com/create` (a blank sheet)
+### How it works
 
-These are completely separate actions — the CSV never gets into the sheet. The user sees an empty spreadsheet.
+1. **New Edge Function: `export-to-sheets`**
+   - Receives export data (transactions, budget items, or goals) from the app
+   - Checks if you've already authorized Google (stored refresh token in `user_settings`)
+   - If not authorized: returns a Google authorization URL for you to grant access
+   - If authorized: uses the Google Sheets API to create a new spreadsheet, populate it with your data, make it accessible, and return the URL
 
-### Solution
+2. **One-time Google authorization flow**
+   - First click on "Sheets" redirects to Google's consent screen
+   - After you approve, Google redirects back to the app
+   - The app stores your Google refresh token so you never have to authorize again
+   - The pending export automatically completes
 
-Replace the approach with a **single action** that opens Google Sheets with the data pre-loaded using a `data:` URI passed to Google Sheets' CSV import URL:
+3. **Every subsequent export**
+   - Click "Sheets" -> a new tab opens with your fully populated spreadsheet (2-3 seconds)
 
-```
-https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv
-```
+### Files to create/modify
 
-Unfortunately Google Sheets doesn't support importing from `blob:` or `data:` URIs directly. The most reliable approach that works without a backend is:
+| File | What changes |
+|------|-------------|
+| `supabase/functions/export-to-sheets/index.ts` | New edge function handling OAuth token exchange and Google Sheets API calls |
+| `supabase/config.toml` | Add `export-to-sheets` function config |
+| `src/lib/exportUtils.ts` | Rewrite `openInGoogleSheets` to call the edge function instead of clipboard |
+| `src/pages/Reports.tsx` | Handle the OAuth callback redirect and update toast messages |
+| `src/pages/GoogleSheetsCallback.tsx` | New page to handle the Google OAuth redirect |
+| `src/App.tsx` | Add route for `/auth/google-sheets/callback` |
+| Database migration | Add `google_sheets_refresh_token` column to `user_settings` table |
 
-**Option: Copy CSV to clipboard + open blank sheet with instructions**
+### Technical details
 
-Instead of silently downloading a CSV and opening a blank sheet, change the flow to:
-1. Copy the CSV data to the user's clipboard
-2. Open a blank Google Sheet
-3. Show a toast: "Data copied to clipboard — paste it into the sheet (Ctrl+V)"
+**Edge Function endpoints:**
 
-This is a much better UX than the current silent CSV download.
+- `POST { action: "export", data, headers, title }` -- Creates a spreadsheet and returns `{ url }`. Uses stored refresh token.
+- `POST { action: "get-auth-url", redirectUri }` -- Returns `{ authUrl }` for first-time authorization.
+- `POST { action: "exchange-code", code, redirectUri }` -- Exchanges the OAuth code for tokens, stores refresh token, returns success.
 
-### File Change: `src/lib/exportUtils.ts`
+**OAuth redirect URI:** `https://latela.lovable.app/auth/google-sheets/callback`
 
-Update `openInGoogleSheets()`:
+**Google API scopes:** `https://www.googleapis.com/auth/spreadsheets` (create and edit sheets only)
 
-```typescript
-export const openInGoogleSheets = async (data: Record<string, unknown>[], headers?: string[]) => {
-  if (data.length === 0) return;
-  
-  // Build tab-separated values (pastes correctly into Sheets)
-  const keys = headers || Object.keys(data[0]);
-  const headerRow = keys.join('\t');
-  const rows = data.map(row =>
-    keys.map(key => {
-      const value = row[key];
-      return value === null || value === undefined ? '' : String(value);
-    }).join('\t')
-  );
-  const tsv = [headerRow, ...rows].join('\n');
+**Security:**
+- Refresh tokens stored in the `user_settings` table (protected by existing RLS policies -- only the user can read/write their own row)
+- Edge function validates JWT authentication before any operation
+- Google Client ID and Secret stored as Supabase secrets (already configured)
 
-  try {
-    await navigator.clipboard.writeText(tsv);
-  } catch {
-    // Fallback: download CSV instead
-    downloadFile(arrayToCSV(data, headers), 'latela-export.csv', 'text/csv;charset=utf-8;');
-  }
-
-  window.open('https://sheets.google.com/create', '_blank');
-};
-```
-
-### File Change: `src/pages/Reports.tsx`
-
-Update the toast message for the `sheets` export case:
-
-```typescript
-case "sheets":
-  await openInGoogleSheets(data);
-  toast.success("Data copied to clipboard — paste it into the Google Sheet (Ctrl+V)");
-  break;
-```
-
-Also update `openInGoogleSheets` call to be awaited (it's now async).
-
-### Summary
-
-| File | Change |
-|------|--------|
-| `src/lib/exportUtils.ts` | Rewrite `openInGoogleSheets` to copy TSV to clipboard instead of downloading CSV; make it async |
-| `src/pages/Reports.tsx` | Await the call; update toast message to instruct user to paste |
+**Database change:**
+- Add `google_sheets_refresh_token TEXT` column to `user_settings` (nullable, default null)
 
