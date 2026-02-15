@@ -38,6 +38,28 @@ export const useUserProfile = () => {
       }
 
       setProfile(data || null);
+
+      // Backfill first/last name from auth metadata if missing
+      if (data && !data.first_name && user.user_metadata?.username) {
+        const userName = user.user_metadata.username as string;
+        const parts = userName.split(' ');
+        const parsedFirst = parts[0];
+        const parsedLast = parts.length > 1 ? parts.slice(1).join(' ') : null;
+
+        if (parsedFirst) {
+          const fields: { first_name: string; last_name?: string } = { first_name: parsedFirst };
+          if (parsedLast) fields.last_name = parsedLast;
+
+          const { error: updateError } = await supabase
+            .from('user_settings')
+            .update(fields)
+            .eq('user_id', user.id);
+
+          if (!updateError) {
+            setProfile(prev => prev ? { ...prev, ...fields } : null);
+          }
+        }
+      }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
     } finally {
