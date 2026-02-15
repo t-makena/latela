@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff, Edit2, X, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -18,8 +18,8 @@ import { LanguageSettings } from "@/components/settings/LanguageSettings";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUserSettings, SavingsAdjustmentStrategy } from "@/hooks/useUserSettings";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useColorPalette, ColorPalette } from "@/hooks/useColorPalette";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/contexts/AuthContext";
 import { AvatarPickerDialog } from "@/components/settings/AvatarPickerDialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarComponent } from "@/components/avatars/DefaultAvatars";
@@ -28,8 +28,8 @@ const Settings = () => {
   const { accounts } = useAccounts();
   const { theme, setTheme } = useTheme();
   const { savingsAdjustmentStrategy, updateSavingsStrategy } = useUserSettings();
-  const { colorPalette, updateColorPalette } = useColorPalette();
-  const { profile, getInitials, updateAvatar } = useUserProfile();
+  const { profile, getInitials, updateAvatar, updateProfile } = useUserProfile();
+  const { user } = useAuth();
   const { 
     payday, 
     frequency, 
@@ -54,14 +54,28 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
   
-  // Email and mobile editing states
-  const [email, setEmail] = useState("john.doe@example.com");
+  // Profile form states
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [editedEmail, setEditedEmail] = useState(email);
+  const [editedEmail, setEditedEmail] = useState("");
   
-  const [mobile, setMobile] = useState("+27 81 234 5678");
+  const [mobile, setMobile] = useState("");
   const [isEditingMobile, setIsEditingMobile] = useState(false);
-  const [editedMobile, setEditedMobile] = useState(mobile);
+  const [editedMobile, setEditedMobile] = useState("");
+
+  // Populate from profile once loaded
+  useEffect(() => {
+    if (profile) {
+      setFirstName(profile.first_name || "");
+      setLastName(profile.last_name || "");
+      setEmail(profile.email || user?.email || "");
+      setEditedEmail(profile.email || user?.email || "");
+      setMobile(profile.mobile || "");
+      setEditedMobile(profile.mobile || "");
+    }
+  }, [profile, user]);
   
   // Collapsible states
   const [isUsernameOpen, setIsUsernameOpen] = useState(false);
@@ -153,10 +167,15 @@ const Settings = () => {
     }
   };
 
-  const handleSaveEmail = () => {
-    setEmail(editedEmail);
-    setIsEditingEmail(false);
-    toast.success("Email updated successfully!");
+  const handleSaveEmail = async () => {
+    try {
+      await updateProfile({ email: editedEmail });
+      setEmail(editedEmail);
+      setIsEditingEmail(false);
+      toast.success("Email updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update email");
+    }
   };
 
   const handleCancelEmail = () => {
@@ -164,10 +183,15 @@ const Settings = () => {
     setIsEditingEmail(false);
   };
 
-  const handleSaveMobile = () => {
-    setMobile(editedMobile);
-    setIsEditingMobile(false);
-    toast.success("Mobile number updated successfully!");
+  const handleSaveMobile = async () => {
+    try {
+      await updateProfile({ mobile: editedMobile });
+      setMobile(editedMobile);
+      setIsEditingMobile(false);
+      toast.success("Mobile number updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update mobile number");
+    }
   };
 
   const handleCancelMobile = () => {
@@ -254,11 +278,33 @@ const Settings = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" defaultValue="John" />
+                <Input 
+                  id="firstName" 
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  onBlur={async () => {
+                    try {
+                      await updateProfile({ first_name: firstName });
+                    } catch (error) {
+                      toast.error("Failed to update first name");
+                    }
+                  }}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" defaultValue="Doe" />
+                <Input 
+                  id="lastName" 
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  onBlur={async () => {
+                    try {
+                      await updateProfile({ last_name: lastName });
+                    } catch (error) {
+                      toast.error("Failed to update last name");
+                    }
+                  }}
+                />
               </div>
             </div>
             <div className="space-y-2">
@@ -655,33 +701,6 @@ const Settings = () => {
               />
             </div>
             
-            <div className="border-t border-border pt-4">
-              <Label className="text-base font-medium">Color Palette</Label>
-              <p className="text-sm text-muted-foreground mb-3">
-                Choose the background color style
-              </p>
-              <RadioGroup
-                value={colorPalette}
-                onValueChange={async (value) => {
-                  try {
-                    await updateColorPalette(value as ColorPalette);
-                    toast.success("Color palette updated!");
-                  } catch (error) {
-                    toast.error("Failed to update color palette");
-                  }
-                }}
-                className="flex gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="multicolor" id="multicolor" />
-                  <Label htmlFor="multicolor" className="cursor-pointer">Multi-color</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="blackwhite" id="blackwhite" />
-                  <Label htmlFor="blackwhite" className="cursor-pointer">Black & White</Label>
-                </div>
-              </RadioGroup>
-            </div>
           </div>
         </CardContent>
       </Card>

@@ -186,7 +186,13 @@ const Auth = () => {
         return;
       }
 
-      if (data.user) {
+      if (data.user && !data.session) {
+        // Email confirmation required
+        toast({
+          title: "Check your email",
+          description: "Please confirm your email address to continue",
+        });
+      } else if (data.session) {
         toast({
           title: "Account created!",
           description: "Welcome to Latela",
