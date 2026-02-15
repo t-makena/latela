@@ -19,7 +19,7 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("1 Mth");
   const { t } = useLanguage();
   
-  const { transactions } = useTransactions();
+  const { transactions } = useTransactions({ currentMonthOnly: false, limit: 2000 });
   const { accounts } = useAccounts();
   const { calculateTotalMonthly } = useBudgetItems();
   const currentDate = new Date();
@@ -69,6 +69,9 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
       return date >= previousPeriodStart && date <= previousPeriodEnd;
     });
 
+    const hasPreviousData = previousPeriodTransactions.length > 0;
+    const hasCurrentData = currentPeriodTransactions.length > 0;
+
     // Calculate spending (negative amounts = expenses)
     const currentSpending = currentPeriodTransactions
       .filter(t => t.amount < 0)
@@ -78,42 +81,39 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
       .filter(t => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-    // Calculate % change for spending
-    const spendingChange = previousSpending > 0 
-      ? ((currentSpending - previousSpending) / previousSpending) * 100 
-      : 0;
+    // Spending change: null if no data in either period
+    const spendingChange: number | null = (!hasCurrentData || !hasPreviousData)
+      ? null
+      : previousSpending > 0
+        ? ((currentSpending - previousSpending) / previousSpending) * 100
+        : null;
 
     // Available Balance (sum of all accounts)
     const availableBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
-    // Calculate previous period's ending balance from transactions
-    const previousPeriodEndingBalances = previousPeriodTransactions
-      .filter(t => t.balance !== undefined)
-      .reduce((acc, t) => {
-        const date = new Date(t.transaction_date);
-        if (!acc.date || date > acc.date) {
-          return { date, balance: t.balance };
-        }
-        return acc;
-      }, { date: null as Date | null, balance: 0 });
-    
-    const previousAvailableBalance = previousPeriodEndingBalances.balance || availableBalance * 0.9;
-    
-    // Calculate % change for available balance
-    const availableBalanceChange = previousAvailableBalance > 0
-      ? ((availableBalance - previousAvailableBalance) / previousAvailableBalance) * 100
-      : 0;
+    // Use actual previous-period ending balance; null if no previous data
+    let availableBalanceChange: number | null = null;
+    if (hasPreviousData) {
+      const previousPeriodEndingBalances = previousPeriodTransactions
+        .filter(t => t.balance != null)
+        .reduce((acc, t) => {
+          const date = new Date(t.transaction_date);
+          if (!acc.date || date > acc.date) {
+            return { date, balance: t.balance ?? 0 };
+          }
+          return acc;
+        }, { date: null as Date | null, balance: 0 });
 
-    // Budget Balance (budget expenses + upcoming events)
+      if (previousPeriodEndingBalances.date && previousPeriodEndingBalances.balance !== 0) {
+        availableBalanceChange = ((availableBalance - previousPeriodEndingBalances.balance) / Math.abs(previousPeriodEndingBalances.balance)) * 100;
+      }
+    }
+
+    // Budget Balance — no historical snapshots, always N/A
     const totalBudgetExpenses = calculateTotalMonthly();
     const totalUpcomingEvents = upcomingEvents.reduce((sum, event) => sum + event.budgetedAmount, 0);
     const budgetBalance = totalBudgetExpenses + totalUpcomingEvents;
-
-    // For budget balance, estimate previous period (use same calculation with 0.9x multiplier as fallback)
-    const previousBudgetBalance = budgetBalance * 0.9;
-    const budgetBalanceChange = previousBudgetBalance > 0
-      ? ((budgetBalance - previousBudgetBalance) / previousBudgetBalance) * 100
-      : 0;
+    const budgetBalanceChange: number | null = null;
 
     return {
       availableBalance,
@@ -181,8 +181,8 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
                 <p className="table-body-text">{t('finance.availableBalance')}</p>
               </td>
               <td className="py-4 text-right">
-                <p className={`percentage-text ${metrics.availableBalanceChange > 0 ? 'percentage-positive' : metrics.availableBalanceChange < 0 ? 'percentage-negative' : 'percentage-neutral'}`}>
-                  {formatChange(metrics.availableBalanceChange)}
+                <p className={`percentage-text ${metrics.availableBalanceChange === null ? 'percentage-neutral' : metrics.availableBalanceChange > 0 ? 'percentage-positive' : metrics.availableBalanceChange < 0 ? 'percentage-negative' : 'percentage-neutral'}`}>
+                  {metrics.availableBalanceChange === null ? "N/A" : formatChange(metrics.availableBalanceChange)}
                 </p>
               </td>
             </tr>
@@ -191,8 +191,8 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
                 <p className="table-body-text">{t('finance.budgetBalance')}</p>
               </td>
               <td className="py-4 text-right">
-                <p className={`percentage-text ${metrics.budgetBalanceChange > 0 ? 'percentage-positive' : metrics.budgetBalanceChange < 0 ? 'percentage-negative' : 'percentage-neutral'}`}>
-                  {formatChange(metrics.budgetBalanceChange)}
+                <p className={`percentage-text ${metrics.budgetBalanceChange === null ? 'percentage-neutral' : metrics.budgetBalanceChange > 0 ? 'percentage-positive' : metrics.budgetBalanceChange < 0 ? 'percentage-negative' : 'percentage-neutral'}`}>
+                  {metrics.budgetBalanceChange === null ? "N/A" : formatChange(metrics.budgetBalanceChange)}
                 </p>
               </td>
             </tr>
@@ -201,8 +201,8 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
                 <p className="table-body-text">{t('finance.spending')}</p>
               </td>
               <td className="py-4 text-right">
-                <p className={`percentage-text ${metrics.spendingChange > 0 ? 'percentage-negative' : metrics.spendingChange < 0 ? 'percentage-positive' : 'percentage-neutral'}`}>
-                  {formatChange(metrics.spendingChange)}
+                <p className={`percentage-text ${metrics.spendingChange === null ? 'percentage-neutral' : metrics.spendingChange > 0 ? 'percentage-negative' : metrics.spendingChange < 0 ? 'percentage-positive' : 'percentage-neutral'}`}>
+                  {metrics.spendingChange === null ? "N/A" : formatChange(metrics.spendingChange)}
                 </p>
               </td>
             </tr>
