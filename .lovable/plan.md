@@ -1,66 +1,56 @@
 
 
-## Enhanced PDF Report — Include All Charts and Tables
+## Update 1M Period to Show 30 Individual Days
 
 ### Overview
-Expand the `PrintableReport` component to include **all** the charts and tables currently shown across the app, so the PDF is a comprehensive financial snapshot.
+Change the 1M (one month) filter from displaying ~4 weekly buckets ("Jan W3", "Feb W1") to showing 30 individual daily data points, matching the same day-by-day format used by the 1W filter but over a longer range.
 
-### What Will Be Added to the PDF
+### Changes
 
-The report will include these new sections (in addition to existing Financial Overview, Budget Plan table, Goals table, and Latela Score):
+#### 1. `src/lib/dateFilterUtils.ts` — Core date/label logic
 
-1. **Spending Trend Chart** — A bar chart showing spending by category over the past month (reuses the same data logic as `EnhancedSpendingChart`)
-2. **Balance Chart** — A line chart showing Available Balance and Savings Balance over 1 year (reuses the same data logic as `FinancialInsightContent.getNetBalanceData()`)
-3. **Budget Allocation Pie Chart** — Category breakdown pie chart with a table showing category, amount, and percentage (reuses logic from `BudgetBreakdown`)
-4. **Savings Balance Chart** — Expected vs actual savings balance projection (reuses logic from `GoalsSavingsBalanceChart`)
-5. **Transaction History Table** — Full list of recent transactions with date, description, category, amount, and balance
-6. **Budget Insight Table** — The comparison table showing Available Balance, Budget Balance, and Spending with month-over-month percentage changes
+- **`get1MDateRange()`**: Change from "past 4 weeks" to "past 30 days" using `subDays(today, 29)` (29 days ago + today = 30 days).
+- **`get1MLabels()`**: Change from week labels ("Jan W3") to daily labels. Use a compact format like `"dd MMM"` (e.g., "15 Jan", "16 Jan") to fit 30 points on the x-axis.
 
-### Technical Plan
+#### 2. `src/components/financial-insight/FinancialInsightContent.tsx` — Balance and Category charts
 
-#### File 1: `src/components/reports/PrintableReport.tsx` (major rewrite)
+- **`getNetBalanceData()`** (around lines 108-113 and 145-159): Replace the `1M` week-based grouping with day-based grouping (same logic as the `1W` branch but using the 30-day range).
+- **`getCategoryLineData()`** (around lines 425-438): Replace the `1M` week-based grouping with day-based grouping.
 
-- Add new props for the additional data:
-  - `transactions` — array of transaction records for the transaction table and chart data generation
-  - `categoryBreakdown` — pre-computed array of `{ name, value, color }` for the pie chart
-  - `spendingChartData` — pre-computed array for the spending bar chart
-  - `balanceChartData` — pre-computed array of `{ month, netBalance, budgetBalance }` for the balance line chart
-  - `savingsChartData` — pre-computed array of `{ month, expected, savings }` for the savings projection chart
-  - `budgetInsight` — object with current/previous metrics and percentage changes
+#### 3. `src/components/dashboard/EnhancedSpendingChart.tsx` — Spending Trend chart
 
-- Render Recharts charts directly (SVG-based, prints natively):
-  - Use `<BarChart>` for spending trend (static, no tooltips/interactions)
-  - Use `<LineChart>` for balance and savings charts
-  - Use `<PieChart>` for budget allocation
-  - Set explicit `width` and `height` on charts instead of `ResponsiveContainer` (which doesn't work well in print) — use a wrapper `<div>` with fixed dimensions
+- **`getChartData()`** (line 73-74): Change `periodType` for 1M from `'week'` to `'day'`.
+- **`getLineData()`** (lines 136-145): Replace the 1M week-based grouping with day-based grouping.
 
-- Add a transaction history table (last 50 transactions) with columns: Date, Description, Category, Amount, Balance
+#### 4. `src/lib/chartDataUtils.ts` — Shared chart data generator
 
-- Use print-friendly colors (dark strokes on white background)
+- Update the week-based logic branch (lines 92-97) so that when `periodType` is `'day'` with 30 labels, it correctly maps transactions to daily buckets (this should already work since the `'day'` branch handles this).
 
-#### File 2: `src/pages/Reports.tsx` (update)
+#### 5. `src/components/goals/GoalsSavingsBalanceChart.tsx` — Goals Savings chart
 
-- Compute the additional data needed for the new props:
-  - Generate `categoryBreakdown` from transactions (same logic as `BudgetBreakdown.getSimpleCategoryData()`)
-  - Generate `spendingChartData` using `generateChartDataFromTransactions()` from `chartDataUtils`
-  - Generate `balanceChartData` using the same logic as `getNetBalanceData()` from `FinancialInsightContent`
-  - Generate `savingsChartData` from goals data
-  - Compute `budgetInsight` metrics with percentage changes
-- Pass all new data as props to `PrintableReport`
+- **1M branch** (lines 55-91): Replace week-based data points with daily data points over 30 days. Each day shows the savings balance and expected balance using the same day-by-day logic.
 
-#### File 3: `src/index.css` (minor update)
+#### 6. `src/pages/Reports.tsx` — PDF report
 
-- Ensure SVG elements render properly in print by adding:
-  ```css
-  @media print {
-    svg { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  }
-  ```
+- The PDF report currently uses monthly aggregation for all charts. Update it so charts default to 1M (30-day) view with daily granularity, matching the in-app display.
 
-### Key Considerations
+### Technical Details
 
-- **Recharts in print**: Recharts renders SVG which prints natively. The main gotcha is `ResponsiveContainer` — it relies on parent element dimensions which can be 0 in hidden elements. The fix is to use a visible-during-print wrapper with explicit dimensions, or render charts with fixed `width`/`height` props directly on the chart components.
-- **Page breaks**: CSS `break-before: page` will be added between major sections so the PDF has clean page boundaries.
-- **Colors**: Charts will use the same category colors as the app but with `print-color-adjust: exact` to preserve colors in print.
-- **Data computation**: All chart data is computed client-side in `Reports.tsx` using the same utility functions and hooks already used by the app's interactive charts — no new data fetching needed.
+**New `get1MDateRange`:**
+```
+from = startOfDay(subDays(today, 29))
+to = endOfDay(today)
+```
+
+**New `get1MLabels`:**
+```
+eachDayOfInterval -> format(day, "dd MMM")   // e.g. "15 Jan"
+```
+
+**X-axis readability**: With 30 labels, the x-axis will be dense. Labels will use a compact format and charts may show every 5th label using `interval={4}` on the XAxis component to avoid overlap.
+
+### Scope
+- 5 source files modified
+- All in-app charts (Balance, Spending Trend, Category, Goals Savings) will show 30 daily data points for 1M
+- PDF report charts will default to the same 30-day daily view
 
