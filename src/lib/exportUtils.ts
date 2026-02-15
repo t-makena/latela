@@ -70,16 +70,25 @@ export const downloadExcel = (data: Record<string, unknown>[], filename: string,
 /**
  * Open data in Google Sheets via CSV import URL
  */
-export const openInGoogleSheets = (data: Record<string, unknown>[], headers?: string[]) => {
-  const csv = arrayToCSV(data, headers);
-  const encoded = encodeURIComponent(csv);
-  // Use a data URI approach: create a temporary CSV, then open Google Sheets import
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  
-  // Open Google Sheets with a blank sheet - user can then paste/import
-  // Since direct CSV import via URL requires a hosted file, we download CSV and open Sheets
-  downloadFile(csv, 'latela-export.csv', 'text/csv;charset=utf-8;');
+export const openInGoogleSheets = async (data: Record<string, unknown>[], headers?: string[]) => {
+  if (data.length === 0) return;
+
+  const keys = headers || Object.keys(data[0]);
+  const headerRow = keys.join('\t');
+  const rows = data.map(row =>
+    keys.map(key => {
+      const value = row[key];
+      return value === null || value === undefined ? '' : String(value);
+    }).join('\t')
+  );
+  const tsv = [headerRow, ...rows].join('\n');
+
+  try {
+    await navigator.clipboard.writeText(tsv);
+  } catch {
+    downloadFile(arrayToCSV(data, headers), 'latela-export.csv', 'text/csv;charset=utf-8;');
+  }
+
   window.open('https://sheets.google.com/create', '_blank');
 };
 
