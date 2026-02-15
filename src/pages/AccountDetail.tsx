@@ -68,7 +68,7 @@ const AccountDetail = () => {
     return (
       <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
         <MobileAccountCard account={account} />
-        <MobileBudgetInsightCard />
+        <MobileBudgetInsightCard titleKey="finance.accountInsight" accountId={accountId} />
       </div>
     );
   }
