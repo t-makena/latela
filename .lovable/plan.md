@@ -1,38 +1,48 @@
 
 
-## Auto-populate Profile Name from Auth Metadata
+## Update Sign Up Form: Add First/Last Name, Remove ID Field
 
-### The Problem
+### What changes
 
-When you signed up, you provided "Tumišo Makena" as your username in the auth metadata. However, nothing copies that into your `user_settings` table's `first_name` and `last_name` columns -- they remain empty.
+The signup form currently has: Username, Mobile, Email, ID/Passport, Password, Confirm Password.
 
-### The Fix
+After this change it will have: **First Name**, **Last Name**, Mobile, Email, Password, Confirm Password.
 
-Two changes are needed:
+- The "Username" field is replaced by separate "First Name" and "Last Name" fields
+- The "ID/Passport Number" field is completely removed
+- The auth metadata sent to Supabase will include `first_name` and `last_name` instead of `username` and `id_passport`
+- The `handle_new_user` trigger already supports `first_name` and `last_name` from metadata, so no database changes are needed
 
-**1. Database trigger (new users going forward)**
+### File changed
 
-Create a trigger on `auth.users` that, when a new user signs up, automatically populates the `user_settings` row with `first_name` and `last_name` parsed from the `username` metadata field (or email as fallback).
+| File | What changes |
+|------|-------------|
+| `src/pages/Auth.tsx` | Replace `username` and `idPassport` in signup state with `firstName` and `lastName`. Update form fields, validation, and the `signUp` metadata payload. |
 
-**2. Backfill your existing profile (one-time fix)**
+### Technical details
 
-Update the `useUserProfile` hook so that when it loads a profile with empty `first_name`/`last_name`, it checks the auth user metadata for a name and writes it back to `user_settings`. This handles your existing account without needing a manual SQL update.
+**State change:**
+```
+// Before
+{ username, mobile, email, idPassport, password, confirmPassword }
 
-### Technical Details
+// After
+{ firstName, lastName, mobile, email, password, confirmPassword }
+```
 
-| Change | File |
-|--------|------|
-| Database migration | New trigger `handle_new_user_settings` on `auth.users` AFTER INSERT -- parses `raw_user_meta_data->>'username'` into first/last name and inserts into `user_settings` |
-| Frontend backfill | `src/hooks/useUserProfile.ts` -- in `fetchProfile`, if `first_name` is empty and auth metadata has a username, call `updateProfile` to save parsed name |
+**Auth metadata change:**
+```
+// Before
+data: { username: signupData.username, mobile, id_passport }
 
-**Trigger logic:**
-- Takes `raw_user_meta_data->>'username'` (e.g. "Tumišo Makena")
-- Splits on space: first word = `first_name`, rest = `last_name`
-- Falls back to email prefix if no username metadata exists
+// After
+data: { first_name: signupData.firstName, last_name: signupData.lastName, username: `${firstName} ${lastName}`, mobile }
+```
 
-**Frontend backfill logic (in `fetchProfile`):**
-- After fetching the profile, check if `first_name` is null/empty
-- If so, read the auth user's `user_metadata.username`
-- Split it into first/last name and call `updateProfile` to persist
-- This runs once and self-heals -- next load the data is already there
+The `username` metadata field is kept as a concatenation of first + last name for backward compatibility with existing code that reads `user_metadata.username` (e.g., the backfill logic in `useUserProfile`).
+
+**Validation:**
+- First Name: required, non-empty
+- Last Name: required, non-empty
+- ID/Passport validation removed entirely
 
