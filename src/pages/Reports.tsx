@@ -166,7 +166,7 @@ const Reports = () => {
     toast.success("PDF report ready — use your browser's Save as PDF option");
   };
 
-  const handleExport = (
+  const handleExport = async (
     type: "csv" | "excel" | "sheets",
     dataset: "transactions" | "budget" | "goals"
   ) => {
@@ -203,8 +203,8 @@ const Reports = () => {
         toast.success("Excel file downloaded");
         break;
       case "sheets":
-        openInGoogleSheets(data);
-        toast.success("CSV downloaded — import it into the Google Sheet that opened");
+        await openInGoogleSheets(data);
+        toast.success("Data copied to clipboard — paste it into the Google Sheet (Ctrl+V)");
         break;
     }
   };
