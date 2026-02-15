@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 // ============= Export Utilities =============
 
 /**
@@ -70,26 +72,55 @@ export const downloadExcel = (data: Record<string, unknown>[], filename: string,
 /**
  * Open data in Google Sheets via CSV import URL
  */
-export const openInGoogleSheets = async (data: Record<string, unknown>[], headers?: string[]) => {
-  if (data.length === 0) return;
+export const openInGoogleSheets = async (
+  data: Record<string, unknown>[],
+  title?: string,
+  headers?: string[]
+): Promise<{ url?: string; needsAuth?: boolean } | null> => {
+  if (data.length === 0) return null;
 
   const keys = headers || Object.keys(data[0]);
-  const headerRow = keys.join('\t');
-  const rows = data.map(row =>
-    keys.map(key => {
-      const value = row[key];
-      return value === null || value === undefined ? '' : String(value);
-    }).join('\t')
-  );
-  const tsv = [headerRow, ...rows].join('\n');
 
   try {
-    await navigator.clipboard.writeText(tsv);
-  } catch {
-    downloadFile(arrayToCSV(data, headers), 'latela-export.csv', 'text/csv;charset=utf-8;');
-  }
+    const { data: result, error } = await supabase.functions.invoke("export-to-sheets", {
+      body: { action: "export", data, headers: keys, title: title || "Latela Export" },
+    });
 
-  window.open('https://sheets.google.com/create', '_blank');
+    if (error) throw new Error(error.message);
+
+    if (result?.needsAuth) {
+      // User hasn't authorized Google yet — get the auth URL
+      const redirectUri = `${window.location.origin}/auth/google-sheets/callback`;
+      const { data: authResult, error: authError } = await supabase.functions.invoke(
+        "export-to-sheets",
+        { body: { action: "get-auth-url", redirectUri } }
+      );
+
+      if (authError || !authResult?.authUrl) {
+        throw new Error("Failed to get authorization URL");
+      }
+
+      // Save pending export to sessionStorage so we can complete it after OAuth
+      sessionStorage.setItem(
+        "pendingSheetExport",
+        JSON.stringify({ data, headers: keys, title: title || "Latela Export" })
+      );
+
+      // Redirect to Google consent
+      window.location.href = authResult.authUrl;
+      return { needsAuth: true };
+    }
+
+    if (result?.url) {
+      window.open(result.url, "_blank");
+      return { url: result.url };
+    }
+
+    throw new Error(result?.error || "Unknown error");
+  } catch (err: any) {
+    console.error("Google Sheets export error:", err);
+    throw err;
+  }
 };
 
 /**
