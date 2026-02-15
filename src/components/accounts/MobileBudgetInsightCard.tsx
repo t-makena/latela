@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 
 type PeriodOption = "1 Mth" | "3 Mth" | "6 Mth" | "1 Yr";
 
-export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: { titleKey?: string }) => {
+export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', accountId }: { titleKey?: string; accountId?: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("1 Mth");
   const { t } = useLanguage();
   
@@ -53,18 +53,23 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
 
   // Calculate metrics with period comparison
   const metrics = useMemo(() => {
+    // Filter transactions by account if scoped
+    const scopedTransactions = accountId
+      ? transactions.filter(t => t.account_id === accountId)
+      : transactions;
+
     const now = new Date();
     const currentPeriodStart = new Date(now.getFullYear(), now.getMonth() - periodMonths + 1, 1);
     const previousPeriodStart = new Date(now.getFullYear(), now.getMonth() - (periodMonths * 2) + 1, 1);
     const previousPeriodEnd = new Date(now.getFullYear(), now.getMonth() - periodMonths + 1, 0);
 
     // Filter transactions for current and previous periods
-    const currentPeriodTransactions = transactions.filter(t => {
+    const currentPeriodTransactions = scopedTransactions.filter(t => {
       const date = new Date(t.transaction_date);
       return date >= currentPeriodStart && date <= now;
     });
 
-    const previousPeriodTransactions = transactions.filter(t => {
+    const previousPeriodTransactions = scopedTransactions.filter(t => {
       const date = new Date(t.transaction_date);
       return date >= previousPeriodStart && date <= previousPeriodEnd;
     });
@@ -89,7 +94,9 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
         : null;
 
     // Available Balance (sum of all accounts)
-    const availableBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+    const availableBalance = accountId
+      ? (accounts.find(a => a.id === accountId)?.balance || 0)
+      : accounts.reduce((sum, account) => sum + account.balance, 0);
 
     // Use actual previous-period ending balance; null if no previous data
     let availableBalanceChange: number | null = null;
@@ -123,7 +130,7 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight' }: 
       spending: currentSpending,
       spendingChange,
     };
-  }, [transactions, accounts, calculateTotalMonthly, upcomingEvents, periodMonths]);
+  }, [transactions, accounts, calculateTotalMonthly, upcomingEvents, periodMonths, accountId]);
 
   const formatCurrency = (amount: number) => {
     return `R${amount.toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;

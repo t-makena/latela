@@ -50,8 +50,10 @@ const Accounts = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen py-6 space-y-5 animate-fade-in">
-        <MobileAccountCard account={accounts[0]} />
-        <MobileBudgetInsightCard titleKey="finance.accountInsight" />
+        {accounts.map(account => (
+          <MobileAccountCard key={account.id} account={account} />
+        ))}
+        <MobileBudgetInsightCard />
         
         <StatementUploadDialog 
           open={addAccountOpen} 
