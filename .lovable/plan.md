@@ -1,41 +1,59 @@
 
 
-## Fix: Add Offertory/Charity to Categorization Logic
+## Fix: Uncategorized Transactions Pile-Up
 
 ### Problem
-"Church Project" (and similar church/charity transactions) get categorized as "Miscellaneous" because:
-1. `preCategorizeSmart` has no keywords for church/charity/donation patterns
-2. The AI prompt's category list does not include "Offertory/Charity" -- the AI can only pick from categories it's told about
-3. `AI_TO_DB_CATEGORY_MAP` has no entries for charity, offertory, donation, church, or tithe
+125 out of 221 transactions are uncategorized, all on the same account. Two issues:
+
+1. **Batch limit without re-invocation**: The edge function processes max 50 transactions per call and returns a `remaining` count, but the client (StatementUploadDialog) calls it only ONCE and ignores the `remaining` field. So if a statement has 175 transactions, only 50 get categorized.
+
+2. **No manual re-categorize trigger**: There's no way to re-run categorization from the UI after the initial upload.
 
 ### Changes
 
-**File: `supabase/functions/categorize-transactions/index.ts`**
+**1. `src/components/accounts/StatementUploadDialog.tsx` -- Loop until all categorized**
 
-1. **Add to `AI_TO_DB_CATEGORY_MAP`** -- new entries so AI responses resolve correctly:
-   - `'charity'` -> `['Offertory/Charity', 'Miscellaneous']`
-   - `'offertory'` -> `['Offertory/Charity']`
-   - `'donation'` -> `['Offertory/Charity']`
-   - `'donations'` -> `['Offertory/Charity']`
-   - `'church'` -> `['Offertory/Charity']`
-   - `'tithe'` -> `['Offertory/Charity']`
-   - `'offertory/charity'` -> `['Offertory/Charity']`
+After calling `categorize-transactions`, check `catData.remaining > 0` and re-invoke in a loop until all transactions are processed:
 
-2. **Add smart detection in `preCategorizeSmart`** -- catch obvious church/charity keywords before hitting the AI:
-   ```
-   const charityKeywords = ['CHURCH', 'TITHE', 'OFFERTORY', 'DONATION', 'CHARITY', 'OFFERING'];
-   if (amount < 0 && charityKeywords.some(k => desc.includes(k))) {
-     return 'Offertory/Charity';
-   }
-   ```
+```
+let remaining = Infinity;
+while (remaining > 0) {
+  const { data: catData, error: catError } = await supabase.functions.invoke(
+    'categorize-transactions', { body: { accountId: accountData.id } }
+  );
+  if (catError || !catData?.success) break;
+  remaining = catData.remaining || 0;
+}
+```
 
-3. **Add "Offertory/Charity" to the AI prompt's category list** so the AI knows it can use this category for ambiguous cases (e.g., "Church Project" where "Church" alone might not be keyword-matched but the AI can infer intent).
+**2. `src/components/accounts/AccountDetail.tsx` -- Add "Re-categorize" button**
 
-### Result
+Add a button on the account detail page that lets users manually trigger categorization for accounts with uncategorized transactions. This calls the same loop logic above.
 
-| Transaction | Before | After |
-|------------|--------|-------|
-| CHURCH PROJECT (negative) | Miscellaneous | Offertory/Charity |
-| TITHE PAYMENT (negative) | Miscellaneous | Offertory/Charity |
-| DONATION TO X (negative) | Miscellaneous | Offertory/Charity |
+**3. `supabase/functions/categorize-transactions/index.ts` -- Expand smart rules**
+
+Several of the 125 uncategorized transactions have clear patterns not yet covered:
+
+| Pattern | Count | Should Be |
+|---------|-------|-----------|
+| "MONTHLY MANAGEMENT FEE" (no colon) | ~2 | Fees |
+| "FEE - INSTANT MONEY" (dash not colon) | ~4 | Fees |
+| "FEE-ELECTRONIC ACCOUNT PAYMENT" | ~2 | Fees |
+| "CASH WITHDRAWAL AT" (no "FEE") | ~2 | Transport (ATM withdrawal) |
+| "CELLPHONE INSTANTMON CASH TO" | ~4 | Transfers |
+| "BETWAY" | ~4 | Entertainment |
+| "MEATEXPRESS" | ~1 | Groceries/Dining (AI) |
+| "PAYFLEX" | ~1 | Shopping (buy-now-pay-later) |
+| "ATMNN..." / "ATM CASH WITHDRAWAL" | ~2 | Transfers |
+
+Update `preCategorizeSmart` to catch:
+- Fee variations: `MANAGEMENT FEE`, `FEE -`, `FEE-` (not just `FEE:`)
+- ATM withdrawals: `CASH WITHDRAWAL`, `ATM` with negative amount
+- Instant money: `INSTANTMON`, `INSTANT MONEY` = Transfers
+- Betting: `BETWAY`, `HOLLYWOOD`, `SPORTINGBET` = Entertainment
+
+### Summary
+- The loop fix ensures ALL transactions get categorized regardless of statement size
+- The re-categorize button lets users fix accounts that were partially processed
+- Expanded smart rules reduce AI calls and prevent future miscategorization
 
