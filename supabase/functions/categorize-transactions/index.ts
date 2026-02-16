@@ -55,6 +55,13 @@ const AI_TO_DB_CATEGORY_MAP: Record<string, string[]> = {
   'technology': ['Bills & Subscriptions', 'Bills', 'Subscriptions'],
   'software': ['Bills & Subscriptions', 'Bills', 'Subscriptions'],
   'other': ['Other', 'Miscellaneous', 'Other Expenses'],
+  'charity': ['Offertory/Charity', 'Miscellaneous'],
+  'offertory': ['Offertory/Charity'],
+  'donation': ['Offertory/Charity'],
+  'donations': ['Offertory/Charity'],
+  'church': ['Offertory/Charity'],
+  'tithe': ['Offertory/Charity'],
+  'offertory/charity': ['Offertory/Charity'],
 };
 
 // Max transactions to process per invocation to stay within CPU limits
@@ -87,6 +94,12 @@ function preCategorizeSmart(description: string, amount: number): string | null 
   
   if (desc.includes('PAYSHAP') && (desc.includes(' TO') || desc.includes('PAY BY PROXY')) && amount < 0) {
     return 'Assistance';
+  }
+
+  // Church, charity, donations, tithes
+  const charityKeywords = ['CHURCH', 'TITHE', 'OFFERTORY', 'DONATION', 'CHARITY', 'OFFERING'];
+  if (amount < 0 && charityKeywords.some(k => desc.includes(k))) {
+    return 'Offertory/Charity';
   }
 
   // Outgoing transfers and virtual card loads
@@ -268,7 +281,7 @@ Merchant: ${merchantName}
 Description: ${description}
 Amount: R${Math.abs(amount).toFixed(2)} (${amount < 0 ? 'expense' : 'income'})
 
-Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Assistance, Transfers, Fees, Salary, Other Income, Other
+Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Assistance, Transfers, Fees, Salary, Other Income, Offertory/Charity, Other
 
 Rules:
 - NEGATIVE amounts are EXPENSES - never classify as Salary or Other Income
