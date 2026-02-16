@@ -267,9 +267,9 @@ const Budget = () => {
     frequency: string,
     amount: number,
     daysPerWeek?: number,
-    _parentCategoryId?: string
+    parentCategoryId?: string
   ) => {
-    await addBudgetItem(name, frequency, amount, daysPerWeek);
+    await addBudgetItem(name, frequency, amount, daysPerWeek, parentCategoryId);
   };
 
   // Grocery sub-view content
