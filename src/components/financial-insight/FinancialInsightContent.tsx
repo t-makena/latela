@@ -200,38 +200,29 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const totalUpcomingEvents = upcomingEvents.reduce((sum, event) => sum + event.budgetedAmount, 0);
   const budgetBalance = totalBudgetExpenses + totalUpcomingEvents;
   
-  // Spending: sum of negative transactions for current month, fallback to latest month with data
+  // Spending: sum of negative transactions for current month (no fallback)
   const currentMonthIdx = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
-  const currentMonthExpenses = transactions
+  const spending = transactions
     .filter(t => {
       const d = new Date(t.transaction_date);
       return t.amount < 0 && d.getMonth() === currentMonthIdx && d.getFullYear() === currentYear;
     })
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  
-  // Fallback: if no current month spending, use the latest month that has data
-  const spending = currentMonthExpenses > 0 ? currentMonthExpenses : (() => {
-    const expenseTransactions = transactions.filter(t => t.amount < 0);
-    if (expenseTransactions.length === 0) return 0;
-    const latest = expenseTransactions.sort((a, b) => 
-      new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
-    )[0];
-    const latestDate = new Date(latest.transaction_date);
-    return expenseTransactions
-      .filter(t => {
-        const d = new Date(t.transaction_date);
-        return d.getMonth() === latestDate.getMonth() && d.getFullYear() === latestDate.getFullYear();
-      })
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  })();
 
-  // Historical comparison data from monthlySpending array
-  const fallback = { netBalance: 0, amount: 0, savings: 0, month: '' };
-  const previousMonthData = monthlySpending[currentMonthIdx - 1] || fallback;
-  const threeMonthsAgoData = monthlySpending[Math.max(0, currentMonthIdx - 3)] || fallback;
-  const sixMonthsAgoData = monthlySpending[Math.max(0, currentMonthIdx - 6)] || fallback;
-  const oneYearAgoData = monthlySpending[Math.max(0, currentMonthIdx - 12)] || fallback;
+  // Historical comparison data from monthlySpending array — return null if out of range
+  const getHistoricalData = (monthsBack: number) => {
+    const idx = currentMonthIdx - monthsBack;
+    if (idx < 0 || idx >= monthlySpending.length) return null;
+    const data = monthlySpending[idx];
+    if (!data || (!data.netBalance && !data.amount)) return null;
+    return data;
+  };
+
+  const previousMonthData = getHistoricalData(1);
+  const threeMonthsAgoData = getHistoricalData(3);
+  const sixMonthsAgoData = getHistoricalData(6);
+  const oneYearAgoData = getHistoricalData(12);
 
   // Category colors and labels for all categories
   const categoryColors: Record<string, string> = {
@@ -465,26 +456,26 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             availableBalance={availableBalance}
             budgetBalance={budgetBalance}
             spending={spending}
-            previousMonth={{
+            previousMonth={previousMonthData ? {
               availableBalance: previousMonthData.netBalance,
-              budgetBalance: budgetBalance * 0.9,
-              spending: previousMonthData.amount || spending * 0.9
-            }}
-            threeMonthsAgo={{
+              budgetBalance: null,
+              spending: previousMonthData.amount || null
+            } : null}
+            threeMonthsAgo={threeMonthsAgoData ? {
               availableBalance: threeMonthsAgoData.netBalance,
-              budgetBalance: budgetBalance * 0.9,
-              spending: threeMonthsAgoData.amount || spending * 0.85
-            }}
-            sixMonthsAgo={{
+              budgetBalance: null,
+              spending: threeMonthsAgoData.amount || null
+            } : null}
+            sixMonthsAgo={sixMonthsAgoData ? {
               availableBalance: sixMonthsAgoData.netBalance,
-              budgetBalance: budgetBalance * 0.9,
-              spending: sixMonthsAgoData.amount || spending * 0.8
-            }}
-            oneYearAgo={{
+              budgetBalance: null,
+              spending: sixMonthsAgoData.amount || null
+            } : null}
+            oneYearAgo={oneYearAgoData ? {
               availableBalance: oneYearAgoData.netBalance,
-              budgetBalance: budgetBalance * 0.9,
-              spending: oneYearAgoData.amount || spending * 0.75
-            }}
+              budgetBalance: null,
+              spending: oneYearAgoData.amount || null
+            } : null}
             showOnlyTable={true}
           />
         </CardContent>
@@ -508,11 +499,11 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
             availableBalance={availableBalance}
             budgetBalance={budgetBalance}
             spending={spending}
-            previousMonth={{
+            previousMonth={previousMonthData ? {
               availableBalance: previousMonthData.netBalance,
-              budgetBalance: monthlyIncome * 0.3,
-              spending: monthlyExpenses * 0.9
-            }}
+              budgetBalance: null,
+              spending: previousMonthData.amount || null
+            } : null}
             showOnlyPieChart={true}
             transactions={transactions}
             isDetailed={isDetailed}
