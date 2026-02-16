@@ -154,19 +154,33 @@ export const StatementUploadDialog = ({
             } else {
               setProcessingStage('categorizing');
 
-              const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
-                body: { accountId: accountData.id }
-              });
-
-              if (catError) {
-                console.error('Categorization error:', catError);
-                toast({
-                  title: "Categorization incomplete",
-                  description: "Transactions imported but some couldn't be categorized",
-                  variant: "destructive",
+              // Loop until all transactions are categorized (batch limit = 50 per call)
+              let remaining = Infinity;
+              let totalCategorized = 0;
+              while (remaining > 0) {
+                const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
+                  body: { accountId: accountData.id }
                 });
-              } else if (catData?.success) {
-                console.log(`Categorization complete: ${catData.categorized} transactions, ${catData.cached} from cache, ${catData.aiCalls} AI calls, ~$${catData.cost}`);
+
+                if (catError) {
+                  console.error('Categorization error:', catError);
+                  toast({
+                    title: "Categorization incomplete",
+                    description: "Transactions imported but some couldn't be categorized",
+                    variant: "destructive",
+                  });
+                  break;
+                }
+                
+                if (!catData?.success) break;
+                
+                totalCategorized += catData.categorized || 0;
+                remaining = catData.remaining || 0;
+                console.log(`Categorization batch: ${catData.categorized} done, ${remaining} remaining, ${catData.aiCalls} AI calls`);
+              }
+              
+              if (totalCategorized > 0) {
+                console.log(`Categorization complete: ${totalCategorized} total transactions categorized`);
               }
             }
           }

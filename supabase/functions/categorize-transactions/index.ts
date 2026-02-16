@@ -70,13 +70,33 @@ const BATCH_LIMIT = 50;
 function preCategorizeSmart(description: string, amount: number): string | null {
   const desc = description.toUpperCase();
   
-  if (desc.includes('FEE:') || desc.includes('WITHDRAWAL FEE') || desc.includes('ATM FEE')) {
+  // Fee variations: FEE:, FEE -, FEE-, MANAGEMENT FEE, WITHDRAWAL FEE, ATM FEE
+  if (desc.includes('FEE:') || desc.includes('WITHDRAWAL FEE') || desc.includes('ATM FEE') ||
+      desc.includes('MANAGEMENT FEE') || desc.includes('FEE -') || desc.includes('FEE-') ||
+      desc.includes('SERVICE FEE') || desc.includes('MONTHLY FEE')) {
     return 'Fees';
   }
   
   const fuelKeywords = ['BP ', 'C*BP', 'SHELL ', 'ENGEN ', 'SASOL ', 'CALTEX ', 'TOTAL ', 'ASTRON '];
   if (fuelKeywords.some(k => desc.includes(k))) {
     return 'Transport';
+  }
+
+  // ATM / Cash withdrawals (not fee-related, already caught above)
+  if (amount < 0 && (desc.includes('CASH WITHDRAWAL') || desc.includes('ATM CASH') || 
+      desc.match(/\bATMNN/) || desc.match(/\bATM\b.*\bWITHDRAWAL\b/))) {
+    return 'Transfers';
+  }
+
+  // Instant money transfers
+  if (amount < 0 && (desc.includes('INSTANTMON') || desc.includes('INSTANT MONEY'))) {
+    return 'Transfers';
+  }
+
+  // Betting / gambling = Entertainment
+  const bettingKeywords = ['BETWAY', 'HOLLYWOOD', 'SPORTINGBET', 'SUPABET', 'BETKING'];
+  if (amount < 0 && bettingKeywords.some(k => desc.includes(k))) {
+    return 'Entertainment';
   }
   
   if (amount > 0) {
