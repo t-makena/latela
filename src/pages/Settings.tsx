@@ -206,12 +206,18 @@ const Settings = () => {
 
     setIsLoading(true);
     try {
-      // First delete all transactions associated with this account
+      // Delete budget scores associated with this account
+      const { error: scoresError } = await supabase
+        .from('budget_scores')
+        .delete()
+        .eq('account_id', accountId);
+      if (scoresError) throw scoresError;
+
+      // Delete all transactions associated with this account
       const { error: transactionsError } = await supabase
         .from('transactions')
         .delete()
         .eq('account_id', accountId);
-
       if (transactionsError) throw transactionsError;
 
       // Then delete the account itself
