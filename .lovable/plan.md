@@ -1,34 +1,43 @@
 
 
-## Fix: Budget Allocation Not Working
+## Cascade Delete All Data When an Account is Removed
 
 ### Problem
-Budget items are saved **without** their `parent_category_id`, so the percentage-based allocation system (Needs/Wants/Savings) has no data to work with. All allocations show as zero.
+When an account is deleted in Settings, only transactions are removed. Budget scores associated with that account are left behind as orphaned records.
 
-The bug is a 3-link broken chain:
-
-1. `Budget.tsx` -- `handleAddBudgetItem` receives `parentCategoryId` but discards it (prefixed with `_`)
-2. `useBudgetItems.ts` -- `addBudgetItem` and `addMutation` don't accept a `parentCategoryId` parameter
-3. `useBudgetItems.ts` -- The database INSERT never includes `parent_category_id`
+### Tables with `account_id`
+| Table | Currently deleted? |
+|-------|-------------------|
+| `transactions` | Yes |
+| `budget_scores` | No (set to NULL via FK, leaving orphaned rows) |
+| `v_transactions_with_details` | View (auto-handled) |
+| `v_daily_account_balances` | View (auto-handled) |
 
 ### Changes
 
-**1. `src/hooks/useBudgetItems.ts`**
+**`src/pages/Settings.tsx` -- `handleRemoveAccount` function**
 
-- Add `parentCategoryId` to `addMutation`'s input type
-- Include `parent_category_id` in the Supabase INSERT
-- Update the `addBudgetItem` wrapper function to accept and pass through the parameter
+Add deletion of `budget_scores` before deleting transactions and the account:
 
-**2. `src/pages/Budget.tsx`**
+```text
+1. Delete budget_scores where account_id matches
+2. Delete transactions where account_id matches (already exists)
+3. Delete the account itself (already exists)
+```
 
-- Remove the underscore from `_parentCategoryId` and pass it through to `addBudgetItem`
+The order matters because budget_scores has a foreign key to accounts with `ON DELETE SET NULL`, so deleting explicitly first keeps things clean. Transactions have no FK constraint but are deleted first by convention.
 
-### Result
+### Technical Detail
 
-| Before | After |
-|--------|-------|
-| `parent_category_id` always NULL | Saved correctly from the selected subcategory |
-| Category allocations always 0 | Allocations reflect actual budget items |
-| "Exceeds limit" warning never triggers | Warns when Needs/Wants/Savings limits are exceeded |
-| Percentage-based budgeting is decorative | Percentage-based budgeting actually works |
+Add one Supabase call before the existing transaction deletion:
 
+```typescript
+// Delete budget scores for this account
+const { error: scoresError } = await supabase
+  .from('budget_scores')
+  .delete()
+  .eq('account_id', accountId);
+if (scoresError) throw scoresError;
+```
+
+No database migration needed -- this is purely a frontend code change to ensure all related data is cleaned up.
