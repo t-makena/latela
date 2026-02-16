@@ -52,6 +52,8 @@ const AI_TO_DB_CATEGORY_MAP: Record<string, string[]> = {
   'fee': ['Fees', 'Bank Fees'],
   'assistance': ['Assistance/Lending', 'Assistance', 'Lending'],
   'lending': ['Assistance/Lending', 'Lending', 'Assistance'],
+  'technology': ['Bills & Subscriptions', 'Bills', 'Subscriptions'],
+  'software': ['Bills & Subscriptions', 'Bills', 'Subscriptions'],
   'other': ['Other', 'Miscellaneous', 'Other Expenses'],
 };
 
@@ -86,7 +88,25 @@ function preCategorizeSmart(description: string, amount: number): string | null 
   if (desc.includes('PAYSHAP') && (desc.includes(' TO') || desc.includes('PAY BY PROXY')) && amount < 0) {
     return 'Assistance';
   }
-  
+
+  // Outgoing transfers and virtual card loads
+  if (amount < 0 && (desc.includes('VALUE LOADED TO VIRTUAL CARD') || 
+      desc.includes('IB TRANSFER TO') || desc.includes('IB PAYMENT TO') ||
+      desc.includes('PAYMENT TO'))) {
+    return 'Transfers';
+  }
+
+  // SaaS / tech subscriptions
+  const saasKeywords = ['SUPABASE', 'VERCEL', 'GITHUB', 'HEROKU', 'DIGITAL OCEAN', 'FIREBASE', 'NETLIFY', 'AWS '];
+  if (saasKeywords.some(k => desc.includes(k))) {
+    return 'Bills';
+  }
+
+  // YOCO point-of-sale purchases
+  if (desc.includes('YOCO') && amount < 0) {
+    return 'Shopping';
+  }
+
   const groceryKeywords = ['PNP ', 'PICK N PAY', 'CHECKERS', 'SHOPRITE', 'WOOLWORTHS', 'SPAR ', 
     'SUPERSPAR', 'USAVE', 'BOXER', 'FOOD LOVER'];
   if (groceryKeywords.some(k => desc.includes(k))) {
@@ -220,7 +240,7 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function categorizeMerchantWithAI(merchantName: string, description: string, retryCount = 0): Promise<string> {
+async function categorizeMerchantWithAI(merchantName: string, description: string, amount: number, retryCount = 0): Promise<string> {
   const MAX_RETRIES = 2;
   const BASE_DELAY_MS = 1000;
   
@@ -246,14 +266,17 @@ async function categorizeMerchantWithAI(merchantName: string, description: strin
 
 Merchant: ${merchantName}
 Description: ${description}
+Amount: R${Math.abs(amount).toFixed(2)} (${amount < 0 ? 'expense' : 'income'})
 
-Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Assistance, Fees, Salary, Other Income, Other
+Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Assistance, Transfers, Fees, Salary, Other Income, Other
 
 Rules:
+- NEGATIVE amounts are EXPENSES - never classify as Salary or Other Income
 - BP, Shell, Engen, Sasol, Caltex = Transport
-- Netflix, Spotify, DSTV, Claude, ChatGPT = Bills
+- Netflix, Spotify, DSTV, Claude, ChatGPT, Supabase, Vercel = Bills
 - YOCO * = categorize by likely vendor type
 - Money to individuals = Assistance
+- Inter-account movements, virtual card loads = Transfers
 - FEE: = Fees
 
 Respond with ONLY the category name.`
@@ -453,7 +476,7 @@ serve(async (req) => {
       }
 
       // PRIORITY 4: AI call (only network call in loop)
-      const aiCategory = await categorizeMerchantWithAI(merchantName, transaction.description);
+      const aiCategory = await categorizeMerchantWithAI(merchantName, transaction.description, transaction.amount);
       aiCallsCount++;
       const categoryId = resolveCategoryId(aiCategory);
       updates.push({
