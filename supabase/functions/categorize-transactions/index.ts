@@ -6,9 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-/**
- * Common South African merchant aliases for fuzzy matching
- */
 const MERCHANT_ALIASES: Record<string, string[]> = {
   'MCD': ['MCDONALDS', 'MCDONALD', "MCDONALD'S", 'MCDS'],
   'MCDONALDS': ['MCD', 'MCDS', "MCDONALD'S"],
@@ -24,528 +21,6 @@ const MERCHANT_ALIASES: Record<string, string[]> = {
   'KENTUCKY': ['KFC'],
 };
 
-/**
- * Pre-AI smart detection for common transaction patterns.
- * Returns category name if pattern is detected, null otherwise.
- * This saves AI costs and ensures consistent categorization.
- */
-function preCategorizeSmart(description: string, amount: number): string | null {
-  const desc = description.toUpperCase();
-  
-  // 1. FEES - Any FEE: prefix or withdrawal fee
-  if (desc.includes('FEE:') || desc.includes('WITHDRAWAL FEE') || desc.includes('ATM FEE')) {
-    return 'Fees';
-  }
-  
-  // 2. TRANSPORTATION - Fuel stations (check before other patterns)
-  const fuelKeywords = ['BP ', 'C*BP', 'SHELL ', 'ENGEN ', 'SASOL ', 'CALTEX ', 'TOTAL ', 'ASTRON '];
-  if (fuelKeywords.some(k => desc.includes(k))) {
-    return 'Transport';
-  }
-  
-  // 3. INCOME DETECTION - Positive amounts
-  if (amount > 0) {
-    if (desc.includes('SALARY') || desc.includes('WAGES')) {
-      return 'Salary';
-    }
-    // All other incoming money = Other Income
-    return 'Other Income';
-  }
-  
-  // 4. BILLS & SUBSCRIPTIONS - Known subscription services
-  const subscriptionKeywords = ['CLAUDE', 'CHATGPT', 'NETFLIX', 'SPOTIFY', 'DSTV', 'OPENAI', 
-    'SHOWMAX', 'YOUTUBE', 'AMAZON PRIME', 'APPLE', 'MICROSOFT', 'GOOGLE PLAY'];
-  if (subscriptionKeywords.some(k => desc.includes(k))) {
-    return 'Bills';
-  }
-  
-  // 5. ASSISTANCE/LENDING - PayShap TO a person (outgoing money)
-  // Patterns: "NAME PAYSHAP PAYMENT TO", "PAYSHAP PAY BY PROXY"
-  if (desc.includes('PAYSHAP') && (desc.includes(' TO') || desc.includes('PAY BY PROXY')) && amount < 0) {
-    // Check if it's NOT a known subscription (handled above)
-    return 'Assistance';
-  }
-  
-  // 6. GROCERIES - Major SA grocery chains
-  const groceryKeywords = ['PNP ', 'PICK N PAY', 'CHECKERS', 'SHOPRITE', 'WOOLWORTHS', 'SPAR ', 
-    'SUPERSPAR', 'USAVE', 'BOXER', 'FOOD LOVER'];
-  if (groceryKeywords.some(k => desc.includes(k))) {
-    return 'Groceries';
-  }
-  
-  // 7. DINING - Fast food and restaurants
-  const diningKeywords = ['MCD ', 'MCDONALDS', 'KFC ', 'NANDOS', "NANDO'S", 'STEERS', 'WIMPY', 
-    'SPUR ', 'DEBONAIRS', 'FISHAWAYS', 'CHICKEN LICKEN', 'BURGER'];
-  if (diningKeywords.some(k => desc.includes(k))) {
-    return 'Dining';
-  }
-  
-  // 8. AIRTIME/MOBILE - Prepaid purchases
-  if (desc.includes('PREPAID MOBILE') || desc.includes('VODA') || desc.includes('MTN ') || 
-      desc.includes('TELKOM') || desc.includes('CELLC')) {
-    return 'Bills';
-  }
-  
-  // Let AI handle complex cases like YOCO payments
-  return null;
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { accountId } = await req.json();
-
-    if (!accountId) {
-      throw new Error('Account ID is required');
-    }
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    // Get user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Unauthorized');
-    }
-
-    // Fetch uncategorized transactions for this account
-    const { data: transactions, error: txError } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('account_id', accountId)
-      .eq('user_id', user.id)
-      .is('category_id', null)
-      .order('transaction_date', { ascending: false });
-
-    if (txError) {
-      throw txError;
-    }
-
-    if (!transactions || transactions.length === 0) {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          categorized: 0,
-          cached: 0,
-          userMappings: 0,
-          aiCalls: 0 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Fetch ALL user merchant mappings upfront for fuzzy matching
-    const { data: userMappings } = await supabase
-      .from('user_merchant_mappings')
-      .select('merchant_name, merchant_pattern, display_name, category_id, subcategory_id, custom_subcategory_id')
-      .eq('user_id', user.id)
-      .eq('is_active', true);
-
-    let categorizedCount = 0;
-    let cachedCount = 0;
-    let userMappingsCount = 0;
-    let aiCallsCount = 0;
-
-    // Process each transaction
-    for (const transaction of transactions) {
-      const merchantName = extractMerchantName(transaction.description);
-      const merchantCore = extractMerchantCore(transaction.description);
-      
-      // PRIORITY 1: Check user_merchant_mappings with fuzzy matching
-      const userMapping = findBestUserMapping(merchantName, merchantCore, userMappings || []);
-
-      if (userMapping) {
-        // Apply user's custom mapping with full category chain and display name
-        const updateData: Record<string, unknown> = {
-          category_id: userMapping.category_id,
-          subcategory_id: userMapping.subcategory_id || userMapping.custom_subcategory_id || null,
-          auto_categorized: false,
-          user_verified: true,
-          categorization_confidence: userMapping.score,
-          is_categorized: true
-        };
-
-        // Apply display name if set
-        if (userMapping.display_name) {
-          updateData.display_merchant_name = userMapping.display_name;
-        }
-
-        await supabase
-          .from('transactions')
-          .update(updateData)
-          .eq('id', transaction.id);
-
-        userMappingsCount++;
-        categorizedCount++;
-        console.log(`✓ User mapping (score: ${userMapping.score.toFixed(2)}): ${merchantName} → category_id: ${userMapping.category_id}`);
-        continue;
-      }
-
-      // PRIORITY 2: Check merchants table (cached AI categorizations)
-      const { data: cachedCategory } = await supabase
-        .from('merchants')
-        .select('category')
-        .eq('merchant_name', merchantName)
-        .or(`user_id.eq.${user.id},user_id.is.null`)
-        .order('user_id', { ascending: false, nullsFirst: false })
-        .limit(1)
-        .maybeSingle();
-
-      let categoryName: string;
-      let smartDetected = false;
-
-      // PRIORITY 2: Pre-AI smart detection (saves AI costs)
-      const smartCategory = preCategorizeSmart(transaction.description, transaction.amount);
-      if (smartCategory) {
-        categoryName = smartCategory;
-        smartDetected = true;
-        console.log(`✓ Smart detection: ${merchantName} → ${categoryName}`);
-      } else {
-        // PRIORITY 3: Check merchants table (cached AI categorizations)
-        const { data: cachedCategory } = await supabase
-          .from('merchants')
-          .select('category')
-          .eq('merchant_name', merchantName)
-          .or(`user_id.eq.${user.id},user_id.is.null`)
-          .order('user_id', { ascending: false, nullsFirst: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (cachedCategory) {
-          categoryName = cachedCategory.category;
-          cachedCount++;
-          console.log(`✓ Cached: ${merchantName} → ${categoryName}`);
-        } else {
-          // PRIORITY 4: Call AI for new merchant
-          categoryName = await categorizeMerchantWithAI(merchantName, transaction.description);
-          aiCallsCount++;
-          console.log(`💰 AI Call: ${merchantName} → ${categoryName}`);
-
-          // Save to merchants cache
-          await supabase
-            .from('merchants')
-            .upsert({
-              merchant_name: merchantName,
-              category: categoryName,
-              user_id: user.id,
-              frequency: 1,
-              confidence: 0.9,
-            }, {
-              onConflict: 'merchant_name,user_id'
-            });
-        }
-      }
-
-      // Get or create category_id from category name
-      const categoryId = await getOrCreateCategory(supabase, categoryName);
-
-      // Update transaction with category
-      await supabase
-        .from('transactions')
-        .update({ 
-          category_id: categoryId,
-          auto_categorized: true,
-          categorization_confidence: cachedCategory ? 1.0 : 0.9,
-          is_categorized: true
-        })
-        .eq('id', transaction.id);
-
-      categorizedCount++;
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        categorized: categorizedCount,
-        cached: cachedCount,
-        userMappings: userMappingsCount,
-        aiCalls: aiCallsCount,
-        cost: (aiCallsCount * 0.00015).toFixed(4)
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    console.error('Categorization error:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-});
-
-/**
- * Extracts and normalizes merchant name from transaction description.
- * Must match the logic in src/lib/merchantUtils.ts for consistency.
- */
-function extractMerchantName(description: string): string {
-  if (!description) return '';
-  
-  let merchant = description
-    .replace(/\bPURCHASE\b|\bDEBIT\b|\bCREDIT\b|\bPAYMENT\b|\bTRANSFER\b|\bPOS\b|\bATM\b|\bEFT\b/gi, '')
-    .replace(/\bCARD\s+\d+/gi, '')
-    .replace(/\*+\d+/g, '')
-    .replace(/\d{2}\/\d{2}\/\d{4}/g, '')
-    .replace(/\d{4}-\d{2}-\d{2}/g, '')
-    .replace(/\d{2}-\d{2}-\d{4}/g, '')
-    .replace(/\d{2}\.\d{2}\.\d{4}/g, '')
-    .replace(/\d{2}:\d{2}(:\d{2})?/g, '')
-    .replace(/REF\s*[:.]?\s*\d+/gi, '')
-    .replace(/\bTXN\s*[:.]?\s*\d+/gi, '')
-    .replace(/R?\d+[.,]\d{2}/g, '')
-    .replace(/\s+\d{6,}$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  const parts = merchant.split(/\s{2,}/);
-  merchant = parts[0] || merchant;
-  
-  return merchant.substring(0, 100).toUpperCase();
-}
-
-/**
- * Extracts the core identifier from a merchant name (first significant word).
- */
-function extractMerchantCore(description: string): string {
-  if (!description) return '';
-  
-  const normalized = extractMerchantName(description);
-  
-  // Skip common prefixes
-  let cleaned = normalized.replace(/^(THE|A|AN)\s+/i, '');
-  
-  // Get the first word
-  const firstWord = cleaned.split(' ')[0] || cleaned;
-  
-  return firstWord.length >= 2 ? firstWord : cleaned;
-}
-
-/**
- * Calculates similarity between two merchant names.
- */
-function calculateMerchantSimilarity(name1: string, name2: string): number {
-  if (!name1 || !name2) return 0;
-  
-  const normalized1 = extractMerchantName(name1);
-  const normalized2 = extractMerchantName(name2);
-  
-  // Exact match
-  if (normalized1 === normalized2) return 1.0;
-  
-  const core1 = extractMerchantCore(name1);
-  const core2 = extractMerchantCore(name2);
-  
-  // Core match
-  if (core1 === core2 && core1.length >= 2) return 0.95;
-  
-  // Check alias match
-  const aliases1 = MERCHANT_ALIASES[core1] || [];
-  const aliases2 = MERCHANT_ALIASES[core2] || [];
-  if (aliases1.includes(core2) || aliases2.includes(core1)) return 0.9;
-  
-  // Prefix match
-  if (normalized1.startsWith(normalized2) || normalized2.startsWith(normalized1)) {
-    return 0.85;
-  }
-  
-  // Core prefix match
-  if (core1.length >= 3 && core2.length >= 3) {
-    if (core1.startsWith(core2) || core2.startsWith(core1)) {
-      return 0.8;
-    }
-  }
-  
-  // Contains match
-  if (core1.length >= 4 && core2.length >= 4) {
-    if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
-      return 0.75;
-    }
-  }
-  
-  return 0;
-}
-
-interface UserMappingMatch {
-  category_id: string;
-  subcategory_id: string | null;
-  custom_subcategory_id: string | null;
-  display_name: string | null;
-  score: number;
-}
-
-/**
- * Finds the best matching user mapping using fuzzy matching.
- */
-function findBestUserMapping(
-  merchantName: string, 
-  merchantCore: string, 
-  mappings: Array<{
-    merchant_name: string;
-    merchant_pattern: string | null;
-    display_name: string | null;
-    category_id: string;
-    subcategory_id: string | null;
-    custom_subcategory_id: string | null;
-  }>
-): UserMappingMatch | null {
-  if (!mappings.length) return null;
-  
-  let bestMatch: UserMappingMatch | null = null;
-  
-  for (const mapping of mappings) {
-    // Try exact match first
-    const mappingNormalized = extractMerchantName(mapping.merchant_name);
-    if (mappingNormalized === merchantName) {
-      return {
-        category_id: mapping.category_id,
-        subcategory_id: mapping.subcategory_id,
-        custom_subcategory_id: mapping.custom_subcategory_id,
-        display_name: mapping.display_name,
-        score: 1.0
-      };
-    }
-    
-    // Try pattern match if available
-    if (mapping.merchant_pattern) {
-      const patternCore = mapping.merchant_pattern.toUpperCase();
-      if (patternCore === merchantCore) {
-        const score = 0.95;
-        if (!bestMatch || score > bestMatch.score) {
-          bestMatch = {
-            category_id: mapping.category_id,
-            subcategory_id: mapping.subcategory_id,
-            custom_subcategory_id: mapping.custom_subcategory_id,
-            display_name: mapping.display_name,
-            score
-          };
-        }
-        continue;
-      }
-    }
-    
-    // Calculate fuzzy similarity
-    const score = calculateMerchantSimilarity(mapping.merchant_name, merchantName);
-    if (score >= 0.7 && (!bestMatch || score > bestMatch.score)) {
-      bestMatch = {
-        category_id: mapping.category_id,
-        subcategory_id: mapping.subcategory_id,
-        custom_subcategory_id: mapping.custom_subcategory_id,
-        display_name: mapping.display_name,
-        score
-      };
-    }
-  }
-  
-  return bestMatch;
-}
-
-/**
- * Delays execution for specified milliseconds
- */
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Categorizes a merchant using Anthropic API with retry logic and exponential backoff
- */
-async function categorizeMerchantWithAI(merchantName: string, description: string, retryCount = 0): Promise<string> {
-  const MAX_RETRIES = 3;
-  const BASE_DELAY_MS = 2000; // Start with 2 second delay
-  
-  const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-  if (!ANTHROPIC_API_KEY) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
-  }
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 20,
-        messages: [
-          {
-            role: 'user',
-            content: `You are a financial transaction categorizer for South African transactions. Categorize this transaction into ONE category:
-
-Merchant: ${merchantName}
-Description: ${description}
-
-Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Assistance, Fees, Salary, Other Income, Other
-
-Rules:
-- BP, Shell, Engen, Sasol, Caltex = Transport (fuel stations)
-- Netflix, Spotify, DSTV, Claude, ChatGPT = Bills (subscriptions)
-- YOCO * = vendor payment, categorize by likely vendor type (food vendor = Dining, clothing = Shopping, etc.)
-- Money paid to individuals (names in description) = Assistance
-- FEE: or withdrawal fee = Fees
-- Incoming money (not salary) = Other Income
-
-Respond with ONLY the category name, nothing else.`
-          }
-        ],
-      }),
-    });
-
-    if (response.status === 429) {
-      if (retryCount < MAX_RETRIES) {
-        const delayMs = BASE_DELAY_MS * Math.pow(2, retryCount); // Exponential backoff: 2s, 4s, 8s
-        console.log(`Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-        await delay(delayMs);
-        return categorizeMerchantWithAI(merchantName, description, retryCount + 1);
-      }
-      // After max retries, return 'Other' instead of failing
-      console.warn(`Rate limit exceeded after ${MAX_RETRIES} retries, defaulting to 'Other'`);
-      return 'Other';
-    }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API error:', response.status, errorText);
-      // Return 'Other' instead of throwing to prevent full failure
-      return 'Other';
-    }
-
-    const data = await response.json();
-    const category = data.content?.[0]?.text?.trim() || 'Other';
-    
-    // Add small delay between successful calls to avoid hitting rate limits
-    await delay(500);
-    
-    return category;
-  } catch (error) {
-    console.error('AI categorization error:', error);
-    return 'Other';
-  }
-}
-
-/**
- * Maps AI category responses to existing database category names.
- * AI returns simple names, but database has more specific names.
- */
 const AI_TO_DB_CATEGORY_MAP: Record<string, string[]> = {
   'groceries': ['Food & Groceries', 'Groceries', 'Food'],
   'food': ['Food & Groceries', 'Groceries', 'Food'],
@@ -580,71 +55,468 @@ const AI_TO_DB_CATEGORY_MAP: Record<string, string[]> = {
   'other': ['Other', 'Miscellaneous', 'Other Expenses'],
 };
 
-// Fallback category ID for "Other" - will be fetched once
-let fallbackCategoryId: string | null = null;
+// Max transactions to process per invocation to stay within CPU limits
+const BATCH_LIMIT = 50;
 
-// deno-lint-ignore no-explicit-any
-async function getOrCreateCategory(supabase: any, categoryName: string): Promise<string> {
-  const normalizedName = categoryName.trim().toLowerCase();
+function preCategorizeSmart(description: string, amount: number): string | null {
+  const desc = description.toUpperCase();
   
-  // Get potential matches from the mapping
-  const potentialMatches = AI_TO_DB_CATEGORY_MAP[normalizedName] || [categoryName];
+  if (desc.includes('FEE:') || desc.includes('WITHDRAWAL FEE') || desc.includes('ATM FEE')) {
+    return 'Fees';
+  }
   
-  // Try each potential match in order
-  for (const matchName of potentialMatches) {
-    const { data: existing } = await supabase
-      .from('categories')
-      .select('id')
-      .ilike('name', matchName)
-      .maybeSingle();
-
-    if (existing) {
-      console.log(`✓ Category mapped: "${categoryName}" → "${matchName}" (${existing.id})`);
-      return existing.id;
+  const fuelKeywords = ['BP ', 'C*BP', 'SHELL ', 'ENGEN ', 'SASOL ', 'CALTEX ', 'TOTAL ', 'ASTRON '];
+  if (fuelKeywords.some(k => desc.includes(k))) {
+    return 'Transport';
+  }
+  
+  if (amount > 0) {
+    if (desc.includes('SALARY') || desc.includes('WAGES')) {
+      return 'Salary';
     }
+    return 'Other Income';
   }
   
-  // Try fuzzy match with LIKE
-  const { data: fuzzyMatch } = await supabase
-    .from('categories')
-    .select('id, name')
-    .ilike('name', `%${normalizedName}%`)
-    .maybeSingle();
-    
-  if (fuzzyMatch) {
-    console.log(`✓ Category fuzzy matched: "${categoryName}" → "${fuzzyMatch.name}" (${fuzzyMatch.id})`);
-    return fuzzyMatch.id;
+  const subscriptionKeywords = ['CLAUDE', 'CHATGPT', 'NETFLIX', 'SPOTIFY', 'DSTV', 'OPENAI', 
+    'SHOWMAX', 'YOUTUBE', 'AMAZON PRIME', 'APPLE', 'MICROSOFT', 'GOOGLE PLAY'];
+  if (subscriptionKeywords.some(k => desc.includes(k))) {
+    return 'Bills';
   }
-
-  // Fallback to "Other" or first available category
-  if (!fallbackCategoryId) {
-    // Try to find "Other" category
-    const { data: otherCategory } = await supabase
-      .from('categories')
-      .select('id')
-      .or('name.ilike.Other,name.ilike.Miscellaneous,name.ilike.Other Expenses')
-      .limit(1)
-      .maybeSingle();
-    
-    if (otherCategory) {
-      fallbackCategoryId = otherCategory.id;
-    } else {
-      // Get any category as absolute fallback
-      const { data: anyCategory } = await supabase
-        .from('categories')
-        .select('id')
-        .is('parent_id', null)
-        .limit(1)
-        .maybeSingle();
-      
-      fallbackCategoryId = anyCategory?.id || null;
-    }
+  
+  if (desc.includes('PAYSHAP') && (desc.includes(' TO') || desc.includes('PAY BY PROXY')) && amount < 0) {
+    return 'Assistance';
   }
-
-  if (fallbackCategoryId) {
-    console.log(`⚠ Category not found: "${categoryName}" → using fallback`);
-    return fallbackCategoryId;
+  
+  const groceryKeywords = ['PNP ', 'PICK N PAY', 'CHECKERS', 'SHOPRITE', 'WOOLWORTHS', 'SPAR ', 
+    'SUPERSPAR', 'USAVE', 'BOXER', 'FOOD LOVER'];
+  if (groceryKeywords.some(k => desc.includes(k))) {
+    return 'Groceries';
   }
-
-  throw new Error(`No categories found in database for: ${categoryName}`);
+  
+  const diningKeywords = ['MCD ', 'MCDONALDS', 'KFC ', 'NANDOS', "NANDO'S", 'STEERS', 'WIMPY', 
+    'SPUR ', 'DEBONAIRS', 'FISHAWAYS', 'CHICKEN LICKEN', 'BURGER'];
+  if (diningKeywords.some(k => desc.includes(k))) {
+    return 'Dining';
+  }
+  
+  if (desc.includes('PREPAID MOBILE') || desc.includes('VODA') || desc.includes('MTN ') || 
+      desc.includes('TELKOM') || desc.includes('CELLC')) {
+    return 'Bills';
+  }
+  
+  return null;
 }
+
+function extractMerchantName(description: string): string {
+  if (!description) return '';
+  
+  let merchant = description
+    .replace(/\bPURCHASE\b|\bDEBIT\b|\bCREDIT\b|\bPAYMENT\b|\bTRANSFER\b|\bPOS\b|\bATM\b|\bEFT\b/gi, '')
+    .replace(/\bCARD\s+\d+/gi, '')
+    .replace(/\*+\d+/g, '')
+    .replace(/\d{2}\/\d{2}\/\d{4}/g, '')
+    .replace(/\d{4}-\d{2}-\d{2}/g, '')
+    .replace(/\d{2}-\d{2}-\d{4}/g, '')
+    .replace(/\d{2}\.\d{2}\.\d{4}/g, '')
+    .replace(/\d{2}:\d{2}(:\d{2})?/g, '')
+    .replace(/REF\s*[:.]?\s*\d+/gi, '')
+    .replace(/\bTXN\s*[:.]?\s*\d+/gi, '')
+    .replace(/R?\d+[.,]\d{2}/g, '')
+    .replace(/\s+\d{6,}$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  const parts = merchant.split(/\s{2,}/);
+  merchant = parts[0] || merchant;
+  
+  return merchant.substring(0, 100).toUpperCase();
+}
+
+function extractMerchantCore(description: string): string {
+  if (!description) return '';
+  const normalized = extractMerchantName(description);
+  let cleaned = normalized.replace(/^(THE|A|AN)\s+/i, '');
+  const firstWord = cleaned.split(' ')[0] || cleaned;
+  return firstWord.length >= 2 ? firstWord : cleaned;
+}
+
+function calculateMerchantSimilarity(name1: string, name2: string): number {
+  if (!name1 || !name2) return 0;
+  const normalized1 = extractMerchantName(name1);
+  const normalized2 = extractMerchantName(name2);
+  if (normalized1 === normalized2) return 1.0;
+  const core1 = extractMerchantCore(name1);
+  const core2 = extractMerchantCore(name2);
+  if (core1 === core2 && core1.length >= 2) return 0.95;
+  const aliases1 = MERCHANT_ALIASES[core1] || [];
+  const aliases2 = MERCHANT_ALIASES[core2] || [];
+  if (aliases1.includes(core2) || aliases2.includes(core1)) return 0.9;
+  if (normalized1.startsWith(normalized2) || normalized2.startsWith(normalized1)) return 0.85;
+  if (core1.length >= 3 && core2.length >= 3) {
+    if (core1.startsWith(core2) || core2.startsWith(core1)) return 0.8;
+  }
+  if (core1.length >= 4 && core2.length >= 4) {
+    if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) return 0.75;
+  }
+  return 0;
+}
+
+interface UserMappingMatch {
+  category_id: string;
+  subcategory_id: string | null;
+  custom_subcategory_id: string | null;
+  display_name: string | null;
+  score: number;
+}
+
+function findBestUserMapping(
+  merchantName: string, 
+  merchantCore: string, 
+  mappings: Array<{
+    merchant_name: string;
+    merchant_pattern: string | null;
+    display_name: string | null;
+    category_id: string;
+    subcategory_id: string | null;
+    custom_subcategory_id: string | null;
+  }>
+): UserMappingMatch | null {
+  if (!mappings.length) return null;
+  let bestMatch: UserMappingMatch | null = null;
+  
+  for (const mapping of mappings) {
+    const mappingNormalized = extractMerchantName(mapping.merchant_name);
+    if (mappingNormalized === merchantName) {
+      return {
+        category_id: mapping.category_id,
+        subcategory_id: mapping.subcategory_id,
+        custom_subcategory_id: mapping.custom_subcategory_id,
+        display_name: mapping.display_name,
+        score: 1.0
+      };
+    }
+    
+    if (mapping.merchant_pattern) {
+      const patternCore = mapping.merchant_pattern.toUpperCase();
+      if (patternCore === merchantCore) {
+        const score = 0.95;
+        if (!bestMatch || score > bestMatch.score) {
+          bestMatch = { category_id: mapping.category_id, subcategory_id: mapping.subcategory_id, custom_subcategory_id: mapping.custom_subcategory_id, display_name: mapping.display_name, score };
+        }
+        continue;
+      }
+    }
+    
+    const score = calculateMerchantSimilarity(mapping.merchant_name, merchantName);
+    if (score >= 0.7 && (!bestMatch || score > bestMatch.score)) {
+      bestMatch = { category_id: mapping.category_id, subcategory_id: mapping.subcategory_id, custom_subcategory_id: mapping.custom_subcategory_id, display_name: mapping.display_name, score };
+    }
+  }
+  
+  return bestMatch;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function categorizeMerchantWithAI(merchantName: string, description: string, retryCount = 0): Promise<string> {
+  const MAX_RETRIES = 2;
+  const BASE_DELAY_MS = 1000;
+  
+  const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY not configured');
+  }
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 20,
+        messages: [{
+          role: 'user',
+          content: `Categorize this South African transaction into ONE category.
+
+Merchant: ${merchantName}
+Description: ${description}
+
+Categories: Groceries, Transport, Entertainment, Utilities, Healthcare, Shopping, Dining, Bills, Assistance, Fees, Salary, Other Income, Other
+
+Rules:
+- BP, Shell, Engen, Sasol, Caltex = Transport
+- Netflix, Spotify, DSTV, Claude, ChatGPT = Bills
+- YOCO * = categorize by likely vendor type
+- Money to individuals = Assistance
+- FEE: = Fees
+
+Respond with ONLY the category name.`
+        }],
+      }),
+    });
+
+    if (response.status === 429) {
+      if (retryCount < MAX_RETRIES) {
+        const delayMs = BASE_DELAY_MS * Math.pow(2, retryCount);
+        console.log(`Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        await delay(delayMs);
+        return categorizeMerchantWithAI(merchantName, description, retryCount + 1);
+      }
+      console.warn(`Rate limit exceeded after ${MAX_RETRIES} retries, defaulting to 'Other'`);
+      return 'Other';
+    }
+
+    if (!response.ok) {
+      console.error('Anthropic API error:', response.status);
+      return 'Other';
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text?.trim() || 'Other';
+  } catch (error) {
+    console.error('AI categorization error:', error);
+    return 'Other';
+  }
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { accountId } = await req.json();
+    if (!accountId) throw new Error('Account ID is required');
+
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('No authorization header');
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('Unauthorized');
+
+    // Fetch uncategorized transactions - LIMIT to batch size
+    const { data: transactions, error: txError } = await supabase
+      .from('transactions')
+      .select('id, description, amount, account_id')
+      .eq('account_id', accountId)
+      .eq('user_id', user.id)
+      .is('category_id', null)
+      .order('transaction_date', { ascending: false })
+      .limit(BATCH_LIMIT);
+
+    if (txError) throw txError;
+
+    if (!transactions || transactions.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, categorized: 0, cached: 0, userMappings: 0, aiCalls: 0, remaining: 0 }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Fetch all data needed upfront in parallel
+    const [userMappingsResult, categoriesResult, merchantsCacheResult] = await Promise.all([
+      supabase
+        .from('user_merchant_mappings')
+        .select('merchant_name, merchant_pattern, display_name, category_id, subcategory_id, custom_subcategory_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true),
+      supabase
+        .from('categories')
+        .select('id, name, parent_id'),
+      supabase
+        .from('merchants')
+        .select('merchant_name, category')
+        .or(`user_id.eq.${user.id},user_id.is.null`)
+    ]);
+
+    const userMappings = userMappingsResult.data || [];
+    const allCategories = categoriesResult.data || [];
+    const merchantsCache = merchantsCacheResult.data || [];
+
+    // Build category lookup maps in memory
+    const categoryByNameLower = new Map<string, string>();
+    for (const cat of allCategories) {
+      categoryByNameLower.set(cat.name.toLowerCase(), cat.id);
+    }
+
+    // Build merchants cache map
+    const merchantsCacheMap = new Map<string, string>();
+    for (const m of merchantsCache) {
+      merchantsCacheMap.set(m.merchant_name.toUpperCase(), m.category);
+    }
+
+    // Find fallback category ID
+    let fallbackCategoryId: string | null = null;
+    for (const name of ['other', 'miscellaneous', 'other expenses']) {
+      const id = categoryByNameLower.get(name);
+      if (id) { fallbackCategoryId = id; break; }
+    }
+    if (!fallbackCategoryId && allCategories.length > 0) {
+      const rootCat = allCategories.find(c => !c.parent_id);
+      fallbackCategoryId = rootCat?.id || allCategories[0].id;
+    }
+
+    // Resolve category name to ID using in-memory maps
+    function resolveCategoryId(categoryName: string): string {
+      const normalizedName = categoryName.trim().toLowerCase();
+      
+      // Direct match
+      const directId = categoryByNameLower.get(normalizedName);
+      if (directId) return directId;
+      
+      // Try mapped names
+      const potentialMatches = AI_TO_DB_CATEGORY_MAP[normalizedName] || [categoryName];
+      for (const matchName of potentialMatches) {
+        const id = categoryByNameLower.get(matchName.toLowerCase());
+        if (id) return id;
+      }
+      
+      // Fuzzy: find any category containing the name
+      for (const [catName, catId] of categoryByNameLower) {
+        if (catName.includes(normalizedName) || normalizedName.includes(catName)) {
+          return catId;
+        }
+      }
+      
+      return fallbackCategoryId || '';
+    }
+
+    let categorizedCount = 0;
+    let cachedCount = 0;
+    let userMappingsCount = 0;
+    let aiCallsCount = 0;
+
+    // Collect batch updates
+    const updates: Array<{ id: string; data: Record<string, unknown> }> = [];
+    const newMerchants: Array<{ merchant_name: string; category: string; user_id: string }> = [];
+
+    // Process each transaction - no DB calls in the loop except AI
+    for (const transaction of transactions) {
+      const merchantName = extractMerchantName(transaction.description);
+      const merchantCore = extractMerchantCore(transaction.description);
+      
+      // PRIORITY 1: User merchant mappings (in-memory)
+      const userMapping = findBestUserMapping(merchantName, merchantCore, userMappings);
+      if (userMapping) {
+        const updateData: Record<string, unknown> = {
+          category_id: userMapping.category_id,
+          subcategory_id: userMapping.subcategory_id || userMapping.custom_subcategory_id || null,
+          auto_categorized: false,
+          user_verified: true,
+          categorization_confidence: userMapping.score,
+          is_categorized: true
+        };
+        if (userMapping.display_name) {
+          updateData.display_merchant_name = userMapping.display_name;
+        }
+        updates.push({ id: transaction.id, data: updateData });
+        userMappingsCount++;
+        categorizedCount++;
+        continue;
+      }
+
+      // PRIORITY 2: Smart detection (in-memory)
+      const smartCategory = preCategorizeSmart(transaction.description, transaction.amount);
+      if (smartCategory) {
+        const categoryId = resolveCategoryId(smartCategory);
+        updates.push({
+          id: transaction.id,
+          data: { category_id: categoryId, auto_categorized: true, categorization_confidence: 1.0, is_categorized: true }
+        });
+        categorizedCount++;
+        continue;
+      }
+
+      // PRIORITY 3: Merchants cache (in-memory)
+      const cachedCategory = merchantsCacheMap.get(merchantName);
+      if (cachedCategory) {
+        const categoryId = resolveCategoryId(cachedCategory);
+        updates.push({
+          id: transaction.id,
+          data: { category_id: categoryId, auto_categorized: true, categorization_confidence: 1.0, is_categorized: true }
+        });
+        cachedCount++;
+        categorizedCount++;
+        continue;
+      }
+
+      // PRIORITY 4: AI call (only network call in loop)
+      const aiCategory = await categorizeMerchantWithAI(merchantName, transaction.description);
+      aiCallsCount++;
+      const categoryId = resolveCategoryId(aiCategory);
+      updates.push({
+        id: transaction.id,
+        data: { category_id: categoryId, auto_categorized: true, categorization_confidence: 0.9, is_categorized: true }
+      });
+      newMerchants.push({ merchant_name: merchantName, category: aiCategory, user_id: user.id });
+      categorizedCount++;
+    }
+
+    // Apply all updates in parallel batches of 10
+    const UPDATE_BATCH_SIZE = 10;
+    for (let i = 0; i < updates.length; i += UPDATE_BATCH_SIZE) {
+      const batch = updates.slice(i, i + UPDATE_BATCH_SIZE);
+      await Promise.all(
+        batch.map(u => supabase.from('transactions').update(u.data).eq('id', u.id))
+      );
+    }
+
+    // Save new merchants to cache in parallel
+    if (newMerchants.length > 0) {
+      await Promise.all(
+        newMerchants.map(m =>
+          supabase.from('merchants').upsert({
+            merchant_name: m.merchant_name,
+            category: m.category,
+            user_id: m.user_id,
+            frequency: 1,
+            confidence: 0.9,
+          }, { onConflict: 'merchant_name,user_id' })
+        )
+      );
+    }
+
+    // Check if there are remaining uncategorized transactions
+    const { count: remainingCount } = await supabase
+      .from('transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('account_id', accountId)
+      .eq('user_id', user.id)
+      .is('category_id', null);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        categorized: categorizedCount,
+        cached: cachedCount,
+        userMappings: userMappingsCount,
+        aiCalls: aiCallsCount,
+        remaining: remainingCount || 0,
+        cost: (aiCallsCount * 0.00015).toFixed(4)
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Categorization error:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
