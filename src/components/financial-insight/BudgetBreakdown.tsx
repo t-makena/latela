@@ -23,30 +23,20 @@ interface Transaction {
   parent_category_color?: string | null;
 }
 
+interface ComparisonPeriod {
+  availableBalance: number | null;
+  budgetBalance: number | null;
+  spending: number | null;
+}
+
 interface BudgetBreakdownProps {
   availableBalance: number;
   budgetBalance: number;
   spending: number;
-  previousMonth: {
-    availableBalance: number;
-    budgetBalance: number;
-    spending: number;
-  };
-  threeMonthsAgo?: {
-    availableBalance: number;
-    budgetBalance: number;
-    spending: number;
-  };
-  sixMonthsAgo?: {
-    availableBalance: number;
-    budgetBalance: number;
-    spending: number;
-  };
-  oneYearAgo?: {
-    availableBalance: number;
-    budgetBalance: number;
-    spending: number;
-  };
+  previousMonth: ComparisonPeriod | null;
+  threeMonthsAgo?: ComparisonPeriod | null;
+  sixMonthsAgo?: ComparisonPeriod | null;
+  oneYearAgo?: ComparisonPeriod | null;
   showOnlyPieChart?: boolean;
   showOnlyTable?: boolean;
   showOnlyOneMonth?: boolean;
@@ -89,52 +79,48 @@ export const BudgetBreakdown = ({
       return d >= startOfDay(range.from) && d <= endOfDay(range.to);
     });
   })();
-  
-  // Calculate percentage changes for 1 month
-  const availableChange = previousMonth.availableBalance 
-    ? ((availableBalance - previousMonth.availableBalance) / previousMonth.availableBalance * 100).toFixed(0)
-    : 0;
-  const budgetChange = previousMonth.budgetBalance
-    ? ((budgetBalance - previousMonth.budgetBalance) / previousMonth.budgetBalance * 100).toFixed(0)
-    : 0;
-  const spendingChange = previousMonth.spending
-    ? ((spending - previousMonth.spending) / previousMonth.spending * 100).toFixed(0)
-    : 0;
 
-  // Calculate percentage changes for 3 months
-  const available3MChange = threeMonthsAgo?.availableBalance 
-    ? ((availableBalance - threeMonthsAgo.availableBalance) / threeMonthsAgo.availableBalance * 100).toFixed(0)
-    : 0;
-  const budget3MChange = threeMonthsAgo?.budgetBalance
-    ? ((budgetBalance - threeMonthsAgo.budgetBalance) / threeMonthsAgo.budgetBalance * 100).toFixed(0)
-    : 0;
-  const spending3MChange = threeMonthsAgo?.spending
-    ? ((spending - threeMonthsAgo.spending) / threeMonthsAgo.spending * 100).toFixed(0)
-    : 0;
 
-  // Calculate percentage changes for 6 months
-  const available6MChange = sixMonthsAgo?.availableBalance 
-    ? ((availableBalance - sixMonthsAgo.availableBalance) / sixMonthsAgo.availableBalance * 100).toFixed(0)
-    : 0;
-  const budget6MChange = sixMonthsAgo?.budgetBalance
-    ? ((budgetBalance - sixMonthsAgo.budgetBalance) / sixMonthsAgo.budgetBalance * 100).toFixed(0)
-    : 0;
-  const spending6MChange = sixMonthsAgo?.spending
-    ? ((spending - sixMonthsAgo.spending) / sixMonthsAgo.spending * 100).toFixed(0)
-    : 0;
+  const calcChange = (current: number, previous: number | null | undefined): string | null => {
+    if (previous === null || previous === undefined || previous === 0) return null;
+    return ((current - previous) / previous * 100).toFixed(0);
+  };
 
-  // Calculate percentage changes for 1 year
-  const available1YChange = oneYearAgo?.availableBalance 
-    ? ((availableBalance - oneYearAgo.availableBalance) / oneYearAgo.availableBalance * 100).toFixed(0)
-    : 0;
-  const budget1YChange = oneYearAgo?.budgetBalance
-    ? ((budgetBalance - oneYearAgo.budgetBalance) / oneYearAgo.budgetBalance * 100).toFixed(0)
-    : 0;
-  const spending1YChange = oneYearAgo?.spending
-    ? ((spending - oneYearAgo.spending) / oneYearAgo.spending * 100).toFixed(0)
-    : 0;
+  // 1 month changes
+  const availableChange = calcChange(availableBalance, previousMonth?.availableBalance);
+  const budgetChange = calcChange(budgetBalance, previousMonth?.budgetBalance);
+  const spendingChange = calcChange(spending, previousMonth?.spending);
 
-  // Parent category colors (for simple view)
+  // 3 month changes
+  const available3MChange = calcChange(availableBalance, threeMonthsAgo?.availableBalance);
+  const budget3MChange = calcChange(budgetBalance, threeMonthsAgo?.budgetBalance);
+  const spending3MChange = calcChange(spending, threeMonthsAgo?.spending);
+
+  // 6 month changes
+  const available6MChange = calcChange(availableBalance, sixMonthsAgo?.availableBalance);
+  const budget6MChange = calcChange(budgetBalance, sixMonthsAgo?.budgetBalance);
+  const spending6MChange = calcChange(spending, sixMonthsAgo?.spending);
+
+  // 1 year changes
+  const available1YChange = calcChange(availableBalance, oneYearAgo?.availableBalance);
+  const budget1YChange = calcChange(budgetBalance, oneYearAgo?.budgetBalance);
+  const spending1YChange = calcChange(spending, oneYearAgo?.spending);
+
+  // Render helper for change cells - shows "N/A" for null values
+  const renderChange = (change: string | null, invertColor = false) => {
+    if (change === null) {
+      return <span className="text-muted-foreground">N/A</span>;
+    }
+    const num = Number(change);
+    const isPositive = invertColor ? num <= 0 : num >= 0;
+    return (
+      <span className={isPositive ? 'text-green-600' : 'text-red-600'}>
+        {num >= 0 ? '+' : ''}{change}%
+      </span>
+    );
+  };
+
+
   const parentCategoryColors: Record<string, string> = {
     "Income": "#10B981",        // Green
     "Necessities": "#3B82F6",   // Blue
@@ -319,22 +305,22 @@ export const BudgetBreakdown = ({
             <TableRow>
               <TableCell className="font-medium py-3">{t('finance.availableBalance')}</TableCell>
               <TableCell className="text-right font-medium py-3">R{availableBalance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-              <TableCell className={`text-right font-semibold py-3 ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
+              <TableCell className="text-right font-semibold py-3">
+                {renderChange(availableChange)}
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium py-3">{t('finance.budgetBalance')}</TableCell>
               <TableCell className="text-right font-medium py-3">R{budgetBalance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-              <TableCell className={`text-right font-semibold py-3 ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
+              <TableCell className="text-right font-semibold py-3">
+                {renderChange(budgetChange)}
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium py-3">{t('finance.spending')}</TableCell>
               <TableCell className="text-right font-medium py-3">R{spending.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-              <TableCell className={`text-right font-semibold py-3 ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
+              <TableCell className="text-right font-semibold py-3">
+                {renderChange(spendingChange, true)}
               </TableCell>
             </TableRow>
           </TableBody>
@@ -359,50 +345,26 @@ export const BudgetBreakdown = ({
             <TableRow>
               <TableCell className="font-medium">{t('finance.availableBalance')}</TableCell>
               <TableCell className="text-right font-medium">R{availableBalance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-              <TableCell className={`text-right font-semibold ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(available3MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(available3MChange) >= 0 ? '+' : ''}{available3MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(available6MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(available6MChange) >= 0 ? '+' : ''}{available6MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(available1YChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(available1YChange) >= 0 ? '+' : ''}{available1YChange}%
-              </TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(availableChange)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(available3MChange)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(available6MChange)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(available1YChange)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">{t('finance.budgetBalance')}</TableCell>
               <TableCell className="text-right font-medium">R{budgetBalance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-              <TableCell className={`text-right font-semibold ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(budget3MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budget3MChange) >= 0 ? '+' : ''}{budget3MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(budget6MChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budget6MChange) >= 0 ? '+' : ''}{budget6MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(budget1YChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budget1YChange) >= 0 ? '+' : ''}{budget1YChange}%
-              </TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(budgetChange)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(budget3MChange)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(budget6MChange)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(budget1YChange)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">{t('finance.spending')}</TableCell>
               <TableCell className="text-right font-medium">R{spending.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-              <TableCell className={`text-right font-semibold ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(spending3MChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spending3MChange) >= 0 ? '+' : ''}{spending3MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(spending6MChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spending6MChange) >= 0 ? '+' : ''}{spending6MChange}%
-              </TableCell>
-              <TableCell className={`text-right font-semibold ${Number(spending1YChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spending1YChange) >= 0 ? '+' : ''}{spending1YChange}%
-              </TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(spendingChange, true)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(spending3MChange, true)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(spending6MChange, true)}</TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(spending1YChange, true)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -425,21 +387,15 @@ export const BudgetBreakdown = ({
           <TableBody>
             <TableRow>
               <TableCell className="font-medium">{t('finance.availableBalance')}</TableCell>
-              <TableCell className={`text-right font-semibold ${Number(availableChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(availableChange) >= 0 ? '+' : ''}{availableChange}%
-              </TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(availableChange)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">{t('finance.budgetBalance')}</TableCell>
-              <TableCell className={`text-right font-semibold ${Number(budgetChange) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(budgetChange) >= 0 ? '+' : ''}{budgetChange}%
-              </TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(budgetChange)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">{t('finance.spending')}</TableCell>
-              <TableCell className={`text-right font-semibold ${Number(spendingChange) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(spendingChange) >= 0 ? '+' : ''}{spendingChange}%
-              </TableCell>
+              <TableCell className="text-right font-semibold">{renderChange(spendingChange, true)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
