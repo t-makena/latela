@@ -69,12 +69,14 @@ export const useBudgetItems = () => {
       name,
       frequency,
       amount,
-      daysPerWeek
+      daysPerWeek,
+      parentCategoryId
     }: {
       name: string;
       frequency: string;
       amount: number;
       daysPerWeek?: number;
+      parentCategoryId?: string;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -87,6 +89,7 @@ export const useBudgetItems = () => {
           frequency,
           amount,
           days_per_week: daysPerWeek || null,
+          parent_category_id: parentCategoryId || null,
         });
 
       if (error) throw error;
@@ -138,9 +141,10 @@ export const useBudgetItems = () => {
     name: string,
     frequency: string,
     amount: number,
-    daysPerWeek?: number
+    daysPerWeek?: number,
+    parentCategoryId?: string
   ) => {
-    await addMutation.mutateAsync({ name, frequency, amount, daysPerWeek });
+    await addMutation.mutateAsync({ name, frequency, amount, daysPerWeek, parentCategoryId });
   };
 
   const deleteBudgetItem = async (id: string) => {
