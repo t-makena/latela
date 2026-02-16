@@ -56,6 +56,7 @@
     "totalBalanceAllAccounts": "Total balance across all accounts",
     "budgetExpensesPlusEvents": "Budget expenses plus upcoming events",
     "availableLessBudget": "Available balance less budget balance",
+    "addAccountToSeeStatus": "Add an account to see your budget status",
     "currentBalance": "Current Balance",
     "accountType": "Account Type",
     "currency": "Currency",

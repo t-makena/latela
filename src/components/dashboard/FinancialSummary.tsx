@@ -252,13 +252,28 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
           <div className="label-text mb-1">
             {t('finance.budgetStatus')}
           </div>
-          <div className={`text-balance-secondary font-bold mb-1 ${riskColor}`}>
-            {t(`score.riskLevels.${riskLevel}`)}
-          </div>
-          {showExplanations && (
-            <p className="text-transaction-date text-text-faint">
-              {t(`score.riskMessages.${riskLevel}`)}
-            </p>
+          {accounts.length === 0 ? (
+            <>
+              <div className="text-balance-secondary font-bold mb-1 text-muted-foreground">
+                --
+              </div>
+              {showExplanations && (
+                <p className="text-transaction-date text-text-faint">
+                  {t('finance.addAccountToSeeStatus')}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <div className={`text-balance-secondary font-bold mb-1 ${riskColor}`}>
+                {t(`score.riskLevels.${riskLevel}`)}
+              </div>
+              {showExplanations && (
+                <p className="text-transaction-date text-text-faint">
+                  {t(`score.riskMessages.${riskLevel}`)}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

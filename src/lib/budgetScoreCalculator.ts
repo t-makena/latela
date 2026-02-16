@@ -30,7 +30,7 @@ const WEIGHTS = {
 export async function calculateBudgetScore(
   userId: string,
   paydayDate: number = 25
-): Promise<BudgetScoreResult> {
+): Promise<BudgetScoreResult | null> {
   const today = new Date();
   const currentDay = today.getDate();
   
@@ -52,6 +52,11 @@ export async function calculateBudgetScore(
     .select('id, current_balance, available_balance')
     .eq('user_id', userId)
     .eq('is_active', true);
+
+  // No accounts = no score to calculate
+  if (!accountsData || accountsData.length === 0) {
+    return null;
+  }
   
   // Sum all account balances (stored in cents)
   const remainingBalanceCents = accountsData?.reduce((sum, acc) => {
