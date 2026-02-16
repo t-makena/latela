@@ -1,41 +1,40 @@
 
 
-## Guard Latela Score and Budget Status Behind Account Existence
+## Fix Available Balance Using Wrong Column
 
 ### Problem
-When no accounts are linked, the budget score calculator still runs and produces misleading results (e.g. risk ratio of 999, "Critical" status) because all balances are zero. Users see a scary score and status before they have even added an account.
+The `useAccounts` hook reads `current_balance` from the database and displays it as the "Available Balance" everywhere. For your Standard Bank credit account:
+- `current_balance` = -R20,039.91 (amount owed -- negative)
+- `available_balance` = R1,507.79 (actual available credit)
 
-### Changes
+The app shows -R20,039.91 as your available balance, which is incorrect.
 
-**1. `src/lib/budgetScoreCalculator.ts`**
-- At the top of `calculateBudgetScore`, after fetching `accountsData`, check if the array is empty or null
-- If no accounts exist, return `null` instead of computing a score
-- Update the return type to `Promise<BudgetScoreResult | null>`
+### Root Cause
+In `src/hooks/useAccounts.ts`, line 27:
+```
+balance: (account.current_balance || 0) / 100
+```
+This should use `available_balance` instead, since that column represents what the user actually has available to spend.
 
-**2. `src/hooks/useBudgetScore.ts`**
-- Already handles `scoreData` being `null` with defaults -- no changes needed here since `LatelaScoreCard` checks `!scoreData`
+### Fix
 
-**3. `src/components/budget/LatelaScoreCard.tsx`**
-- Line 32 already has `if (!scoreData) return null;` -- this will automatically hide the card when no accounts exist
-- No changes needed
-
-**4. `src/components/dashboard/FinancialSummary.tsx`**
-- Add a check: if `accounts.length === 0`, display the Budget Status metric as "N/A" (or a dash) instead of showing the risk level
-- This applies to both the desktop content block (line 251-263) and the minimal mobile view
-
-### Summary
-
-| Component | Current (no accounts) | After fix |
-|-----------|----------------------|-----------|
-| Latela Score Card | Shows "Critical", score 0 | Hidden entirely |
-| Budget Status in Financial Overview | Shows "Critical" in red | Shows "N/A" or "--" |
-| Safe to Spend | Shows R0.00/day | Hidden (card not rendered) |
+**File: `src/hooks/useAccounts.ts`**
+- Change line 27 from `account.current_balance` to `account.available_balance`
+- This single change cascades correctly through all components that consume `useAccounts` (FinancialSummary, AvailableBalanceCard, MobileBudgetInsightCard, MobileAccountCard, etc.)
 
 ### Technical Detail
-The key fix is a single early-return in `calculateBudgetScore`:
+
+| Field | Value (cents) | Value (Rands) | Meaning |
+|-------|--------------|---------------|---------|
+| `current_balance` | -2,003,991 | -R20,039.91 | Total balance on account (debt for credit cards) |
+| `available_balance` | 150,779 | R1,507.79 | What the user can actually spend |
+
+One line change in `useAccounts.ts`:
 ```
-if (!accountsData || accountsData.length === 0) {
-  return null;
-}
+// Before
+balance: (account.current_balance || 0) / 100
+
+// After
+balance: (account.available_balance || 0) / 100
 ```
-This cascades through `useBudgetScore` (scoreData becomes null) to `LatelaScoreCard` (returns null) and `FinancialSummary` (checks accounts.length for Budget Status display).
+
