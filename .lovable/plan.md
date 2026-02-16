@@ -1,38 +1,41 @@
 
 
-## Fix Accounts Page Structure: All Accounts vs Individual Account
+## Guard Latela Score and Budget Status Behind Account Existence
 
-### Current Problems
+### Problem
+When no accounts are linked, the budget score calculator still runs and produces misleading results (e.g. risk ratio of 999, "Critical" status) because all balances are zero. Users see a scary score and status before they have even added an account.
 
-1. **`/accounts` (All Accounts) on mobile** only shows the first account card -- it should show ALL account cards
-2. **Title labels are swapped**: "All Accounts" shows "Account Insight" but should show "Budget Insight"; individual accounts show "Budget Insight" (default) but should show "Account Insight"
-3. **No account-specific filtering on mobile**: The `MobileBudgetInsightCard` doesn't filter transactions by account, so individual account pages show the same data as the consolidated view
+### Changes
 
-### Planned Changes
+**1. `src/lib/budgetScoreCalculator.ts`**
+- At the top of `calculateBudgetScore`, after fetching `accountsData`, check if the array is empty or null
+- If no accounts exist, return `null` instead of computing a score
+- Update the return type to `Promise<BudgetScoreResult | null>`
 
-**1. `src/pages/Accounts.tsx` (All Accounts page - mobile)**
-- Show ALL account cards (loop through `accounts` array) instead of just `accounts[0]`
-- Change the insight card title to use the default `titleKey` ("Budget Insight") instead of overriding it to "Account Insight"
+**2. `src/hooks/useBudgetScore.ts`**
+- Already handles `scoreData` being `null` with defaults -- no changes needed here since `LatelaScoreCard` checks `!scoreData`
 
-**2. `src/pages/AccountDetail.tsx` (Individual account page - mobile)**
-- Pass `titleKey="finance.accountInsight"` to `MobileBudgetInsightCard` so it says "Account Insight"
-- Pass the `accountId` to `MobileBudgetInsightCard` so its calculations are scoped to that specific account
+**3. `src/components/budget/LatelaScoreCard.tsx`**
+- Line 32 already has `if (!scoreData) return null;` -- this will automatically hide the card when no accounts exist
+- No changes needed
 
-**3. `src/components/accounts/MobileBudgetInsightCard.tsx`**
-- Add an optional `accountId` prop
-- When `accountId` is provided, filter transactions to only that account before computing metrics
-- This ensures each individual account page shows account-specific percentage changes, not consolidated figures
+**4. `src/components/dashboard/FinancialSummary.tsx`**
+- Add a check: if `accounts.length === 0`, display the Budget Status metric as "N/A" (or a dash) instead of showing the risk level
+- This applies to both the desktop content block (line 251-263) and the minimal mobile view
 
 ### Summary
 
-| Page | Account Cards | Insight Title | Data Scope |
-|------|--------------|---------------|------------|
-| `/accounts` (All) | All accounts | Budget Insight | All transactions |
-| `/accounts/:id` (Single) | Single account | Account Insight | That account's transactions only |
+| Component | Current (no accounts) | After fix |
+|-----------|----------------------|-----------|
+| Latela Score Card | Shows "Critical", score 0 | Hidden entirely |
+| Budget Status in Financial Overview | Shows "Critical" in red | Shows "N/A" or "--" |
+| Safe to Spend | Shows R0.00/day | Hidden (card not rendered) |
 
-### Technical Details
-
-- `MobileBudgetInsightCard` gains an optional `accountId?: string` prop
-- When set, transactions are filtered with `.filter(t => t.account_id === accountId)` before metric calculations
-- Available balance also filters to only the matching account
-- No database or routing changes needed
+### Technical Detail
+The key fix is a single early-return in `calculateBudgetScore`:
+```
+if (!accountsData || accountsData.length === 0) {
+  return null;
+}
+```
+This cascades through `useBudgetScore` (scoreData becomes null) to `LatelaScoreCard` (returns null) and `FinancialSummary` (checks accounts.length for Budget Status display).
