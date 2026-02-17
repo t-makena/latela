@@ -1,44 +1,64 @@
 
-## Fix: Budget Allocation Should Track Actual Spending, Not Budget Plan
 
-### Problem
-The budget allocation (Needs/Wants/Savings breakdown) currently sums up planned budget item amounts. It should instead aggregate actual transaction spending from the current month, grouped by parent category into Needs, Wants, and Savings.
+## Fix: Budget Allocation Shows Empty Due to Category Name Mismatch
 
-### Changes
+### Root Cause
 
-**1. `src/hooks/useBudgetMethod.ts` -- `calculateCategoryAllocations`**
+The `calculateCategoryAllocations` function maps `transaction.parent_category_name` against `PARENT_NAME_TO_BUDGET_CATEGORY`, which expects top-level names like **"Necessities"**, **"Discretionary"**, **"Savings"**.
 
-Replace the logic that sums budget item amounts with logic that sums actual transaction spending:
+However, the database view `v_transactions_with_details` returns **mid-level** category names like "Food & Groceries", "Dining & Restaurants", "Bills & Subscriptions" in the `parent_category_name` field. Every lookup returns `undefined`, so all allocations stay at zero.
 
-- Accept `transactions` (from `useTransactions`) instead of `budgetItems` and `calculateMonthlyAmount`
-- For each expense transaction (amount < 0), look up its `parent_category_name` and map it to Needs/Wants/Savings using `PARENT_NAME_TO_BUDGET_CATEGORY`
-- Sum the absolute amounts per category
-- Keep the existing limit calculations (percentage of available balance) unchanged
-- Update the `allocated` and `remaining` fields based on actual spending
+| What the code expects | What the DB actually returns |
+|---|---|
+| "Necessities" | "Food & Groceries", "Bills & Subscriptions", "Fees", etc. |
+| "Discretionary" | "Dining & Restaurants", "Entertainment & Recreation", "Miscellaneous", etc. |
+| "Savings" | "Savings & Investments" |
 
-Updated signature:
-```text
-calculateCategoryAllocations(
-  availableBalance: number,
-  transactions: Transaction[]    // replaces budgetItems + calculateMonthlyAmount
-): CategoryAllocations
+### Fix
+
+**`src/lib/categoryMapping.ts`** -- Add a complete mapping from mid-level category names to budget categories:
+
+```
+SUBCATEGORY_NAME_TO_BUDGET_CATEGORY = {
+  // Necessities
+  "Food & Groceries": "needs",
+  "Bills & Subscriptions": "needs",
+  "Housing & Utilities": "needs",
+  "Transportation & Fuel": "needs",
+  "Healthcare & Medical": "needs",
+  "Fees": "needs",
+  // Discretionary
+  "Dining & Restaurants": "wants",
+  "Entertainment & Recreation": "wants",
+  "Shopping & Retail": "wants",
+  "Personal & Lifestyle": "wants",
+  "Miscellaneous": "wants",
+  "Offertory/Charity": "wants",
+  "Assistance/Lending": "wants",
+  // Savings
+  "Savings & Investments": "savings",
+  // Income
+  "Salary & Wages": "income",
+  "Other Income": "income",
+  "Bonuses & Commissions": "income",
+  "Refunds & Reimbursements": "income",
+}
 ```
 
-**2. `src/pages/Budget.tsx` -- Wire up transactions instead of budget items**
+**`src/hooks/useBudgetMethod.ts`** -- Update `calculateCategoryAllocations` to use the new mapping instead of `PARENT_NAME_TO_BUDGET_CATEGORY`:
 
-- Change the `categoryAllocations` useMemo (lines 247-262) to pass `transactions` to `calculateCategoryAllocations` instead of `budgetItems` and `calculateMonthlyAmount`
-- Remove the `itemsWithCategories` mapping logic (no longer needed)
-- Pass `transactions` which are already loaded via `useTransactions()`
-
-**3. `src/components/budget/AddBudgetItemDialog.tsx` -- Update prop usage (if needed)**
-
-- The dialog receives `categoryAllocations` for limit warnings -- this will now reflect actual spending vs limits, which is the correct behavior (warn when actual spending approaches the category limit)
+```
+// Change this line:
+const budgetCategory = PARENT_NAME_TO_BUDGET_CATEGORY[tx.parent_category_name];
+// To:
+const budgetCategory = SUBCATEGORY_NAME_TO_BUDGET_CATEGORY[tx.parent_category_name];
+```
 
 ### Result
 
 | Before | After |
 |--------|-------|
-| Allocation = sum of planned budget item amounts | Allocation = sum of actual transaction spending |
-| Empty budget items = zero allocation | Transactions with categories drive allocation |
-| Limit warnings based on planned amounts | Limit warnings based on real spending |
-| Uncategorized transactions ignored | Uncategorized transactions excluded (no parent category) |
+| Every category lookup returns undefined | Each transaction maps to Needs, Wants, or Savings |
+| All allocations show 0 | Allocations reflect actual spending |
+| Percentage bars are empty | Percentage bars show real usage vs limits |
+
