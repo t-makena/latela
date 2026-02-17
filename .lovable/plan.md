@@ -1,64 +1,46 @@
 
 
-## Fix: Budget Allocation Shows Empty Due to Category Name Mismatch
+## Fix: Budget Allocation Pie Chart Shows Empty
 
 ### Root Cause
 
-The `calculateCategoryAllocations` function maps `transaction.parent_category_name` against `PARENT_NAME_TO_BUDGET_CATEGORY`, which expects top-level names like **"Necessities"**, **"Discretionary"**, **"Savings"**.
+The `BudgetBreakdown.tsx` component (used in the Financial Insight page) groups transactions by `parent_category_name` and checks against top-level names ("Necessities", "Discretionary", "Savings"). However, the database view returns **mid-level** names like "Food & Groceries", "Dining & Restaurants", etc. So:
 
-However, the database view `v_transactions_with_details` returns **mid-level** category names like "Food & Groceries", "Dining & Restaurants", "Bills & Subscriptions" in the `parent_category_name` field. Every lookup returns `undefined`, so all allocations stay at zero.
+```
+parentCategoryTotals.hasOwnProperty("Food & Groceries")  // false
+parentCategoryTotals.hasOwnProperty("Necessities")        // never returned by DB
+```
 
-| What the code expects | What the DB actually returns |
-|---|---|
-| "Necessities" | "Food & Groceries", "Bills & Subscriptions", "Fees", etc. |
-| "Discretionary" | "Dining & Restaurants", "Entertainment & Recreation", "Miscellaneous", etc. |
-| "Savings" | "Savings & Investments" |
+Every transaction fails the lookup, and the pie chart renders empty.
 
 ### Fix
 
-**`src/lib/categoryMapping.ts`** -- Add a complete mapping from mid-level category names to budget categories:
+**`src/components/financial-insight/BudgetBreakdown.tsx` -- `getSimpleCategoryData` function (around lines 157-175)**
 
-```
-SUBCATEGORY_NAME_TO_BUDGET_CATEGORY = {
-  // Necessities
-  "Food & Groceries": "needs",
-  "Bills & Subscriptions": "needs",
-  "Housing & Utilities": "needs",
-  "Transportation & Fuel": "needs",
-  "Healthcare & Medical": "needs",
-  "Fees": "needs",
-  // Discretionary
-  "Dining & Restaurants": "wants",
-  "Entertainment & Recreation": "wants",
-  "Shopping & Retail": "wants",
-  "Personal & Lifestyle": "wants",
-  "Miscellaneous": "wants",
-  "Offertory/Charity": "wants",
-  "Assistance/Lending": "wants",
-  // Savings
-  "Savings & Investments": "savings",
-  // Income
-  "Salary & Wages": "income",
-  "Other Income": "income",
-  "Bonuses & Commissions": "income",
-  "Refunds & Reimbursements": "income",
-}
+Import `SUBCATEGORY_NAME_TO_BUDGET_CATEGORY` from `@/lib/categoryMapping` and use it to map mid-level category names to their parent budget category before accumulating totals.
+
+```text
+Before:
+  if (parentCategoryTotals.hasOwnProperty(parentCategory)) {
+    parentCategoryTotals[parentCategory] += amount;
+  }
+
+After:
+  // Map mid-level name to parent bucket
+  const mapped = SUBCATEGORY_NAME_TO_BUDGET_CATEGORY[parentCategory];
+  const parentBucket = mapped === 'needs' ? 'Necessities'
+                     : mapped === 'wants' ? 'Discretionary'
+                     : mapped === 'savings' ? 'Savings'
+                     : mapped === 'income' ? 'Income'
+                     : null;
+  if (parentBucket && parentCategoryTotals.hasOwnProperty(parentBucket)) {
+    parentCategoryTotals[parentBucket] += amount;
+  }
 ```
 
-**`src/hooks/useBudgetMethod.ts`** -- Update `calculateCategoryAllocations` to use the new mapping instead of `PARENT_NAME_TO_BUDGET_CATEGORY`:
+This single change will make the simple (parent-level) pie chart display actual spending data. The detailed view already works correctly since it uses `subcategory_name` / `display_subcategory_name` directly.
 
-```
-// Change this line:
-const budgetCategory = PARENT_NAME_TO_BUDGET_CATEGORY[tx.parent_category_name];
-// To:
-const budgetCategory = SUBCATEGORY_NAME_TO_BUDGET_CATEGORY[tx.parent_category_name];
-```
-
-### Result
-
-| Before | After |
-|--------|-------|
-| Every category lookup returns undefined | Each transaction maps to Needs, Wants, or Savings |
-| All allocations show 0 | Allocations reflect actual spending |
-| Percentage bars are empty | Percentage bars show real usage vs limits |
-
+### What This Does NOT Change
+- The detailed pie chart view (already works with subcategory names)
+- The `useBudgetMethod` hook (already fixed in the previous change)
+- No database changes needed
