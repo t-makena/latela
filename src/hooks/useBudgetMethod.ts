@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   BudgetCategory, 
-  PARENT_NAME_TO_BUDGET_CATEGORY, 
+  SUBCATEGORY_NAME_TO_BUDGET_CATEGORY, 
   CategoryLimits,
   calculateCategoryLimits as calcLimits 
 } from '@/lib/categoryMapping';
@@ -165,7 +165,7 @@ export const useBudgetMethod = () => {
     // Sum actual spending by category from transactions
     transactions.forEach(tx => {
       if (tx.amount < 0 && tx.parent_category_name) {
-        const budgetCategory = PARENT_NAME_TO_BUDGET_CATEGORY[tx.parent_category_name];
+        const budgetCategory = SUBCATEGORY_NAME_TO_BUDGET_CATEGORY[tx.parent_category_name];
         if (budgetCategory && budgetCategory !== 'income') {
           const absAmount = Math.abs(tx.amount);
           allocations[budgetCategory].allocated += absAmount;

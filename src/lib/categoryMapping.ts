@@ -27,6 +27,32 @@ export const PARENT_NAME_TO_BUDGET_CATEGORY: Record<string, BudgetCategory> = {
   'Income': 'income',
 };
 
+// Map mid-level category names (from v_transactions_with_details) to budget categories
+export const SUBCATEGORY_NAME_TO_BUDGET_CATEGORY: Record<string, BudgetCategory> = {
+  // Necessities
+  'Food & Groceries': 'needs',
+  'Bills & Subscriptions': 'needs',
+  'Housing & Utilities': 'needs',
+  'Transportation & Fuel': 'needs',
+  'Healthcare & Medical': 'needs',
+  'Fees': 'needs',
+  // Discretionary
+  'Dining & Restaurants': 'wants',
+  'Entertainment & Recreation': 'wants',
+  'Shopping & Retail': 'wants',
+  'Personal & Lifestyle': 'wants',
+  'Miscellaneous': 'wants',
+  'Offertory/Charity': 'wants',
+  'Assistance/Lending': 'wants',
+  // Savings
+  'Savings & Investments': 'savings',
+  // Income
+  'Salary & Wages': 'income',
+  'Other Income': 'income',
+  'Bonuses & Commissions': 'income',
+  'Refunds & Reimbursements': 'income',
+};
+
 // Get display name for budget category
 export const BUDGET_CATEGORY_LABELS: Record<BudgetCategory, string> = {
   needs: 'Needs',
