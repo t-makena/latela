@@ -1,43 +1,44 @@
 
-
-## Cascade Delete All Data When an Account is Removed
+## Fix: Budget Allocation Should Track Actual Spending, Not Budget Plan
 
 ### Problem
-When an account is deleted in Settings, only transactions are removed. Budget scores associated with that account are left behind as orphaned records.
-
-### Tables with `account_id`
-| Table | Currently deleted? |
-|-------|-------------------|
-| `transactions` | Yes |
-| `budget_scores` | No (set to NULL via FK, leaving orphaned rows) |
-| `v_transactions_with_details` | View (auto-handled) |
-| `v_daily_account_balances` | View (auto-handled) |
+The budget allocation (Needs/Wants/Savings breakdown) currently sums up planned budget item amounts. It should instead aggregate actual transaction spending from the current month, grouped by parent category into Needs, Wants, and Savings.
 
 ### Changes
 
-**`src/pages/Settings.tsx` -- `handleRemoveAccount` function**
+**1. `src/hooks/useBudgetMethod.ts` -- `calculateCategoryAllocations`**
 
-Add deletion of `budget_scores` before deleting transactions and the account:
+Replace the logic that sums budget item amounts with logic that sums actual transaction spending:
 
+- Accept `transactions` (from `useTransactions`) instead of `budgetItems` and `calculateMonthlyAmount`
+- For each expense transaction (amount < 0), look up its `parent_category_name` and map it to Needs/Wants/Savings using `PARENT_NAME_TO_BUDGET_CATEGORY`
+- Sum the absolute amounts per category
+- Keep the existing limit calculations (percentage of available balance) unchanged
+- Update the `allocated` and `remaining` fields based on actual spending
+
+Updated signature:
 ```text
-1. Delete budget_scores where account_id matches
-2. Delete transactions where account_id matches (already exists)
-3. Delete the account itself (already exists)
+calculateCategoryAllocations(
+  availableBalance: number,
+  transactions: Transaction[]    // replaces budgetItems + calculateMonthlyAmount
+): CategoryAllocations
 ```
 
-The order matters because budget_scores has a foreign key to accounts with `ON DELETE SET NULL`, so deleting explicitly first keeps things clean. Transactions have no FK constraint but are deleted first by convention.
+**2. `src/pages/Budget.tsx` -- Wire up transactions instead of budget items**
 
-### Technical Detail
+- Change the `categoryAllocations` useMemo (lines 247-262) to pass `transactions` to `calculateCategoryAllocations` instead of `budgetItems` and `calculateMonthlyAmount`
+- Remove the `itemsWithCategories` mapping logic (no longer needed)
+- Pass `transactions` which are already loaded via `useTransactions()`
 
-Add one Supabase call before the existing transaction deletion:
+**3. `src/components/budget/AddBudgetItemDialog.tsx` -- Update prop usage (if needed)**
 
-```typescript
-// Delete budget scores for this account
-const { error: scoresError } = await supabase
-  .from('budget_scores')
-  .delete()
-  .eq('account_id', accountId);
-if (scoresError) throw scoresError;
-```
+- The dialog receives `categoryAllocations` for limit warnings -- this will now reflect actual spending vs limits, which is the correct behavior (warn when actual spending approaches the category limit)
 
-No database migration needed -- this is purely a frontend code change to ensure all related data is cleaned up.
+### Result
+
+| Before | After |
+|--------|-------|
+| Allocation = sum of planned budget item amounts | Allocation = sum of actual transaction spending |
+| Empty budget items = zero allocation | Transactions with categories drive allocation |
+| Limit warnings based on planned amounts | Limit warnings based on real spending |
+| Uncategorized transactions ignored | Uncategorized transactions excluded (no parent category) |
