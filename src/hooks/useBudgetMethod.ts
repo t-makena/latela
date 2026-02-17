@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   BudgetCategory, 
-  PARENT_TO_BUDGET_CATEGORY, 
+  PARENT_NAME_TO_BUDGET_CATEGORY, 
   CategoryLimits,
   calculateCategoryLimits as calcLimits 
 } from '@/lib/categoryMapping';
+import type { Transaction } from '@/hooks/useTransactions';
 
 export type BudgetMethod = 'zero_based' | 'percentage_based';
 
@@ -146,11 +147,10 @@ export const useBudgetMethod = () => {
     );
   }, [settings.needs_percentage, settings.wants_percentage, settings.savings_percentage]);
 
-  // Calculate current allocations for each category based on budget items
+  // Calculate current allocations for each category based on actual transaction spending
   const calculateCategoryAllocations = useCallback((
     availableBalance: number,
-    budgetItems: BudgetItem[],
-    calculateMonthlyAmount: (item: BudgetItem) => number
+    transactions: Transaction[]
   ): CategoryAllocations => {
     const limits = calculateCategoryLimits(availableBalance);
     
@@ -162,13 +162,13 @@ export const useBudgetMethod = () => {
       income: { limit: 0, allocated: 0, remaining: 0, percentage: 0 },
     };
 
-    // Sum up allocations by category
-    budgetItems.forEach(item => {
-      if (item.parent_category_id) {
-        const budgetCategory = PARENT_TO_BUDGET_CATEGORY[item.parent_category_id];
+    // Sum actual spending by category from transactions
+    transactions.forEach(tx => {
+      if (tx.amount < 0 && tx.parent_category_name) {
+        const budgetCategory = PARENT_NAME_TO_BUDGET_CATEGORY[tx.parent_category_name];
         if (budgetCategory && budgetCategory !== 'income') {
-          const monthlyAmount = calculateMonthlyAmount(item);
-          allocations[budgetCategory].allocated += monthlyAmount;
+          const absAmount = Math.abs(tx.amount);
+          allocations[budgetCategory].allocated += absAmount;
           allocations[budgetCategory].remaining = 
             allocations[budgetCategory].limit - allocations[budgetCategory].allocated;
         }

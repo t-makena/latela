@@ -247,19 +247,8 @@ const Budget = () => {
   const categoryAllocations = useMemo(() => {
     if (budgetMethod !== 'percentage_based') return undefined;
     
-    // Map budget items to include parent_category_id from subcategories
-    const itemsWithCategories = budgetItems.map(item => {
-      const subcategory = subcategories.find(sub => sub.name === item.name);
-      // Use type assertion since parent_category_id may not be in the type yet (pending migration)
-      const existingParentId = (item as { parent_category_id?: string }).parent_category_id;
-      return {
-        ...item,
-        parent_category_id: existingParentId || subcategory?.parent_category_id || undefined,
-      };
-    });
-
-    return calculateCategoryAllocations(availableBalance, itemsWithCategories, calculateMonthlyAmount);
-  }, [budgetMethod, budgetItems, subcategories, availableBalance, calculateCategoryAllocations, calculateMonthlyAmount]);
+    return calculateCategoryAllocations(availableBalance, transactions);
+  }, [budgetMethod, transactions, availableBalance, calculateCategoryAllocations]);
 
   // Wrapper for addBudgetItem that handles the optional parentCategoryId
   const handleAddBudgetItem = async (
