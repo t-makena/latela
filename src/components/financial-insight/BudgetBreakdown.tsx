@@ -203,6 +203,7 @@ export const BudgetBreakdown = ({
         // then fall back to subcategory_name
         const subcategoryName = transaction.display_subcategory_name || 
                                 transaction.subcategory_name || 
+                                transaction.parent_category_name ||
                                 'Miscellaneous';
         const amount = Math.abs(transaction.amount);
         
