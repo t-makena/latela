@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { DateFilterOption } from "@/components/common/DateFilter";
 import { getDateRangeForFilter, DateRange } from "@/lib/dateFilterUtils";
+import { SUBCATEGORY_NAME_TO_BUDGET_CATEGORY } from "@/lib/categoryMapping";
 
 interface Transaction {
   description: string;
@@ -168,8 +169,15 @@ export const BudgetBreakdown = ({
       if (transaction.amount < 0 && transaction.parent_category_name) {
         const amount = Math.abs(transaction.amount);
         const parentCategory = transaction.parent_category_name;
-        if (parentCategoryTotals.hasOwnProperty(parentCategory)) {
-          parentCategoryTotals[parentCategory] += amount;
+        // Map mid-level name to parent bucket
+        const mapped = SUBCATEGORY_NAME_TO_BUDGET_CATEGORY[parentCategory];
+        const parentBucket = mapped === 'needs' ? 'Necessities'
+                           : mapped === 'wants' ? 'Discretionary'
+                           : mapped === 'savings' ? 'Savings'
+                           : mapped === 'income' ? 'Income'
+                           : parentCategory; // fallback to original name
+        if (parentBucket && parentCategoryTotals.hasOwnProperty(parentBucket)) {
+          parentCategoryTotals[parentBucket] += amount;
         }
       }
     });
