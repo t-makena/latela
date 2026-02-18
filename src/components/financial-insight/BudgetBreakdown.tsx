@@ -151,6 +151,7 @@ export const BudgetBreakdown = ({
     "Assistance/Lending": "#FB923C",
     "Offertory/Charity": "#FBBF24",
     "Miscellaneous": "#06B6D4",
+    "Transfers": "#64748B",
     // Savings subcategories
     "Savings & Investments": "#8B5CF6"
   };
