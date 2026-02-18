@@ -1,46 +1,85 @@
 
+## Fix: Miscellaneous Overflow from Missing "Transfers" Category & Stale Categorization
 
-## Fix: Budget Allocation Pie Chart Shows Empty
+### Root Cause Summary
 
-### Root Cause
+There are two distinct problems causing the Miscellaneous flood:
 
-The `BudgetBreakdown.tsx` component (used in the Financial Insight page) groups transactions by `parent_category_name` and checks against top-level names ("Necessities", "Discretionary", "Savings"). However, the database view returns **mid-level** names like "Food & Groceries", "Dining & Restaurants", etc. So:
+**Problem 1 - Missing "Transfers" category in the database**
 
-```
-parentCategoryTotals.hasOwnProperty("Food & Groceries")  // false
-parentCategoryTotals.hasOwnProperty("Necessities")        // never returned by DB
-```
+The edge function's `preCategorizeSmart` correctly identifies "VALUE LOADED TO VIRTUAL CARD" and "IB TRANSFER TO" as `'Transfers'`. However, the `resolveCategoryId` function then searches the categories table for a category named "Transfers" — and it doesn't exist. The fallback fires and lands them in Miscellaneous (65 transactions).
 
-Every transaction fails the lookup, and the pie chart renders empty.
+**Problem 2 - Already-categorized transactions are never fixed**
 
-### Fix
+The edge function has `IS NULL` filter on `category_id`, meaning once a transaction is in Miscellaneous, it is permanently stuck there. There is no way for corrected logic to re-process them.
 
-**`src/components/financial-insight/BudgetBreakdown.tsx` -- `getSimpleCategoryData` function (around lines 157-175)**
+### Fix Plan
 
-Import `SUBCATEGORY_NAME_TO_BUDGET_CATEGORY` from `@/lib/categoryMapping` and use it to map mid-level category names to their parent budget category before accumulating totals.
+#### Part A: Add "Transfers" as a proper subcategory in the database
 
-```text
-Before:
-  if (parentCategoryTotals.hasOwnProperty(parentCategory)) {
-    parentCategoryTotals[parentCategory] += amount;
-  }
+A migration will insert a "Transfers" subcategory under the "Discretionary" parent (same parent as Miscellaneous). This will make `resolveCategoryId('Transfers')` find a real category instead of falling back.
 
-After:
-  // Map mid-level name to parent bucket
-  const mapped = SUBCATEGORY_NAME_TO_BUDGET_CATEGORY[parentCategory];
-  const parentBucket = mapped === 'needs' ? 'Necessities'
-                     : mapped === 'wants' ? 'Discretionary'
-                     : mapped === 'savings' ? 'Savings'
-                     : mapped === 'income' ? 'Income'
-                     : null;
-  if (parentBucket && parentCategoryTotals.hasOwnProperty(parentBucket)) {
-    parentCategoryTotals[parentBucket] += amount;
-  }
+```sql
+INSERT INTO categories (name, parent_id, color, description)
+VALUES (
+  'Transfers',
+  (SELECT id FROM categories WHERE name = 'Discretionary' AND parent_id IS NULL LIMIT 1),
+  '#64748B',
+  'Bank transfers, virtual card loads, inter-account movements'
+)
+ON CONFLICT DO NOTHING;
 ```
 
-This single change will make the simple (parent-level) pie chart display actual spending data. The detailed view already works correctly since it uses `subcategory_name` / `display_subcategory_name` directly.
+#### Part B: Bulk re-categorize the stuck Miscellaneous transactions
 
-### What This Does NOT Change
-- The detailed pie chart view (already works with subcategory names)
-- The `useBudgetMethod` hook (already fixed in the previous change)
-- No database changes needed
+A second migration will retroactively fix the 65 Miscellaneous transactions that match known "Transfers" patterns (VALUE LOADED TO VIRTUAL CARD, IB TRANSFER TO, IB PAYMENT TO, INSTANTMON, CASH WITHDRAWAL).
+
+```sql
+UPDATE transactions
+SET 
+  category_id = (SELECT id FROM categories WHERE name = 'Transfers' LIMIT 1),
+  auto_categorized = true,
+  categorization_confidence = 1.0,
+  is_categorized = true
+WHERE 
+  category_id = (SELECT id FROM categories WHERE name = 'Miscellaneous' LIMIT 1)
+  AND (
+    description ILIKE '%VALUE LOADED TO VIRTUAL CARD%'
+    OR description ILIKE '%IB TRANSFER TO%'
+    OR description ILIKE '%IB PAYMENT TO%'
+    OR description ILIKE '%INSTANT MONEY%'
+    OR description ILIKE '%INSTANTMON%'
+    OR description ILIKE '%CASH WITHDRAWAL%'
+  );
+```
+
+#### Part C: Add "Transfers" to the category mapping in code
+
+Update `src/lib/categoryMapping.ts` to add `'Transfers'` to `SUBCATEGORY_NAME_TO_BUDGET_CATEGORY` so the charts map it correctly:
+
+```typescript
+'Transfers': 'wants',  // or exclude from budget charts entirely
+```
+
+Also update `AI_TO_DB_CATEGORY_MAP` in the edge function to ensure `'transfer'` and `'transfers'` map to the new `'Transfers'` category name (it currently maps to `['Transfers', 'Transfer', 'Bank Transfer']` which will now find a match).
+
+#### Part D: Add Transfers to the detailed chart color map in BudgetBreakdown.tsx
+
+```typescript
+"Transfers": "#64748B",  // Slate grey
+```
+
+### What this does NOT touch
+- No changes to the AI model or prompt
+- No changes to `preCategorizeSmart` logic (it already handles this correctly)
+- No changes to RLS policies
+- Income transactions are unaffected
+
+### Expected Result
+
+| Before | After |
+|--------|-------|
+| 65 transactions in Miscellaneous | Transfers/virtual card loads in "Transfers" |
+| `resolveCategoryId('Transfers')` → Miscellaneous | `resolveCategoryId('Transfers')` → Transfers category |
+| Charts show large Miscellaneous slice | Charts show accurate Transfers slice |
+| Future transfers still land in Miscellaneous | Future transfers correctly categorized |
