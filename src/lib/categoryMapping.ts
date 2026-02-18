@@ -37,6 +37,7 @@ export const SUBCATEGORY_NAME_TO_BUDGET_CATEGORY: Record<string, BudgetCategory>
   'Healthcare & Medical': 'needs',
   'Fees': 'needs',
   // Discretionary
+  'Transfers': 'wants',
   'Dining & Restaurants': 'wants',
   'Entertainment & Recreation': 'wants',
   'Shopping & Retail': 'wants',
