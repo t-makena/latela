@@ -1,85 +1,42 @@
 
-## Fix: Miscellaneous Overflow from Missing "Transfers" Category & Stale Categorization
+## Change "Budget Allocation" → "Overall Allocation" on the All Accounts Page
 
-### Root Cause Summary
+### Where the text lives
 
-There are two distinct problems causing the Miscellaneous flood:
+There are two separate places this label appears:
 
-**Problem 1 - Missing "Transfers" category in the database**
+1. **`src/components/financial-insight/FinancialInsightContent.tsx` — line 487**
+   This is a hardcoded `<CardTitle>` string that renders the section heading on the desktop All Accounts page. This is the one shown when you are on `/accounts`.
 
-The edge function's `preCategorizeSmart` correctly identifies "VALUE LOADED TO VIRTUAL CARD" and "IB TRANSFER TO" as `'Transfers'`. However, the `resolveCategoryId` function then searches the categories table for a category named "Transfers" — and it doesn't exist. The fallback fires and lands them in Miscellaneous (65 transactions).
+2. **`src/components/financial-insight/BudgetBreakdown.tsx` — line 416**
+   This uses the i18n key `t('finance.budgetAllocation')` for the pie chart sub-heading inside the breakdown component itself.
 
-**Problem 2 - Already-categorized transactions are never fixed**
+3. **`src/locales/en.json` — line 69**
+   The translation key `"budgetAllocation": "Budget Allocation"` (previously proposed to be changed to "Account Allocation" but not yet applied).
 
-The edge function has `IS NULL` filter on `category_id`, meaning once a transaction is in Miscellaneous, it is permanently stuck there. There is no way for corrected logic to re-process them.
+### Change Plan
 
-### Fix Plan
+#### File 1: `src/components/financial-insight/FinancialInsightContent.tsx` — line 487
 
-#### Part A: Add "Transfers" as a proper subcategory in the database
+Change the hardcoded `<CardTitle>`:
 
-A migration will insert a "Transfers" subcategory under the "Discretionary" parent (same parent as Miscellaneous). This will make `resolveCategoryId('Transfers')` find a real category instead of falling back.
-
-```sql
-INSERT INTO categories (name, parent_id, color, description)
-VALUES (
-  'Transfers',
-  (SELECT id FROM categories WHERE name = 'Discretionary' AND parent_id IS NULL LIMIT 1),
-  '#64748B',
-  'Bank transfers, virtual card loads, inter-account movements'
-)
-ON CONFLICT DO NOTHING;
+```
+Before:  <CardTitle className="heading-main">Budget Allocation</CardTitle>
+After:   <CardTitle className="heading-main">Overall Allocation</CardTitle>
 ```
 
-#### Part B: Bulk re-categorize the stuck Miscellaneous transactions
+#### File 2: `src/locales/en.json` — line 69
 
-A second migration will retroactively fix the 65 Miscellaneous transactions that match known "Transfers" patterns (VALUE LOADED TO VIRTUAL CARD, IB TRANSFER TO, IB PAYMENT TO, INSTANTMON, CASH WITHDRAWAL).
+Update the translation key used by the pie chart sub-heading inside `BudgetBreakdown`:
 
-```sql
-UPDATE transactions
-SET 
-  category_id = (SELECT id FROM categories WHERE name = 'Transfers' LIMIT 1),
-  auto_categorized = true,
-  categorization_confidence = 1.0,
-  is_categorized = true
-WHERE 
-  category_id = (SELECT id FROM categories WHERE name = 'Miscellaneous' LIMIT 1)
-  AND (
-    description ILIKE '%VALUE LOADED TO VIRTUAL CARD%'
-    OR description ILIKE '%IB TRANSFER TO%'
-    OR description ILIKE '%IB PAYMENT TO%'
-    OR description ILIKE '%INSTANT MONEY%'
-    OR description ILIKE '%INSTANTMON%'
-    OR description ILIKE '%CASH WITHDRAWAL%'
-  );
+```
+Before:  "budgetAllocation": "Budget Allocation",
+After:   "budgetAllocation": "Overall Allocation",
 ```
 
-#### Part C: Add "Transfers" to the category mapping in code
+This ensures both the card title and the chart sub-heading on the All Accounts page consistently read "Overall Allocation".
 
-Update `src/lib/categoryMapping.ts` to add `'Transfers'` to `SUBCATEGORY_NAME_TO_BUDGET_CATEGORY` so the charts map it correctly:
-
-```typescript
-'Transfers': 'wants',  // or exclude from budget charts entirely
-```
-
-Also update `AI_TO_DB_CATEGORY_MAP` in the edge function to ensure `'transfer'` and `'transfers'` map to the new `'Transfers'` category name (it currently maps to `['Transfers', 'Transfer', 'Bank Transfer']` which will now find a match).
-
-#### Part D: Add Transfers to the detailed chart color map in BudgetBreakdown.tsx
-
-```typescript
-"Transfers": "#64748B",  // Slate grey
-```
-
-### What this does NOT touch
-- No changes to the AI model or prompt
-- No changes to `preCategorizeSmart` logic (it already handles this correctly)
-- No changes to RLS policies
-- Income transactions are unaffected
-
-### Expected Result
-
-| Before | After |
-|--------|-------|
-| 65 transactions in Miscellaneous | Transfers/virtual card loads in "Transfers" |
-| `resolveCategoryId('Transfers')` → Miscellaneous | `resolveCategoryId('Transfers')` → Transfers category |
-| Charts show large Miscellaneous slice | Charts show accurate Transfers slice |
-| Future transfers still land in Miscellaneous | Future transfers correctly categorized |
+### What this does NOT change
+- The `PrintableReport.tsx` hardcoded "Budget Allocation" label (in reports) — left untouched as it's a separate context
+- No database changes
+- No logic changes, styling changes, or RLS changes
