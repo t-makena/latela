@@ -484,7 +484,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       {/* Budget Allocation Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="heading-main">Budget Allocation</CardTitle>
+          <CardTitle className="heading-main">Overall Allocation</CardTitle>
           <Button
             variant={isDetailed ? "default" : "outline"}
             size="sm"
