@@ -4,8 +4,6 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FinancialInsightContent } from "@/components/financial-insight/FinancialInsightContent";
-import { AccountCard } from "@/components/accounts/AccountCard";
-import { MobileAccountCard } from "@/components/accounts/MobileAccountCard";
 import { MobileBudgetInsightCard } from "@/components/accounts/MobileBudgetInsightCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -50,7 +48,7 @@ const AccountDetail = () => {
   if (loading) {
     if (isMobile) {
       return (
-        <div className="min-h-screen bg-white py-6 space-y-5">
+        <div className="min-h-screen py-6 space-y-5">
           <Skeleton 
             className="h-24 rounded-2xl border border-black" 
             style={{ boxShadow: '4px 4px 0px #000000' }}
@@ -100,8 +98,7 @@ const AccountDetail = () => {
   // Mobile neo-brutalist layout
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-white py-6 space-y-5 animate-fade-in">
-        <MobileAccountCard account={account} />
+      <div className="min-h-screen py-6 space-y-5 animate-fade-in">
         <div className="flex justify-end">
           <Button 
             variant="outline" 
@@ -122,10 +119,9 @@ const AccountDetail = () => {
 
   // Desktop layout
   return (
-    <div className="min-h-screen bg-background px-6 pb-20">
+    <div className="min-h-screen pt-6 px-6 pb-20">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <AccountCard account={account} />
+        <div className="flex justify-end">
           <Button 
             variant="outline" 
             size="sm" 
