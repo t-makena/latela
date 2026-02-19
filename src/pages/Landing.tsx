@@ -97,7 +97,10 @@ export default function Landing() {
       }}
     >
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center w-full max-w-md px-4 py-10 gap-5">
+        <div
+          className="relative z-10 flex flex-col items-center w-full max-w-md px-4 pb-10 gap-5"
+          style={{ paddingTop: "calc(env(safe-area-inset-top) + 2.5rem)" }}
+        >
         {/* Logo */}
         <LatelaIconLanding />
 
