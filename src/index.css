@@ -1,4 +1,19 @@
 
+/* Garet Font Family */
+@font-face {
+  font-family: 'Garet';
+  src: url('/fonts/Garet-Book.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Garet';
+  src: url('/fonts/Garet-Heavy.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
 /* Cooper BT Font Family */
 @font-face {
   font-family: 'Cooper BT';
