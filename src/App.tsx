@@ -25,6 +25,7 @@ import Chat from "./pages/Chat";
 import AddToList from "./pages/AddToList";
 import Reports from "./pages/Reports";
 import GoogleSheetsCallback from "./pages/GoogleSheetsCallback";
+import Landing from "./pages/Landing";
 
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
               <FloatingChat />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/landing" element={<Landing />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Layout>
