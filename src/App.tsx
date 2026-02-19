@@ -26,6 +26,16 @@ import AddToList from "./pages/AddToList";
 import Reports from "./pages/Reports";
 import GoogleSheetsCallback from "./pages/GoogleSheetsCallback";
 import Landing from "./pages/Landing";
+import { useState } from "react";
+
+const MOBILE_BREAKPOINT = 768;
+
+function MobileGate({ children }: { children: React.ReactNode }) {
+  // Synchronous initial check avoids any flash on first render
+  const [isMobile] = useState(() => window.innerWidth < MOBILE_BREAKPOINT);
+  if (isMobile) return <Landing />;
+  return <>{children}</>;
+}
 
 
 const queryClient = new QueryClient();
@@ -39,6 +49,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <MobileGate>
               <FloatingChatProvider>
               <FloatingChat />
               <Routes>
@@ -137,6 +148,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </FloatingChatProvider>
+              </MobileGate>
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>
