@@ -1,34 +1,100 @@
 
-## Landing Page — Wider Cards, Larger Text & Darker Button Shadow
+## Admin Waitlist Dashboard — `info@latela.co.za`
 
-### What's Changing
+### Overview
 
-Three small visual tweaks to `src/pages/Landing.tsx` only:
+A desktop-accessible `/admin/waitlist` route that sits **outside** the `MobileGate`, so it always renders regardless of viewport width. It is protected by `ProtectedRoute` (must be logged in) and performs a second check inside the page itself — if the logged-in email is not `info@latela.co.za`, an "Access Denied" screen is shown. The actual data access is also locked at the database layer via an RLS policy.
 
-#### 1. Wider cards / more horizontal width
+---
 
-The content wrapper is currently `max-w-sm` (384px) with `px-6` padding. Changing to `max-w-md` (448px) with `px-4` padding gives the cards more room to breathe and makes them feel bigger on screen.
+### Part 1 — Database: New RLS `SELECT` policy on `waitlist`
 
-#### 2. Larger text inside the cards
+Currently the `waitlist` table only allows `SELECT` for `service_role`. We need a new policy so that an authenticated session where `auth.email() = 'info@latela.co.za'` can also read the full table.
 
-- **About us heading**: `text-xl` → `text-2xl`
-- **Card body text**: both cards currently use `text-sm` → changing to `text-base`
+```sql
+CREATE POLICY "Admin can read waitlist"
+ON public.waitlist
+FOR SELECT
+USING (auth.email() = 'info@latela.co.za');
+```
 
-#### 3. Much darker shadow on "Join Waitlist" button
+This is evaluated entirely server-side from the JWT — cannot be spoofed.
 
-Currently: `boxShadow: "4px 4px 0 #374151"` (dark grey, fairly subtle)  
-Changed to: `boxShadow: "6px 6px 0 #000000"` — pure black and slightly larger offset for a stronger, crisper neo-brutalist effect.
+---
+
+### Part 2 — New page: `src/pages/AdminWaitlist.tsx`
+
+A clean desktop admin UI with:
+
+- **Header bar**: Latela wordmark + "Waitlist Admin" badge + Sign Out button
+- **Stats row** (3 cards):
+  - Total sign-ups
+  - Sign-ups this week
+  - Sign-ups today
+- **Search input** — filters the table client-side by name or email
+- **Table** — columns: `#` | Name | Email | Joined date (formatted `DD MMM YYYY`) — newest first, max 1000 rows
+- **Export CSV button** — downloads the full filtered list using the existing `downloadCSV` utility from `src/lib/exportUtils.ts`
+- **Access Denied screen** — shown if the logged-in email ≠ `info@latela.co.za`, with a Sign Out button
+- **Loading / empty / error states** handled cleanly
+
+The page uses existing shadcn/ui components (`Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Input`, `Button`, `Badge`) and the `useAuth` hook from `AuthContext`.
+
+The admin email `info@latela.co.za` is stored in a single constant at the top of the file — easy to change in future.
+
+---
+
+### Part 3 — Routing: `src/App.tsx`
+
+The `/admin/waitlist` route is placed **before** the `<MobileGate>` wrapper (actually, it needs to be outside `MobileGate` so it renders on desktop too). The cleanest way:
+
+```tsx
+// In App.tsx — the admin route is rendered OUTSIDE MobileGate
+// so the MobileGate (which shows Landing on mobile) doesn't intercept it.
+```
+
+The solution is to restructure `App.tsx` so that `/admin/waitlist` is rendered in a separate `<Routes>` block outside `MobileGate`, or more simply: move the admin route to the very top of the `<Routes>` block but still outside `MobileGate`. 
+
+The cleanest approach: render the admin route in a parallel branch alongside `MobileGate`:
+
+```tsx
+<BrowserRouter>
+  <Routes>
+    {/* Admin route — always available on desktop, no MobileGate */}
+    <Route path="/admin/waitlist" element={
+      <ProtectedRoute>
+        <AdminWaitlist />
+      </ProtectedRoute>
+    } />
+    {/* All other routes go through MobileGate */}
+    <Route path="/*" element={
+      <MobileGate>
+        <FloatingChatProvider>
+          <FloatingChat />
+          <Routes>
+            ...existing routes...
+          </Routes>
+        </FloatingChatProvider>
+      </MobileGate>
+    } />
+  </Routes>
+</BrowserRouter>
+```
+
+This is the correct React Router v6 pattern — no code duplication, clean separation.
+
+---
 
 ### Files to Change
 
-- **`src/pages/Landing.tsx`** only — three small edits:
-  1. Content wrapper: `max-w-sm px-6` → `max-w-md px-4`
-  2. About us card: heading `text-xl` → `text-2xl`, body `text-sm` → `text-base`
-  3. Waitlist card: body `text-sm` → `text-base`
-  4. CTA button shadow: `4px 4px 0 #374151` → `6px 6px 0 #000000`
+| File | Change |
+|---|---|
+| Database migration | New `SELECT` RLS policy: `auth.email() = 'info@latela.co.za'` |
+| `src/pages/AdminWaitlist.tsx` | New page (create) |
+| `src/App.tsx` | Restructure routes to lift admin route outside MobileGate |
 
 ### What is NOT changing
-- All fonts, colours, card backgrounds — unchanged
-- The background image — unchanged
-- The waitlist modal / form — unchanged
-- All other pages — unchanged
+
+- Landing page — unchanged
+- All other app routes — unchanged
+- The public `INSERT` policy on `waitlist` — unchanged (anyone can still sign up)
+- `MobileGate` logic itself — unchanged
