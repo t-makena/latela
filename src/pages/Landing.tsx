@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import bg from "@/assets/landing-bg.png";
 
 const waitlistSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name too long"),
@@ -88,70 +88,14 @@ export default function Landing() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-white flex flex-col items-center justify-start">
-      {/* Colourful blob background */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: "-80px",
-          left: "-80px",
-          width: "260px",
-          height: "260px",
-          background: "#4ade80",
-          borderRadius: "62% 38% 70% 30% / 45% 55% 45% 55%",
-          opacity: 0.9,
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: "-60px",
-          right: "-70px",
-          width: "220px",
-          height: "220px",
-          background: "#f87171",
-          borderRadius: "40% 60% 35% 65% / 55% 45% 55% 45%",
-          opacity: 0.9,
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: "38%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "280px",
-          height: "280px",
-          background: "#fde047",
-          borderRadius: "55% 45% 60% 40% / 40% 60% 40% 60%",
-          opacity: 0.7,
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: "22%",
-          left: "-60px",
-          width: "240px",
-          height: "240px",
-          background: "#60a5fa",
-          borderRadius: "50% 50% 65% 35% / 60% 40% 60% 40%",
-          opacity: 0.85,
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: "-70px",
-          right: "-60px",
-          width: "260px",
-          height: "260px",
-          background: "#fb923c",
-          borderRadius: "65% 35% 50% 50% / 45% 55% 45% 55%",
-          opacity: 0.9,
-        }}
-      />
-
+    <div
+      className="relative min-h-screen overflow-hidden flex flex-col items-center justify-start"
+      style={{
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+      }}
+    >
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-6 py-10 gap-5">
         {/* Logo */}
@@ -159,13 +103,9 @@ export default function Landing() {
 
         {/* Heading */}
         <div className="text-center">
-          <h1
-            className="font-brand font-black text-black leading-none"
-            style={{ fontSize: "52px" }}
-          >
-            Welcome to
-            <br />
-            Latela
+          <h1 className="leading-tight" style={{ fontSize: "52px" }}>
+            <span className="font-garet font-normal text-black block">Welcome to</span>
+            <span className="font-brand font-light text-black block">Latela</span>
           </h1>
         </div>
 
@@ -177,8 +117,8 @@ export default function Landing() {
             boxShadow: "4px 4px 0 #000",
           }}
         >
-          <h2 className="font-brand font-black text-black text-xl mb-2">About us</h2>
-          <p className="text-black text-sm leading-relaxed">
+          <h2 className="font-garet font-bold text-black text-xl mb-2">About us</h2>
+          <p className="font-garet font-normal text-black text-sm leading-relaxed">
             We are an AI-powered budgeting app on a mission to transform the
             relationship millions of South Africans have with their money.
           </p>
@@ -192,7 +132,7 @@ export default function Landing() {
             boxShadow: "4px 4px 0 #000",
           }}
         >
-          <p className="text-black text-sm leading-relaxed font-medium">
+          <p className="font-garet font-normal text-black text-sm leading-relaxed">
             If you would like to be notified when we launch our mobile app,
             please join our waitlist. The first 1 000 people on our waitlist
             will get <strong>three months of our premium tier, for free.</strong>
@@ -202,19 +142,11 @@ export default function Landing() {
         {/* CTA Button */}
         <button
           onClick={() => setShowForm(true)}
-          className="w-full rounded-2xl bg-black text-white font-bold text-lg py-4 hover:opacity-90 active:scale-[0.98] transition-transform"
+          className="w-full rounded-2xl bg-black text-white font-brand font-bold text-lg py-4 hover:opacity-90 active:scale-[0.98] transition-transform"
           style={{ boxShadow: "4px 4px 0 #374151" }}
         >
           Join Waitlist
         </button>
-
-        {/* Login link */}
-        <Link
-          to="/auth"
-          className="text-sm text-gray-600 underline underline-offset-2 hover:text-black transition-colors"
-        >
-          Already have an account? Log in
-        </Link>
       </div>
 
       {/* Waitlist modal */}
@@ -226,10 +158,10 @@ export default function Landing() {
             {success ? (
               <div className="flex flex-col items-center gap-4 py-6 text-center">
                 <span className="text-5xl">🎉</span>
-                <h2 className="font-brand font-black text-2xl text-black">
+                <h2 className="font-brand font-bold text-2xl text-black">
                   You're on the list!
                 </h2>
-                <p className="text-gray-600 text-sm">
+                <p className="font-garet font-normal text-gray-600 text-sm">
                   We'll let you know when Latela launches. Get ready!
                 </p>
                 <button
@@ -239,7 +171,7 @@ export default function Landing() {
                     setName("");
                     setEmail("");
                   }}
-                  className="mt-2 w-full rounded-xl bg-black text-white font-bold py-3"
+                  className="mt-2 w-full rounded-xl bg-black text-white font-brand font-bold py-3"
                 >
                   Close
                 </button>
@@ -247,7 +179,7 @@ export default function Landing() {
             ) : (
               <>
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-brand font-black text-xl text-black">Join the waitlist</h2>
+                  <h2 className="font-brand font-bold text-xl text-black">Join the waitlist</h2>
                   <button
                     onClick={() => setShowForm(false)}
                     className="text-gray-500 hover:text-black text-2xl leading-none"
@@ -259,7 +191,7 @@ export default function Landing() {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-1">
+                    <label className="font-garet font-semibold block text-sm text-black mb-1">
                       Name
                     </label>
                     <input
@@ -268,7 +200,7 @@ export default function Landing() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Your name"
                       maxLength={100}
-                      className="w-full rounded-xl border-2 border-black px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-black/20"
+                      className="font-garet font-normal w-full rounded-xl border-2 border-black px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-black/20"
                     />
                     {errors.name && (
                       <p className="text-red-600 text-xs mt-1">{errors.name}</p>
@@ -276,7 +208,7 @@ export default function Landing() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-1">
+                    <label className="font-garet font-semibold block text-sm text-black mb-1">
                       Email
                     </label>
                     <input
@@ -285,7 +217,7 @@ export default function Landing() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
                       maxLength={255}
-                      className="w-full rounded-xl border-2 border-black px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-black/20"
+                      className="font-garet font-normal w-full rounded-xl border-2 border-black px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-black/20"
                     />
                     {errors.email && (
                       <p className="text-red-600 text-xs mt-1">{errors.email}</p>
@@ -299,7 +231,7 @@ export default function Landing() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full rounded-xl bg-black text-white font-bold py-3 disabled:opacity-60 mt-1"
+                    className="w-full rounded-xl bg-black text-white font-brand font-bold py-3 disabled:opacity-60 mt-1"
                   >
                     {loading ? "Joining..." : "Join Waitlist"}
                   </button>

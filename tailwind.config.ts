@@ -20,9 +20,10 @@ export default {
 		},
 	extend: {
 		fontFamily: {
-				'brand': ['"Cooper BT"', '"Cooper Black"', 'serif'],
-				'sans': ['Inter', 'system-ui', 'sans-serif'],
-			},
+			'brand': ['"Cooper BT"', '"Cooper Black"', 'serif'],
+			'garet': ['Garet', 'sans-serif'],
+			'sans': ['Inter', 'system-ui', 'sans-serif'],
+		},
 			fontSize: {
 				'heading-main': 'var(--text-heading-main)',
 				'heading-card': 'var(--text-heading-card)',
