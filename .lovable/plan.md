@@ -1,130 +1,75 @@
 
-## Mobile Landing Page with Waitlist
+## Block All Mobile Routes — Show Landing Page Instead
 
-### Overview
+### The Problem
 
-Create a new public-facing landing page (`/landing`) that non-authenticated mobile users see, based on the design reference. The page features a colourful neo-brutalist background, the Latela logo icon, a large "Welcome to Latela" heading, an "About us" info card, a waitlist invite card, and a "Join Waitlist" CTA button that collects email addresses.
+Right now `/landing` is just one route among many. Mobile users who navigate directly to `/auth` (or any other route) still see the real app. The landing page is a destination, not a gate.
 
-### Design Breakdown (from reference image)
+The goal: **any mobile visitor hitting any URL in the app should be intercepted and shown `/landing` instead** — including `/auth`. Desktop users are completely unaffected.
 
-- **Background**: Bold multi-colour blob/wave shapes — green (top-left), red (top-right), yellow (centre), blue (lower-left), orange (bottom-right)
-- **Logo**: Latela icon (the existing `LatelaIcon` SVG) centred at the top
-- **Headline**: "Welcome to Latela" in the brand font (Cooper BT), large, black
-- **Card 1** (yellow, black border + shadow): Bold "About us" heading + description text
-- **Card 2** (blue, black border + shadow): Waitlist incentive text (first 1000 users get 3 months premium free)
-- **CTA Button**: Black background, white bold text "Join Waitlist" → opens email input modal
+### Strategy
 
-### Database
-
-A new `waitlist` table will be needed to persist signups. This is a simple public-insert table.
-
-**Migration: `supabase/migrations/YYYYMMDD_create_waitlist.sql`**
-```sql
-CREATE TABLE IF NOT EXISTS waitlist (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT NOT NULL UNIQUE,
-  name TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
-
--- Anyone can insert (join waitlist)
-CREATE POLICY "Public can join waitlist" ON waitlist 
-  FOR INSERT WITH CHECK (true);
-
--- Only service role can read (admin use)
-CREATE POLICY "Service read waitlist" ON waitlist 
-  FOR SELECT USING (auth.role() = 'service_role');
-```
-
-### Files to Create / Edit
-
-#### 1. New file: `src/pages/Landing.tsx`
-
-A full-screen mobile-first landing page component with:
-
-- **Colourful blob background** using inline SVG blobs or absolute-positioned coloured `div`s clipped with `border-radius` to produce the organic shape aesthetic from the design
-- **LatelaIcon** (existing component) centered at top
-- **"Welcome to Latela"** heading using `font-brand` (Cooper BT)
-- **Yellow card** (About us)
-- **Blue card** (Waitlist incentive)
-- **Black "Join Waitlist" button** that opens an inline form (name + email input) or a small dialog
-- On submit: inserts into the `waitlist` Supabase table, shows a success confirmation
-
-#### 2. Edit: `src/App.tsx`
-
-Add a `/landing` route (no auth required):
-```tsx
-import Landing from "./pages/Landing";
-// ...
-<Route path="/landing" element={<Landing />} />
-```
-
-#### 3. Edit: `src/components/ProtectedRoute.tsx`
-
-Change the redirect for unauthenticated users from `/auth` → `/landing` so mobile visitors land here first:
-```tsx
-// Before
-return <Navigate to="/auth" state={{ from: location }} replace />;
-
-// After
-return <Navigate to="/landing" state={{ from: location }} replace />;
-```
-
-The Landing page will have a secondary "Already have an account? Log in" link that navigates to `/auth`.
-
-### Landing Page Structure (JSX outline)
+The cleanest way is a single **`MobileGate` wrapper** component that sits above all routing. It checks `useIsMobile()` and, if the user is on a small screen, immediately renders `<Landing />` regardless of what URL they tried to access. Desktop users fall through to the normal `<Routes>` as today.
 
 ```text
-<div> ← full viewport, overflow hidden, relative
-  
-  [Blob background layer] ← absolute positioned coloured shapes
-    - Green blob top-left
-    - Red blob top-right
-    - Yellow centre-blob
-    - Blue lower blob
-    - Orange bottom blob
-
-  [Content layer] ← relative z-10, flex-col, padded
-    
-    [LatelaIcon]  ← centered, ~80px, white fill for contrast
-    
-    [Heading]
-      "Welcome to"
-      "Latela"
-      ← font-brand, ~56px, font-black
-    
-    [About Us Card]  ← bg-yellow-300, black border, box-shadow 4px 4px 0 black, rounded-2xl
-      <h3>About us</h3>
-      <p>We are an AI-powered budgeting app on a mission to transform the relationship millions of South Africans have with their money.</p>
-    
-    [Waitlist Card]  ← bg-blue-400, black border, box-shadow 4px 4px 0 black, rounded-2xl, white text
-      <p>If you would like to be notified when we launch our mobile app, please join our waitlist. The first 1000 people on our waitlist will get three months of our premium tier, for free.</p>
-    
-    [Join Waitlist Button]  ← full-width, bg-black, white bold text, rounded-2xl, large
-      "Join Waitlist"
-    
-    [Login link]  ← small, centered, muted
-      "Already have an account? Log in"
-
-  [Waitlist Dialog / inline form]
-    - Name input
-    - Email input
-    - Submit button
-    - Success state: "You're on the list! 🎉"
+App renders
+  └── MobileGate
+        ├── [mobile]  → always render <Landing /> (no routing at all)
+        └── [desktop] → render normal <Routes> (all existing routes unchanged)
 ```
 
-### Technical Notes
+This is better than adding redirect logic to every individual route, and better than patching `ProtectedRoute`, because it intercepts even public routes like `/auth` that `ProtectedRoute` never touches.
 
-- Blob shapes will be CSS `div`s with `border-radius` percentages to produce organic shapes (no external library needed)
-- The `LatelaIcon` SVG uses `fill-foreground`/`fill-background` classes — on the landing page these will be overridden with hardcoded white/black fills since the background is colourful
-- A separate `LatelaIconInverted` variant or inline SVG with hardcoded colours will be used for the landing page logo to ensure visibility against the colourful background
-- No authentication is needed to view the landing page
-- The waitlist insert uses the anonymous Supabase client with the RLS INSERT policy allowing public access
+### Files to Change
+
+#### 1. `src/App.tsx`
+
+- Import `useIsMobile` and `Landing`.
+- Wrap all `<Routes>` in a new inline `MobileGate` component defined inside `App.tsx`.
+- `MobileGate` calls `useIsMobile()`. If mobile → render `<Landing />`. Otherwise → render `{children}` (the `<Routes>`).
+- Also: remove the now-redundant `/landing` route from `<Routes>` (desktop users don't need it, mobile users are gated before routing).
+
+Key change shape:
+
+```tsx
+function MobileGate({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile();
+  if (isMobile) return <Landing />;
+  return <>{children}</>;
+}
+
+// Inside App JSX:
+<BrowserRouter>
+  <MobileGate>
+    <FloatingChatProvider>
+      <FloatingChat />
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        {/* all other routes — NO /landing route needed */}
+        ...
+      </Routes>
+    </FloatingChatProvider>
+  </MobileGate>
+</BrowserRouter>
+```
+
+Note: `useIsMobile` returns `false` by default on the first render (before the `useEffect` fires). This means desktop users will see a very brief blank flash. To avoid this, the `MobileGate` can render `null` (a spinner would be overkill for a one-frame delay) while `isMobile` is still `undefined` — which we can detect since `useIsMobile` returns `!!isMobile` (always a boolean). We'll tweak `MobileGate` to handle this by checking `window.innerWidth` synchronously on first render via a one-liner `useState` initialiser, so there's zero flash.
+
+#### 2. `src/components/ProtectedRoute.tsx`
+
+- Change the fallback redirect back from `/landing` to `/auth`, since mobile users are now blocked before they ever reach `ProtectedRoute`. This keeps desktop unauthenticated users going to the login page, not the landing page.
+
+```tsx
+// Before
+return <Navigate to="/landing" state={{ from: location }} replace />;
+
+// After
+return <Navigate to="/auth" state={{ from: location }} replace />;
+```
 
 ### What this does NOT change
-- The existing `/auth` flow — unchanged, still accessible via link on the landing page
-- Authenticated user routing — logged-in users still go to `/` (dashboard)
-- Desktop layout — no changes (the landing page is intentionally mobile-focused)
-- All existing app pages and components
+- All desktop routing — completely untouched
+- The Landing page component itself — no changes
+- All other pages and components
+- Database / RLS — no changes
+- The `/landing` route can be removed from `<Routes>` since the gate handles it at a higher level; or it can be kept as a no-op for desktop if a direct desktop link to `/landing` should still work (we'll keep it as a safe fallback)
