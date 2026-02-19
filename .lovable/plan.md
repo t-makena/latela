@@ -1,100 +1,44 @@
 
-## Admin Waitlist Dashboard — `info@latela.co.za`
+## Fix: Background Extends Behind Dynamic Island / Status Bar
 
-### Overview
+Two precise edits only — no logic changes, no new files.
 
-A desktop-accessible `/admin/waitlist` route that sits **outside** the `MobileGate`, so it always renders regardless of viewport width. It is protected by `ProtectedRoute` (must be logged in) and performs a second check inside the page itself — if the logged-in email is not `info@latela.co.za`, an "Access Denied" screen is shown. The actual data access is also locked at the database layer via an RLS policy.
+### Edit 1 — `index.html` (line 5)
 
----
+Add `viewport-fit=cover` to the viewport meta tag:
 
-### Part 1 — Database: New RLS `SELECT` policy on `waitlist`
+```html
+<!-- Before -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-Currently the `waitlist` table only allows `SELECT` for `service_role`. We need a new policy so that an authenticated session where `auth.email() = 'info@latela.co.za'` can also read the full table.
-
-```sql
-CREATE POLICY "Admin can read waitlist"
-ON public.waitlist
-FOR SELECT
-USING (auth.email() = 'info@latela.co.za');
+<!-- After -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 ```
 
-This is evaluated entirely server-side from the JWT — cannot be spoofed.
+This tells mobile Safari to extend the page's rendering surface all the way behind the Dynamic Island and status bar. Without it, the browser always reserves that top strip as white.
 
----
+### Edit 2 — `src/pages/Landing.tsx` (line 100)
 
-### Part 2 — New page: `src/pages/AdminWaitlist.tsx`
-
-A clean desktop admin UI with:
-
-- **Header bar**: Latela wordmark + "Waitlist Admin" badge + Sign Out button
-- **Stats row** (3 cards):
-  - Total sign-ups
-  - Sign-ups this week
-  - Sign-ups today
-- **Search input** — filters the table client-side by name or email
-- **Table** — columns: `#` | Name | Email | Joined date (formatted `DD MMM YYYY`) — newest first, max 1000 rows
-- **Export CSV button** — downloads the full filtered list using the existing `downloadCSV` utility from `src/lib/exportUtils.ts`
-- **Access Denied screen** — shown if the logged-in email ≠ `info@latela.co.za`, with a Sign Out button
-- **Loading / empty / error states** handled cleanly
-
-The page uses existing shadcn/ui components (`Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Input`, `Button`, `Badge`) and the `useAuth` hook from `AuthContext`.
-
-The admin email `info@latela.co.za` is stored in a single constant at the top of the file — easy to change in future.
-
----
-
-### Part 3 — Routing: `src/App.tsx`
-
-The `/admin/waitlist` route is placed **before** the `<MobileGate>` wrapper (actually, it needs to be outside `MobileGate` so it renders on desktop too). The cleanest way:
+Replace the `py-10` class on the content wrapper with an inline `paddingTop` style that uses the CSS environment variable `env(safe-area-inset-top)`:
 
 ```tsx
-// In App.tsx — the admin route is rendered OUTSIDE MobileGate
-// so the MobileGate (which shows Landing on mobile) doesn't intercept it.
+<!-- Before -->
+<div className="relative z-10 flex flex-col items-center w-full max-w-md px-4 py-10 gap-5">
+
+<!-- After -->
+<div
+  className="relative z-10 flex flex-col items-center w-full max-w-md px-4 pb-10 gap-5"
+  style={{ paddingTop: "calc(env(safe-area-inset-top) + 2.5rem)" }}
+>
 ```
 
-The solution is to restructure `App.tsx` so that `/admin/waitlist` is rendered in a separate `<Routes>` block outside `MobileGate`, or more simply: move the admin route to the very top of the `<Routes>` block but still outside `MobileGate`. 
-
-The cleanest approach: render the admin route in a parallel branch alongside `MobileGate`:
-
-```tsx
-<BrowserRouter>
-  <Routes>
-    {/* Admin route — always available on desktop, no MobileGate */}
-    <Route path="/admin/waitlist" element={
-      <ProtectedRoute>
-        <AdminWaitlist />
-      </ProtectedRoute>
-    } />
-    {/* All other routes go through MobileGate */}
-    <Route path="/*" element={
-      <MobileGate>
-        <FloatingChatProvider>
-          <FloatingChat />
-          <Routes>
-            ...existing routes...
-          </Routes>
-        </FloatingChatProvider>
-      </MobileGate>
-    } />
-  </Routes>
-</BrowserRouter>
-```
-
-This is the correct React Router v6 pattern — no code duplication, clean separation.
-
----
-
-### Files to Change
-
-| File | Change |
-|---|---|
-| Database migration | New `SELECT` RLS policy: `auth.email() = 'info@latela.co.za'` |
-| `src/pages/AdminWaitlist.tsx` | New page (create) |
-| `src/App.tsx` | Restructure routes to lift admin route outside MobileGate |
+- `env(safe-area-inset-top)` equals the exact height of the Dynamic Island / notch on the current device
+- On iPhones with a Dynamic Island it is ~59px; on older notch iPhones ~44px; on devices with no notch it equals `0px` — so this is fully safe everywhere
+- `+ 2.5rem` preserves the existing `py-10` (40px) top spacing below the safe area, so the logo and heading sit in the same visual position they do now, just pushed down past the island
 
 ### What is NOT changing
 
-- Landing page — unchanged
-- All other app routes — unchanged
-- The public `INSERT` policy on `waitlist` — unchanged (anyone can still sign up)
-- `MobileGate` logic itself — unchanged
+- Background image, colours, cards, typography — all unchanged
+- The waitlist modal — unchanged
+- All desktop routes and other pages — unchanged
+- The bottom of the page / modal safe area is already handled with `pb-10`
