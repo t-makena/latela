@@ -26,6 +26,7 @@ import AddToList from "./pages/AddToList";
 import Reports from "./pages/Reports";
 import GoogleSheetsCallback from "./pages/GoogleSheetsCallback";
 import Landing from "./pages/Landing";
+import AdminWaitlist from "./pages/AdminWaitlist";
 import { useState } from "react";
 
 const MOBILE_BREAKPOINT = 768;
@@ -49,106 +50,117 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <MobileGate>
-              <FloatingChatProvider>
-              <FloatingChat />
               <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/landing" element={<Landing />} />
-                <Route path="/" element={
+                {/* Admin route — always available, bypasses MobileGate */}
+                <Route path="/admin/waitlist" element={
                   <ProtectedRoute>
-                    <Layout>
-                      <Index />
-                    </Layout>
+                    <AdminWaitlist />
                   </ProtectedRoute>
                 } />
-                <Route path="/accounts" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Accounts />
-                    </Layout>
-                  </ProtectedRoute>
+                {/* All other routes go through MobileGate */}
+                <Route path="/*" element={
+                  <MobileGate>
+                    <FloatingChatProvider>
+                    <FloatingChat />
+                    <Routes>
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/landing" element={<Landing />} />
+                      <Route path="/" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Index />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/accounts" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Accounts />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/accounts/:accountId" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <AccountDetail />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/budget" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Budget />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/compare" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Compare />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/scan" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Scan />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/grocery-budget" element={<Navigate to="/budget" replace />} />
+                      <Route path="/add-to-list" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <AddToList />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/chat" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Chat />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/goals" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Goals />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/reports" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Reports />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/calendar" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Calendar />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/settings" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Settings />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/auth/google-sheets/callback" element={
+                        <ProtectedRoute>
+                          <GoogleSheetsCallback />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    </FloatingChatProvider>
+                  </MobileGate>
                 } />
-                <Route path="/accounts/:accountId" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <AccountDetail />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/budget" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Budget />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/compare" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Compare />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/scan" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Scan />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/grocery-budget" element={<Navigate to="/budget" replace />} />
-                <Route path="/add-to-list" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <AddToList />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/chat" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Chat />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/goals" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Goals />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/reports" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Reports />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/calendar" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Calendar />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/settings" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Settings />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/auth/google-sheets/callback" element={
-                  <ProtectedRoute>
-                    <GoogleSheetsCallback />
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<NotFound />} />
               </Routes>
-              </FloatingChatProvider>
-              </MobileGate>
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>
