@@ -97,7 +97,7 @@ export default function Landing() {
       }}
     >
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-6 py-10 gap-5">
+      <div className="relative z-10 flex flex-col items-center w-full max-w-md px-4 py-10 gap-5">
         {/* Logo */}
         <LatelaIconLanding />
 
@@ -117,8 +117,8 @@ export default function Landing() {
             boxShadow: "4px 4px 0 #000",
           }}
         >
-          <h2 className="font-garet font-bold text-black text-xl mb-2">About us</h2>
-          <p className="font-garet font-normal text-black text-sm leading-relaxed">
+          <h2 className="font-garet font-bold text-black text-2xl mb-2">About us</h2>
+          <p className="font-garet font-normal text-black text-base leading-relaxed">
             We are an AI-powered budgeting app on a mission to transform the
             relationship millions of South Africans have with their money.
           </p>
@@ -132,7 +132,7 @@ export default function Landing() {
             boxShadow: "4px 4px 0 #000",
           }}
         >
-          <p className="font-garet font-normal text-black text-sm leading-relaxed">
+          <p className="font-garet font-normal text-black text-base leading-relaxed">
             If you would like to be notified when we launch our mobile app,
             please join our waitlist. The first 1 000 people on our waitlist
             will get <strong>three months of our premium tier, for free.</strong>
@@ -143,7 +143,7 @@ export default function Landing() {
         <button
           onClick={() => setShowForm(true)}
           className="w-full rounded-2xl bg-black text-white font-brand font-bold text-lg py-4 hover:opacity-90 active:scale-[0.98] transition-transform"
-          style={{ boxShadow: "4px 4px 0 #374151" }}
+          style={{ boxShadow: "6px 6px 0 #000000" }}
         >
           Join Waitlist
         </button>
