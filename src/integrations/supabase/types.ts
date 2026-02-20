@@ -1276,6 +1276,30 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          phone_number: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          phone_number: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          phone_number?: string
+          role?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       cheapest_products: {
