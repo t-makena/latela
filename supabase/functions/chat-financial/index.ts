@@ -751,7 +751,7 @@ ${transactions.slice(0, 10).map((t: Record<string, unknown>) => `- ${t.descripti
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 2048,
         system: systemPrompt,
         messages: anthropicMessages,
@@ -818,7 +818,7 @@ ${transactions.slice(0, 10).map((t: Record<string, unknown>) => `- ${t.descripti
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 2048,
         stream: true,
         system: systemPrompt,
