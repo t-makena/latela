@@ -597,6 +597,8 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
+    console.log('chat-financial invoked, method:', req.method, 'has-auth:', !!authHeader);
+
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -610,20 +612,14 @@ serve(async (req) => {
     });
 
     const token = authHeader.replace('Bearer ', '');
-    let userId: string;
-    try {
-      const payloadBase64 = token.split('.')[1];
-      if (!payloadBase64) throw new Error('Invalid JWT');
-      const payload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
-      if (!payload.sub || (payload.exp && payload.exp < Math.floor(Date.now() / 1000))) {
-        throw new Error('Token expired or missing sub');
-      }
-      userId = payload.sub;
-    } catch {
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      console.error('getClaims failed:', claimsError?.message, 'Token length:', token?.length, 'Token prefix:', token?.slice(0, 20));
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const userId = claimsData.claims.sub;
     const { messages } = await req.json();
 
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -749,6 +745,7 @@ ${transactions.slice(0, 10).map((t: Record<string, unknown>) => `- ${t.descripti
     const anthropicMessages = messages.map((m: Record<string, unknown>) => ({ role: m.role, content: m.content }));
 
     // First call to Anthropic (may return tool_use)
+    console.log('Calling Anthropic with model: claude-sonnet-4-5-20250929, userId:', userId);
     const firstResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
