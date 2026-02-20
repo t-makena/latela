@@ -1,36 +1,55 @@
 
-## Fix: Budget Buddy "Failed to get response"
+## Fix: Budget Buddy 401 Unauthorized — Root Cause Found
 
-### Root Cause Identified
+### What is Actually Happening
 
-The analytics show the edge function is returning **401 Unauthorized**, not a 500 AI error. There are two contributing issues:
+The edge function logs show it boots successfully but there are zero request-processing logs — meaning the 401 is being returned very early, before any AI call is made. The culprit is on **line 613** of `supabase/functions/chat-financial/index.ts`:
 
-1. **Redeployment gap**: The edge function logs are completely empty — no logs whatsoever. This strongly suggests the redeployment from the previous fix didn't complete properly, so the function running in production may still be the old version.
-
-2. **Auth token fetch in Chat.tsx**: On line 171 of `Chat.tsx`, the `send` function makes a redundant async `supabase.auth.getSession()` call to get the access token, even though `session` is already available from `useAuth()` at the top of the component. If the session has expired or the async call returns slightly stale/null data, `access_token` is `undefined` and the request sends `Authorization: Bearer undefined`, which the edge function rejects as 401.
-
-### The Fix — Two changes
-
-**Change 1 — `src/pages/Chat.tsx` (line 171)**
-
-Replace the redundant `getSession()` call with the already-available `session` from `useAuth()`:
-
-```tsx
-// Before (line 171)
-Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-
-// After
-Authorization: `Bearer ${session?.access_token}`,
+```typescript
+const { data: authData, error: authError } = await supabase.auth.getUser(token);
 ```
 
-This removes the async roundtrip and uses the token that is already available and kept fresh by the `AuthContext` listener.
+`getUser(token)` makes a **network call** to the Supabase auth server to validate the JWT. With the current signing-keys system, this call is failing (returning an auth error), so the function immediately returns 401 before ever reaching the Anthropic API call.
 
-**Change 2 — Redeploy the edge function**
+The correct approach (as specified in the project's own Supabase guidelines) is to use `getClaims(token)`, which validates the JWT **locally** using the signing keys without a network roundtrip.
 
-Force a fresh redeployment of `chat-financial` to ensure the model fix (`claude-3-5-sonnet-20241022`) is actually live.
+### The Fix — One Change in the Edge Function
 
-### What is NOT changing
+**`supabase/functions/chat-financial/index.ts` (lines 612-618)**
 
-- The edge function logic — only redeploying it
-- All other pages — unchanged
-- The FloatingChat component already uses `session?.access_token` correctly, so no change needed there
+Replace `getUser()` with `getClaims()`:
+
+```typescript
+// BEFORE (broken)
+const token = authHeader.replace('Bearer ', '');
+const { data: authData, error: authError } = await supabase.auth.getUser(token);
+if (authError || !authData.user) {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+const userId = authData.user.id;
+
+// AFTER (fixed)
+const token = authHeader.replace('Bearer ', '');
+const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+if (claimsError || !claimsData?.claims) {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+const userId = claimsData.claims.sub;
+```
+
+`getClaims()` reads the user ID directly from the JWT payload (`sub` field) without a network call — so it is faster, more reliable, and compatible with Lovable Cloud's signing-key authentication.
+
+### After the Code Change
+
+The edge function will be immediately redeployed.
+
+### What is NOT Changing
+
+- The Anthropic model (`claude-3-5-sonnet-20241022`) — already correct
+- All tool logic, system prompt, data fetching — unchanged  
+- All other pages and edge functions — unchanged
+- The `ANTHROPIC_API_KEY` secret — already configured and correct
