@@ -1,35 +1,36 @@
 
-## Fix: Budget Buddy Not Responding
+## Fix: Budget Buddy "Failed to get response"
 
-### Root Cause
+### Root Cause Identified
 
-The `chat-financial` edge function is calling Anthropic with the model name `claude-sonnet-4-5-20250929`. This is not a valid Anthropic model identifier — it is a malformed string that blends two different model names:
+The analytics show the edge function is returning **401 Unauthorized**, not a 500 AI error. There are two contributing issues:
 
-- `claude-sonnet-4-5` — valid, but very new (may not be available on all accounts)
-- `claude-3-5-sonnet-20241022` — valid and widely available
+1. **Redeployment gap**: The edge function logs are completely empty — no logs whatsoever. This strongly suggests the redeployment from the previous fix didn't complete properly, so the function running in production may still be the old version.
 
-When Anthropic receives an unknown model name it returns a `400` error. The edge function catches this at line 762–767 and returns `{ error: 'AI service error' }` to the client. The FloatingChat component receives a non-OK response, throws inside the `try` block, and the `toast.error` fires briefly — but because the SSE reader never opens, there is no visible feedback beyond the typing indicator disappearing.
+2. **Auth token fetch in Chat.tsx**: On line 171 of `Chat.tsx`, the `send` function makes a redundant async `supabase.auth.getSession()` call to get the access token, even though `session` is already available from `useAuth()` at the top of the component. If the session has expired or the async call returns slightly stale/null data, `access_token` is `undefined` and the request sends `Authorization: Bearer undefined`, which the edge function rejects as 401.
 
-### The Fix — One Line Change
+### The Fix — Two changes
 
-In `supabase/functions/chat-financial/index.ts`, change the model string in **both** Anthropic fetch calls (lines ~754 and ~821) from:
+**Change 1 — `src/pages/Chat.tsx` (line 171)**
 
+Replace the redundant `getSession()` call with the already-available `session` from `useAuth()`:
+
+```tsx
+// Before (line 171)
+Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+
+// After
+Authorization: `Bearer ${session?.access_token}`,
 ```
-model: 'claude-sonnet-4-5-20250929',
-```
 
-to:
+This removes the async roundtrip and uses the token that is already available and kept fresh by the `AuthContext` listener.
 
-```
-model: 'claude-3-5-sonnet-20241022',
-```
+**Change 2 — Redeploy the edge function**
 
-`claude-3-5-sonnet-20241022` is Claude's most capable stable model, fully available via standard API keys, and supports all tool-use features that Budget Buddy relies on.
+Force a fresh redeployment of `chat-financial` to ensure the model fix (`claude-3-5-sonnet-20241022`) is actually live.
 
-### Files to Change
+### What is NOT changing
 
-| File | Change |
-|---|---|
-| `supabase/functions/chat-financial/index.ts` | Fix the model name in two `fetch` calls (lines ~754 and ~821) |
-
-The function will be redeployed immediately after the edit. No other files need to change — the ANTHROPIC_API_KEY secret is already configured correctly.
+- The edge function logic — only redeploying it
+- All other pages — unchanged
+- The FloatingChat component already uses `session?.access_token` correctly, so no change needed there
