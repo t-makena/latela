@@ -15,7 +15,7 @@ import ReactMarkdown from "react-markdown";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-financial`;
+const CHAT_URL = `https://sqbcxopovghwgdqplejr.supabase.co/functions/v1/chat-financial`;
 
 export default function FloatingChat() {
   const { session } = useAuth();

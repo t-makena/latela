@@ -21,7 +21,7 @@ type Conversation = {
   updated_at: string | null;
 };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-financial`;
+const CHAT_URL = `https://sqbcxopovghwgdqplejr.supabase.co/functions/v1/chat-financial`;
 
 export default function Chat() {
   const { session } = useAuth();
