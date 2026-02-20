@@ -1,44 +1,35 @@
 
-## Fix: Background Extends Behind Dynamic Island / Status Bar
+## Fix: Budget Buddy Not Responding
 
-Two precise edits only — no logic changes, no new files.
+### Root Cause
 
-### Edit 1 — `index.html` (line 5)
+The `chat-financial` edge function is calling Anthropic with the model name `claude-sonnet-4-5-20250929`. This is not a valid Anthropic model identifier — it is a malformed string that blends two different model names:
 
-Add `viewport-fit=cover` to the viewport meta tag:
+- `claude-sonnet-4-5` — valid, but very new (may not be available on all accounts)
+- `claude-3-5-sonnet-20241022` — valid and widely available
 
-```html
-<!-- Before -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+When Anthropic receives an unknown model name it returns a `400` error. The edge function catches this at line 762–767 and returns `{ error: 'AI service error' }` to the client. The FloatingChat component receives a non-OK response, throws inside the `try` block, and the `toast.error` fires briefly — but because the SSE reader never opens, there is no visible feedback beyond the typing indicator disappearing.
 
-<!-- After -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+### The Fix — One Line Change
+
+In `supabase/functions/chat-financial/index.ts`, change the model string in **both** Anthropic fetch calls (lines ~754 and ~821) from:
+
+```
+model: 'claude-sonnet-4-5-20250929',
 ```
 
-This tells mobile Safari to extend the page's rendering surface all the way behind the Dynamic Island and status bar. Without it, the browser always reserves that top strip as white.
+to:
 
-### Edit 2 — `src/pages/Landing.tsx` (line 100)
-
-Replace the `py-10` class on the content wrapper with an inline `paddingTop` style that uses the CSS environment variable `env(safe-area-inset-top)`:
-
-```tsx
-<!-- Before -->
-<div className="relative z-10 flex flex-col items-center w-full max-w-md px-4 py-10 gap-5">
-
-<!-- After -->
-<div
-  className="relative z-10 flex flex-col items-center w-full max-w-md px-4 pb-10 gap-5"
-  style={{ paddingTop: "calc(env(safe-area-inset-top) + 2.5rem)" }}
->
+```
+model: 'claude-3-5-sonnet-20241022',
 ```
 
-- `env(safe-area-inset-top)` equals the exact height of the Dynamic Island / notch on the current device
-- On iPhones with a Dynamic Island it is ~59px; on older notch iPhones ~44px; on devices with no notch it equals `0px` — so this is fully safe everywhere
-- `+ 2.5rem` preserves the existing `py-10` (40px) top spacing below the safe area, so the logo and heading sit in the same visual position they do now, just pushed down past the island
+`claude-3-5-sonnet-20241022` is Claude's most capable stable model, fully available via standard API keys, and supports all tool-use features that Budget Buddy relies on.
 
-### What is NOT changing
+### Files to Change
 
-- Background image, colours, cards, typography — all unchanged
-- The waitlist modal — unchanged
-- All desktop routes and other pages — unchanged
-- The bottom of the page / modal safe area is already handled with `pb-10`
+| File | Change |
+|---|---|
+| `supabase/functions/chat-financial/index.ts` | Fix the model name in two `fetch` calls (lines ~754 and ~821) |
+
+The function will be redeployed immediately after the edit. No other files need to change — the ANTHROPIC_API_KEY secret is already configured correctly.
