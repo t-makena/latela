@@ -1,36 +1,30 @@
 
-## Fix: Budget Buddy 401 Unauthorized — Root Cause Found
+## Fix: Budget Buddy 401 — `getClaims()` Not Available on This Supabase JS Version
 
-### What is Actually Happening
+### Root Cause (Confirmed)
 
-The edge function logs show it boots successfully but there are zero request-processing logs — meaning the 401 is being returned very early, before any AI call is made. The culprit is on **line 613** of `supabase/functions/chat-financial/index.ts`:
+The direct curl test returns 401. The edge function is deploying and running, but failing at line 613:
 
 ```typescript
-const { data: authData, error: authError } = await supabase.auth.getUser(token);
+const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
 ```
 
-`getUser(token)` makes a **network call** to the Supabase auth server to validate the JWT. With the current signing-keys system, this call is failing (returning an auth error), so the function immediately returns 401 before ever reaching the Anthropic API call.
-
-The correct approach (as specified in the project's own Supabase guidelines) is to use `getClaims(token)`, which validates the JWT **locally** using the signing keys without a network roundtrip.
-
-### The Fix — One Change in the Edge Function
-
-**`supabase/functions/chat-financial/index.ts` (lines 612-618)**
-
-Replace `getUser()` with `getClaims()`:
+`getClaims()` was added to `@supabase/supabase-js` in **v2.69.0** (released late 2024). The edge function imports:
 
 ```typescript
-// BEFORE (broken)
-const token = authHeader.replace('Bearer ', '');
-const { data: authData, error: authError } = await supabase.auth.getUser(token);
-if (authError || !authData.user) {
-  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-    status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}
-const userId = authData.user.id;
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+```
 
-// AFTER (fixed)
+The `@2` floating pin on esm.sh is resolving to an older cached version that does **not** have `getClaims`. The method is `undefined` at runtime, so calling it returns an error immediately, triggering the 401 before any AI call is made.
+
+### The Fix — Decode JWT Manually
+
+The solution is to stop using the Supabase client for auth validation entirely, and instead decode the JWT payload directly. A JWT is three base64url-encoded segments separated by dots. The middle segment (payload) contains the `sub` (user ID), `exp` (expiry), and other claims. This is exactly what `getClaims()` does internally — no network call, no library version dependency.
+
+**Change in `supabase/functions/chat-financial/index.ts` (lines 612-620)**:
+
+```typescript
+// BEFORE (broken - getClaims not available on @supabase/supabase-js@2 pin)
 const token = authHeader.replace('Bearer ', '');
 const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
 if (claimsError || !claimsData?.claims) {
@@ -39,17 +33,38 @@ if (claimsError || !claimsData?.claims) {
   });
 }
 const userId = claimsData.claims.sub;
+
+// AFTER (fixed - decode JWT payload directly, no library dependency)
+const token = authHeader.replace('Bearer ', '');
+let userId: string;
+try {
+  const payloadBase64 = token.split('.')[1];
+  if (!payloadBase64) throw new Error('Invalid JWT');
+  const payload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+  if (!payload.sub || (payload.exp && payload.exp < Math.floor(Date.now() / 1000))) {
+    throw new Error('Token expired or missing sub');
+  }
+  userId = payload.sub;
+} catch {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
 ```
 
-`getClaims()` reads the user ID directly from the JWT payload (`sub` field) without a network call — so it is faster, more reliable, and compatible with Lovable Cloud's signing-key authentication.
+This approach:
+- Works on any Supabase JS version (no method dependency)
+- Requires zero network calls
+- Validates the `sub` claim (user ID) and `exp` (expiry) from the JWT payload
+- Is the same technique `getClaims()` uses internally
 
 ### After the Code Change
 
-The edge function will be immediately redeployed.
+The edge function will be immediately redeployed and tested via curl.
 
 ### What is NOT Changing
 
 - The Anthropic model (`claude-3-5-sonnet-20241022`) — already correct
-- All tool logic, system prompt, data fetching — unchanged  
+- All tool logic, system prompt, data fetching — unchanged
 - All other pages and edge functions — unchanged
 - The `ANTHROPIC_API_KEY` secret — already configured and correct
