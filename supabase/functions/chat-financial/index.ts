@@ -610,14 +610,20 @@ serve(async (req) => {
     });
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    let userId: string;
+    try {
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) throw new Error('Invalid JWT');
+      const payload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+      if (!payload.sub || (payload.exp && payload.exp < Math.floor(Date.now() / 1000))) {
+        throw new Error('Token expired or missing sub');
+      }
+      userId = payload.sub;
+    } catch {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const userId = claimsData.claims.sub;
     const { messages } = await req.json();
 
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
