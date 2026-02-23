@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Plus, Loader2, Trash2, CheckCircle2, Pencil } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useGoals } from "@/hooks/useGoals";
@@ -30,41 +37,50 @@ const Goals = () => {
   const { t } = useLanguage();
 
   const { goals, loading, error, addGoal, updateGoal, deleteGoal } = useGoals();
-  
+
   // Get target saving label based on frequency
   const getTargetSavingLabel = () => {
     switch (frequency) {
-      case 'weekly': return 'Target Weekly Saving';
-      case 'bi-weekly': return 'Target Bi-weekly Saving';
-      default: return 'Target Monthly Saving';
+      case "weekly":
+        return "Target Weekly Saving";
+      case "bi-weekly":
+        return "Target Bi-weekly Saving";
+      default:
+        return "Target Monthly Saving";
     }
   };
-  
+
   // Get allocation footnote based on frequency
   const getAllocationFootnote = () => {
     switch (frequency) {
-      case 'weekly': return 'Allocation shows the Rand amount to save this week for each goal.';
-      case 'bi-weekly': return 'Allocation shows the Rand amount to save this pay period for each goal.';
-      default: return 'Allocation shows the Rand amount to save this month for each goal.';
+      case "weekly":
+        return "Allocation shows the Rand amount to save this week for each goal.";
+      case "bi-weekly":
+        return "Allocation shows the Rand amount to save this pay period for each goal.";
+      default:
+        return "Allocation shows the Rand amount to save this month for each goal.";
     }
   };
-  
+
   // Separate goals for the two sections
   const budgetGoals = goals.slice(0, 3);
   const goalsOverview = goals;
-  
+
   // Calculate total amount saved
-  const totalAmountSaved = goals.reduce((total, goal) => total + goal.amountSaved, 0);
-  
+  const totalAmountSaved = goals.reduce(
+    (total, goal) => total + goal.amountSaved,
+    0,
+  );
+
   // Calculate total monthly allocation (sum of all goals' monthly allocations)
-  const totalMonthlyAllocation = goals.reduce((total, goal) => total + goal.monthlyAllocation, 0);
-  
-  // Calculate total target savings
-  const totalTargetSavings = goals.reduce((total, goal) => total + goal.target, 0);
-  
+  const totalMonthlyAllocation = goals.reduce(
+    (total, goal) => total + goal.monthlyAllocation,
+    0,
+  );
+
   // Format currency
   const formatCurrency = (amount: number) => {
-    return `R${amount.toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    return `R${amount.toLocaleString("en-ZA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   const handleDeleteGoal = async (goalId: string) => {
@@ -102,11 +118,13 @@ const Goals = () => {
     <div className="space-y-6 relative z-10 pt-6 px-6">
       {/* Month-End Review Dialog */}
       <MonthEndReviewDialog />
-      
+
       {/* Budget Goals Section */}
       <Card className="bg-card border border-border w-full">
         <CardHeader className="pb-4">
-          <CardTitle className="heading-main">{t('goals.budgetGoals')}</CardTitle>
+          <CardTitle className="heading-main">
+            {t("goals.budgetGoals")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {budgetGoals.length > 0 ? (
@@ -122,8 +140,8 @@ const Goals = () => {
                   <span className="label-text">{goal.progress}% Saved</span>
                 </div>
                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all ${goal.isComplete ? 'bg-green-500' : 'bg-foreground'}`}
+                  <div
+                    className={`h-full transition-all ${goal.isComplete ? "bg-green-500" : "bg-foreground"}`}
                     style={{ width: `${Math.min(goal.progress, 100)}%` }}
                   />
                 </div>
@@ -131,7 +149,9 @@ const Goals = () => {
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">{t('goals.noGoalsYet')}</p>
+            <p className="text-sm text-muted-foreground text-center py-4">
+              {t("goals.noGoalsYet")}
+            </p>
           )}
         </CardContent>
       </Card>
@@ -141,44 +161,52 @@ const Goals = () => {
 
       {/* Goals Overview Table */}
       {isMobile ? (
-        <div 
-          className="bg-card rounded-3xl border border-border p-5 w-full"
-        >
+        <div className="bg-card rounded-3xl border border-border p-5 w-full">
           <div className="pb-2 mb-2">
-            <h2 className="heading-main">{t('goals.goalsOverview')}</h2>
+            <h2 className="heading-main">{t("goals.goalsOverview")}</h2>
           </div>
           <div className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-4">
+              {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="label-text mb-1">{t('goals.targetMonthlySaving')}</p>
-                <p className="heading-main currency">{formatCurrency(totalMonthlyAllocation)}</p>
+                <p className="label-text mb-1">
+                  {t("goals.targetMonthlySaving")}
+                </p>
+                <p className="balance-secondary currency">
+                  {formatCurrency(totalMonthlyAllocation)}
+                </p>
               </div>
-              <div className="flex-1 text-center">
-                <p className="label-text mb-1">{t('goals.totalAmountSaved')}</p>
-                <p className="heading-main currency">{formatCurrency(totalAmountSaved)}</p>
-              </div>
+
+              {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
-                <p className="label-text mb-1">Target Total Savings</p>
-                <p className="heading-main currency">{formatCurrency(totalTargetSavings)}</p>
+                <p className="label-text mb-1">{t("goals.totalAmountSaved")}</p>
+                <p className="balance-secondary currency">
+                  {formatCurrency(totalAmountSaved)}
+                </p>
               </div>
             </div>
-            
+
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="table-header-text w-[22%] px-2">{t('goals.goal')}</TableHead>
+                  <TableHead className="table-header-text w-[22%] px-2">
+                    {t("goals.goal")}
+                  </TableHead>
                   <TableHead className="table-header-text w-[18%] px-2">
-                    {t('goals.allocation')}<sup>1</sup>
+                    {t("goals.allocation")}
+                    <sup>1</sup>
                   </TableHead>
                   <TableHead className="table-header-text text-right w-[18%] px-2">
-                    {t('goals.saved')} (R)<sup>2</sup>
+                    {t("goals.saved")} (R)<sup>2</sup>
                   </TableHead>
                   <TableHead className="table-header-text w-[18%] px-2">
-                    {t('goals.target')}<sup>3</sup>
+                    {t("goals.target")}
+                    <sup>3</sup>
                   </TableHead>
                   <TableHead className="table-header-text w-[18%] px-2">
-                    {t('goals.timeline')}<sup>4</sup>
+                    {t("goals.timeline")}
+                    <sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[6%]"></TableHead>
                 </TableRow>
@@ -186,30 +214,49 @@ const Goals = () => {
               <TableBody>
                 {goalsOverview.length > 0 ? (
                   goalsOverview.map((row) => (
-                    <TableRow key={row.id} className={row.isComplete ? 'opacity-60' : ''}>
+                    <TableRow
+                      key={row.id}
+                      className={row.isComplete ? "opacity-60" : ""}
+                    >
                       <TableCell className="table-body-text font-medium px-2 py-4">
                         <div className="flex items-center gap-1">
-                          {row.isComplete && <CheckCircle2 className="h-3 w-3 text-positive flex-shrink-0" />}
-                          <span className={row.isComplete ? 'line-through' : ''}>{row.name}</span>
+                          {row.isComplete && (
+                            <CheckCircle2 className="h-3 w-3 text-positive flex-shrink-0" />
+                          )}
+                          <span
+                            className={row.isComplete ? "line-through" : ""}
+                          >
+                            {row.name}
+                          </span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 py-4 table-body-text font-medium currency">{formatCurrency(row.monthlyAllocation)}</TableCell>
-                      <TableCell className="text-right table-body-text font-medium px-2 py-4 currency">{formatCurrency(row.amountSaved)}</TableCell>
-                      <TableCell className="px-2 py-4 table-body-text currency">{formatCurrency(row.target)}</TableCell>
-                      <TableCell className="px-2 py-4 table-body-text">{row.timeline}</TableCell>
+                      <TableCell className="px-2 py-4 table-body-text font-medium currency">
+                        {formatCurrency(row.monthlyAllocation)}
+                      </TableCell>
+                      <TableCell className="text-right table-body-text font-medium px-2 py-4 currency">
+                        {formatCurrency(row.amountSaved)}
+                      </TableCell>
+                      <TableCell className="px-2 py-4 table-body-text currency">
+                        {formatCurrency(row.target)}
+                      </TableCell>
+                      <TableCell className="px-2 py-4 table-body-text">
+                        {row.timeline}
+                      </TableCell>
                       <TableCell className="px-2 py-4">
                         <div className="flex items-center gap-1">
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => handleEditGoal({
-                              id: row.id,
-                              name: row.name,
-                              target: row.target,
-                              amountSaved: row.amountSaved,
-                              monthlyAllocation: row.monthlyAllocation,
-                              timeline: row.timeline,
-                            })}
+                            onClick={() =>
+                              handleEditGoal({
+                                id: row.id,
+                                name: row.name,
+                                target: row.target,
+                                amountSaved: row.amountSaved,
+                                monthlyAllocation: row.monthlyAllocation,
+                                timeline: row.timeline,
+                              })
+                            }
                             className="h-8 w-8 hover:bg-muted"
                             title="Edit goal"
                           >
@@ -230,7 +277,10 @@ const Goals = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       No goals found. Click below to add your first goal.
                     </TableCell>
                   </TableRow>
@@ -239,21 +289,27 @@ const Goals = () => {
             </Table>
 
             <div className="flex flex-col items-center gap-2 pt-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="icon"
                 className="h-10 w-10 rounded-full border-2"
                 onClick={() => setDialogOpen(true)}
               >
                 <Plus className="h-5 w-5" />
               </Button>
-              <p className="text-sm text-muted-foreground">{t('goals.addNewGoal')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("goals.addNewGoal")}
+              </p>
             </div>
 
             <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
               <p>1. {getAllocationFootnote()}</p>
-              <p>2. Saved shows the actual rand value saved for each goal so far.</p>
-              <p>3. Target shows the total amount you want to save for each goal.</p>
+              <p>
+                2. Saved shows the actual rand value saved for each goal so far.
+              </p>
+              <p>
+                3. Target shows the total amount you want to save for each goal.
+              </p>
               <p>4. Timeline indicates your target deadline for each goal.</p>
             </div>
           </div>
@@ -261,40 +317,52 @@ const Goals = () => {
       ) : (
         <Card className="bg-card border border-border w-full">
           <CardHeader className="pb-4">
-            <CardTitle className="heading-main">{t('goals.goalsOverview')}</CardTitle>
+            <CardTitle className="heading-main">
+              {t("goals.goalsOverview")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Target Saving and Total Amount Saved */}
             <div className="flex justify-between items-start gap-8">
+              {/* Target Saving - Left */}
               <div className="flex-1">
-                <p className="label-text mb-1">{t('goals.targetMonthlySaving')}</p>
-                <p className="heading-main currency">{formatCurrency(totalMonthlyAllocation)}</p>
+                <p className="label-text mb-1">
+                  {t("goals.targetMonthlySaving")}
+                </p>
+                <p className="balance-primary currency">
+                  {formatCurrency(totalMonthlyAllocation)}
+                </p>
               </div>
-              <div className="flex-1 text-center">
-                <p className="label-text mb-1">{t('goals.totalAmountSaved')}</p>
-                <p className="heading-main currency">{formatCurrency(totalAmountSaved)}</p>
-              </div>
+
+              {/* Total Amount Saved - Right */}
               <div className="flex-1 text-right">
-                <p className="label-text mb-1">Target Total Savings</p>
-                <p className="heading-main currency">{formatCurrency(totalTargetSavings)}</p>
+                <p className="label-text mb-1">{t("goals.totalAmountSaved")}</p>
+                <p className="balance-primary currency">
+                  {formatCurrency(totalAmountSaved)}
+                </p>
               </div>
             </div>
-            
+
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="table-header-text w-[22%] px-6">{t('goals.goal')}</TableHead>
+                  <TableHead className="table-header-text w-[22%] px-6">
+                    {t("goals.goal")}
+                  </TableHead>
                   <TableHead className="table-header-text w-[16%] px-6">
-                    {t('goals.allocation')}<sup>1</sup>
+                    {t("goals.allocation")}
+                    <sup>1</sup>
                   </TableHead>
                   <TableHead className="table-header-text text-right w-[16%] px-6">
-                    {t('goals.saved')} (R)<sup>2</sup>
+                    {t("goals.saved")} (R)<sup>2</sup>
                   </TableHead>
                   <TableHead className="table-header-text w-[16%] px-6">
-                    {t('goals.target')}<sup>3</sup>
+                    {t("goals.target")}
+                    <sup>3</sup>
                   </TableHead>
                   <TableHead className="table-header-text w-[16%] px-6">
-                    {t('goals.timeline')}<sup>4</sup>
+                    {t("goals.timeline")}
+                    <sup>4</sup>
                   </TableHead>
                   <TableHead className="w-[8%]"></TableHead>
                 </TableRow>
@@ -302,30 +370,49 @@ const Goals = () => {
               <TableBody>
                 {goalsOverview.length > 0 ? (
                   goalsOverview.map((row) => (
-                    <TableRow key={row.id} className={row.isComplete ? 'opacity-60 bg-muted/30' : ''}>
+                    <TableRow
+                      key={row.id}
+                      className={row.isComplete ? "opacity-60 bg-muted/30" : ""}
+                    >
                       <TableCell className="table-body-text font-medium px-6 py-4">
                         <div className="flex items-center gap-2">
-                          {row.isComplete && <CheckCircle2 className="h-4 w-4 text-positive flex-shrink-0" />}
-                          <span className={row.isComplete ? 'line-through' : ''}>{row.name}</span>
+                          {row.isComplete && (
+                            <CheckCircle2 className="h-4 w-4 text-positive flex-shrink-0" />
+                          )}
+                          <span
+                            className={row.isComplete ? "line-through" : ""}
+                          >
+                            {row.name}
+                          </span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4 table-body-text font-medium text-primary currency">{formatCurrency(row.monthlyAllocation)}</TableCell>
-                      <TableCell className="text-right table-body-text font-medium px-6 py-4 currency">{formatCurrency(row.amountSaved)}</TableCell>
-                      <TableCell className="px-6 py-4 table-body-text currency">{formatCurrency(row.target)}</TableCell>
-                      <TableCell className="px-6 py-4 table-body-text">{row.timeline}</TableCell>
+                      <TableCell className="px-6 py-4 table-body-text font-medium text-primary currency">
+                        {formatCurrency(row.monthlyAllocation)}
+                      </TableCell>
+                      <TableCell className="text-right table-body-text font-medium px-6 py-4 currency">
+                        {formatCurrency(row.amountSaved)}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 table-body-text currency">
+                        {formatCurrency(row.target)}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 table-body-text">
+                        {row.timeline}
+                      </TableCell>
                       <TableCell className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => handleEditGoal({
-                              id: row.id,
-                              name: row.name,
-                              target: row.target,
-                              amountSaved: row.amountSaved,
-                              monthlyAllocation: row.monthlyAllocation,
-                              timeline: row.timeline,
-                            })}
+                            onClick={() =>
+                              handleEditGoal({
+                                id: row.id,
+                                name: row.name,
+                                target: row.target,
+                                amountSaved: row.amountSaved,
+                                monthlyAllocation: row.monthlyAllocation,
+                                timeline: row.timeline,
+                              })
+                            }
                             className="h-8 w-8 hover:bg-muted"
                             title="Edit goal"
                           >
@@ -346,7 +433,10 @@ const Goals = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       No goals found. Click below to add your first goal.
                     </TableCell>
                   </TableRow>
@@ -355,21 +445,27 @@ const Goals = () => {
             </Table>
 
             <div className="flex flex-col items-center gap-2 pt-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="icon"
                 className="h-10 w-10 rounded-full border-2"
                 onClick={() => setDialogOpen(true)}
               >
                 <Plus className="h-5 w-5" />
               </Button>
-              <p className="text-sm text-muted-foreground">{t('goals.addNewGoal')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("goals.addNewGoal")}
+              </p>
             </div>
 
             <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
               <p>1. {getAllocationFootnote()}</p>
-              <p>2. Saved shows the actual rand value saved for each goal so far.</p>
-              <p>3. Target shows the total amount you want to save for each goal.</p>
+              <p>
+                2. Saved shows the actual rand value saved for each goal so far.
+              </p>
+              <p>
+                3. Target shows the total amount you want to save for each goal.
+              </p>
               <p>4. Timeline indicates your target deadline for each goal.</p>
             </div>
           </CardContent>

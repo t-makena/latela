@@ -1,8 +1,8 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
-import Anthropic from '@anthropic-ai/sdk';
-import sharp from 'sharp';
-import fs from 'fs/promises';
-import path from 'path';
+import puppeteer, { Browser, Page } from "puppeteer";
+import Anthropic from "@anthropic-ai/sdk";
+import sharp from "sharp";
+import fs from "fs/promises";
+import path from "path";
 
 export interface ScrapedProduct {
   name: string;
@@ -35,17 +35,17 @@ export abstract class BaseScraper {
 
   constructor(storeName: string, paginationConfig?: Partial<PaginationConfig>) {
     this.store = storeName;
-    this.screenshotDir = path.join(process.cwd(), 'temp_screenshots');
+    this.screenshotDir = path.join(process.cwd(), "temp_screenshots");
     this.paginationConfig = {
       maxPages: paginationConfig?.maxPages ?? 10,
-      productsPerPage: paginationConfig?.productsPerPage ?? 24
+      productsPerPage: paginationConfig?.productsPerPage ?? 24,
     };
-    
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY environment variable is required');
+      throw new Error("ANTHROPIC_API_KEY environment variable is required");
     }
-    
+
     this.anthropic = new Anthropic({ apiKey });
   }
 
@@ -60,14 +60,14 @@ export abstract class BaseScraper {
     this.browser = await puppeteer.launch({
       headless: true,
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920x1080',
-        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
-      ]
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--disable-gpu",
+        "--window-size=1920x1080",
+        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+      ],
     });
 
     return this.browser;
@@ -82,16 +82,16 @@ export abstract class BaseScraper {
 
     try {
       console.log(`Validating URL: ${url}`);
-      
+
       const response = await page.goto(url, {
-        waitUntil: 'networkidle2',
-        timeout: 30000
+        waitUntil: "networkidle2",
+        timeout: 30000,
       });
 
       if (!response) {
         return {
           isValid: false,
-          error: 'No response received from URL'
+          error: "No response received from URL",
         };
       }
 
@@ -103,7 +103,7 @@ export abstract class BaseScraper {
         return {
           isValid: true,
           statusCode,
-          finalUrl
+          finalUrl,
         };
       }
 
@@ -112,23 +112,23 @@ export abstract class BaseScraper {
         return {
           isValid: true,
           statusCode,
-          finalUrl
+          finalUrl,
         };
       }
 
       return {
         isValid: false,
         statusCode,
-        error: `URL returned status code ${statusCode}`
+        error: `URL returned status code ${statusCode}`,
       };
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       console.error(`✗ URL validation failed: ${errorMessage}`);
-      
+
       return {
         isValid: false,
-        error: errorMessage
+        error: errorMessage,
       };
     } finally {
       await page.close();
@@ -138,15 +138,18 @@ export abstract class BaseScraper {
   /**
    * Take a screenshot and ensure directory exists
    */
-  protected async takeScreenshot(page: Page, filename: string): Promise<string> {
+  protected async takeScreenshot(
+    page: Page,
+    filename: string,
+  ): Promise<string> {
     await fs.mkdir(this.screenshotDir, { recursive: true });
-    
+
     const filepath = path.join(this.screenshotDir, filename);
-    await page.screenshot({ 
-      path: filepath, 
-      fullPage: true 
+    await page.screenshot({
+      path: filepath,
+      fullPage: true,
     });
-    
+
     console.log(`Screenshot saved: ${filepath}`);
     return filepath;
   }
@@ -160,13 +163,13 @@ export abstract class BaseScraper {
       .resize({
         width: 1600,
         height: 7500,
-        fit: 'inside',
-        withoutEnlargement: true
+        fit: "inside",
+        withoutEnlargement: true,
       })
       .png()
       .toBuffer();
-    
-    return resizedBuffer.toString('base64');
+
+    return resizedBuffer.toString("base64");
   }
 
   /**
@@ -187,17 +190,17 @@ export abstract class BaseScraper {
   protected async cleanupScreenshots(): Promise<void> {
     try {
       const files = await fs.readdir(this.screenshotDir);
-      
+
       for (const file of files) {
-        if (file.endsWith('.png') || file.endsWith('.jpg')) {
+        if (file.endsWith(".png") || file.endsWith(".jpg")) {
           await this.deleteScreenshot(path.join(this.screenshotDir, file));
         }
       }
-      
+
       console.log(`Cleaned up ${files.length} screenshot(s)`);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        console.error('Failed to cleanup screenshots:', error);
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        console.error("Failed to cleanup screenshots:", error);
       }
     }
   }
@@ -207,30 +210,30 @@ export abstract class BaseScraper {
    */
   protected async extractWithAI(
     screenshotPath: string,
-    extractionPrompt: string
+    extractionPrompt: string,
   ): Promise<ScrapedProduct[]> {
     const base64Image = await this.screenshotToBase64(screenshotPath);
 
     try {
-      console.log('Sending screenshot to Claude for analysis...');
-      
+      console.log("Sending screenshot to Claude for analysis...");
+
       const message = await this.anthropic.messages.create({
-        model: 'claude-3-5-haiku-20241022',
+        model: "claude-3-5-haiku-20241022",
         max_tokens: 4096,
         messages: [
           {
-            role: 'user',
+            role: "user",
             content: [
               {
-                type: 'image',
+                type: "image",
                 source: {
-                  type: 'base64',
-                  media_type: 'image/png',
+                  type: "base64",
+                  media_type: "image/png",
                   data: base64Image,
                 },
               },
               {
-                type: 'text',
+                type: "text",
                 text: extractionPrompt,
               },
             ],
@@ -238,38 +241,45 @@ export abstract class BaseScraper {
         ],
       });
 
-      const responseText = message.content[0].type === 'text' 
-        ? message.content[0].text 
-        : '';
+      const responseText =
+        message.content[0].type === "text" ? message.content[0].text : "";
 
-      console.log('Claude response received');
-      console.log('Response preview:', responseText.substring(0, 500));
+      console.log("Claude response received");
+      console.log("Response preview:", responseText.substring(0, 500));
 
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
-        console.error('Full Claude response:', responseText);
-        
-        if (responseText.toLowerCase().includes('no product') || 
-            responseText.toLowerCase().includes('login') ||
-            responseText.toLowerCase().includes('cookie consent') ||
-            responseText.toLowerCase().includes('empty')) {
-          console.log('⚠️ Claude detected no products on page');
+        console.error("Full Claude response:", responseText);
+
+        if (
+          responseText.toLowerCase().includes("no product") ||
+          responseText.toLowerCase().includes("login") ||
+          responseText.toLowerCase().includes("cookie consent") ||
+          responseText.toLowerCase().includes("empty")
+        ) {
+          console.log("⚠️ Claude detected no products on page");
           return [];
         }
-        
-        throw new Error('No valid JSON array found in Claude response');
+
+        throw new Error("No valid JSON array found in Claude response");
       }
 
-      const products: ScrapedProduct[] = JSON.parse(jsonMatch[0]);
-      
-      return products.map(product => ({
+      let products: ScrapedProduct[] = [];
+      try {
+        products = JSON.parse(jsonMatch[0]);
+      } catch (parseErr) {
+        console.error("Failed to parse scraped product JSON:", parseErr);
+        console.error("Raw JSON:", jsonMatch[0].substring(0, 200));
+        products = [];
+      }
+
+      return products.map((product) => ({
         ...product,
         store: this.store,
-        scrapedAt: new Date()
+        scrapedAt: new Date(),
       }));
-
     } catch (error) {
-      console.error('AI extraction failed:', error);
+      console.error("AI extraction failed:", error);
       throw error;
     }
   }
@@ -279,8 +289,8 @@ export abstract class BaseScraper {
    */
   protected async handlePopups(page: Page): Promise<void> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // Location/delivery address popups
       const locationDismissSelectors = [
         'button:has-text("Do this later")',
@@ -292,24 +302,24 @@ export abstract class BaseScraper {
         'button[class*="dismiss"]',
         '[data-testid*="close"]',
         '[data-testid*="dismiss"]',
-        '.modal-close',
+        ".modal-close",
         '[class*="modal"] button[class*="close"]',
       ];
-      
+
       for (const selector of locationDismissSelectors) {
         try {
           const button = await page.$(selector);
           if (button) {
             console.log(`Dismissing location/popup: ${selector}`);
             await button.click();
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             break;
           }
         } catch (e) {
           // Continue to next selector
         }
       }
-      
+
       // Cookie consent banners
       const cookieSelectors = [
         'button[id*="accept"]',
@@ -318,18 +328,18 @@ export abstract class BaseScraper {
         'button:has-text("I Accept")',
         'button:has-text("Accept All")',
         '[class*="cookie"] button',
-        '#onetrust-accept-btn-handler',
-        '.cookie-accept',
+        "#onetrust-accept-btn-handler",
+        ".cookie-accept",
         '[data-testid*="accept"]',
       ];
-      
+
       for (const selector of cookieSelectors) {
         try {
           const button = await page.$(selector);
           if (button) {
             console.log(`Clicking cookie consent button: ${selector}`);
             await button.click();
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             break;
           }
         } catch (e) {
@@ -337,14 +347,17 @@ export abstract class BaseScraper {
         }
       }
     } catch (error) {
-      console.log('No popups found or already dismissed');
+      console.log("No popups found or already dismissed");
     }
   }
 
   /**
    * Wait for the product grid to be visible
    */
-  protected async waitForProductGrid(page: Page, selectors: string[]): Promise<boolean> {
+  protected async waitForProductGrid(
+    page: Page,
+    selectors: string[],
+  ): Promise<boolean> {
     for (const selector of selectors) {
       try {
         await page.waitForSelector(selector, { timeout: 5000 });
@@ -358,10 +371,10 @@ export abstract class BaseScraper {
     // Fallback: wait for any product-like elements
     try {
       await page.waitForSelector('[class*="product"]', { timeout: 5000 });
-      console.log('✓ Found products with generic selector');
+      console.log("✓ Found products with generic selector");
       return true;
     } catch {
-      console.log('⚠ Could not find product grid, proceeding anyway');
+      console.log("⚠ Could not find product grid, proceeding anyway");
       return false;
     }
   }
@@ -370,27 +383,28 @@ export abstract class BaseScraper {
    * Scroll through the page to load lazy-loaded products
    */
   protected async scrollToLoadAllProducts(page: Page): Promise<void> {
-    console.log('Scrolling to load all products...');
-    
+    console.log("Scrolling to load all products...");
+
     await page.evaluate(async () => {
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      
+      const delay = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
+
       const totalHeight = document.body.scrollHeight;
       const viewportHeight = window.innerHeight;
       let currentPosition = 0;
-      
+
       while (currentPosition < totalHeight) {
         window.scrollTo(0, currentPosition);
         await delay(300);
         currentPosition += viewportHeight * 0.8;
       }
-      
+
       // Scroll back to top
       window.scrollTo(0, 0);
       await delay(500);
     });
-    
-    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
   /**
@@ -400,11 +414,15 @@ export abstract class BaseScraper {
     try {
       const totalPages = await page.evaluate(() => {
         // Look for "Page X of Y" text
-        const pageText = document.body.innerText.match(/Page\s*\d+\s*of\s*(\d+)/i);
+        const pageText = document.body.innerText.match(
+          /Page\s*\d+\s*of\s*(\d+)/i,
+        );
         if (pageText) return parseInt(pageText[1]);
 
         // Look for "Showing X-Y of Z" text
-        const showingText = document.body.innerText.match(/of\s*(\d+)\s*(?:results|products|items)/i);
+        const showingText = document.body.innerText.match(
+          /of\s*(\d+)\s*(?:results|products|items)/i,
+        );
         if (showingText) {
           const totalProducts = parseInt(showingText[1]);
           // Estimate pages (assuming ~24 products per page)
@@ -413,13 +431,13 @@ export abstract class BaseScraper {
 
         // Look for pagination buttons
         const paginationButtons = document.querySelectorAll(
-          '.pagination a, .pagination button, [class*="pagination"] a, [class*="Pagination"] button, nav[aria-label*="pagination"] a, [class*="pager"] a'
+          '.pagination a, .pagination button, [class*="pagination"] a, [class*="Pagination"] button, nav[aria-label*="pagination"] a, [class*="pager"] a',
         );
-        
+
         let maxPage = 1;
         paginationButtons.forEach((btn) => {
           const text = btn.textContent?.trim();
-          const num = parseInt(text || '0');
+          const num = parseInt(text || "0");
           if (!isNaN(num) && num > maxPage) {
             maxPage = num;
           }
@@ -437,14 +455,18 @@ export abstract class BaseScraper {
   /**
    * Navigate to a specific page
    */
-  protected async goToPage(page: Page, pageNum: number, baseUrl: string): Promise<boolean> {
+  protected async goToPage(
+    page: Page,
+    pageNum: number,
+    baseUrl: string,
+  ): Promise<boolean> {
     try {
       // Try clicking pagination button first
       const clicked = await page.evaluate((targetPage) => {
         const buttons = document.querySelectorAll(
-          '.pagination a, .pagination button, [class*="pagination"] a, [class*="Pagination"] button, nav[aria-label*="pagination"] a, [class*="pager"] a'
+          '.pagination a, .pagination button, [class*="pagination"] a, [class*="Pagination"] button, nav[aria-label*="pagination"] a, [class*="pager"] a',
         );
-        
+
         for (const btn of buttons) {
           if (btn.textContent?.trim() === String(targetPage)) {
             (btn as HTMLElement).click();
@@ -455,23 +477,25 @@ export abstract class BaseScraper {
       }, pageNum);
 
       if (clicked) {
-        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() => {});
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await page
+          .waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 })
+          .catch(() => {});
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         return true;
       }
 
       // Fallback: modify URL with page parameter
       const url = new URL(baseUrl);
-      url.searchParams.set('page', String(pageNum));
-      
+      url.searchParams.set("page", String(pageNum));
+
       await page.goto(url.toString(), {
-        waitUntil: 'networkidle2',
-        timeout: 30000
+        waitUntil: "networkidle2",
+        timeout: 30000,
       });
-      
+
       await this.handlePopups(page);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       return true;
     } catch (error) {
       console.error(`Failed to navigate to page ${pageNum}:`, error);
@@ -484,19 +508,19 @@ export abstract class BaseScraper {
    */
   protected async navigateToPage(page: Page, url: string): Promise<void> {
     await page.goto(url, {
-      waitUntil: 'networkidle2',
-      timeout: 60000
+      waitUntil: "networkidle2",
+      timeout: 60000,
     });
 
     await this.handlePopups(page);
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
     // Scroll to trigger lazy loading
     await page.evaluate(() => {
       window.scrollTo(0, document.body.scrollHeight / 2);
     });
-    
-    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
   /**
@@ -507,7 +531,7 @@ export abstract class BaseScraper {
       await this.browser.close();
       this.browser = null;
     }
-    
+
     await this.cleanupScreenshots();
   }
 
@@ -516,10 +540,10 @@ export abstract class BaseScraper {
    */
   protected deduplicateProducts(
     products: ScrapedProduct[],
-    seenProducts: Set<string>
+    seenProducts: Set<string>,
   ): { newProducts: ScrapedProduct[]; count: number } {
     const newProducts: ScrapedProduct[] = [];
-    
+
     for (const product of products) {
       const key = `${product.name.toLowerCase()}-${product.price}`;
       if (!seenProducts.has(key)) {
@@ -527,7 +551,7 @@ export abstract class BaseScraper {
         newProducts.push(product);
       }
     }
-    
+
     return { newProducts, count: newProducts.length };
   }
 

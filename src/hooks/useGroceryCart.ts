@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ProductOffer } from './usePriceSearch';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { ProductOffer } from "./usePriceSearch";
 
 export type CartItemStatus = 'considering' | 'budgeted' | 'purchased';
 
@@ -29,7 +29,7 @@ interface AddToCartParams {
   selectedOffer?: ProductOffer;
 }
 
-const CART_STORAGE_KEY = 'grocery-cart';
+const CART_STORAGE_KEY = "grocery-cart";
 
 export const useGroceryCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -40,6 +40,7 @@ export const useGroceryCart = () => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
       if (stored) {
+<<<<<<< HEAD
         const parsed = JSON.parse(stored);
         // Migration: add status field to old items
         const migrated = parsed.map((item: any) => ({
@@ -47,9 +48,22 @@ export const useGroceryCart = () => {
           status: item.status || 'considering',
         }));
         setItems(migrated);
+=======
+        let parsed;
+        try {
+          parsed = JSON.parse(stored);
+        } catch {
+          console.warn(
+            "Corrupted grocery cart data in localStorage, resetting.",
+          );
+          localStorage.removeItem("grocery-cart"); // or whatever the key is
+          parsed = [];
+        }
+        setItems(parsed);
+>>>>>>> f97402b (Add WhatsApp webhook endpoint)
       }
     } catch (error) {
-      console.error('Failed to load cart from localStorage:', error);
+      console.error("Failed to load cart from localStorage:", error);
     }
     setIsInitialized(true);
   }, []);
@@ -60,25 +74,37 @@ export const useGroceryCart = () => {
       try {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
       } catch (error) {
-        console.error('Failed to save cart to localStorage:', error);
+        console.error("Failed to save cart to localStorage:", error);
       }
     }
   }, [items, isInitialized]);
 
   const addToCart = useCallback((params: AddToCartParams) => {
-    const { productId, productName, brand, imageUrl, quantityValue, quantityUnit, offers, selectedOffer } = params;
-    
+    const {
+      productId,
+      productName,
+      brand,
+      imageUrl,
+      quantityValue,
+      quantityUnit,
+      offers,
+      selectedOffer,
+    } = params;
+
     // Find the cheapest offer if no specific offer is selected
-    const cheapestOffer = offers.reduce((min, offer) => 
-      offer.price_cents < min.price_cents ? offer : min, offers[0]
+    const cheapestOffer = offers.reduce(
+      (min, offer) => (offer.price_cents < min.price_cents ? offer : min),
+      offers[0],
     );
-    
+
     const offerToUse = selectedOffer || cheapestOffer;
-    
-    setItems(prev => {
+
+    setItems((prev) => {
       // Check if item already exists
-      const existingIndex = prev.findIndex(item => item.productId === productId);
-      
+      const existingIndex = prev.findIndex(
+        (item) => item.productId === productId,
+      );
+
       if (existingIndex >= 0) {
         // Update quantity of existing item
         const updated = [...prev];
@@ -89,7 +115,7 @@ export const useGroceryCart = () => {
         };
         return updated;
       }
-      
+
       // Add new item
       const newItem: CartItem = {
         id: `${productId}-${Date.now()}`,
@@ -105,33 +131,36 @@ export const useGroceryCart = () => {
         addedAt: Date.now(),
         status: 'considering',
       };
-      
+
       return [...prev, newItem];
     });
   }, []);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity < 1) return;
-    
-    setItems(prev => prev.map(item => 
-      item.id === itemId ? { ...item, quantity } : item
-    ));
+
+    setItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, quantity } : item)),
+    );
   }, []);
 
   const updateStore = useCallback((itemId: string, newOffer: ProductOffer) => {
-    setItems(prev => prev.map(item => 
-      item.id === itemId ? { ...item, selectedOffer: newOffer } : item
-    ));
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? { ...item, selectedOffer: newOffer } : item,
+      ),
+    );
   }, []);
 
   const removeFromCart = useCallback((itemId: string) => {
-    setItems(prev => prev.filter(item => item.id !== itemId));
+    setItems((prev) => prev.filter((item) => item.id !== itemId));
   }, []);
 
   const clearCart = useCallback(() => {
     setItems([]);
   }, []);
 
+<<<<<<< HEAD
   const markAsBudgeted = useCallback((itemId: string) => {
     setItems(prev => prev.map(item => 
       item.id === itemId ? { ...item, status: 'budgeted' as CartItemStatus } : item
@@ -161,25 +190,35 @@ export const useGroceryCart = () => {
   const itemCount = useMemo(() => 
     items.reduce((sum, item) => sum + item.quantity, 0), 
     [items]
+=======
+  const itemCount = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity, 0),
+    [items],
+>>>>>>> f97402b (Add WhatsApp webhook endpoint)
   );
 
-  const totalCents = useMemo(() => 
-    items.reduce((sum, item) => sum + (item.selectedOffer.price_cents * item.quantity), 0), 
-    [items]
+  const totalCents = useMemo(
+    () =>
+      items.reduce(
+        (sum, item) => sum + item.selectedOffer.price_cents * item.quantity,
+        0,
+      ),
+    [items],
   );
 
   const storeBreakdown = useMemo(() => {
     const breakdown: Record<string, { count: number; totalCents: number }> = {};
-    
-    items.forEach(item => {
+
+    items.forEach((item) => {
       const store = item.selectedOffer.store;
       if (!breakdown[store]) {
         breakdown[store] = { count: 0, totalCents: 0 };
       }
       breakdown[store].count += item.quantity;
-      breakdown[store].totalCents += item.selectedOffer.price_cents * item.quantity;
+      breakdown[store].totalCents +=
+        item.selectedOffer.price_cents * item.quantity;
     });
-    
+
     return breakdown;
   }, [items]);
 
