@@ -1,56 +1,48 @@
 
-## Root Cause Found: `VITE_SUPABASE_URL` is `undefined`
 
-### What the Logs Showed
+## Fix: Build Errors in `chat-financial` Edge Function
 
-Edge function logs: **completely empty** — the function never received the request.
+### Problem
 
-Network request (the smoking gun):
-```
-POST undefined/functions/v1/chat-financial
-Status: 404
-```
-
-The URL is literally `undefined/functions/v1/chat-financial`. The request hits a 404 and never reaches Supabase at all — which is why there are no logs, no 401s, nothing.
-
-### Why This Happens
-
-Both `src/pages/Chat.tsx` and `src/components/chat/FloatingChat.tsx` construct the chat URL like this:
+The edge function `supabase/functions/chat-financial/index.ts` creates a Supabase client without database type information:
 
 ```typescript
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-financial`;
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 ```
 
-The `.env` file does not exist in the project, so `import.meta.env.VITE_SUPABASE_URL` evaluates to `undefined` at runtime. All Supabase database calls work fine because `src/integrations/supabase/client.ts` hardcodes the URL directly — but the fetch to the edge function bypasses that.
+Without a generic type parameter, TypeScript infers all table columns as `never`, causing every `.insert()`, `.update()`, `.delete()`, and property access on query results to fail with type errors (28+ errors total).
 
-### The Fix
+### Solution
 
-Replace the raw `fetch` URL construction in both files with `supabase.functions.invoke()`, which uses the already-configured Supabase client and never relies on env vars. This is also the correct pattern per Supabase best practices.
+Add `any` as the generic type parameter when creating the Supabase client. This tells TypeScript to skip strict table-column validation, which is the standard approach for edge functions that don't have access to the auto-generated `Database` type.
 
-**`src/pages/Chat.tsx`** — remove the `CHAT_URL` constant and replace the fetch block with `supabase.functions.invoke('chat-financial', { body: ..., headers: ... })`. The response is a `ReadableStream` that can be consumed the same way.
+### Changes
 
-**`src/components/chat/FloatingChat.tsx`** — same change.
+**File: `supabase/functions/chat-financial/index.ts`**
 
-The cleanest approach is to use `supabase.functions.invoke()` with the streaming option, but since the current code manually reads SSE streams, we can simply replace just the URL with the hardcoded value from `client.ts`:
+1. Where the Supabase client is created (likely around the `createClient(...)` call inside `serve`), change it from:
+   ```typescript
+   const supabase = createClient(supabaseUrl, supabaseKey, ...);
+   ```
+   to:
+   ```typescript
+   const supabase = createClient<any>(supabaseUrl, supabaseKey, ...);
+   ```
 
-```typescript
-// BEFORE (broken)
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-financial`;
+2. Update the `executeTool` function signature (line 244) from:
+   ```typescript
+   supabase: ReturnType<typeof createClient>,
+   ```
+   to:
+   ```typescript
+   supabase: ReturnType<typeof createClient<any>>,
+   ```
+   Or simply use `any` for the parameter type.
 
-// AFTER (fixed)
-const CHAT_URL = `https://sqbcxopovghwgdqplejr.supabase.co/functions/v1/chat-financial`;
-```
-
-This is the same URL already hardcoded in `client.ts` and is the correct Supabase project URL.
-
-### What Will Be Changed
-
-- `src/pages/Chat.tsx` — fix `CHAT_URL` constant (line 24)
-- `src/components/chat/FloatingChat.tsx` — fix `CHAT_URL` constant (line 23)
+This eliminates all 28+ type errors without changing any runtime behavior.
 
 ### What Will NOT Change
-
-- Edge function code — already correct and deployed
-- Authentication logic — already correct
-- Model name — already updated to `claude-sonnet-4-5-20250929`
-- All other files — unchanged
+- No runtime logic changes
+- No authentication changes  
+- No model or tool changes
+- The function behavior remains identical -- this is purely a TypeScript fix
