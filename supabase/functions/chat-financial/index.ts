@@ -241,7 +241,7 @@ const tools = [
 async function executeTool(
   toolName: string,
   toolInput: Record<string, unknown>,
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   userId: string,
 ): Promise<{ result: string; action?: string }> {
   switch (toolName) {
@@ -607,7 +607,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
+    const supabase = createClient<any>(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
