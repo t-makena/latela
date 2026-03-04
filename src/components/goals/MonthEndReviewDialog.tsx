@@ -89,10 +89,8 @@ export const MonthEndReviewDialog = () => {
         const goal = goals.find(g => g.id === adjustment.goalId);
         if (!goal) continue;
 
-        const dueDate = new Date();
-        if (adjustment.timelineExtensionMonths > 0 && adjustment.timelineExtensionMonths !== Infinity) {
-          dueDate.setMonth(dueDate.getMonth() + adjustment.timelineExtensionMonths);
-        }
+        // Preserve the goal's original due date — only update allocation
+        const dueDate = new Date(goal.timeline);
 
         await updateGoal(adjustment.goalId, {
           name: goal.name,

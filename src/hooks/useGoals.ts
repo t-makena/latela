@@ -95,7 +95,7 @@ export const useGoals = () => {
         name: goal.name,
         target: goal.target,
         progress,
-        dueDate: `Due: ${formattedDueDate}`,
+        dueDate: `Est completion date: ${formattedDueDate}`,
         priority: `${priorityPercentage.toFixed(2)}%`,
         split: `${split}%`,
         amountSaved: goal.current_saved,
