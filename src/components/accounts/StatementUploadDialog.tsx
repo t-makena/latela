@@ -49,6 +49,8 @@ export const StatementUploadDialog = ({
   const [dragActive, setDragActive] = useState(false);
   const [processingStage, setProcessingStage] = useState<ProcessingStage>(null);
   const { toast } = useToast();
+  const isUpdateMode = !!accountId;
+  const PROCESSING_STAGES = getProcessingStages(isUpdateMode);
 
   const handleFile = async (file: File) => {
     // Validate file type
