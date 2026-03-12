@@ -18,6 +18,7 @@ type PeriodOption = "1 Mth" | "3 Mth" | "6 Mth" | "1 Yr";
 
 export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', accountId }: { titleKey?: string; accountId?: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("1 Mth");
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const { t } = useLanguage();
   
   const { transactions } = useTransactions({ currentMonthOnly: false, limit: 2000 });
