@@ -23,7 +23,7 @@ type ProcessingStage = 'reading' | 'parsing' | 'creating' | 'importing' | 'categ
 const PROCESSING_STAGES = [
   { key: 'reading', label: 'Reading file' },
   { key: 'parsing', label: 'Parsing statement' },
-  { key: 'creating', label: 'Creating account' },
+  { key: 'creating', label: 'Setting up account' },
   { key: 'importing', label: 'Importing transactions' },
   { key: 'categorizing', label: 'Categorizing with AI' },
 ] as const;
