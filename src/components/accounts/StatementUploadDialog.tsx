@@ -15,6 +15,7 @@ interface StatementUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  accountId?: string;
 }
 
 type ProcessingStage = 'reading' | 'parsing' | 'creating' | 'importing' | 'categorizing' | null;
