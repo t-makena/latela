@@ -150,7 +150,13 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', ac
       <div 
         className="bg-card rounded-3xl border border-foreground p-5 w-full"
       >
-        <h2 className="heading-card mb-4">{t(titleKey)}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="heading-card">{t(titleKey)}</h2>
+          <Button variant="outline" size="sm" onClick={() => setUploadDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Update
+          </Button>
+        </div>
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
