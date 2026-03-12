@@ -28,5 +28,9 @@
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/lib/statementParser.ts",
+    "src/lib/whatsapp.ts"
   ]
 }
