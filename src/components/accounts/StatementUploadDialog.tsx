@@ -229,8 +229,10 @@ export const StatementUploadDialog = ({
           }
 
           toast({
-            title: "Account added successfully!",
-            description: `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
+            title: existingAccount ? "Statement updated!" : "Account added successfully!",
+            description: existingAccount 
+              ? `Updated account with new transactions from ${data.accountInfo.bankName}`
+              : `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
           });
 
           onOpenChange(false);
