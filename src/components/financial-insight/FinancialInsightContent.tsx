@@ -59,6 +59,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const [selectedCategoryForHistory, setSelectedCategoryForHistory] = useState<string | undefined>();
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>();
   const [legendDialogOpen, setLegendDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedCategoryForGraph, setSelectedCategoryForGraph] = useState<string | null>(null);
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   const [lastClickedCategory, setLastClickedCategory] = useState<string | null>(null);
