@@ -998,6 +998,11 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           initialCategoryFilterName={selectedCategoryName}
         />
       </div>
+      <StatementUploadDialog 
+        open={uploadDialogOpen} 
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   );
 };
