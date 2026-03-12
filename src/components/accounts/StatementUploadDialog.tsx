@@ -20,19 +20,19 @@ interface StatementUploadDialogProps {
 
 type ProcessingStage = 'reading' | 'parsing' | 'creating' | 'importing' | 'categorizing' | null;
 
-const PROCESSING_STAGES = [
+const getProcessingStages = (isUpdateMode: boolean) => [
   { key: 'reading', label: 'Reading file' },
   { key: 'parsing', label: 'Parsing statement' },
-  { key: 'creating', label: 'Setting up account' },
+  { key: 'creating', label: isUpdateMode ? 'Updating account' : 'Setting up account' },
   { key: 'importing', label: 'Importing transactions' },
   { key: 'categorizing', label: 'Categorizing with AI' },
 ] as const;
 
-const getStageMessage = (stage: ProcessingStage): string => {
+const getStageMessage = (stage: ProcessingStage, isUpdateMode: boolean): string => {
   switch (stage) {
     case 'reading': return 'Reading your file...';
     case 'parsing': return 'Parsing your statement...';
-    case 'creating': return 'Creating your account...';
+    case 'creating': return isUpdateMode ? 'Updating your account...' : 'Creating your account...';
     case 'importing': return 'Importing transactions...';
     case 'categorizing': return 'Categorizing with AI...';
     default: return 'Processing...';
@@ -49,6 +49,8 @@ export const StatementUploadDialog = ({
   const [dragActive, setDragActive] = useState(false);
   const [processingStage, setProcessingStage] = useState<ProcessingStage>(null);
   const { toast } = useToast();
+  const isUpdateMode = !!accountId;
+  const PROCESSING_STAGES = getProcessingStages(isUpdateMode);
 
   const handleFile = async (file: File) => {
     // Validate file type
@@ -109,6 +111,20 @@ export const StatementUploadDialog = ({
 
           const userId = (await supabase.auth.getUser()).data.user?.id;
           let targetAccountId: string;
+          let mismatchDetected = false;
+
+          // Detect mismatched account when updating
+          if (accountId) {
+            const { data: currentAccount } = await supabase
+              .from('accounts')
+              .select('account_number')
+              .eq('id', accountId)
+              .single();
+
+            if (currentAccount && currentAccount.account_number !== data.accountInfo.accountNumber) {
+              mismatchDetected = true;
+            }
+          }
 
           // Check if account already exists for this user
           const { data: existingAccount } = await supabase
@@ -228,12 +244,20 @@ export const StatementUploadDialog = ({
             }
           }
 
-          toast({
-            title: existingAccount ? "Statement updated!" : "Account added successfully!",
-            description: existingAccount 
-              ? `Updated account with new transactions from ${data.accountInfo.bankName}`
-              : `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
-          });
+          if (mismatchDetected) {
+            toast({
+              title: "Different account detected",
+              description: `This statement belongs to a different account (${data.accountInfo.accountNumber}). We've ${existingAccount ? 'updated' : 'created'} that account instead.`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: existingAccount ? "Statement updated!" : "Account added successfully!",
+              description: existingAccount 
+                ? `Updated account with new transactions from ${data.accountInfo.bankName}`
+                : `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
+            });
+          }
 
           onOpenChange(false);
           onSuccess?.();
@@ -332,7 +356,7 @@ export const StatementUploadDialog = ({
               {/* Stage message */}
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground animate-pulse">
-                  {getStageMessage(processingStage)}
+                  {getStageMessage(processingStage, isUpdateMode)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   This may take a moment
