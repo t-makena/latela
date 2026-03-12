@@ -244,12 +244,20 @@ export const StatementUploadDialog = ({
             }
           }
 
-          toast({
-            title: existingAccount ? "Statement updated!" : "Account added successfully!",
-            description: existingAccount 
-              ? `Updated account with new transactions from ${data.accountInfo.bankName}`
-              : `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
-          });
+          if (mismatchDetected) {
+            toast({
+              title: "Different account detected",
+              description: `This statement belongs to a different account (${data.accountInfo.accountNumber}). We've ${existingAccount ? 'updated' : 'created'} that account instead.`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: existingAccount ? "Statement updated!" : "Account added successfully!",
+              description: existingAccount 
+                ? `Updated account with new transactions from ${data.accountInfo.bankName}`
+                : `Imported ${data.summary.totalTransactions} transactions from ${data.accountInfo.bankName}`,
+            });
+          }
 
           onOpenChange(false);
           onSuccess?.();
