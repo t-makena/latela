@@ -20,19 +20,19 @@ interface StatementUploadDialogProps {
 
 type ProcessingStage = 'reading' | 'parsing' | 'creating' | 'importing' | 'categorizing' | null;
 
-const PROCESSING_STAGES = [
+const getProcessingStages = (isUpdateMode: boolean) => [
   { key: 'reading', label: 'Reading file' },
   { key: 'parsing', label: 'Parsing statement' },
-  { key: 'creating', label: 'Setting up account' },
+  { key: 'creating', label: isUpdateMode ? 'Updating account' : 'Setting up account' },
   { key: 'importing', label: 'Importing transactions' },
   { key: 'categorizing', label: 'Categorizing with AI' },
 ] as const;
 
-const getStageMessage = (stage: ProcessingStage): string => {
+const getStageMessage = (stage: ProcessingStage, isUpdateMode: boolean): string => {
   switch (stage) {
     case 'reading': return 'Reading your file...';
     case 'parsing': return 'Parsing your statement...';
-    case 'creating': return 'Creating your account...';
+    case 'creating': return isUpdateMode ? 'Updating your account...' : 'Creating your account...';
     case 'importing': return 'Importing transactions...';
     case 'categorizing': return 'Categorizing with AI...';
     default: return 'Processing...';
