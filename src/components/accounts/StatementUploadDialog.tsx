@@ -111,6 +111,20 @@ export const StatementUploadDialog = ({
 
           const userId = (await supabase.auth.getUser()).data.user?.id;
           let targetAccountId: string;
+          let mismatchDetected = false;
+
+          // Detect mismatched account when updating
+          if (accountId) {
+            const { data: currentAccount } = await supabase
+              .from('accounts')
+              .select('account_number')
+              .eq('id', accountId)
+              .single();
+
+            if (currentAccount && currentAccount.account_number !== data.accountInfo.accountNumber) {
+              mismatchDetected = true;
+            }
+          }
 
           // Check if account already exists for this user
           const { data: existingAccount } = await supabase
