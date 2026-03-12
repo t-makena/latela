@@ -1002,6 +1002,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
         open={uploadDialogOpen} 
         onOpenChange={setUploadDialogOpen}
         onSuccess={() => window.location.reload()}
+        accountId={accountId}
       />
     </div>
   );
