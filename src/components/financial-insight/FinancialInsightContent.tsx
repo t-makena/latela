@@ -451,8 +451,12 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     <div className="space-y-6 relative z-10">
       {/* Budget Insight Card */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="heading-main">{t('finance.accountInsight')}</CardTitle>
+          <Button variant="outline" size="sm" onClick={() => setUploadDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Update
+          </Button>
         </CardHeader>
         <CardContent>
           <BudgetBreakdown 

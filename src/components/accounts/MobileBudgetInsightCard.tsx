@@ -224,6 +224,11 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', ac
           </tbody>
         </table>
       </div>
+      <StatementUploadDialog 
+        open={uploadDialogOpen} 
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   );
 };
