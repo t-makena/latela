@@ -1,20 +1,14 @@
 
 
-## Add "Update Statement" Button to Account Insight Card
+## Apply Garet Font to Chat Components
+
+Apply `font-garet` class to both chat components so all chatbot text uses the Garet font family.
 
 ### Changes
 
-**`src/components/financial-insight/FinancialInsightContent.tsx`** (line 451):
-- Change the `<CardHeader>` to use `flex flex-row items-center justify-between` layout
-- Add a button with an upload icon (e.g., `Upload` from lucide-react) in the top-right corner
-- Add local state `uploadDialogOpen` to control the `StatementUploadDialog`
-- Import and render `StatementUploadDialog` triggered by the button
+**`src/pages/Chat.tsx`** — Add `font-garet` to the outermost chat container div so all text inside (messages, input, sidebar titles) inherits Garet.
 
-**`src/components/accounts/MobileBudgetInsightCard.tsx`** (line 148-151):
-- Same approach: add an upload button next to the heading
-- Import and render `StatementUploadDialog`
+**`src/components/chat/FloatingChat.tsx`** — Same approach: add `font-garet` to the floating chat container div.
 
-### Technical detail
-
-The button will open the existing `StatementUploadDialog` component. On success, the page reloads to reflect new data (`window.location.reload()`). The button will use `variant="outline"` and `size="sm"` with the `Upload` icon for a clean, non-intrusive look.
+This uses the existing `font-garet` utility already defined in `tailwind.config.ts` (`'Garet', sans-serif`).
 

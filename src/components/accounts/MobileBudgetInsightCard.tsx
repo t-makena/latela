@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Upload } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useBudgetItems } from "@/hooks/useBudgetItems";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useLanguage } from "@/hooks/useLanguage";
+import { StatementUploadDialog } from "@/components/accounts/StatementUploadDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ type PeriodOption = "1 Mth" | "3 Mth" | "6 Mth" | "1 Yr";
 
 export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', accountId }: { titleKey?: string; accountId?: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("1 Mth");
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const { t } = useLanguage();
   
   const { transactions } = useTransactions({ currentMonthOnly: false, limit: 2000 });
@@ -148,7 +150,13 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', ac
       <div 
         className="bg-card rounded-3xl border border-foreground p-5 w-full"
       >
-        <h2 className="heading-card mb-4">{t(titleKey)}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="heading-card">{t(titleKey)}</h2>
+          <Button variant="outline" size="sm" onClick={() => setUploadDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Update
+          </Button>
+        </div>
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
@@ -216,6 +224,11 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', ac
           </tbody>
         </table>
       </div>
+      <StatementUploadDialog 
+        open={uploadDialogOpen} 
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   );
 };

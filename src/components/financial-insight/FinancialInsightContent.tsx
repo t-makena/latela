@@ -1,5 +1,7 @@
-import { TrendingUp, Info } from "lucide-react";
+import { TrendingUp, Info, Upload } from "lucide-react";
+import { StatementUploadDialog } from "@/components/accounts/StatementUploadDialog";
 import { useState, useEffect } from "react";
+
 import { useLocation } from "react-router-dom";
 import {
   BarChart,
@@ -57,6 +59,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
   const [selectedCategoryForHistory, setSelectedCategoryForHistory] = useState<string | undefined>();
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | undefined>();
   const [legendDialogOpen, setLegendDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedCategoryForGraph, setSelectedCategoryForGraph] = useState<string | null>(null);
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   const [lastClickedCategory, setLastClickedCategory] = useState<string | null>(null);
@@ -448,8 +451,12 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
     <div className="space-y-6 relative z-10">
       {/* Budget Insight Card */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="heading-main">{t('finance.accountInsight')}</CardTitle>
+          <Button variant="outline" size="sm" onClick={() => setUploadDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Update
+          </Button>
         </CardHeader>
         <CardContent>
           <BudgetBreakdown 
@@ -991,6 +998,11 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           initialCategoryFilterName={selectedCategoryName}
         />
       </div>
+      <StatementUploadDialog 
+        open={uploadDialogOpen} 
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   );
 };
