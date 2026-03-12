@@ -2,6 +2,7 @@ import { TrendingUp, Info, Upload } from "lucide-react";
 import { StatementUploadDialog } from "@/components/accounts/StatementUploadDialog";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+
 import { useLocation } from "react-router-dom";
 import {
   BarChart,
