@@ -107,82 +107,123 @@ export const StatementUploadDialog = ({
 
           setProcessingStage('creating');
 
-          // Create account with parsed data
-          const { data: accountData, error: accountError } = await supabase
-            .from('accounts')
-            .insert({
-              account_number: data.accountInfo.accountNumber,
-              bank_name: data.accountInfo.bankName,
-              account_type: data.accountInfo.accountType,
-              account_name: data.accountInfo.accountName || `${data.accountInfo.bankName} Account`,
-              current_balance: Math.round(data.accountInfo.currentBalance * 100), // Store in cents
-              balance_brought_forward: 0,
-              currency: 'ZAR',
-              status: 'active',
-              user_id: (await supabase.auth.getUser()).data.user?.id,
-            })
-            .select()
-            .single();
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          let targetAccountId: string;
 
-          if (accountError) {
-            throw accountError;
+          // Check if account already exists for this user
+          const { data: existingAccount } = await supabase
+            .from('accounts')
+            .select('id')
+            .eq('account_number', data.accountInfo.accountNumber)
+            .eq('user_id', userId!)
+            .maybeSingle();
+
+          if (existingAccount) {
+            // Update existing account balance
+            const { error: updateError } = await supabase
+              .from('accounts')
+              .update({
+                available_balance: Math.round(data.accountInfo.currentBalance * 100),
+                current_balance: Math.round(data.accountInfo.currentBalance * 100),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', existingAccount.id);
+
+            if (updateError) throw updateError;
+            targetAccountId = existingAccount.id;
+          } else {
+            // Create new account
+            const { data: accountData, error: accountError } = await supabase
+              .from('accounts')
+              .insert({
+                account_number: data.accountInfo.accountNumber,
+                bank_name: data.accountInfo.bankName,
+                account_type: data.accountInfo.accountType,
+                account_name: data.accountInfo.accountName || `${data.accountInfo.bankName} Account`,
+                current_balance: Math.round(data.accountInfo.currentBalance * 100),
+                balance_brought_forward: 0,
+                currency: 'ZAR',
+                status: 'active',
+                user_id: userId,
+              })
+              .select()
+              .single();
+
+            if (accountError) throw accountError;
+            targetAccountId = accountData.id;
           }
 
           // Import transactions if any were parsed
           if (data.transactions && data.transactions.length > 0) {
             setProcessingStage('importing');
-            
-            const userId = (await supabase.auth.getUser()).data.user?.id;
-            
+
             const transactionsToInsert = data.transactions.map((t: any) => ({
               user_id: userId,
-              account_id: accountData.id,
+              account_id: targetAccountId,
               transaction_date: new Date(t.date).toISOString(),
               description: t.description,
               reference: t.reference || t.description.substring(0, 50),
-              // Store debits as negative cents, credits as positive cents
               amount: Math.round(t.type === 'debit' ? -Math.abs(t.amount) * 100 : Math.abs(t.amount) * 100),
               balance: t.balance ? Math.round(t.balance * 100) : 0,
               cleared: true,
             }));
 
-            const { error: transError } = await supabase
-              .from('transactions')
-              .insert(transactionsToInsert);
+            // If updating existing account, deduplicate against existing transactions
+            let newTransactions = transactionsToInsert;
+            if (existingAccount) {
+              const { data: existingTxns } = await supabase
+                .from('transactions')
+                .select('transaction_date, amount, description')
+                .eq('account_id', targetAccountId);
 
-            if (transError) {
-              console.error('Transaction import error:', transError);
-              // Don't fail the whole operation, account was created successfully
-            } else {
-              setProcessingStage('categorizing');
-
-              // Loop until all transactions are categorized (batch limit = 50 per call)
-              let remaining = Infinity;
-              let totalCategorized = 0;
-              while (remaining > 0) {
-                const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
-                  body: { accountId: accountData.id }
+              if (existingTxns && existingTxns.length > 0) {
+                const existingKeys = new Set(
+                  existingTxns.map((t: any) => `${t.transaction_date}|${t.amount}|${t.description}`)
+                );
+                newTransactions = transactionsToInsert.filter((t: any) => {
+                  const key = `${t.transaction_date}|${t.amount}|${t.description}`;
+                  return !existingKeys.has(key);
                 });
+              }
+            }
 
-                if (catError) {
-                  console.error('Categorization error:', catError);
-                  toast({
-                    title: "Categorization incomplete",
-                    description: "Transactions imported but some couldn't be categorized",
-                    variant: "destructive",
+            if (newTransactions.length > 0) {
+              const { error: transError } = await supabase
+                .from('transactions')
+                .insert(newTransactions);
+
+              if (transError) {
+                console.error('Transaction import error:', transError);
+              } else {
+                setProcessingStage('categorizing');
+
+                let remaining = Infinity;
+                let totalCategorized = 0;
+                while (remaining > 0) {
+                  const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
+                    body: { accountId: targetAccountId }
                   });
-                  break;
+
+                  if (catError) {
+                    console.error('Categorization error:', catError);
+                    toast({
+                      title: "Categorization incomplete",
+                      description: "Transactions imported but some couldn't be categorized",
+                      variant: "destructive",
+                    });
+                    break;
+                  }
+                  
+                  if (!catData?.success) break;
+                  
+                  totalCategorized += catData.categorized || 0;
+                  remaining = catData.remaining || 0;
+                  console.log(`Categorization batch: ${catData.categorized} done, ${remaining} remaining, ${catData.aiCalls} AI calls`);
                 }
                 
-                if (!catData?.success) break;
-                
-                totalCategorized += catData.categorized || 0;
-                remaining = catData.remaining || 0;
-                console.log(`Categorization batch: ${catData.categorized} done, ${remaining} remaining, ${catData.aiCalls} AI calls`);
-              }
-              
-              if (totalCategorized > 0) {
-                console.log(`Categorization complete: ${totalCategorized} total transactions categorized`);
+                if (totalCategorized > 0) {
+                  console.log(`Categorization complete: ${totalCategorized} total transactions categorized`);
+                }
               }
             }
           }
