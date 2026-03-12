@@ -43,6 +43,7 @@ export const StatementUploadDialog = ({
   open,
   onOpenChange,
   onSuccess,
+  accountId,
 }: StatementUploadDialogProps) => {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
