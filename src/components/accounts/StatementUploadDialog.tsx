@@ -334,7 +334,7 @@ export const StatementUploadDialog = ({
               {/* Stage message */}
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground animate-pulse">
-                  {getStageMessage(processingStage)}
+                  {getStageMessage(processingStage, isUpdateMode)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   This may take a moment
