@@ -532,9 +532,419 @@ function getMainMenu(): InteractiveMessage {
 
 async function handleGreeting(ctx: UserContext | null): Promise<string> {
   const name = ctx?.name || "there";
-  return `Hi ${name}! Welcome back to Latela. 👋\n\nHere's what I can help with:\n💳 *"Balance"* — 30-day summary\n📊 *"Score"* — Latela Score\n💰 *"Budget"* — Budget status\n📂 *"Spending"* — Category breakdown\n💬 *"Chat"* — Budget Buddy (AI)\n❓ *"Help"* — Full command list\n\nWhat would you like to know?`;
+  return `Hi ${name}! Welcome back to Latela.\n\nWhat would you like to know?\n\n1. Balances — Available, Budget & Savings\n2. Budget plan\n3. Goals & progress\n4. Upcoming events\n5. Chat w/ Budget Buddy\n\nType a number or *menu* for the full list.`;
 }
 
+async function handleBalances(ctx: UserContext | null): Promise<string> {
+  if (!ctx)
+    return "I don't have your account linked yet.\n\nSign up on the Latela app.\n\nType *menu* to go back.";
+
+  let r = `*${ctx.name}'s Balances*\n\n`;
+
+  if (ctx.accounts.length > 0) {
+    r += `*Accounts:*\n`;
+    ctx.accounts.forEach((a) => {
+      const aName = a.account_name || a.bank_name || "Account";
+      r += `  ${aName}: R${((a.available_balance || 0) / 100).toFixed(2)}\n`;
+    });
+  } else {
+    r += `No accounts found. Upload a bank statement on the app.\n`;
+  }
+
+  if (ctx.budgetItems.length > 0) {
+    const totalBudgeted = ctx.budgetItems.reduce((s, b) => s + b.amount, 0);
+    const totalSpent = ctx.budgetItems.reduce((s, b) => s + (b.amount_spent || 0), 0);
+    r += `\n*Budget:*\n  Budgeted: R${totalBudgeted.toFixed(2)}\n  Spent: R${totalSpent.toFixed(2)}\n  Remaining: R${(totalBudgeted - totalSpent).toFixed(2)}\n`;
+  }
+
+  if (ctx.goals.length > 0) {
+    const totalSaved = ctx.goals.reduce((s, g) => s + (g.current_saved || 0), 0);
+    const totalTarget = ctx.goals.reduce((s, g) => s + g.target, 0);
+    r += `\n*Savings:*\n  Saved: R${totalSaved.toFixed(2)} / R${totalTarget.toFixed(2)}\n`;
+  }
+
+  r += `\nType *menu* to go back.`;
+  return r;
+}
+
+async function handleBudgetPlan(ctx: UserContext | null): Promise<string> {
+  if (!ctx) return "I need your account linked.\n\nType *menu* to go back.";
+
+  const month = new Date().toLocaleString("en-ZA", { month: "long", year: "numeric" });
+  let r = `*Budget Plan — ${month}*\n\n`;
+  r += `Split: ${ctx.settings.needs_percentage}% Needs / ${ctx.settings.wants_percentage}% Wants / ${ctx.settings.savings_percentage}% Savings\n`;
+
+  if (ctx.budgetItems.length > 0) {
+    r += `\n*Budget Items:*\n`;
+    ctx.budgetItems.forEach((b) => {
+      const spent = b.amount_spent || 0;
+      const pct = b.amount > 0 ? Math.round((spent / b.amount) * 100) : 0;
+      const icon = spent <= b.amount ? "✅" : "🔴";
+      r += `${icon} ${b.name}: R${spent.toFixed(0)} / R${b.amount} (${pct}%) — ${b.frequency}\n`;
+    });
+  } else {
+    r += `\nNo budget items set up yet. Create them in the Latela app.\n`;
+  }
+
+  r += `\nType *menu* to go back.`;
+  return r;
+}
+
+async function handleGoals(ctx: UserContext | null): Promise<string> {
+  if (!ctx) return "I need your account linked.\n\nType *menu* to go back.";
+  if (ctx.goals.length === 0)
+    return `No savings goals set up yet. Create one in the Latela app.\n\nType *menu* to go back.`;
+
+  let r = `*Goals & Progress*\n\n`;
+  ctx.goals.forEach((g) => {
+    const saved = g.current_saved || 0;
+    const pct = g.target > 0 ? Math.round((saved / g.target) * 100) : 0;
+    const bar = "█".repeat(Math.floor(pct / 10)) + "░".repeat(10 - Math.floor(pct / 10));
+    r += `*${g.name}*\n  ${bar} ${pct}%\n  R${saved.toFixed(2)} / R${g.target.toFixed(2)}\n`;
+    if (g.monthly_allocation) r += `  Monthly: R${g.monthly_allocation.toFixed(2)}\n`;
+    if (g.due_date) r += `  Due: ${g.due_date}\n`;
+    r += `\n`;
+  });
+
+  r += `Type *menu* to go back.`;
+  return r;
+}
+
+async function handleEvents(ctx: UserContext | null): Promise<string> {
+  if (!ctx) return "I need your account linked.\n\nType *menu* to go back.";
+  if (ctx.upcomingEvents.length === 0)
+    return `No upcoming events scheduled. Add events in the Latela app.\n\nType *menu* to go back.`;
+
+  let r = `*Upcoming Events*\n\n`;
+  ctx.upcomingEvents.forEach((e) => {
+    r += `📅 *${e.event_name}*\n  Date: ${e.event_date}\n  Budget: R${e.budgeted_amount.toFixed(2)}`;
+    if (e.category) r += `\n  Category: ${e.category}`;
+    r += `\n\n`;
+  });
+
+  const totalBudget = ctx.upcomingEvents.reduce((s, e) => s + e.budgeted_amount, 0);
+  r += `Total budgeted: R${totalBudget.toFixed(2)}\n\nType *menu* to go back.`;
+  return r;
+}
+
+function handleHelp(): string {
+  return `*Latela Commands*\n\n1️⃣ *"Balances"* — Available, Budget & Savings\n2️⃣ *"Budget"* — Monthly budget plan\n3️⃣ *"Goals"* — Savings goals & progress\n4️⃣ *"Events"* — Upcoming events\n5️⃣ *"Chat"* — Budget Buddy AI\n\n📄 *"Statement"* — Upload bank statement\n🏠 *"Menu"* — Options list\n↩️ *"Back"* — Return to menu\n❓ *"Help"* — This list\n\nOr ask anything in plain English!\n\nlatela.co.za`;
+}
+
+// ─── Router ──────────────────────────────────────────────────────────────────
+
+async function route(
+  text: string,
+  phone: string,
+  state: SessionState,
+  btnId?: string,
+): Promise<RouteResult> {
+  const i = normalise(text);
+
+  // Greetings
+  if (["hi", "hello", "hey", "howzit", "hiya"].includes(i)) {
+    await setSessionState(phone, "awaiting_menu");
+    return { type: "predetermined" };
+  }
+
+  // Menu
+  if (["menu", "start", "home"].includes(i) || btnId === "cmd_menu") {
+    await setSessionState(phone, "awaiting_menu");
+    return { type: "predetermined", interactive: getMainMenu() };
+  }
+
+  // Help
+  if (i === "help") {
+    await setSessionState(phone, "idle");
+    return { type: "predetermined", response: handleHelp() };
+  }
+
+  // Back / Exit
+  if (["back", "exit", "stop", "quit", "0"].includes(i)) {
+    await setSessionState(phone, "awaiting_menu");
+    return { type: "predetermined", interactive: getMainMenu() };
+  }
+
+  // 1. Balances
+  if (i === "1" || i === "balance" || i === "balances" || btnId === "cmd_balances") {
+    await setSessionState(phone, "idle");
+    return { type: "predetermined" };
+  }
+
+  // 2. Budget plan
+  if (i === "2" || i === "budget" || i === "budgets" || i === "budget plan" || btnId === "cmd_budget_plan") {
+    await setSessionState(phone, "idle");
+    return { type: "predetermined" };
+  }
+
+  // 3. Goals
+  if (i === "3" || i === "goals" || i === "goals and progress" || btnId === "cmd_goals") {
+    await setSessionState(phone, "idle");
+    return { type: "predetermined" };
+  }
+
+  // 4. Upcoming events
+  if (i === "4" || i === "events" || i === "upcoming events" || btnId === "cmd_events") {
+    await setSessionState(phone, "idle");
+    return { type: "predetermined" };
+  }
+
+  // 5. Chat w/ Budget Buddy
+  if (
+    i === "5" ||
+    i === "chat" ||
+    i === "buddy" ||
+    i === "budget buddy" ||
+    i === "chat w budget buddy" ||
+    btnId === "cmd_chat"
+  ) {
+    await setSessionState(phone, "in_budget_buddy");
+    return {
+      type: "predetermined",
+      response:
+        "*Budget Buddy is here!*\n\nAsk me anything about your finances.\n\nType *back* to return to the menu.",
+    };
+  }
+
+  // Statement upload prompt
+  if (i === "statement" || i === "upload" || i === "bank statement") {
+    await setSessionState(phone, "idle");
+    return {
+      type: "predetermined",
+      response:
+        "*Upload Your Bank Statement*\n\nSend me your statement as:\n📎 *PDF* — From your banking app\n📸 *Photo* — Screenshot of your statement\n\nI support FNB, Standard Bank, ABSA, Nedbank, Capitec, TymeBank, and Discovery Bank.\n\nJust send the file!",
+    };
+  }
+
+  // Budget Buddy mode
+  if (state === "in_budget_buddy") return { type: "claude" };
+
+  // Awaiting menu — didn't understand
+  if (state === "awaiting_menu")
+    return {
+      type: "predetermined",
+      response:
+        "I didn't catch that.\n\n1. Balances\n2. Budget plan\n3. Goals & progress\n4. Upcoming events\n5. Chat w/ Budget Buddy\n\nOr type *help* for all commands.",
+    };
+
+  // Default — show menu
+  await setSessionState(phone, "awaiting_menu");
+  return { type: "predetermined", interactive: getMainMenu() };
+}
+
+// ─── Process Message ─────────────────────────────────────────────────────────
+
+async function processMessage(
+  phone: string,
+  text: string,
+  msgId: string,
+  btnId?: string,
+): Promise<void> {
+  try {
+    await markRead(msgId);
+    const state = await getSessionState(phone);
+    const r = await route(text, phone, state, btnId);
+
+    if (r.type === "predetermined") {
+      if (r.interactive) {
+        await sendInteractive(phone, r.interactive);
+        return;
+      }
+      const i = normalise(text);
+
+      // Greeting
+      if (["hi", "hello", "hey", "howzit", "hiya"].includes(i)) {
+        await sendText(phone, await handleGreeting(await getUserContext(phone)));
+        return;
+      }
+
+      // 1. Balances
+      if (i === "1" || i === "balance" || i === "balances" || btnId === "cmd_balances") {
+        await sendText(phone, await handleBalances(await getUserContext(phone)));
+        return;
+      }
+
+      // 2. Budget plan
+      if (i === "2" || i === "budget" || i === "budgets" || i === "budget plan" || btnId === "cmd_budget_plan") {
+        await sendText(phone, await handleBudgetPlan(await getUserContext(phone)));
+        return;
+      }
+
+      // 3. Goals
+      if (i === "3" || i === "goals" || i === "goals and progress" || btnId === "cmd_goals") {
+        await sendText(phone, await handleGoals(await getUserContext(phone)));
+        return;
+      }
+
+      // 4. Events
+      if (i === "4" || i === "events" || i === "upcoming events" || btnId === "cmd_events") {
+        await sendText(phone, await handleEvents(await getUserContext(phone)));
+        return;
+      }
+
+      if (r.response) {
+        await sendText(phone, r.response);
+        return;
+      }
+    }
+
+    if (r.type === "claude") {
+      const ctx = await getUserContext(phone);
+      const history = await getHistory(phone);
+      await storeMsg(phone, "user", text);
+      const msgs = [
+        ...history.map((m) => ({ role: m.role, content: m.content })),
+        { role: "user", content: text },
+      ];
+      const reply = await callClaude(msgs, buildContextMsg(ctx));
+      await storeMsg(phone, "assistant", reply);
+      await sendText(phone, reply);
+    }
+  } catch (err) {
+    console.error("❌ Process error:", err);
+    try {
+      await sendText(phone, "Oops! Something went wrong. Please try again.");
+    } catch {}
+  }
+}
+
+// ─── Statement Upload ────────────────────────────────────────────────────────
+
+async function processUpload(
+  phone: string,
+  mediaId: string,
+  mime: string,
+  msgId: string,
+): Promise<void> {
+  try {
+    await markRead(msgId);
+    const { data: settings } = await supabase
+      .from("user_settings")
+      .select("user_id, first_name, display_name")
+      .or(`mobile.eq.${phone},phone_number.eq.${phone}`)
+      .single();
+    if (!settings) {
+      await sendText(
+        phone,
+        "I need your account linked first.\n\nSign up on the Latela app.\n\nType *menu* for options.",
+      );
+      return;
+    }
+    const userName = settings.display_name || settings.first_name || "there";
+    await sendText(phone, `Got your statement, ${userName}! Processing...`);
+    await sendText(
+      phone,
+      "Statement received! Full WhatsApp parsing is coming soon.\n\nUpload via the Latela app for instant processing.\n\nType *menu* for options.",
+    );
+  } catch (err) {
+    console.error("❌ Upload error:", err);
+    try {
+      await sendText(
+        phone,
+        "Something went wrong processing your statement. Try again or use the app.\n\nType *menu* for options.",
+      );
+    } catch {}
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ██  MAIN HANDLER                                                         ██
+// ═════════════════════════════════════════════════════════════════════════════
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // ── GET: Webhook Verification ──
+  if (req.method === "GET") {
+    const mode = req.query["hub.mode"] as string;
+    const token = req.query["hub.verify_token"] as string;
+    const challenge = req.query["hub.challenge"] as string;
+    if (mode === "subscribe" && token === WHATSAPP_VERIFY_TOKEN) {
+      console.log("✅ Webhook verified");
+      return res.status(200).send(challenge);
+    }
+    return res.status(403).json({ error: "Verification failed" });
+  }
+
+  // ── POST: Incoming Messages ──
+  if (req.method === "POST") {
+    const rawBody =
+      typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+    const sig = req.headers["x-hub-signature-256"] as string | undefined;
+
+    if (!verifySignature(sig, rawBody)) {
+      return res.status(401).json({ error: "Invalid signature" });
+    }
+
+    // Respond 200 immediately
+    res.status(200).json({ status: "ok" });
+
+    let body: any;
+    try {
+      body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    } catch {
+      return;
+    }
+
+    try {
+      const value = body?.entry?.[0]?.changes?.[0]?.value;
+      if (value?.statuses)
+        console.log(
+          `Status: ${value.statuses[0].id}: ${value.statuses[0].status}`,
+        );
+
+      if (value?.messages?.length > 0) {
+        const msg = value.messages[0];
+        const phone: string = msg.from;
+
+        if (msg.type === "text") {
+          const text = msg.text.body.trim();
+          if (text) await processMessage(phone, text, msg.id);
+        } else if (msg.type === "interactive") {
+          const t = msg.interactive?.type;
+          if (t === "button_reply")
+            await processMessage(
+              phone,
+              msg.interactive.button_reply.title,
+              msg.id,
+              msg.interactive.button_reply.id,
+            );
+          else if (t === "list_reply")
+            await processMessage(
+              phone,
+              msg.interactive.list_reply.title,
+              msg.id,
+              msg.interactive.list_reply.id,
+            );
+        } else if (msg.type === "document") {
+          const mime = msg.document.mime_type || "application/pdf";
+          if (["application/pdf", "text/csv"].some((t) => mime.includes(t)))
+            await processUpload(phone, msg.document.id, mime, msg.id);
+          else
+            await sendText(
+              phone,
+              `Can't process ${mime}. Send a *PDF* or *photo*.\n\nType *menu* for options.`,
+            );
+        } else if (msg.type === "image") {
+          await processUpload(
+            phone,
+            msg.image.id,
+            msg.image.mime_type || "image/jpeg",
+            msg.id,
+          );
+        } else {
+          await sendText(
+            phone,
+            'I can read text and bank statements (PDF/photo). Type *"menu"* to start!',
+          );
+        }
+      }
+    } catch (err) {
+      console.error("❌ Webhook error:", err);
+    }
+    return;
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
 async function handleBalance(ctx: UserContext | null): Promise<string> {
   if (!ctx)
     return "I don't have your account linked yet. 🔗\n\nSign up on the Latela app.\n\nType *menu* to go back.";
