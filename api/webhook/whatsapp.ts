@@ -52,18 +52,38 @@ CRITICAL RULES:
 interface UserContext {
   id: string;
   name: string;
+  accounts: Array<{
+    account_name: string | null;
+    bank_name: string | null;
+    available_balance: number | null;
+    current_balance: number | null;
+  }>;
   transactions: Array<{
     amount: number;
-    category: string | null;
     description: string | null;
-    date: string;
+    transaction_date: string;
+    parent_category_name: string | null;
   }>;
-  budgets: Array<{ category: string; amount: number; spent: number | null }>;
+  budgetItems: Array<{ name: string; amount: number; amount_spent: number | null; frequency: string }>;
   goals: Array<{
     name: string;
-    target_amount: number;
-    current_amount: number;
-    target_date: string | null;
+    target: number;
+    current_saved: number | null;
+    due_date: string | null;
+    monthly_allocation: number | null;
+  }>;
+  settings: {
+    needs_percentage: number;
+    wants_percentage: number;
+    savings_percentage: number;
+    payday_date: number | null;
+    budget_method: string;
+  };
+  upcomingEvents: Array<{
+    event_name: string;
+    event_date: string;
+    budgeted_amount: number;
+    category: string | null;
   }>;
 }
 
