@@ -474,14 +474,21 @@ async function callClaude(
 
 function getMainMenu(): InteractiveMessage {
   return {
-    type: "button",
-    header: "Latela 💰",
-    body: "Hi there! 👋 How can I help you today?\n\nPlease choose an option below, or type your choice:",
+    type: "list",
+    header: "Latela",
+    body: "What would you like to know?",
     footer: "Type 'menu' at any time to see this again",
-    buttons: [
-      { id: "cmd_balance", title: "💳 Balance" },
-      { id: "cmd_score", title: "📊 Latela Score" },
-      { id: "cmd_chat", title: "💬 Budget Buddy" },
+    sections: [
+      {
+        title: "Options",
+        rows: [
+          { id: "cmd_balances", title: "Balances", description: "Available, Budget & Savings" },
+          { id: "cmd_budget_plan", title: "Budget plan", description: "Your monthly budget breakdown" },
+          { id: "cmd_goals", title: "Goals & progress", description: "Savings goals and progress" },
+          { id: "cmd_events", title: "Upcoming events", description: "Scheduled financial events" },
+          { id: "cmd_chat", title: "Chat w/ Budget Buddy", description: "Ask anything about your finances" },
+        ],
+      },
     ],
   };
 }
