@@ -364,6 +364,12 @@ async function getUserContext(phone: string): Promise<UserContext | null> {
 function buildContextMsg(ctx: UserContext | null): string {
   if (!ctx) return "User is not registered on Latela yet.";
   let msg = `User: ${ctx.name}\n`;
+  if (ctx.accounts.length > 0) {
+    msg += `\nAccounts:\n`;
+    ctx.accounts.forEach((a) => {
+      msg += `  - ${a.account_name || a.bank_name || "Account"}: Available R${((a.available_balance || 0) / 100).toFixed(2)}\n`;
+    });
+  }
   if (ctx.transactions.length > 0) {
     const spent = ctx.transactions
       .filter((t) => t.amount < 0)
@@ -372,7 +378,7 @@ function buildContextMsg(ctx: UserContext | null): string {
     ctx.transactions
       .filter((t) => t.amount < 0)
       .forEach((t) => {
-        const c = t.category || "Uncategorized";
+        const c = t.parent_category_name || "Uncategorized";
         cats[c] = (cats[c] || 0) + Math.abs(t.amount);
       });
     const sorted = Object.entries(cats)
@@ -385,22 +391,27 @@ function buildContextMsg(ctx: UserContext | null): string {
   } else {
     msg += "\nNo recent transactions.\n";
   }
-  if (ctx.budgets.length > 0) {
-    msg += `\nBudgets:\n`;
-    ctx.budgets.forEach((b) => {
-      msg += `  - ${b.category}: R${(b.spent || 0).toFixed(2)} / R${b.amount}\n`;
+  if (ctx.budgetItems.length > 0) {
+    msg += `\nBudget Items:\n`;
+    ctx.budgetItems.forEach((b) => {
+      msg += `  - ${b.name}: R${(b.amount_spent || 0).toFixed(2)} / R${b.amount} (${b.frequency})\n`;
     });
   }
   if (ctx.goals.length > 0) {
     msg += `\nGoals:\n`;
     ctx.goals.forEach((g) => {
-      const p =
-        g.target_amount > 0
-          ? ((g.current_amount / g.target_amount) * 100).toFixed(1)
-          : "0";
-      msg += `  - ${g.name}: R${g.current_amount} / R${g.target_amount} (${p}%)\n`;
+      const saved = g.current_saved || 0;
+      const p = g.target > 0 ? ((saved / g.target) * 100).toFixed(1) : "0";
+      msg += `  - ${g.name}: R${saved} / R${g.target} (${p}%)\n`;
     });
   }
+  if (ctx.upcomingEvents.length > 0) {
+    msg += `\nUpcoming Events:\n`;
+    ctx.upcomingEvents.forEach((e) => {
+      msg += `  - ${e.event_name} on ${e.event_date}: R${e.budgeted_amount}\n`;
+    });
+  }
+  msg += `\nBudget split: ${ctx.settings.needs_percentage}/${ctx.settings.wants_percentage}/${ctx.settings.savings_percentage} (Needs/Wants/Savings)`;
   return msg;
 }
 
