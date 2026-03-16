@@ -945,7 +945,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return res.status(405).json({ error: "Method not allowed" });
 }
-async function handleBalance(ctx: UserContext | null): Promise<string> {
   if (!ctx)
     return "I don't have your account linked yet. 🔗\n\nSign up on the Latela app.\n\nType *menu* to go back.";
   if (ctx.transactions.length === 0)
