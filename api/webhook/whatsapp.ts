@@ -52,18 +52,38 @@ CRITICAL RULES:
 interface UserContext {
   id: string;
   name: string;
+  accounts: Array<{
+    account_name: string | null;
+    bank_name: string | null;
+    available_balance: number | null;
+    current_balance: number | null;
+  }>;
   transactions: Array<{
     amount: number;
-    category: string | null;
     description: string | null;
-    date: string;
+    transaction_date: string;
+    parent_category_name: string | null;
   }>;
-  budgets: Array<{ category: string; amount: number; spent: number | null }>;
+  budgetItems: Array<{ name: string; amount: number; amount_spent: number | null; frequency: string }>;
   goals: Array<{
     name: string;
-    target_amount: number;
-    current_amount: number;
-    target_date: string | null;
+    target: number;
+    current_saved: number | null;
+    due_date: string | null;
+    monthly_allocation: number | null;
+  }>;
+  settings: {
+    needs_percentage: number;
+    wants_percentage: number;
+    savings_percentage: number;
+    payday_date: number | null;
+    budget_method: string;
+  };
+  upcomingEvents: Array<{
+    event_name: string;
+    event_date: string;
+    budgeted_amount: number;
+    category: string | null;
   }>;
 }
 
@@ -275,39 +295,65 @@ async function markRead(messageId: string): Promise<void> {
 
 async function getUserContext(phone: string): Promise<UserContext | null> {
   try {
-    const { data: user, error } = await supabase
-      .from("profiles")
-      .select("id, full_name, phone_number")
-      .eq("phone_number", phone)
+    // Look up user via user_settings (mobile or phone_number field)
+    const { data: settings, error } = await supabase
+      .from("user_settings")
+      .select("user_id, first_name, last_name, display_name, needs_percentage, wants_percentage, savings_percentage, payday_date, budget_method")
+      .or(`mobile.eq.${phone},phone_number.eq.${phone}`)
       .single();
-    if (error || !user) return null;
+    if (error || !settings) return null;
+
+    const userId = settings.user_id;
+    const name = settings.display_name || settings.first_name || "there";
     const ago30 = new Date();
     ago30.setDate(ago30.getDate() - 30);
-    const [{ data: tx }, { data: budgets }, { data: goals }] =
+
+    const [{ data: accounts }, { data: tx }, { data: budgetItems }, { data: goals }, { data: events }] =
       await Promise.all([
         supabase
-          .from("transactions")
-          .select("amount, category, description, date")
-          .eq("user_id", user.id)
-          .gte("date", ago30.toISOString())
-          .order("date", { ascending: false })
-          .limit(50),
-        supabase
-          .from("budgets")
-          .select("category, amount, spent")
-          .eq("user_id", user.id)
+          .from("accounts")
+          .select("account_name, bank_name, available_balance, current_balance")
+          .eq("user_id", userId)
           .eq("is_active", true),
         supabase
-          .from("savings_goals")
-          .select("name, target_amount, current_amount, target_date")
-          .eq("user_id", user.id),
+          .from("v_transactions_with_details")
+          .select("amount, description, transaction_date, parent_category_name")
+          .eq("user_id", userId)
+          .gte("transaction_date", ago30.toISOString())
+          .order("transaction_date", { ascending: false })
+          .limit(50),
+        supabase
+          .from("budget_items")
+          .select("name, amount, amount_spent, frequency")
+          .eq("user_id", userId),
+        supabase
+          .from("goals")
+          .select("name, target, current_saved, due_date, monthly_allocation")
+          .eq("user_id", userId),
+        supabase
+          .from("calendar_events")
+          .select("event_name, event_date, budgeted_amount, category")
+          .eq("user_id", userId)
+          .gte("event_date", new Date().toISOString().split("T")[0])
+          .order("event_date", { ascending: true })
+          .limit(10),
       ]);
+
     return {
-      id: user.id,
-      name: user.full_name,
+      id: userId,
+      name,
+      accounts: accounts || [],
       transactions: tx || [],
-      budgets: budgets || [],
+      budgetItems: budgetItems || [],
       goals: goals || [],
+      settings: {
+        needs_percentage: settings.needs_percentage,
+        wants_percentage: settings.wants_percentage,
+        savings_percentage: settings.savings_percentage,
+        payday_date: settings.payday_date,
+        budget_method: settings.budget_method,
+      },
+      upcomingEvents: events || [],
     };
   } catch (err: any) {
     console.error("User context error:", err.message);
@@ -318,6 +364,12 @@ async function getUserContext(phone: string): Promise<UserContext | null> {
 function buildContextMsg(ctx: UserContext | null): string {
   if (!ctx) return "User is not registered on Latela yet.";
   let msg = `User: ${ctx.name}\n`;
+  if (ctx.accounts.length > 0) {
+    msg += `\nAccounts:\n`;
+    ctx.accounts.forEach((a) => {
+      msg += `  - ${a.account_name || a.bank_name || "Account"}: Available R${((a.available_balance || 0) / 100).toFixed(2)}\n`;
+    });
+  }
   if (ctx.transactions.length > 0) {
     const spent = ctx.transactions
       .filter((t) => t.amount < 0)
@@ -326,7 +378,7 @@ function buildContextMsg(ctx: UserContext | null): string {
     ctx.transactions
       .filter((t) => t.amount < 0)
       .forEach((t) => {
-        const c = t.category || "Uncategorized";
+        const c = t.parent_category_name || "Uncategorized";
         cats[c] = (cats[c] || 0) + Math.abs(t.amount);
       });
     const sorted = Object.entries(cats)
@@ -339,22 +391,27 @@ function buildContextMsg(ctx: UserContext | null): string {
   } else {
     msg += "\nNo recent transactions.\n";
   }
-  if (ctx.budgets.length > 0) {
-    msg += `\nBudgets:\n`;
-    ctx.budgets.forEach((b) => {
-      msg += `  - ${b.category}: R${(b.spent || 0).toFixed(2)} / R${b.amount}\n`;
+  if (ctx.budgetItems.length > 0) {
+    msg += `\nBudget Items:\n`;
+    ctx.budgetItems.forEach((b) => {
+      msg += `  - ${b.name}: R${(b.amount_spent || 0).toFixed(2)} / R${b.amount} (${b.frequency})\n`;
     });
   }
   if (ctx.goals.length > 0) {
     msg += `\nGoals:\n`;
     ctx.goals.forEach((g) => {
-      const p =
-        g.target_amount > 0
-          ? ((g.current_amount / g.target_amount) * 100).toFixed(1)
-          : "0";
-      msg += `  - ${g.name}: R${g.current_amount} / R${g.target_amount} (${p}%)\n`;
+      const saved = g.current_saved || 0;
+      const p = g.target > 0 ? ((saved / g.target) * 100).toFixed(1) : "0";
+      msg += `  - ${g.name}: R${saved} / R${g.target} (${p}%)\n`;
     });
   }
+  if (ctx.upcomingEvents.length > 0) {
+    msg += `\nUpcoming Events:\n`;
+    ctx.upcomingEvents.forEach((e) => {
+      msg += `  - ${e.event_name} on ${e.event_date}: R${e.budgeted_amount}\n`;
+    });
+  }
+  msg += `\nBudget split: ${ctx.settings.needs_percentage}/${ctx.settings.wants_percentage}/${ctx.settings.savings_percentage} (Needs/Wants/Savings)`;
   return msg;
 }
 
@@ -443,176 +500,135 @@ async function callClaude(
       if (attempt < MAX_RETRIES) await sleep(RETRY_DELAY_MS * attempt);
     } catch (err: any) {
       if (attempt === MAX_RETRIES)
-        return "Sorry, I'm having trouble right now. Please try again in a moment! 🙏";
+        return "Sorry, I'm having trouble right now. Please try again in a moment!";
       await sleep(RETRY_DELAY_MS * attempt);
     }
   }
-  return "Sorry, I'm having trouble right now. Please try again in a moment! 🙏";
+  return "Sorry, I'm having trouble right now. Please try again in a moment!";
 }
 
 // ─── Command Handlers ────────────────────────────────────────────────────────
 
 function getMainMenu(): InteractiveMessage {
   return {
-    type: "button",
-    header: "Latela 💰",
-    body: "Hi there! 👋 How can I help you today?\n\nPlease choose an option below, or type your choice:",
+    type: "list",
+    header: "Latela",
+    body: "What would you like to know?",
     footer: "Type 'menu' at any time to see this again",
-    buttons: [
-      { id: "cmd_balance", title: "💳 Balance" },
-      { id: "cmd_score", title: "📊 Latela Score" },
-      { id: "cmd_chat", title: "💬 Budget Buddy" },
+    sections: [
+      {
+        title: "Options",
+        rows: [
+          { id: "cmd_balances", title: "Balances", description: "Available, Budget & Savings" },
+          { id: "cmd_budget_plan", title: "Budget plan", description: "Your monthly budget breakdown" },
+          { id: "cmd_goals", title: "Goals & progress", description: "Savings goals and progress" },
+          { id: "cmd_events", title: "Upcoming events", description: "Scheduled financial events" },
+          { id: "cmd_chat", title: "Chat w/ Budget Buddy", description: "Ask anything about your finances" },
+        ],
+      },
     ],
   };
 }
 
 async function handleGreeting(ctx: UserContext | null): Promise<string> {
   const name = ctx?.name || "there";
-  return `Hi ${name}! Welcome back to Latela. 👋\n\nHere's what I can help with:\n💳 *"Balance"* — 30-day summary\n📊 *"Score"* — Latela Score\n💰 *"Budget"* — Budget status\n📂 *"Spending"* — Category breakdown\n💬 *"Chat"* — Budget Buddy (AI)\n❓ *"Help"* — Full command list\n\nWhat would you like to know?`;
+  return `Hi ${name}! Welcome back to Latela.\n\nWhat would you like to know?\n\n1. Balances — Available, Budget & Savings\n2. Budget plan\n3. Goals & progress\n4. Upcoming events\n5. Chat w/ Budget Buddy\n\nType a number or *menu* for the full list.`;
 }
 
-async function handleBalance(ctx: UserContext | null): Promise<string> {
+async function handleBalances(ctx: UserContext | null): Promise<string> {
   if (!ctx)
-    return "I don't have your account linked yet. 🔗\n\nSign up on the Latela app.\n\nType *menu* to go back.";
-  if (ctx.transactions.length === 0)
-    return `Hi ${ctx.name}! No recent transactions found. Upload a bank statement on the Latela app.\n\nType *menu* to go back.`;
-  const spent = ctx.transactions
-    .filter((t) => t.amount < 0)
-    .reduce((s, t) => s + Math.abs(t.amount), 0);
-  const income = ctx.transactions
-    .filter((t) => t.amount > 0)
-    .reduce((s, t) => s + t.amount, 0);
-  let r = `💳 *${ctx.name}'s 30-Day Summary*\n\nIncome: R${income.toFixed(2)}\nSpending: R${spent.toFixed(2)}\nNet: R${(income - spent).toFixed(2)}\n`;
-  if (ctx.budgets.length > 0) {
-    r += `\n📋 *Budget Status:*\n`;
-    ctx.budgets.forEach((b) => {
-      const s = b.spent || 0;
-      const pct = ((s / b.amount) * 100).toFixed(0);
-      r += `${s <= b.amount ? "✅" : "🔴"} ${b.category}: R${s.toFixed(0)} / R${b.amount} (${pct}%)\n`;
+    return "I don't have your account linked yet.\n\nSign up on the Latela app.\n\nType *menu* to go back.";
+
+  let r = `*${ctx.name}'s Balances*\n\n`;
+
+  if (ctx.accounts.length > 0) {
+    r += `*Accounts:*\n`;
+    ctx.accounts.forEach((a) => {
+      const aName = a.account_name || a.bank_name || "Account";
+      r += `  ${aName}: R${((a.available_balance || 0) / 100).toFixed(2)}\n`;
     });
+  } else {
+    r += `No accounts found. Upload a bank statement on the app.\n`;
   }
-  r += `\nType *menu* to go back or *3* for Budget Buddy.`;
-  return r;
-}
 
-async function handleScore(ctx: UserContext | null): Promise<string> {
-  if (!ctx)
-    return "I need your account linked for Latela Score. 📊\n\nType *menu* to go back.";
-  let score = 50;
-  const bd: string[] = [];
-  if (ctx.transactions.length > 10) {
-    score += 10;
-    bd.push("✅ Active tracking (+10)");
-  } else if (ctx.transactions.length > 0) {
-    score += 5;
-    bd.push("🟡 Some tracking (+5)");
-  } else {
-    bd.push("❌ No tracking (0)");
+  if (ctx.budgetItems.length > 0) {
+    const totalBudgeted = ctx.budgetItems.reduce((s, b) => s + b.amount, 0);
+    const totalSpent = ctx.budgetItems.reduce((s, b) => s + (b.amount_spent || 0), 0);
+    r += `\n*Budget:*\n  Budgeted: R${totalBudgeted.toFixed(2)}\n  Spent: R${totalSpent.toFixed(2)}\n  Remaining: R${(totalBudgeted - totalSpent).toFixed(2)}\n`;
   }
-  if (ctx.budgets.length > 0) {
-    score += 15;
-    bd.push("✅ Budgets active (+15)");
-    const ub = ctx.budgets.filter((b) => (b.spent || 0) <= b.amount).length;
-    if (ub === ctx.budgets.length) {
-      score += 10;
-      bd.push("✅ All under budget (+10)");
-    } else {
-      score += 5;
-      bd.push("🟡 Some over budget (+5)");
-    }
-  } else {
-    bd.push("❌ No budgets (0)");
-  }
+
   if (ctx.goals.length > 0) {
-    score += 10;
-    bd.push("✅ Goals set (+10)");
-    const avg =
-      ctx.goals.reduce(
-        (s, g) =>
-          s + (g.target_amount > 0 ? g.current_amount / g.target_amount : 0),
-        0,
-      ) / ctx.goals.length;
-    if (avg > 0.5) {
-      score += 5;
-      bd.push("✅ Good progress (+5)");
-    }
+    const totalSaved = ctx.goals.reduce((s, g) => s + (g.current_saved || 0), 0);
+    const totalTarget = ctx.goals.reduce((s, g) => s + g.target, 0);
+    r += `\n*Savings:*\n  Saved: R${totalSaved.toFixed(2)} / R${totalTarget.toFixed(2)}\n`;
   }
-  score = Math.min(score, 100);
-  const emoji = score >= 80 ? "🟢" : score >= 60 ? "🟡" : "🔴";
-  let r = `📊 *Latela Score: ${emoji} ${score}/100*\n\n*Breakdown:*\n${bd.join("\n")}\n\n`;
-  r +=
-    score < 60
-      ? "💡 Set budgets and create a savings goal to improve."
-      : score < 80
-        ? "💡 Keep tracking to push past 80!"
-        : "🎉 Great work!";
-  r += `\n\nType *menu* to go back.`;
+
+  r += `\nType *menu* to go back.`;
   return r;
 }
 
-async function handleBudget(ctx: UserContext | null): Promise<string> {
-  if (!ctx) return "I need your account linked. 🔗\n\nType *menu* to go back.";
-  const som = new Date();
-  som.setDate(1);
-  som.setHours(0, 0, 0, 0);
-  const { data: tx } = await supabase
-    .from("transactions")
-    .select("amount, category")
-    .eq("user_id", ctx.id)
-    .gte("date", som.toISOString());
-  const spent = tx?.reduce((s, t) => s + Math.abs(t.amount), 0) || 0;
-  const { data: bgt } = await supabase
-    .from("budgets")
-    .select("amount")
-    .eq("user_id", ctx.id)
-    .eq("is_active", true)
-    .eq("category", "Overall")
-    .single();
-  const limit = bgt?.amount || 0;
-  const month = new Date().toLocaleString("en-ZA", {
-    month: "long",
-    year: "numeric",
-  });
-  let r = `💰 *Budget — ${month}*\n\nSpent: R${spent.toFixed(2)}\n`;
-  if (limit > 0) {
-    const pct = Math.round((spent / limit) * 100);
-    r += `Limit: R${limit.toFixed(2)}\nRemaining: R${(limit - spent).toFixed(2)}\nUsed: ${pct}%\n\n${pct > 90 ? "⚠️ Close to limit!" : "✅ Looking good!"}`;
-  } else {
-    r += `\nNo overall budget set. Create one in the Latela app.`;
-  }
-  if (ctx.budgets.length > 0) {
-    r += `\n\n📋 *Categories:*\n`;
-    ctx.budgets.forEach((b) => {
-      const s = b.spent || 0;
-      r += `${s <= b.amount ? "✅" : "🔴"} ${b.category}: R${s.toFixed(0)} / R${b.amount}\n`;
+async function handleBudgetPlan(ctx: UserContext | null): Promise<string> {
+  if (!ctx) return "I need your account linked.\n\nType *menu* to go back.";
+
+  const month = new Date().toLocaleString("en-ZA", { month: "long", year: "numeric" });
+  let r = `*Budget Plan — ${month}*\n\n`;
+  r += `Split: ${ctx.settings.needs_percentage}% Needs / ${ctx.settings.wants_percentage}% Wants / ${ctx.settings.savings_percentage}% Savings\n`;
+
+  if (ctx.budgetItems.length > 0) {
+    r += `\n*Budget Items:*\n`;
+    ctx.budgetItems.forEach((b) => {
+      const spent = b.amount_spent || 0;
+      const pct = b.amount > 0 ? Math.round((spent / b.amount) * 100) : 0;
+      const icon = spent <= b.amount ? "✅" : "🔴";
+      r += `${icon} ${b.name}: R${spent.toFixed(0)} / R${b.amount} (${pct}%) — ${b.frequency}\n`;
     });
+  } else {
+    r += `\nNo budget items set up yet. Create them in the Latela app.\n`;
   }
-  r += `\n\nType *menu* to go back.`;
+
+  r += `\nType *menu* to go back.`;
   return r;
 }
 
-async function handleSpending(ctx: UserContext | null): Promise<string> {
-  if (!ctx) return "I need your account linked. 🔗\n\nType *menu* to go back.";
-  const exp = ctx.transactions.filter((t) => t.amount < 0);
-  if (exp.length === 0)
-    return `No spending data found. Upload a statement on the app.\n\nType *menu* to go back.`;
-  const total = exp.reduce((s, t) => s + Math.abs(t.amount), 0);
-  const cats: Record<string, number> = {};
-  exp.forEach((t) => {
-    const c = t.category || "Uncategorized";
-    cats[c] = (cats[c] || 0) + Math.abs(t.amount);
+async function handleGoals(ctx: UserContext | null): Promise<string> {
+  if (!ctx) return "I need your account linked.\n\nType *menu* to go back.";
+  if (ctx.goals.length === 0)
+    return `No savings goals set up yet. Create one in the Latela app.\n\nType *menu* to go back.`;
+
+  let r = `*Goals & Progress*\n\n`;
+  ctx.goals.forEach((g) => {
+    const saved = g.current_saved || 0;
+    const pct = g.target > 0 ? Math.round((saved / g.target) * 100) : 0;
+    const bar = "█".repeat(Math.floor(pct / 10)) + "░".repeat(10 - Math.floor(pct / 10));
+    r += `*${g.name}*\n  ${bar} ${pct}%\n  R${saved.toFixed(2)} / R${g.target.toFixed(2)}\n`;
+    if (g.monthly_allocation) r += `  Monthly: R${g.monthly_allocation.toFixed(2)}\n`;
+    if (g.due_date) r += `  Due: ${g.due_date}\n`;
+    r += `\n`;
   });
-  const sorted = Object.entries(cats).sort(([, a], [, b]) => b - a);
-  let r = `📂 *Spending (Last 30 Days)*\n\nTotal: R${total.toFixed(2)}\n\n`;
-  sorted.forEach(([c, a], i) => {
-    r += `${i === 0 ? "🔴" : i < 3 ? "🟡" : "🟢"} ${c}: R${a.toFixed(2)} (${((a / total) * 100).toFixed(0)}%)\n`;
+
+  r += `Type *menu* to go back.`;
+  return r;
+}
+
+async function handleEvents(ctx: UserContext | null): Promise<string> {
+  if (!ctx) return "I need your account linked.\n\nType *menu* to go back.";
+  if (ctx.upcomingEvents.length === 0)
+    return `No upcoming events scheduled. Add events in the Latela app.\n\nType *menu* to go back.`;
+
+  let r = `*Upcoming Events*\n\n`;
+  ctx.upcomingEvents.forEach((e) => {
+    r += `📅 *${e.event_name}*\n  Date: ${e.event_date}\n  Budget: R${e.budgeted_amount.toFixed(2)}`;
+    if (e.category) r += `\n  Category: ${e.category}`;
+    r += `\n\n`;
   });
-  r += `\nType *menu* to go back or *3* for Budget Buddy.`;
+
+  const totalBudget = ctx.upcomingEvents.reduce((s, e) => s + e.budgeted_amount, 0);
+  r += `Total budgeted: R${totalBudget.toFixed(2)}\n\nType *menu* to go back.`;
   return r;
 }
 
 function handleHelp(): string {
-  return `📖 *Latela Commands*\n\n💳 *"Balance"* — 30-day summary\n💰 *"Budget"* — Monthly budget\n📂 *"Spending"* — Category breakdown\n📊 *"Score"* — Financial health score\n📄 *"Statement"* — Upload bank statement\n💬 *"Chat"* — Budget Buddy AI\n🏠 *"Menu"* — Quick buttons\n↩️ *"Back"* — Return to menu\n\nOr ask anything in plain English!\n\nlatela.co.za`;
+  return `*Latela Commands*\n\n1️⃣ *"Balances"* — Available, Budget & Savings\n2️⃣ *"Budget"* — Monthly budget plan\n3️⃣ *"Goals"* — Savings goals & progress\n4️⃣ *"Events"* — Upcoming events\n5️⃣ *"Chat"* — Budget Buddy AI\n\n📄 *"Statement"* — Upload bank statement\n🏠 *"Menu"* — Options list\n↩️ *"Back"* — Return to menu\n❓ *"Help"* — This list\n\nOr ask anything in plain English!\n\nlatela.co.za`;
 }
 
 // ─── Router ──────────────────────────────────────────────────────────────────
@@ -624,72 +640,94 @@ async function route(
   btnId?: string,
 ): Promise<RouteResult> {
   const i = normalise(text);
+
+  // Greetings
   if (["hi", "hello", "hey", "howzit", "hiya"].includes(i)) {
     await setSessionState(phone, "awaiting_menu");
     return { type: "predetermined" };
   }
+
+  // Menu
   if (["menu", "start", "home"].includes(i) || btnId === "cmd_menu") {
     await setSessionState(phone, "awaiting_menu");
     return { type: "predetermined", interactive: getMainMenu() };
   }
+
+  // Help
   if (i === "help") {
     await setSessionState(phone, "idle");
     return { type: "predetermined", response: handleHelp() };
   }
+
+  // Back / Exit
   if (["back", "exit", "stop", "quit", "0"].includes(i)) {
     await setSessionState(phone, "awaiting_menu");
     return { type: "predetermined", interactive: getMainMenu() };
   }
-  if (i === "1" || i === "balance" || btnId === "cmd_balance") {
+
+  // 1. Balances
+  if (i === "1" || i === "balance" || i === "balances" || btnId === "cmd_balances") {
     await setSessionState(phone, "idle");
     return { type: "predetermined" };
   }
-  if (
-    i === "2" ||
-    i === "score" ||
-    i === "latela score" ||
-    btnId === "cmd_score"
-  ) {
+
+  // 2. Budget plan
+  if (i === "2" || i === "budget" || i === "budgets" || i === "budget plan" || btnId === "cmd_budget_plan") {
     await setSessionState(phone, "idle");
     return { type: "predetermined" };
   }
+
+  // 3. Goals
+  if (i === "3" || i === "goals" || i === "goals and progress" || btnId === "cmd_goals") {
+    await setSessionState(phone, "idle");
+    return { type: "predetermined" };
+  }
+
+  // 4. Upcoming events
+  if (i === "4" || i === "events" || i === "upcoming events" || btnId === "cmd_events") {
+    await setSessionState(phone, "idle");
+    return { type: "predetermined" };
+  }
+
+  // 5. Chat w/ Budget Buddy
   if (
-    i === "3" ||
+    i === "5" ||
     i === "chat" ||
     i === "buddy" ||
     i === "budget buddy" ||
+    i === "chat w budget buddy" ||
     btnId === "cmd_chat"
   ) {
     await setSessionState(phone, "in_budget_buddy");
     return {
       type: "predetermined",
       response:
-        "💬 *Budget Buddy is here!*\n\nAsk me anything about your finances.\n\nType *back* to return to the menu.",
+        "*Budget Buddy is here!*\n\nAsk me anything about your finances.\n\nType *back* to return to the menu.",
     };
   }
-  if (i === "budget" || i === "budgets") {
-    await setSessionState(phone, "idle");
-    return { type: "predetermined" };
-  }
-  if (i === "spending" || i === "categories" || i === "breakdown") {
-    await setSessionState(phone, "idle");
-    return { type: "predetermined" };
-  }
+
+  // Statement upload prompt
   if (i === "statement" || i === "upload" || i === "bank statement") {
     await setSessionState(phone, "idle");
     return {
       type: "predetermined",
       response:
-        "📄 *Upload Your Bank Statement*\n\nSend me your statement as:\n📎 *PDF* — From your banking app\n📸 *Photo* — Screenshot of your statement\n\nI support FNB, Standard Bank, ABSA, Nedbank, Capitec, TymeBank, and Discovery Bank.\n\nJust send the file! 🚀",
+        "*Upload Your Bank Statement*\n\nSend me your statement as:\n📎 *PDF* — From your banking app\n📸 *Photo* — Screenshot of your statement\n\nI support FNB, Standard Bank, ABSA, Nedbank, Capitec, TymeBank, and Discovery Bank.\n\nJust send the file!",
     };
   }
+
+  // Budget Buddy mode
   if (state === "in_budget_buddy") return { type: "claude" };
+
+  // Awaiting menu — didn't understand
   if (state === "awaiting_menu")
     return {
       type: "predetermined",
       response:
-        "I didn't catch that. 🤔\n\n1️⃣ Balance\n2️⃣ Latela Score\n3️⃣ Budget Buddy\n\nOr type *budget*, *spending*, *help*.\nType *menu* for buttons.",
+        "I didn't catch that.\n\n1. Balances\n2. Budget plan\n3. Goals & progress\n4. Upcoming events\n5. Chat w/ Budget Buddy\n\nOr type *help* for all commands.",
     };
+
+  // Default — show menu
   await setSessionState(phone, "awaiting_menu");
   return { type: "predetermined", interactive: getMainMenu() };
 }
@@ -713,37 +751,37 @@ async function processMessage(
         return;
       }
       const i = normalise(text);
+
+      // Greeting
       if (["hi", "hello", "hey", "howzit", "hiya"].includes(i)) {
-        await sendText(
-          phone,
-          await handleGreeting(await getUserContext(phone)),
-        );
+        await sendText(phone, await handleGreeting(await getUserContext(phone)));
         return;
       }
-      if (i === "1" || i === "balance" || btnId === "cmd_balance") {
-        await sendText(phone, await handleBalance(await getUserContext(phone)));
+
+      // 1. Balances
+      if (i === "1" || i === "balance" || i === "balances" || btnId === "cmd_balances") {
+        await sendText(phone, await handleBalances(await getUserContext(phone)));
         return;
       }
-      if (
-        i === "2" ||
-        i === "score" ||
-        i === "latela score" ||
-        btnId === "cmd_score"
-      ) {
-        await sendText(phone, await handleScore(await getUserContext(phone)));
+
+      // 2. Budget plan
+      if (i === "2" || i === "budget" || i === "budgets" || i === "budget plan" || btnId === "cmd_budget_plan") {
+        await sendText(phone, await handleBudgetPlan(await getUserContext(phone)));
         return;
       }
-      if (i === "budget" || i === "budgets") {
-        await sendText(phone, await handleBudget(await getUserContext(phone)));
+
+      // 3. Goals
+      if (i === "3" || i === "goals" || i === "goals and progress" || btnId === "cmd_goals") {
+        await sendText(phone, await handleGoals(await getUserContext(phone)));
         return;
       }
-      if (i === "spending" || i === "categories" || i === "breakdown") {
-        await sendText(
-          phone,
-          await handleSpending(await getUserContext(phone)),
-        );
+
+      // 4. Events
+      if (i === "4" || i === "events" || i === "upcoming events" || btnId === "cmd_events") {
+        await sendText(phone, await handleEvents(await getUserContext(phone)));
         return;
       }
+
       if (r.response) {
         await sendText(phone, r.response);
         return;
@@ -765,7 +803,7 @@ async function processMessage(
   } catch (err) {
     console.error("❌ Process error:", err);
     try {
-      await sendText(phone, "Oops! Something went wrong. Please try again. 🙏");
+      await sendText(phone, "Oops! Something went wrong. Please try again.");
     } catch {}
   }
 }
@@ -780,26 +818,23 @@ async function processUpload(
 ): Promise<void> {
   try {
     await markRead(msgId);
-    const { data: user } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .eq("phone_number", phone)
+    const { data: settings } = await supabase
+      .from("user_settings")
+      .select("user_id, first_name, display_name")
+      .or(`mobile.eq.${phone},phone_number.eq.${phone}`)
       .single();
-    if (!user) {
+    if (!settings) {
       await sendText(
         phone,
-        "I need your account linked first. 🔗\n\nSign up on the Latela app.\n\nType *menu* for options.",
+        "I need your account linked first.\n\nSign up on the Latela app.\n\nType *menu* for options.",
       );
       return;
     }
+    const userName = settings.display_name || settings.first_name || "there";
+    await sendText(phone, `Got your statement, ${userName}! Processing...`);
     await sendText(
       phone,
-      `📄 Got your statement, ${user.full_name}! Processing... ⏳`,
-    );
-    // Full parser integration coming — for now acknowledge receipt
-    await sendText(
-      phone,
-      "✅ Statement received! Full WhatsApp parsing is coming soon.\n\nUpload via the Latela app for instant processing.\n\nType *menu* for options.",
+      "Statement received! Full WhatsApp parsing is coming soon.\n\nUpload via the Latela app for instant processing.\n\nType *menu* for options.",
     );
   } catch (err) {
     console.error("❌ Upload error:", err);
