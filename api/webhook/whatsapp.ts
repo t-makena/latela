@@ -295,39 +295,65 @@ async function markRead(messageId: string): Promise<void> {
 
 async function getUserContext(phone: string): Promise<UserContext | null> {
   try {
-    const { data: user, error } = await supabase
-      .from("profiles")
-      .select("id, full_name, phone_number")
-      .eq("phone_number", phone)
+    // Look up user via user_settings (mobile or phone_number field)
+    const { data: settings, error } = await supabase
+      .from("user_settings")
+      .select("user_id, first_name, last_name, display_name, needs_percentage, wants_percentage, savings_percentage, payday_date, budget_method")
+      .or(`mobile.eq.${phone},phone_number.eq.${phone}`)
       .single();
-    if (error || !user) return null;
+    if (error || !settings) return null;
+
+    const userId = settings.user_id;
+    const name = settings.display_name || settings.first_name || "there";
     const ago30 = new Date();
     ago30.setDate(ago30.getDate() - 30);
-    const [{ data: tx }, { data: budgets }, { data: goals }] =
+
+    const [{ data: accounts }, { data: tx }, { data: budgetItems }, { data: goals }, { data: events }] =
       await Promise.all([
         supabase
-          .from("transactions")
-          .select("amount, category, description, date")
-          .eq("user_id", user.id)
-          .gte("date", ago30.toISOString())
-          .order("date", { ascending: false })
-          .limit(50),
-        supabase
-          .from("budgets")
-          .select("category, amount, spent")
-          .eq("user_id", user.id)
+          .from("accounts")
+          .select("account_name, bank_name, available_balance, current_balance")
+          .eq("user_id", userId)
           .eq("is_active", true),
         supabase
-          .from("savings_goals")
-          .select("name, target_amount, current_amount, target_date")
-          .eq("user_id", user.id),
+          .from("v_transactions_with_details")
+          .select("amount, description, transaction_date, parent_category_name")
+          .eq("user_id", userId)
+          .gte("transaction_date", ago30.toISOString())
+          .order("transaction_date", { ascending: false })
+          .limit(50),
+        supabase
+          .from("budget_items")
+          .select("name, amount, amount_spent, frequency")
+          .eq("user_id", userId),
+        supabase
+          .from("goals")
+          .select("name, target, current_saved, due_date, monthly_allocation")
+          .eq("user_id", userId),
+        supabase
+          .from("calendar_events")
+          .select("event_name, event_date, budgeted_amount, category")
+          .eq("user_id", userId)
+          .gte("event_date", new Date().toISOString().split("T")[0])
+          .order("event_date", { ascending: true })
+          .limit(10),
       ]);
+
     return {
-      id: user.id,
-      name: user.full_name,
+      id: userId,
+      name,
+      accounts: accounts || [],
       transactions: tx || [],
-      budgets: budgets || [],
+      budgetItems: budgetItems || [],
       goals: goals || [],
+      settings: {
+        needs_percentage: settings.needs_percentage,
+        wants_percentage: settings.wants_percentage,
+        savings_percentage: settings.savings_percentage,
+        payday_date: settings.payday_date,
+        budget_method: settings.budget_method,
+      },
+      upcomingEvents: events || [],
     };
   } catch (err: any) {
     console.error("User context error:", err.message);
