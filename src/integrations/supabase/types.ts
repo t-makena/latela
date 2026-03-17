@@ -547,6 +547,53 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_patterns: {
+        Row: {
+          category_id: string | null
+          confidence: number | null
+          created_at: string | null
+          id: string
+          is_global: boolean | null
+          match_count: number | null
+          normalized_name: string
+          pattern: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          is_global?: boolean | null
+          match_count?: number | null
+          normalized_name: string
+          pattern: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          is_global?: boolean | null
+          match_count?: number | null
+          normalized_name?: string
+          pattern?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_patterns_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchants: {
         Row: {
           category: string
@@ -694,6 +741,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          is_admin?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       transactions: {
         Row: {
@@ -1043,7 +1120,9 @@ export type Database = {
           gender: string | null
           google_sheets_refresh_token: string | null
           id: string
+          income_amount_cents: number | null
           income_frequency: string | null
+          income_sources: Json | null
           language: string | null
           last_active_at: string | null
           last_name: string | null
@@ -1053,6 +1132,7 @@ export type Database = {
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
+          payday: number | null
           payday_date: number | null
           phone_number: string | null
           phone_verified: boolean | null
@@ -1093,7 +1173,9 @@ export type Database = {
           gender?: string | null
           google_sheets_refresh_token?: string | null
           id?: string
+          income_amount_cents?: number | null
           income_frequency?: string | null
+          income_sources?: Json | null
           language?: string | null
           last_active_at?: string | null
           last_name?: string | null
@@ -1103,6 +1185,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          payday?: number | null
           payday_date?: number | null
           phone_number?: string | null
           phone_verified?: boolean | null
@@ -1143,7 +1226,9 @@ export type Database = {
           gender?: string | null
           google_sheets_refresh_token?: string | null
           id?: string
+          income_amount_cents?: number | null
           income_frequency?: string | null
+          income_sources?: Json | null
           language?: string | null
           last_active_at?: string | null
           last_name?: string | null
@@ -1153,6 +1238,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          payday?: number | null
           payday_date?: number | null
           phone_number?: string | null
           phone_verified?: boolean | null
@@ -1297,6 +1383,33 @@ export type Database = {
           id?: string
           phone_number?: string
           role?: string
+        }
+        Relationships: []
+      }
+      whatsapp_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          phone_number: string
+          state: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          phone_number: string
+          state?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          phone_number?: string
+          state?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1514,9 +1627,105 @@ export type Database = {
       }
       delete_user_account: { Args: never; Returns: undefined }
       extract_merchant_core: { Args: { description: string }; Returns: string }
-      fuzzy_match_merchant: {
-        Args: { merchant_name: string; pattern: string }
-        Returns: boolean
+      fuzzy_match_merchant:
+        | {
+            Args: {
+              p_limit?: number
+              p_search_term: string
+              p_threshold?: number
+              p_user_id: string
+            }
+            Returns: {
+              category_id: string
+              category_name: string
+              id: string
+              is_global: boolean
+              normalized_name: string
+              pattern: string
+              similarity_score: number
+            }[]
+          }
+        | { Args: { merchant_name: string; pattern: string }; Returns: boolean }
+      get_daily_spending: {
+        Args: { p_end_date: string; p_start_date: string; p_user_id: string }
+        Returns: {
+          spend_date: string
+          total_amount_cents: number
+          transaction_count: number
+        }[]
+      }
+      get_monthly_spending_trends: {
+        Args: { p_months?: number; p_user_id: string }
+        Returns: {
+          month_start: string
+          month_year: string
+          net_cents: number
+          total_expenses_cents: number
+          total_income_cents: number
+          transaction_count: number
+        }[]
+      }
+      get_or_create_user_settings: {
+        Args: never
+        Returns: {
+          avatar_type: string | null
+          avatar_url: string | null
+          bio: string | null
+          budget_method: string
+          city: string | null
+          color_palette: string
+          country: string | null
+          created_at: string | null
+          currency: string | null
+          date_of_birth: string | null
+          default_account_id: string | null
+          default_avatar_id: string | null
+          display_name: string | null
+          email: string | null
+          email_notifications: boolean | null
+          email_verified: boolean | null
+          financial_year_start: number | null
+          first_name: string | null
+          gender: string | null
+          google_sheets_refresh_token: string | null
+          id: string
+          income_amount_cents: number | null
+          income_frequency: string | null
+          income_sources: Json | null
+          language: string | null
+          last_active_at: string | null
+          last_name: string | null
+          marketing_consent: boolean | null
+          mobile: string | null
+          needs_percentage: number
+          notifications_enabled: boolean | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          payday: number | null
+          payday_date: number | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          privacy_accepted_at: string | null
+          profile_completed: boolean | null
+          province: string | null
+          push_notifications: boolean | null
+          savings_adjustment_strategy: string
+          savings_percentage: number
+          terms_accepted_at: string | null
+          theme: string | null
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+          username: string | null
+          wants_percentage: number
+          week_start_day: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_profile_by_username: {
         Args: { lookup_username: string }
@@ -1526,6 +1735,31 @@ export type Database = {
           display_name: string
           user_id: string
           username: string
+        }[]
+      }
+      get_spending_by_category: {
+        Args: { p_end_date: string; p_start_date: string; p_user_id: string }
+        Returns: {
+          category_color: string
+          category_id: string
+          category_name: string
+          percentage: number
+          total_amount_cents: number
+          transaction_count: number
+        }[]
+      }
+      get_top_merchants: {
+        Args: {
+          p_end_date: string
+          p_limit?: number
+          p_start_date: string
+          p_user_id: string
+        }
+        Returns: {
+          avg_transaction_cents: number
+          merchant_name: string
+          total_amount_cents: number
+          transaction_count: number
         }[]
       }
       insert_transaction: {
@@ -1538,6 +1772,7 @@ export type Database = {
         }
         Returns: string
       }
+      is_current_user_admin: { Args: never; Returns: boolean }
       is_username_available: {
         Args: { check_username: string }
         Returns: boolean
@@ -1571,6 +1806,18 @@ export type Database = {
           quantity_value: number
         }[]
       }
+      search_transaction_descriptions: {
+        Args: { p_limit?: number; p_search_term: string; p_user_id: string }
+        Returns: {
+          category_id: string
+          category_name: string
+          description: string
+          occurrence_count: number
+          similarity_score: number
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       update_goal_current_allocation: {
         Args: { goal_id: string; new_allocation: number }
         Returns: {
@@ -1580,6 +1827,73 @@ export type Database = {
           old_allocation: number
           old_timeline: string
         }[]
+      }
+      update_income_settings: {
+        Args: {
+          p_income_amount_cents: number
+          p_income_frequency: string
+          p_income_sources?: Json
+          p_payday: number
+        }
+        Returns: {
+          avatar_type: string | null
+          avatar_url: string | null
+          bio: string | null
+          budget_method: string
+          city: string | null
+          color_palette: string
+          country: string | null
+          created_at: string | null
+          currency: string | null
+          date_of_birth: string | null
+          default_account_id: string | null
+          default_avatar_id: string | null
+          display_name: string | null
+          email: string | null
+          email_notifications: boolean | null
+          email_verified: boolean | null
+          financial_year_start: number | null
+          first_name: string | null
+          gender: string | null
+          google_sheets_refresh_token: string | null
+          id: string
+          income_amount_cents: number | null
+          income_frequency: string | null
+          income_sources: Json | null
+          language: string | null
+          last_active_at: string | null
+          last_name: string | null
+          marketing_consent: boolean | null
+          mobile: string | null
+          needs_percentage: number
+          notifications_enabled: boolean | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          payday: number | null
+          payday_date: number | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          privacy_accepted_at: string | null
+          profile_completed: boolean | null
+          province: string | null
+          push_notifications: boolean | null
+          savings_adjustment_strategy: string
+          savings_percentage: number
+          terms_accepted_at: string | null
+          theme: string | null
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+          username: string | null
+          wants_percentage: number
+          week_start_day: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_last_active: { Args: never; Returns: undefined }
     }
