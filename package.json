@@ -104,6 +104,7 @@
   },
   "overrides": {
     "tar": "^7.5.11",
+    "basic-ftp": "^5.2.0",
     "@typescript-eslint/typescript-estree": {
       "minimatch": "^9.0.9"
     },
