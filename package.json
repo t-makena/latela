@@ -101,5 +101,8 @@
   },
   "engines": {
   "node": "22.x"
+  },
+  "overrides": {
+    "tar": "^7.5.11"
   }
 }
