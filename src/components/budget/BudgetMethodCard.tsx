@@ -4,11 +4,16 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BudgetMethod } from '@/hooks/useBudgetMethod';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { cn } from '@/lib/utils';
+import {
+  BudgetAdjustmentStrategy,
+  calculateBudgetAdjustment,
+} from '@/hooks/useBudgetPercentageAdjustment';
 
 interface BudgetMethodCardProps {
   budgetMethod: BudgetMethod;
@@ -36,6 +41,7 @@ export const BudgetMethodCard = ({
   const [localWants, setLocalWants] = useState<number>(wantsPercentage);
   const [localSavings, setLocalSavings] = useState<number>(savingsPercentage);
   const [isSaving, setIsSaving] = useState(false);
+  const [adjustStrategy, setAdjustStrategy] = useState<BudgetAdjustmentStrategy>('proportional');
 
   // Sync local state when database values change
   useEffect(() => {
@@ -43,6 +49,21 @@ export const BudgetMethodCard = ({
     setLocalWants(wantsPercentage);
     setLocalSavings(savingsPercentage);
   }, [needsPercentage, wantsPercentage, savingsPercentage]);
+
+  // When savings changes, auto-rebalance needs/wants using the chosen strategy
+  const handleSavingsChange = (raw: string) => {
+    const val = parseFloat(raw);
+    const clamped = isNaN(val) ? 0 : Math.min(100, Math.max(0, val));
+    const { needs, wants, savings } = calculateBudgetAdjustment({
+      currentNeeds: localNeeds,
+      currentWants: localWants,
+      targetSavings: clamped,
+      strategy: adjustStrategy,
+    });
+    setLocalSavings(savings);
+    setLocalNeeds(needs);
+    setLocalWants(wants);
+  };
 
   const total = Math.round((localNeeds + localWants + localSavings) * 100) / 100;
   const isValidTotal = Math.abs(total - 100) < 0.01;
@@ -186,14 +207,29 @@ export const BudgetMethodCard = ({
                     max="100"
                     step="0.01"
                     value={localSavings}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      setLocalSavings(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
-                    }}
+                    onChange={(e) => handleSavingsChange(e.target.value)}
                     className="h-9 text-right pr-7"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">%</span>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 items-center">
+                <Label className="text-sm text-muted-foreground">Auto-adjust</Label>
+                <Select
+                  value={adjustStrategy}
+                  onValueChange={(v) => setAdjustStrategy(v as BudgetAdjustmentStrategy)}
+                >
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="proportional">Proportional</SelectItem>
+                    <SelectItem value="needs_first">Needs first</SelectItem>
+                    <SelectItem value="wants_first">Wants first</SelectItem>
+                    <SelectItem value="equal">Equal split</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="grid grid-cols-2 gap-2 items-center pt-2 border-t border-border">
