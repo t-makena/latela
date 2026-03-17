@@ -169,8 +169,8 @@ export const EditTransactionDialog = ({
           })
           .eq('user_id', user.id)
           .in('description', matchingDescriptions)
-          .select('id', { count: 'exact', head: true });
-        updatedCount = count || 0;
+          .select('id');
+        updatedCount = matchingDescriptions.length;
       }
 
       toast.success(
