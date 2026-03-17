@@ -12,6 +12,7 @@ const GoogleSheetsCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       const code = searchParams.get("code");
+      const state = searchParams.get("state");
       const error = searchParams.get("error");
 
       if (error) {
@@ -26,11 +27,19 @@ const GoogleSheetsCallback = () => {
         return;
       }
 
+      if (!state) {
+        toast.error("Invalid OAuth response — missing state");
+        navigate("/reports", { replace: true });
+        return;
+      }
+
       try {
-        // Exchange code for tokens
+        // Exchange code for tokens. The state (nonce) is validated server-side:
+        // the edge function verifies it exists in oauth_nonces, belongs to the
+        // authenticated user, is not expired, and has not been consumed before.
         const redirectUri = `${window.location.origin}/auth/google-sheets/callback`;
         const { data, error: fnError } = await supabase.functions.invoke("export-to-sheets", {
-          body: { action: "exchange-code", code, redirectUri },
+          body: { action: "exchange-code", code, redirectUri, state },
         });
 
         if (fnError || !data?.success) {
@@ -39,16 +48,14 @@ const GoogleSheetsCallback = () => {
 
         toast.success("Google Sheets connected successfully!");
 
-        // Check for pending export
-        const pendingRaw = sessionStorage.getItem("pendingSheetExport");
-        if (pendingRaw) {
-          sessionStorage.removeItem("pendingSheetExport");
+        // The export payload is returned directly from the nonce row — no sessionStorage.
+        const exportPayload = data?.exportPayload;
+        if (exportPayload) {
           setStatus("exporting");
 
-          const pending = JSON.parse(pendingRaw);
           const { data: exportResult, error: exportError } = await supabase.functions.invoke(
             "export-to-sheets",
-            { body: { action: "export", ...pending } }
+            { body: { action: "export", ...exportPayload } }
           );
 
           if (exportError || !exportResult?.url) {

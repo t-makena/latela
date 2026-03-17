@@ -93,24 +93,28 @@ export const openInGoogleSheets = async (
     if (error) throw new Error(error.message);
 
     if (result?.needsAuth) {
-      // User hasn't authorized Google yet — get the auth URL
+      // User hasn't authorized Google yet — request an auth URL.
+      // The export payload is sent to the edge function here so it can be stored
+      // in the oauth_nonces table server-side. This avoids ever putting financial
+      // data in sessionStorage (XSS-accessible) and also fixes the CSRF
+      // vulnerability where userId was used as the OAuth state parameter.
       const redirectUri = `${window.location.origin}/auth/google-sheets/callback`;
       const { data: authResult, error: authError } = await supabase.functions.invoke(
         "export-to-sheets",
-        { body: { action: "get-auth-url", redirectUri } }
+        {
+          body: {
+            action: "get-auth-url",
+            redirectUri,
+            exportPayload: { data, headers: keys, title: title || "Latela Export" },
+          },
+        }
       );
 
       if (authError || !authResult?.authUrl) {
         throw new Error("Failed to get authorization URL");
       }
 
-      // Save pending export to sessionStorage so we can complete it after OAuth
-      sessionStorage.setItem(
-        "pendingSheetExport",
-        JSON.stringify({ data, headers: keys, title: title || "Latela Export" })
-      );
-
-      // Redirect to Google consent
+      // Redirect to Google consent — no sessionStorage needed.
       window.location.href = authResult.authUrl;
       return { needsAuth: true };
     }

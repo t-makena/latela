@@ -139,8 +139,34 @@ Deno.serve(async (req) => {
 
     // ── GET AUTH URL ──
     if (action === "get-auth-url") {
-      const { redirectUri } = body;
+      const { redirectUri, exportPayload } = body;
       const clientId = Deno.env.get("GOOGLE_CLIENT_ID")!;
+
+      // Generate a single-use nonce and store it server-side with the export payload.
+      // This replaces the old pattern of (a) using userId as the OAuth state parameter
+      // and (b) storing financial data in client-side sessionStorage.
+      const nonce = crypto.randomUUID();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min TTL
+
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+
+      const { error: nonceError } = await serviceClient
+        .from("oauth_nonces")
+        .insert({
+          nonce,
+          user_id: userId,
+          purpose: "google_sheets_export",
+          payload: exportPayload ?? null,
+          expires_at: expiresAt,
+          consumed: false,
+        });
+
+      if (nonceError) {
+        return jsonResponse({ error: `Failed to create auth session: ${nonceError.message}` }, 500);
+      }
 
       const params = new URLSearchParams({
         client_id: clientId,
@@ -149,7 +175,7 @@ Deno.serve(async (req) => {
         scope: SCOPES,
         access_type: "offline",
         prompt: "consent",
-        state: userId,
+        state: nonce,
       });
 
       return jsonResponse({ authUrl: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
@@ -157,7 +183,49 @@ Deno.serve(async (req) => {
 
     // ── EXCHANGE CODE ──
     if (action === "exchange-code") {
-      const { code, redirectUri } = body;
+      const { code, redirectUri, state } = body;
+
+      if (!state) {
+        return jsonResponse({ error: "Missing OAuth state parameter" }, 403);
+      }
+
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+
+      // Look up and validate the nonce before touching anything else.
+      const { data: nonceRow, error: nonceError } = await serviceClient
+        .from("oauth_nonces")
+        .select("user_id, expires_at, consumed, payload")
+        .eq("nonce", state)
+        .eq("purpose", "google_sheets_export")
+        .maybeSingle();
+
+      if (nonceError || !nonceRow) {
+        return jsonResponse({ error: "Invalid OAuth state" }, 403);
+      }
+      if (nonceRow.user_id !== userId) {
+        return jsonResponse({ error: "OAuth state does not belong to this user" }, 403);
+      }
+      if (nonceRow.consumed) {
+        return jsonResponse({ error: "OAuth session already used" }, 403);
+      }
+      if (new Date(nonceRow.expires_at) < new Date()) {
+        return jsonResponse({ error: "OAuth session expired. Please try again." }, 403);
+      }
+
+      // Mark consumed immediately — before the token exchange — so a replay attempt
+      // during the async Google call is rejected even if it arrives concurrently.
+      const { error: consumeError } = await serviceClient
+        .from("oauth_nonces")
+        .update({ consumed: true })
+        .eq("nonce", state);
+
+      if (consumeError) {
+        return jsonResponse({ error: "Failed to validate OAuth session" }, 500);
+      }
+
       const clientId = Deno.env.get("GOOGLE_CLIENT_ID")!;
       const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
 
@@ -181,12 +249,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Store refresh token using service role to bypass RLS for this update
-      const serviceClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
-
       const { error: updateError } = await serviceClient
         .from("user_settings")
         .update({ google_sheets_refresh_token: tokenData.refresh_token })
@@ -196,7 +258,9 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: `Failed to store token: ${updateError.message}` }, 500);
       }
 
-      return jsonResponse({ success: true });
+      // Return the export payload from the nonce so the callback page can resume the
+      // export without ever having stored financial data in sessionStorage.
+      return jsonResponse({ success: true, exportPayload: nonceRow.payload ?? null });
     }
 
     // ── EXPORT ──
