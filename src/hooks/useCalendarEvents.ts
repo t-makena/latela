@@ -36,9 +36,13 @@ export const useCalendarEvents = ({ year, month }: UseCalendarEventsParams) => {
       const monthStart = startOfMonth(new Date(year, month - 1));
       const monthEnd = endOfMonth(new Date(year, month - 1));
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const { data, error } = await (supabase as any)
         .from("calendar_events")
         .select("*")
+        .eq("user_id", user.id)
         .gte("event_date", format(monthStart, "yyyy-MM-dd"))
         .lte("event_date", format(monthEnd, "yyyy-MM-dd"))
         .order("event_date", { ascending: true })
@@ -74,9 +78,13 @@ export const useCalendarEvents = ({ year, month }: UseCalendarEventsParams) => {
       const today = new Date();
       const thirtyDaysLater = addDays(today, 30);
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const { data, error } = await (supabase as any)
         .from("calendar_events")
         .select("*")
+        .eq("user_id", user.id)
         .gte("event_date", format(today, "yyyy-MM-dd"))
         .lte("event_date", format(thirtyDaysLater, "yyyy-MM-dd"))
         .order("event_date", { ascending: true })

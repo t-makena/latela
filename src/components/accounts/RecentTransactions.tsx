@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTransactions } from "@/hooks/useTransactions";
-import { formatCurrency, formatDate } from "@/lib/realData";
+import { formatCurrency, formatDate, getTransactionDisplayName } from "@/lib/realData";
 
 interface RecentTransactionsProps {
   accountId: string;
@@ -112,12 +112,6 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
     }
   };
 
-  // Helper to get display name for transaction
-  const getDisplayMerchantName = (transaction: typeof transactions[0]) => {
-    // Use display_merchant_name if available, otherwise fallback to description
-    return (transaction as any).display_merchant_name || transaction.description;
-  };
-
   if (accountTransactions.length === 0) {
     return (
       <Card>
@@ -208,7 +202,7 @@ export const RecentTransactions = ({ accountId }: RecentTransactionsProps) => {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="transaction-description">
-                      {getDisplayMerchantName(transaction)}
+                      {getTransactionDisplayName((transaction as any).display_merchant_name, transaction.description)}
                     </h3>
                     <p className="transaction-date">
                       {formatDate(transaction.transaction_date)}

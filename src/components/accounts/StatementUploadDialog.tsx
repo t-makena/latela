@@ -215,7 +215,8 @@ export const StatementUploadDialog = ({
 
                 let remaining = Infinity;
                 let totalCategorized = 0;
-                while (remaining > 0) {
+                let maxBatches = 20;
+                while (remaining > 0 && maxBatches-- > 0) {
                   const { data: catData, error: catError } = await supabase.functions.invoke('categorize-transactions', {
                     body: { accountId: targetAccountId }
                   });
@@ -229,16 +230,20 @@ export const StatementUploadDialog = ({
                     });
                     break;
                   }
-                  
+
                   if (!catData?.success) break;
-                  
+
                   totalCategorized += catData.categorized || 0;
                   remaining = catData.remaining || 0;
-                  console.log(`Categorization batch: ${catData.categorized} done, ${remaining} remaining, ${catData.aiCalls} AI calls`);
                 }
-                
-                if (totalCategorized > 0) {
-                  console.log(`Categorization complete: ${totalCategorized} total transactions categorized`);
+
+                if (maxBatches <= 0) {
+                  console.error('Categorization hit max batch limit');
+                  toast({
+                    title: "Categorization incomplete",
+                    description: "Some transactions couldn't be categorized automatically. You can categorize them manually.",
+                    variant: "destructive",
+                  });
                 }
               }
             }

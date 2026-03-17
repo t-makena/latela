@@ -32,10 +32,6 @@ export const FinancialSummary = ({ showExplanations = true, minimal = false }: F
   // Determine if we should show budget/flexible balance (only for percentage-based)
   const isZeroBased = budgetMethod === 'zero_based';
 
-  console.log('FinancialSummary - transactions:', transactions);
-  console.log('FinancialSummary - loading:', loading);
-  console.log('FinancialSummary - error:', error);
-
   if (loading || budgetLoading || eventsLoading || accountsLoading || budgetMethodLoading || scoreLoading) {
     if (minimal) {
       return (

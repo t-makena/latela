@@ -1,69 +1,48 @@
-import { useDeferredValue } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
-export interface MerchantSuggestion {
-  description: string;
-  categoryId?: string;
-  categoryName?: string;
-  similarityScore: number;
+interface MerchantSuggestion {
+  id: string;
+  merchant_name: string;
+  display_name: string | null;
+  category_id: string;
 }
 
-export const useMerchantSearch = (searchTerm: string) => {
-  const { user } = useAuth();
-  const userId = user?.id;
-  const deferredSearch = useDeferredValue(searchTerm);
+export const useMerchantSearch = () => {
+  const [allMappings, setAllMappings] = useState<MerchantSuggestion[]>([]);
 
-  const { data: suggestions = [], isLoading: isSearching } = useQuery({
-    queryKey: ['merchant-search', userId, deferredSearch],
-    queryFn: async (): Promise<MerchantSuggestion[]> => {
-      const [patternsRes, descriptionsRes] = await Promise.all([
-        supabase.rpc('fuzzy_match_merchant', {
-          p_user_id: userId!,
-          p_search_term: deferredSearch,
-          p_limit: 10,
-          p_threshold: 0.3,
-        }),
-        supabase.rpc('search_transaction_descriptions', {
-          p_user_id: userId!,
-          p_search_term: deferredSearch,
-          p_limit: 10,
-        }),
-      ]);
+  useEffect(() => {
+    const fetchMappings = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-      const combined: MerchantSuggestion[] = [
-        ...(patternsRes.data || []).map((p: any) => ({
-          description: p.normalized_name,
-          categoryId: p.category_id,
-          categoryName: p.category_name,
-          similarityScore: Number(p.similarity_score),
-        })),
-        ...(descriptionsRes.data || []).map((d: any) => ({
-          description: d.description,
-          categoryId: d.category_id,
-          categoryName: d.category_name,
-          similarityScore: Number(d.similarity_score),
-        })),
-      ];
+      const { data } = await supabase
+        .from('user_merchant_mappings')
+        .select('id, merchant_name, display_name, category_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('merchant_name')
+        .limit(500);
 
-      // Deduplicate by description, keep highest similarity
-      const seen = new Map<string, MerchantSuggestion>();
-      combined.forEach((item) => {
-        const key = item.description?.toUpperCase();
-        if (!key) return;
-        const existing = seen.get(key);
-        if (!existing || item.similarityScore > existing.similarityScore) {
-          seen.set(key, item);
-        }
-      });
+      setAllMappings(data || []);
+    };
 
-      return Array.from(seen.values()).sort((a, b) => b.similarityScore - a.similarityScore);
+    fetchMappings();
+  }, []);
+
+  const getSuggestions = useCallback(
+    (query: string): MerchantSuggestion[] => {
+      if (!query || query.length < 2) return [];
+      const q = query.toLowerCase();
+      return allMappings
+        .filter(m =>
+          m.merchant_name.toLowerCase().includes(q) ||
+          (m.display_name?.toLowerCase().includes(q) ?? false)
+        )
+        .slice(0, 6);
     },
-    enabled: !!userId && deferredSearch.length >= 2,
-    staleTime: 30000,
-  });
+    [allMappings]
+  );
 
-  return { suggestions, isSearching };
+  return { getSuggestions };
 };
-

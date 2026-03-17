@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getStoreDisplayName } from '@/lib/storeColors';
@@ -55,29 +55,27 @@ const searchProducts = async (query: string): Promise<SearchResponse> => {
 export const usePriceSearch = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
-    
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-    
-    const timer = setTimeout(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
       setDebouncedQuery(value);
     }, 300);
-    
-    setDebounceTimer(timer);
-  }, [debounceTimer]);
+  }, []);
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
     setDebouncedQuery('');
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-  }, [debounceTimer]);
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['product-search', debouncedQuery],

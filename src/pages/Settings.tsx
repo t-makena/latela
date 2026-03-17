@@ -25,7 +25,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarComponent } from "@/components/avatars/DefaultAvatars";
 
 const Settings = () => {
-  const { accounts } = useAccounts();
+  const { accounts, refetch: refetchAccounts } = useAccounts();
   const { theme, setTheme } = useTheme();
   const { savingsAdjustmentStrategy, updateSavingsStrategy } = useUserSettings();
   const { profile, getInitials, updateAvatar, updateProfile } = useUserProfile();
@@ -150,12 +150,23 @@ const Settings = () => {
 
     setIsLoading(true);
     try {
+      // Verify current password before allowing the change
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || "",
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        toast.error("Current password is incorrect");
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) throw error;
-      
+
       toast.success("Password updated successfully!");
       setCurrentPassword("");
       setNewPassword("");
@@ -169,12 +180,17 @@ const Settings = () => {
 
   const handleSaveEmail = async () => {
     try {
+      // Update the auth email (sends a confirmation link to the new address)
+      const { error: authError } = await supabase.auth.updateUser({ email: editedEmail });
+      if (authError) throw authError;
+
+      // Also update the profile copy
       await updateProfile({ email: editedEmail });
       setEmail(editedEmail);
       setIsEditingEmail(false);
-      toast.success("Email updated successfully!");
-    } catch (error) {
-      toast.error("Failed to update email");
+      toast.success("Confirmation link sent to your new email. Please verify it to complete the change.");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to update email");
     }
   };
 
@@ -229,9 +245,7 @@ const Settings = () => {
       if (accountError) throw accountError;
 
       toast.success("Account removed successfully!");
-      
-      // Reload the page to refresh the accounts list
-      window.location.reload();
+      refetchAccounts();
     } catch (error: any) {
       console.error('Error removing account:', error);
       toast.error(error.message || "Failed to remove account");
@@ -765,7 +779,7 @@ const Settings = () => {
       <StatementUploadDialog
         open={addAccountDialogOpen}
         onOpenChange={setAddAccountDialogOpen}
-        onSuccess={() => window.location.reload()}
+        onSuccess={refetchAccounts}
       />
 
       <AvatarPickerDialog

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTransactions } from "@/hooks/useTransactions";
-import { formatCurrency, formatDate } from "@/lib/realData";
+import { formatCurrency, formatDate, getTransactionDisplayName } from "@/lib/realData";
 
 interface CompactRecentTransactionsProps {
   accountId: string;
@@ -57,12 +57,6 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3);
 
-  // Helper to get display name for transaction
-  const getDisplayMerchantName = (transaction: typeof transactions[0]) => {
-    // Use display_merchant_name if available, otherwise fallback to description
-    return (transaction as any).display_merchant_name || transaction.description;
-  };
-
   if (accountTransactions.length === 0) {
     return (
       <Card className="rounded-3xl border border-foreground bg-card">
@@ -100,7 +94,7 @@ export const CompactRecentTransactions = ({ accountId, onSeeMore }: CompactRecen
             >
               <div className="flex-1 min-w-0">
                 <h3 className="transaction-description truncate">
-                  {getDisplayMerchantName(transaction)}
+                  {getTransactionDisplayName((transaction as any).display_merchant_name, transaction.description)}
                 </h3>
                 <p className="transaction-date">
                   {formatDate(transaction.created_at)}

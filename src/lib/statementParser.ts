@@ -310,44 +310,45 @@ async function storeTransactions(
   userId: string,
   transactions: ParsedTransaction[],
 ): Promise<{ inserted: number; skipped: number }> {
-  let inserted = 0;
-  let skipped = 0;
+  if (transactions.length === 0) return { inserted: 0, skipped: 0 };
 
-  for (const tx of transactions) {
-    // Check for duplicates (same date, description, and amount)
-    const { data: existing } = await supabase
-      .from("transactions")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("date", tx.date)
-      .eq("description", tx.description)
-      .eq("amount", tx.amount)
-      .limit(1);
+  // Fetch all existing transactions for this user in a single query to deduplicate in memory
+  const descriptions = [...new Set(transactions.map(t => t.description))];
+  const { data: existingTxns } = await supabase
+    .from("transactions")
+    .select("description, amount, date")
+    .eq("user_id", userId)
+    .in("description", descriptions);
 
-    if (existing && existing.length > 0) {
-      skipped++;
-      continue;
-    }
+  const existingKeys = new Set(
+    (existingTxns || []).map(t => `${t.date}|${t.description}|${t.amount}`)
+  );
 
-    const { error } = await supabase.from("transactions").insert({
+  // Convert amounts from float Rands to integer cents and filter duplicates
+  const newTransactions = transactions
+    .filter(tx => !existingKeys.has(`${tx.date}|${tx.description}|${Math.round(tx.amount * 100)}`))
+    .map(tx => ({
       user_id: userId,
       date: tx.date,
       description: tx.description,
-      amount: tx.amount,
+      amount: Math.round(tx.amount * 100), // store as integer cents
       category: tx.category,
-      balance_after: tx.balance_after,
+      balance_after: tx.balance_after != null ? Math.round(tx.balance_after * 100) : null,
       source: "whatsapp_statement",
       created_at: new Date().toISOString(),
-    });
+    }));
 
-    if (error) {
-      console.error(`Failed to insert transaction: ${error.message}`);
-    } else {
-      inserted++;
-    }
+  const skipped = transactions.length - newTransactions.length;
+
+  if (newTransactions.length === 0) return { inserted: 0, skipped };
+
+  const { error } = await supabase.from("transactions").insert(newTransactions);
+  if (error) {
+    console.error(`Failed to insert transactions: ${error.message}`);
+    return { inserted: 0, skipped };
   }
 
-  return { inserted, skipped };
+  return { inserted: newTransactions.length, skipped };
 }
 
 // ─── Main Pipeline ───────────────────────────────────────────────────────────

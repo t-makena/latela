@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Search, Download, Users, TrendingUp, Calendar, LogOut, ShieldOff, Loader2 } from "lucide-react";
+import { Search, Download, Users, TrendingUp, Calendar, LogOut, ShieldOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -8,6 +8,7 @@ import { downloadCSV } from "@/lib/exportUtils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -41,14 +42,14 @@ function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label
 
 export default function AdminWaitlist() {
   const { user, signOut } = useAuth();
-  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
   const [entries, setEntries] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!isAdmin || adminLoading) return;
+    if (!isAdmin) return;
 
     const fetchWaitlist = async () => {
       setLoading(true);
@@ -67,12 +68,16 @@ export default function AdminWaitlist() {
     };
 
     fetchWaitlist();
-  }, [isAdmin, adminLoading]);
+  }, [isAdmin]);
 
   if (adminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <div className="space-y-3 w-64">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
       </div>
     );
   }

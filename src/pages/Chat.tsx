@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +21,7 @@ type Conversation = {
   updated_at: string | null;
 };
 
-const CHAT_URL = `https://sqbcxopovghwgdqplejr.supabase.co/functions/v1/chat-financial`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-financial`;
 
 export default function Chat() {
   const { session } = useAuth();
@@ -79,6 +79,8 @@ export default function Chat() {
       }
     }, 30000);
     return () => clearInterval(interval);
+    // startNewConversation only uses refs/setters — stable, no need in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length]);
 
   // Auto-scroll
@@ -253,12 +255,19 @@ export default function Chat() {
   };
 
   const deleteConversation = async (id: string) => {
-    await supabase.from("chat_messages").delete().eq("conversation_id", id);
-    await supabase.from("chat_conversations").delete().eq("id", id);
-    setConversations((prev) => prev.filter((c) => c.id !== id));
-    if (activeConversationId === id) {
-      setActiveConversationId(null);
-      setMessages([]);
+    try {
+      const { error: msgErr } = await supabase.from("chat_messages").delete().eq("conversation_id", id);
+      if (msgErr) throw msgErr;
+      const { error: convErr } = await supabase.from("chat_conversations").delete().eq("id", id);
+      if (convErr) throw convErr;
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      if (activeConversationId === id) {
+        setActiveConversationId(null);
+        setMessages([]);
+      }
+    } catch (err: unknown) {
+      console.error("Failed to delete conversation:", err);
+      toast.error("Could not delete conversation. Please try again.");
     }
   };
 
@@ -267,8 +276,8 @@ export default function Chat() {
     if (isMobile) setSidebarOpen(false);
   };
 
-  // Group conversations by date
-  const groupConversations = (convs: Conversation[]) => {
+  // Group conversations by date — memoised to avoid re-grouping on every keystroke
+  const grouped = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 86400000);
@@ -281,7 +290,7 @@ export default function Chat() {
       { label: "Older", items: [] },
     ];
 
-    convs.forEach((c) => {
+    conversations.forEach((c) => {
       const d = new Date(c.updated_at || c.created_at || 0);
       if (d >= today) groups[0].items.push(c);
       else if (d >= yesterday) groups[1].items.push(c);
@@ -290,9 +299,7 @@ export default function Chat() {
     });
 
     return groups.filter((g) => g.items.length > 0);
-  };
-
-  const grouped = groupConversations(conversations);
+  }, [conversations]);
 
   return (
     <div className="flex h-[calc(100vh-5rem)] md:h-[calc(100vh-2rem)] overflow-hidden rounded-2xl relative font-garet">

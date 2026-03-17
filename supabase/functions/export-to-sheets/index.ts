@@ -229,6 +229,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Invalid action" }, 400);
   } catch (err) {
     console.error("export-to-sheets error:", err);
-    return jsonResponse({ error: err.message || "Internal error" }, 500);
+    return jsonResponse({ error: (err as Error).message || "Internal error" }, 500);
   }
 });

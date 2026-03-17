@@ -75,10 +75,12 @@ export async function calculateBudgetScore(
   const cashSurvivalRisk = calculateCashSurvivalRisk(remainingBalance, expectedSpendToPayday);
   const riskRatio = remainingBalance > 0 ? expectedSpendToPayday / remainingBalance : 999;
   
-  // Calculate other pillars
-  const budgetCompliance = await calculateBudgetCompliance(userId);
-  const spendingConsistency = await calculateSpendingConsistency(userId);
-  const savingsHealth = await calculateSavingsHealth(userId, remainingBalance);
+  // Calculate other pillars in parallel
+  const [budgetCompliance, spendingConsistency, savingsHealth] = await Promise.all([
+    calculateBudgetCompliance(userId),
+    calculateSpendingConsistency(userId),
+    calculateSavingsHealth(userId, remainingBalance),
+  ]);
   
   // Calculate weighted total score (0-100)
   const totalScore = Math.round(
@@ -120,42 +122,33 @@ async function calculateAvgPeriodSpend(
   paydayDate: number
 ): Promise<number> {
   const today = new Date();
-  const periodSpends: number[] = [];
-  
-  // Look at last 3 months
-  for (let i = 1; i <= 3; i++) {
+  // Build all 3 period queries in parallel
+  const periodQueries = [1, 2, 3].map(i => {
     const monthDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
     const year = monthDate.getFullYear();
     const month = monthDate.getMonth();
-    
-    // Start date: same day as today in that month
+
     const startDate = new Date(year, month, Math.min(currentDay, new Date(year, month + 1, 0).getDate()));
-    
-    // End date: payday of that month (or next month if payday < currentDay)
-    let endDate: Date;
-    if (paydayDate > currentDay) {
-      endDate = new Date(year, month, paydayDate);
-    } else {
-      endDate = new Date(year, month + 1, paydayDate);
-    }
-    
-    // Query spending for this period (only expenses, negative amounts)
-    const { data: transactions } = await supabase
+    const endDate = paydayDate > currentDay
+      ? new Date(year, month, paydayDate)
+      : new Date(year, month + 1, paydayDate);
+
+    return supabase
       .from('transactions')
       .select('amount')
       .eq('user_id', userId)
       .lt('amount', 0)
       .gte('transaction_date', startDate.toISOString())
       .lte('transaction_date', endDate.toISOString());
-    
-    if (transactions && transactions.length > 0) {
-      // Amount is in cents, convert to Rands
-      const totalSpend = transactions.reduce((sum, t) => sum + Math.abs(Number(t.amount) / 100), 0);
-      periodSpends.push(totalSpend);
-    }
-  }
-  
-  // Return average (or 0 if no data)
+  });
+
+  const results = await Promise.all(periodQueries);
+
+  const periodSpends = results
+    .map(({ data }) => data)
+    .filter((txs): txs is NonNullable<typeof txs> => !!(txs && txs.length > 0))
+    .map(txs => txs.reduce((sum, t) => sum + Math.abs(Number(t.amount) / 100), 0));
+
   if (periodSpends.length === 0) return 0;
   return periodSpends.reduce((a, b) => a + b, 0) / periodSpends.length;
 }
@@ -197,10 +190,9 @@ async function calculateBudgetCompliance(userId: string): Promise<number> {
   
   if (!transactions) return 0.5;
   
-  // Calculate total budgeted (convert to monthly amounts)
+  // Accumulate total monthly budget across all items
   let totalBudgeted = 0;
-  let totalWithinBudget = 0;
-  
+
   budgetItems.forEach(item => {
     let monthlyAmount = Number(item.amount);
     switch (item.frequency) {
@@ -214,29 +206,29 @@ async function calculateBudgetCompliance(userId: string): Promise<number> {
         monthlyAmount *= 30;
         break;
     }
-    
     totalBudgeted += monthlyAmount;
-    
-    // Pro-rate budget based on day of month
-    const dayOfMonth = today.getDate();
-    const daysInMonth = endOfMonth.getDate();
-    const proratedBudget = (monthlyAmount / daysInMonth) * dayOfMonth;
-    
-    // Calculate total spending (simplified - we compare total spend vs total budget)
-    const totalSpent = transactions.reduce((sum, t) => sum + Math.abs(Number(t.amount) / 100), 0);
-    const proratedTotalBudget = (totalBudgeted / daysInMonth) * dayOfMonth;
-    
-    if (totalSpent <= proratedTotalBudget) {
-      totalWithinBudget = totalBudgeted;
-    } else {
-      const overspendRatio = totalSpent / proratedTotalBudget;
-      if (overspendRatio < 1.5) {
-        totalWithinBudget = totalBudgeted * (1 - (overspendRatio - 1));
-      }
-    }
   });
-  
-  return totalBudgeted > 0 ? Math.max(0, Math.min(1, totalWithinBudget / totalBudgeted)) : 0.5;
+
+  if (totalBudgeted === 0) return 0.5;
+
+  // Pro-rate the total budget to the current day of the month
+  const dayOfMonth = today.getDate();
+  const daysInMonth = endOfMonth.getDate();
+  const proratedTotalBudget = (totalBudgeted / daysInMonth) * dayOfMonth;
+
+  const totalSpent = transactions.reduce((sum, t) => sum + Math.abs(Number(t.amount) / 100), 0);
+
+  let totalWithinBudget: number;
+  if (totalSpent <= proratedTotalBudget) {
+    totalWithinBudget = totalBudgeted;
+  } else {
+    const overspendRatio = totalSpent / proratedTotalBudget;
+    totalWithinBudget = overspendRatio < 1.5
+      ? totalBudgeted * (1 - (overspendRatio - 1))
+      : 0;
+  }
+
+  return Math.max(0, Math.min(1, totalWithinBudget / totalBudgeted));
 }
 
 async function calculateSpendingConsistency(userId: string): Promise<number> {
@@ -256,25 +248,22 @@ async function calculateSpendingConsistency(userId: string): Promise<number> {
   
   const thisMonthSpend = thisMonthTx?.reduce((sum, t) => sum + Math.abs(Number(t.amount) / 100), 0) || 0;
   
-  // Get average spending for same period in last 3 months
-  const historicalSpends: number[] = [];
-  
-  for (let i = 1; i <= 3; i++) {
-    const monthStart = new Date(today.getFullYear(), today.getMonth() - i, 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() - i, dayOfMonth);
-    
-    const { data: monthTx } = await supabase
-      .from('transactions')
-      .select('amount')
-      .eq('user_id', userId)
-      .lt('amount', 0)
-      .gte('transaction_date', monthStart.toISOString())
-      .lte('transaction_date', monthEnd.toISOString());
-    
-    if (monthTx && monthTx.length > 0) {
-      historicalSpends.push(monthTx.reduce((sum, t) => sum + Math.abs(Number(t.amount) / 100), 0));
-    }
-  }
+  // Get average spending for same period in last 3 months — run in parallel
+  const historicalQueries = [1, 2, 3].map(i => supabase
+    .from('transactions')
+    .select('amount')
+    .eq('user_id', userId)
+    .lt('amount', 0)
+    .gte('transaction_date', new Date(today.getFullYear(), today.getMonth() - i, 1).toISOString())
+    .lte('transaction_date', new Date(today.getFullYear(), today.getMonth() - i, dayOfMonth).toISOString())
+  );
+
+  const historicalResults = await Promise.all(historicalQueries);
+
+  const historicalSpends = historicalResults
+    .map(({ data }) => data)
+    .filter((txs): txs is NonNullable<typeof txs> => !!(txs && txs.length > 0))
+    .map(txs => txs.reduce((sum, t) => sum + Math.abs(Number(t.amount) / 100), 0));
   
   if (historicalSpends.length === 0) return 0.5;
   

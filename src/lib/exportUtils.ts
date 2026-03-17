@@ -14,8 +14,12 @@ export const arrayToCSV = (data: Record<string, unknown>[], headers?: string[]):
   const rows = data.map(row =>
     keys.map(key => {
       const value = row[key];
-      const stringValue = value === null || value === undefined ? '' : String(value);
-      // Escape commas and quotes
+      let stringValue = value === null || value === undefined ? '' : String(value);
+      // Neutralise spreadsheet formula injection (Excel/Sheets execute cells starting with =, +, -, @, TAB, CR)
+      if (/^[=+\-@\t\r]/.test(stringValue)) {
+        stringValue = `'${stringValue}`;
+      }
+      // Escape commas, quotes and newlines
       if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
         return `"${stringValue.replace(/"/g, '""')}"`;
       }
@@ -66,7 +70,7 @@ export const downloadExcel = (data: Record<string, unknown>[], filename: string,
   );
 
   const tsv = [headerRow, ...rows].join('\n');
-  downloadFile(tsv, `${filename}.xls`, 'application/vnd.ms-excel');
+  downloadFile(tsv, `${filename}.tsv`, 'text/tab-separated-values');
 };
 
 /**

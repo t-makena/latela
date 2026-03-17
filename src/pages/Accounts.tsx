@@ -12,7 +12,7 @@ const Accounts = () => {
   const [addAccountOpen, setAddAccountOpen] = useState(false);
   const isMobile = useIsMobile();
   
-  const { accounts, loading, error } = useAccounts();
+  const { accounts, loading, error, refetch } = useAccounts();
 
   // Loading state
   if (loading) {
@@ -40,7 +40,7 @@ const Accounts = () => {
         <StatementUploadDialog 
           open={addAccountOpen} 
           onOpenChange={setAddAccountOpen}
-          onSuccess={() => window.location.reload()}
+          onSuccess={refetch}
         />
       </div>
     );
@@ -58,7 +58,7 @@ const Accounts = () => {
         <StatementUploadDialog 
           open={addAccountOpen} 
           onOpenChange={setAddAccountOpen}
-          onSuccess={() => window.location.reload()}
+          onSuccess={refetch}
         />
       </div>
     );
@@ -73,7 +73,7 @@ const Accounts = () => {
         <StatementUploadDialog 
           open={addAccountOpen} 
           onOpenChange={setAddAccountOpen}
-          onSuccess={() => window.location.reload()}
+          onSuccess={refetch}
         />
       </div>
     </div>

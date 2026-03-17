@@ -2,26 +2,38 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lightbulb } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactions } from "@/hooks/useTransactions";
-import { calculateFinancialMetrics } from "@/lib/realData";
+import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
 
 export const AIInsights = () => {
   const { transactions } = useTransactions();
   const { monthlyExpenses, monthlySavings, netBalance } = calculateFinancialMetrics(transactions);
   const isMobile = useIsMobile();
-  
-  // Generate insights based on real data
+
   const insights = [
-    `Your monthly expenses are ${monthlyExpenses > 0 ? 'R' + monthlyExpenses.toLocaleString() : 'being calculated'}.`,
-    `Net balance this month: ${netBalance > 0 ? '+' : ''}R${netBalance.toLocaleString()}.`,
-    monthlySavings > 0 ? `Great job saving R${monthlySavings.toLocaleString()} this month!` : "Consider setting up automatic savings transfers."
+    {
+      id: 'expenses',
+      text: monthlyExpenses > 0
+        ? `Your monthly expenses are ${formatCurrency(monthlyExpenses)}.`
+        : 'Monthly expenses are still being calculated.',
+    },
+    {
+      id: 'net',
+      text: `Net balance this month: ${netBalance >= 0 ? '+' : ''}${formatCurrency(netBalance)}.`,
+    },
+    {
+      id: 'savings',
+      text: monthlySavings > 0
+        ? `Great job saving ${formatCurrency(monthlySavings)} this month!`
+        : 'Consider setting up automatic savings transfers.',
+    },
   ];
 
   const content = (
     <ul className="space-y-3">
-      {insights.map((insight, index) => (
-        <li key={index} className="flex gap-2 text-sm">
+      {insights.map((insight) => (
+        <li key={insight.id} className="flex gap-2 text-sm">
           <span className="text-primary font-bold">•</span>
-          <span>{insight}</span>
+          <span>{insight.text}</span>
         </li>
       ))}
     </ul>

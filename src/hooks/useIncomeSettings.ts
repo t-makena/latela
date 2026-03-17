@@ -1,173 +1,209 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 export type IncomeFrequency = 'monthly' | 'bi-weekly' | 'weekly';
+
+interface IncomeSettings {
+  payday: number;
+  frequency: IncomeFrequency;
+  weeklyPayday: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  biweeklyPayday1: number; // First pay date (1-31)
+  biweeklyPayday2: number; // Second pay date (1-31)
+}
 
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export const useIncomeSettings = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const migrationDone = useRef(false);
-
-  // Fetch settings from Supabase
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ['incomeSettings', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_or_create_user_settings');
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-    staleTime: 300000,
-  });
-
-  // Mutation for updating settings
-  const updateMutation = useMutation({
-    mutationFn: async (params: {
-      income_amount_cents: number;
-      income_frequency: string;
-      payday: number;
-      income_sources: any;
-    }) => {
-      const { data, error } = await supabase.rpc('update_income_settings', {
-        p_income_amount_cents: params.income_amount_cents,
-        p_income_frequency: params.income_frequency,
-        p_payday: params.payday,
-        p_income_sources: params.income_sources,
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['incomeSettings', user?.id] });
-    },
-  });
-
-  // One-time migration from localStorage
-  useEffect(() => {
-    if (!settings || !user || migrationDone.current) return;
-    migrationDone.current = true;
-
-    // Check if Supabase has no income data but localStorage does
-    if ((settings as any)?.income_amount_cents === 0 || (settings as any)?.income_amount_cents === null) {
-      const localPayday = localStorage.getItem('userPayday');
-      const localFreq = localStorage.getItem('incomeFrequency');
-      if (localPayday || localFreq) {
-        const paydayVal = localPayday ? parseInt(localPayday, 10) : 25;
-        const freqVal = (localFreq as IncomeFrequency) || 'monthly';
-        updateMutation.mutate({
-          income_amount_cents: 0,
-          income_frequency: freqVal,
-          payday: paydayVal,
-          income_sources: JSON.stringify([]),
-        });
-        // Clear old localStorage keys
-        localStorage.removeItem('userPayday');
-        localStorage.removeItem('incomeFrequency');
-        localStorage.removeItem('weeklyPayday');
-        localStorage.removeItem('biweeklyPayday1');
-        localStorage.removeItem('biweeklyPayday2');
-      }
+  const [payday, setPayday] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('userPayday');
+      return saved ? parseInt(saved, 10) : 25;
     }
-  }, [settings, user]);
+    return 25;
+  });
 
-  // Derived values from settings
-  const payday = (settings as any)?.payday ?? (settings as any)?.payday_date ?? 25;
-  const frequency: IncomeFrequency = ((settings as any)?.income_frequency as IncomeFrequency) || 'monthly';
-  const weeklyPayday = 5; // Default Friday — stored in payday field for weekly
-  const biweeklyPayday1 = 1;
-  const biweeklyPayday2 = 15;
+  const [frequency, setFrequency] = useState<IncomeFrequency>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('incomeFrequency');
+      return (saved as IncomeFrequency) || 'monthly';
+    }
+    return 'monthly';
+  });
 
-  const updatePayday = useCallback((day: number) => {
+  // Sync from Supabase on mount; migrate from localStorage if DB values are absent
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('user_settings')
+        .select('income_frequency, payday_date')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const updates: { income_frequency?: string; payday_date?: number } = {};
+
+      if (data?.income_frequency) {
+        const freq = data.income_frequency as IncomeFrequency;
+        setFrequency(freq);
+        localStorage.setItem('incomeFrequency', freq);
+      } else {
+        // Migrate from localStorage to DB
+        updates.income_frequency = frequency;
+      }
+
+      if (data?.payday_date != null) {
+        setPayday(data.payday_date);
+        localStorage.setItem('userPayday', String(data.payday_date));
+      } else {
+        // Migrate from localStorage to DB
+        updates.payday_date = payday;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await supabase
+          .from('user_settings')
+          .upsert({ user_id: user.id, ...updates }, { onConflict: 'user_id' });
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [weeklyPayday, setWeeklyPayday] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('weeklyPayday');
+      return saved ? parseInt(saved, 10) : 5; // Default to Friday
+    }
+    return 5;
+  });
+
+  const [biweeklyPayday1, setBiweeklyPayday1] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('biweeklyPayday1');
+      return saved ? parseInt(saved, 10) : 1;
+    }
+    return 1;
+  });
+
+  const [biweeklyPayday2, setBiweeklyPayday2] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('biweeklyPayday2');
+      return saved ? parseInt(saved, 10) : 15;
+    }
+    return 15;
+  });
+
+  const updatePayday = (day: number) => {
     const validDay = Math.max(1, Math.min(31, day));
-    updateMutation.mutate({
-      income_amount_cents: (settings as any)?.income_amount_cents ?? 0,
-      income_frequency: (settings as any)?.income_frequency ?? 'monthly',
-      payday: validDay,
-      income_sources: JSON.stringify((settings as any)?.income_sources ?? []),
+    setPayday(validDay);
+    localStorage.setItem('userPayday', validDay.toString());
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase
+          .from('user_settings')
+          .upsert({ user_id: user.id, payday_date: validDay }, { onConflict: 'user_id' });
+      }
     });
-  }, [settings, updateMutation]);
+  };
 
-  const updateFrequency = useCallback((freq: IncomeFrequency) => {
-    updateMutation.mutate({
-      income_amount_cents: (settings as any)?.income_amount_cents ?? 0,
-      income_frequency: freq,
-      payday: (settings as any)?.payday ?? 25,
-      income_sources: JSON.stringify((settings as any)?.income_sources ?? []),
+  const updateFrequency = (freq: IncomeFrequency) => {
+    setFrequency(freq);
+    localStorage.setItem('incomeFrequency', freq);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase
+          .from('user_settings')
+          .upsert({ user_id: user.id, income_frequency: freq }, { onConflict: 'user_id' });
+      }
     });
-  }, [settings, updateMutation]);
+  };
 
-  const updateWeeklyPayday = useCallback((_day: number) => {
-    // Weekly payday stored via the payday field
-    updatePayday(_day);
-  }, [updatePayday]);
+  const updateWeeklyPayday = (day: number) => {
+    const validDay = Math.max(0, Math.min(6, day));
+    setWeeklyPayday(validDay);
+    localStorage.setItem('weeklyPayday', validDay.toString());
+  };
 
-  const updateBiweeklyPayday1 = useCallback((_day: number) => {
-    // For bi-weekly, use the payday field for first date
-    updatePayday(_day);
-  }, [updatePayday]);
+  const updateBiweeklyPayday1 = (day: number) => {
+    const validDay = Math.max(1, Math.min(31, day));
+    setBiweeklyPayday1(validDay);
+    localStorage.setItem('biweeklyPayday1', validDay.toString());
+  };
 
-  const updateBiweeklyPayday2 = useCallback((_day: number) => {
-    // Currently not separately stored — uses payday field
-    updatePayday(_day);
-  }, [updatePayday]);
+  const updateBiweeklyPayday2 = (day: number) => {
+    const validDay = Math.max(1, Math.min(31, day));
+    setBiweeklyPayday2(validDay);
+    localStorage.setItem('biweeklyPayday2', validDay.toString());
+  };
 
   // Helper to get the next payday from a given date
-  const getNextPayday = useCallback((fromDate: Date): Date => {
+  const getNextPayday = (fromDate: Date): Date => {
     const today = new Date(fromDate);
     today.setHours(0, 0, 0, 0);
 
     if (frequency === 'weekly') {
+      // Find next occurrence of the weekly payday
       const currentDay = today.getDay();
       let daysUntilPayday = (weeklyPayday - currentDay + 7) % 7;
-      if (daysUntilPayday === 0) daysUntilPayday = 7;
+      if (daysUntilPayday === 0) daysUntilPayday = 7; // If today is payday, get next week
       const nextPayday = new Date(today);
       nextPayday.setDate(today.getDate() + daysUntilPayday);
       return nextPayday;
     } else if (frequency === 'bi-weekly') {
+      // Find next occurrence of either bi-weekly payday
       const currentMonth = today.getMonth();
       const currentYear = today.getFullYear();
-
+      const currentDate = today.getDate();
+      
+      // Get both paydays for this month
       const payday1ThisMonth = new Date(currentYear, currentMonth, biweeklyPayday1);
       const payday2ThisMonth = new Date(currentYear, currentMonth, biweeklyPayday2);
-
+      
+      // Sort them
       const [firstPayday, secondPayday] = biweeklyPayday1 < biweeklyPayday2 
         ? [payday1ThisMonth, payday2ThisMonth] 
         : [payday2ThisMonth, payday1ThisMonth];
-
-      if (today < firstPayday) return firstPayday;
-      if (today < secondPayday) return secondPayday;
-
-      const nextMonth = currentMonth + 1;
-      const nextYear = nextMonth > 11 ? currentYear + 1 : currentYear;
-      const adjustedMonth = nextMonth % 12;
-      const smallerPayday = Math.min(biweeklyPayday1, biweeklyPayday2);
-      return new Date(nextYear, adjustedMonth, smallerPayday);
-    } else {
-      const nextPaydayDate = new Date(today);
-      nextPaydayDate.setDate(payday);
-      if (nextPaydayDate <= today) {
-        nextPaydayDate.setMonth(nextPaydayDate.getMonth() + 1);
+      
+      if (today < firstPayday) {
+        return firstPayday;
+      } else if (today < secondPayday) {
+        return secondPayday;
+      } else {
+        // Next month's first payday
+        const nextMonth = currentMonth + 1;
+        const nextYear = nextMonth > 11 ? currentYear + 1 : currentYear;
+        const adjustedMonth = nextMonth % 12;
+        const smallerPayday = Math.min(biweeklyPayday1, biweeklyPayday2);
+        return new Date(nextYear, adjustedMonth, smallerPayday);
       }
-      return nextPaydayDate;
+    } else {
+      // Monthly
+      const nextPayday = new Date(today);
+      nextPayday.setDate(payday);
+      
+      if (nextPayday <= today) {
+        nextPayday.setMonth(nextPayday.getMonth() + 1);
+      }
+      
+      return nextPayday;
     }
-  }, [frequency, payday, weeklyPayday, biweeklyPayday1, biweeklyPayday2]);
+  };
 
   // Get the Nth payday from today
-  const getNthPayday = useCallback((periodsFromNow: number): Date => {
+  const getNthPayday = (periodsFromNow: number): Date => {
     if (periodsFromNow <= 0) return new Date();
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     if (frequency === 'weekly') {
+      // Get next weekly payday
       let payDate = getNextPayday(today);
+      // Add (n-1) weeks
       payDate.setDate(payDate.getDate() + (periodsFromNow - 1) * 7);
       return payDate;
     } else if (frequency === 'bi-weekly') {
+      // Get all bi-weekly paydays until we have enough
       const paydays: Date[] = [];
       let currentMonth = today.getMonth();
       let currentYear = today.getFullYear();
@@ -178,36 +214,52 @@ export const useIncomeSettings = () => {
         
         if (p1 > today) paydays.push(p1);
         if (p2 > today) paydays.push(p2);
+        
+        // Sort and dedupe
         paydays.sort((a, b) => a.getTime() - b.getTime());
         
         currentMonth++;
-        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
       }
       
       return paydays[periodsFromNow - 1];
     } else {
+      // Monthly
       let payDate = getNextPayday(today);
       payDate.setMonth(payDate.getMonth() + (periodsFromNow - 1));
       return payDate;
     }
-  }, [frequency, getNextPayday, biweeklyPayday1, biweeklyPayday2]);
+  };
 
   // Count pay periods between now and a target date
-  const countPayPeriods = useCallback((targetDate: Date): number => {
+  const countPayPeriods = (targetDate: Date): number => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const target = new Date(targetDate);
     target.setHours(0, 0, 0, 0);
     
     const firstPayday = getNextPayday(today);
-    if (target < firstPayday) return 0;
+    
+    if (target < firstPayday) {
+      return 0;
+    }
 
     if (frequency === 'weekly') {
+      // Count weeks between first payday and target
       let count = 0;
       let currentPayday = new Date(firstPayday);
-      while (currentPayday <= target) { count++; currentPayday.setDate(currentPayday.getDate() + 7); }
+      
+      while (currentPayday <= target) {
+        count++;
+        currentPayday.setDate(currentPayday.getDate() + 7);
+      }
+      
       return count;
     } else if (frequency === 'bi-weekly') {
+      // Count all bi-weekly paydays between now and target
       let count = 0;
       let currentMonth = firstPayday.getMonth();
       let currentYear = firstPayday.getFullYear();
@@ -219,36 +271,49 @@ export const useIncomeSettings = () => {
         if (p1 > today && p1 <= target) count++;
         if (p2 > today && p2 <= target) count++;
         
+        // Check if we've passed the target date
         const maxPayday = Math.max(biweeklyPayday1, biweeklyPayday2);
         if (new Date(currentYear, currentMonth, maxPayday) > target) break;
         
         currentMonth++;
-        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
       }
+      
       return count;
     } else {
+      // Monthly
       let count = 0;
       let currentPayday = new Date(firstPayday);
-      while (currentPayday <= target) { count++; currentPayday.setMonth(currentPayday.getMonth() + 1); }
+      
+      while (currentPayday <= target) {
+        count++;
+        currentPayday.setMonth(currentPayday.getMonth() + 1);
+      }
+      
       return count;
     }
-  }, [frequency, getNextPayday, biweeklyPayday1, biweeklyPayday2]);
+  };
 
-  const getFrequencyLabel = useCallback((): string => {
+  // Get frequency label for UI
+  const getFrequencyLabel = (): string => {
     switch (frequency) {
       case 'weekly': return 'Weekly';
       case 'bi-weekly': return 'Bi-weekly';
       default: return 'Monthly';
     }
-  }, [frequency]);
+  };
 
-  const getPeriodTerm = useCallback((count: number): string => {
+  // Get period term (week/pay period/month)
+  const getPeriodTerm = (count: number): string => {
     switch (frequency) {
       case 'weekly': return count === 1 ? 'week' : 'weeks';
       case 'bi-weekly': return count === 1 ? 'pay period' : 'pay periods';
       default: return count === 1 ? 'month' : 'months';
     }
-  }, [frequency]);
+  };
 
   return { 
     payday, 
@@ -256,7 +321,6 @@ export const useIncomeSettings = () => {
     weeklyPayday,
     biweeklyPayday1,
     biweeklyPayday2,
-    isLoading,
     updatePayday, 
     updateFrequency,
     updateWeeklyPayday,

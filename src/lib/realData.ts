@@ -1,7 +1,6 @@
 import { Transaction } from '@/lib/data';
 
 export const calculateFinancialMetrics = (transactions: Transaction[]) => {
-  console.log('All transactions:', transactions);
   
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -13,7 +12,6 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
            transactionDate.getFullYear() === currentYear;
   });
 
-  console.log('Current month transactions:', currentMonthTransactions);
 
   // Calculate monthly income from salary deposits only - make the search more flexible
   const salaryTransactions = currentMonthTransactions.filter(t => {
@@ -26,15 +24,11 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
     );
   });
   
-  console.log('Salary transactions:', salaryTransactions);
-  
   const monthlyIncome = salaryTransactions.reduce((sum, t) => sum + t.amount, 0);
-  console.log('Monthly income:', monthlyIncome);
 
   // Calculate monthly expenses as total of all negative values
   const expenseTransactions = currentMonthTransactions.filter(t => t.amount < 0);
   const monthlyExpenses = Math.abs(expenseTransactions.reduce((sum, t) => sum + t.amount, 0));
-  console.log('Monthly expenses:', monthlyExpenses);
 
   // Calculate savings as "transfer from cheque" plus "transfer to cheque"
   const transferFromCheque = currentMonthTransactions
@@ -46,11 +40,9 @@ export const calculateFinancialMetrics = (transactions: Transaction[]) => {
     .reduce((sum, t) => sum + t.amount, 0);
   
   const monthlySavings = transferFromCheque + transferToCheque;
-  console.log('Monthly savings:', monthlySavings);
 
   // Net balance is the total of all transaction values
   const netBalance = currentMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
-  console.log('Net balance:', netBalance);
 
   // Calculate account balances
   const accountBalances = transactions.reduce((acc, transaction) => {
@@ -139,6 +131,20 @@ export const formatCurrency = (amount: number, currency = 'ZAR') => {
     currency: currency,
   }).format(amount);
 };
+
+/** Strips redundant account type suffixes (Cheque, Savings, Credit) from display names. */
+export const cleanAccountName = (name: string): string =>
+  name
+    .replace(/\s+Cheque$/i, '')
+    .replace(/\s+Savings$/i, '')
+    .replace(/\s+Credit$/i, '')
+    .trim();
+
+/** Returns the best human-readable merchant name for a transaction. */
+export const getTransactionDisplayName = (
+  displayMerchantName: string | null | undefined,
+  description: string | null | undefined
+): string => displayMerchantName || description || '—';
 
 export const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {

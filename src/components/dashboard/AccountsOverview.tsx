@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactions } from "@/hooks/useTransactions";
-import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
+import { calculateFinancialMetrics, formatCurrency, cleanAccountName } from "@/lib/realData";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const AccountsOverview = () => {
@@ -10,15 +10,6 @@ export const AccountsOverview = () => {
   const { transactions } = useTransactions();
   const { accountBalances } = calculateFinancialMetrics(transactions);
   const isMobile = useIsMobile();
-
-  // Function to clean account names by removing redundant text
-  const cleanAccountName = (name: string) => {
-    return name
-      .replace(/\s+Cheque$/i, '')
-      .replace(/\s+Savings$/i, '')
-      .replace(/\s+Credit$/i, '')
-      .trim();
-  };
 
   if (accountsLoading) {
     const content = (

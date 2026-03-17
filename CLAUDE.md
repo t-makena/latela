@@ -65,10 +65,12 @@ Use `src/integrations/supabase/types.ts` for type-safe DB access. Regenerate typ
 ### Environment Variables
 | Variable | Used in |
 |---|---|
-| `VITE_SUPABASE_URL` | Frontend Supabase client |
-| `VITE_SUPABASE_ANON_KEY` | Frontend Supabase client |
+| `VITE_SUPABASE_URL` | Frontend Supabase client (Vite — must have `VITE_` prefix) |
+| `VITE_SUPABASE_ANON_KEY` | Frontend Supabase client (Vite — must have `VITE_` prefix) |
+| `SUPABASE_URL` | Vercel serverless webhook + Edge Functions |
+| `SUPABASE_SERVICE_ROLE_KEY` | Vercel serverless webhook + Edge Functions (service role) |
+| `SUPABASE_ANON_KEY` | Supabase Edge Functions (Deno — auto-provided by Supabase platform) |
 | `VITE_SENTRY_DSN` | Sentry error tracking |
-| `SUPABASE_SERVICE_ROLE_KEY` | Webhook API route |
 | `ANTHROPIC_API_KEY` | Webhook AI responses + scrapers |
 | `WHATSAPP_VERIFY_TOKEN` | Webhook GET verification |
 | `META_APP_SECRET` | Webhook POST signature check |

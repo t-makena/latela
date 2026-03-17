@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AccountType } from "@/lib/data";
 import { useTransactions } from "@/hooks/useTransactions";
-import { calculateFinancialMetrics, formatCurrency } from "@/lib/realData";
+import { calculateFinancialMetrics, formatCurrency, cleanAccountName } from "@/lib/realData";
 import { RecentTransactions } from "./RecentTransactions";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -16,15 +16,6 @@ export const AccountDetail = ({ account }: AccountDetailProps) => {
   const { t } = useLanguage();
   
   const accountBalance = accountBalances[parseInt(account.id)] || 0;
-
-  // Function to clean account names by removing redundant text
-  const cleanAccountName = (name: string) => {
-    return name
-      .replace(/\s+Cheque$/i, '')
-      .replace(/\s+Savings$/i, '')
-      .replace(/\s+Credit$/i, '')
-      .trim();
-  };
 
   const cleanedAccountName = cleanAccountName(account.name);
 

@@ -14,6 +14,9 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
+// Disable Vercel's automatic body parsing so we can verify the raw HMAC signature
+export const config = { api: { bodyParser: false } };
+
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const {
@@ -111,6 +114,14 @@ type SessionState =
   | "in_budget_buddy"
   | "awaiting_confirm";
 
+interface ParsedTransaction {
+  date: string;
+  description: string;
+  amount: number;
+  balance_after: number | null;
+  category: string;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function sleep(ms: number): Promise<void> {
@@ -153,6 +164,15 @@ async function setSessionState(
   } catch (err: any) {
     console.error("Session state error:", err.message);
   }
+}
+
+// ─── Phone Validation ────────────────────────────────────────────────────────
+
+const PHONE_REGEX = /^\+?[0-9]{7,15}$/;
+
+function sanitizePhone(phone: string): string | null {
+  const cleaned = phone.replace(/\s/g, "");
+  return PHONE_REGEX.test(cleaned) ? cleaned : null;
 }
 
 // ─── Signature Verification ──────────────────────────────────────────────────
@@ -295,11 +315,14 @@ async function markRead(messageId: string): Promise<void> {
 
 async function getUserContext(phone: string): Promise<UserContext | null> {
   try {
+    const safePhone = sanitizePhone(phone);
+    if (!safePhone) return null;
+
     // Look up user via user_settings (mobile or phone_number field)
     const { data: settings, error } = await supabase
       .from("user_settings")
       .select("user_id, first_name, last_name, display_name, needs_percentage, wants_percentage, savings_percentage, payday_date, budget_method")
-      .or(`mobile.eq.${phone},phone_number.eq.${phone}`)
+      .or(`mobile.eq.${safePhone},phone_number.eq.${safePhone}`)
       .single();
     if (error || !settings) return null;
 
@@ -808,40 +831,260 @@ async function processMessage(
   }
 }
 
+// ─── Statement Upload Helpers ─────────────────────────────────────────────────
+
+const STATEMENT_SYSTEM_PROMPT = `You are a South African bank statement parser. Extract ALL transactions from the provided bank statement text.
+
+For each transaction, extract:
+- date: The transaction date in YYYY-MM-DD format
+- description: The transaction description/narrative (merchant name, reference, etc.)
+- amount: The transaction amount as a number. Use NEGATIVE for debits/payments/purchases, POSITIVE for credits/deposits/income.
+- balance_after: The balance after this transaction (if available, otherwise null)
+- category: Your best guess category from: Groceries, Transport, Entertainment, Utilities, Healthcare, Education, Shopping, Food & Dining, Insurance, Fees & Charges, Transfer, Income, Other
+
+Return ONLY a JSON array, no markdown, no explanation. Example:
+[{"date":"2025-01-15","description":"WOOLWORTHS SANDTON","amount":-523.45,"balance_after":12450.00,"category":"Groceries"}]`;
+
+async function getMediaUrl(mediaId: string): Promise<string> {
+  const res = await fetch(
+    `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${mediaId}`,
+    { headers: { Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}` } },
+  );
+  if (!res.ok) throw new Error(`Failed to get media URL: ${res.status}`);
+  const json = await res.json();
+  return json.url as string;
+}
+
+async function downloadMedia(url: string): Promise<Buffer> {
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}` },
+  });
+  if (!res.ok) throw new Error(`Failed to download media: ${res.status}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
+async function extractTextFromPdf(buffer: Buffer): Promise<string> {
+  const pdfParse = (await import("pdf-parse")).default;
+  return (await pdfParse(buffer)).text;
+}
+
+function safeParseClaudeJson(raw: string): ParsedTransaction[] {
+  const cleaned = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    console.error("Failed to parse Claude JSON:", raw.substring(0, 300));
+    return [];
+  }
+}
+
+async function parseTransactionsWithClaude(text: string): Promise<ParsedTransaction[]> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: 8192,
+      system: STATEMENT_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: `Parse the following bank statement:\n\n${text}` }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Claude API error: ${res.status}`);
+  const data = await res.json();
+  const raw = data.content?.filter((b: any) => b.type === "text").map((b: any) => b.text).join("") ?? "";
+  return safeParseClaudeJson(raw);
+}
+
+async function parseImageWithClaude(buffer: Buffer, mimeType: string): Promise<ParsedTransaction[]> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: 8192,
+      system: STATEMENT_SYSTEM_PROMPT,
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: mimeType, data: buffer.toString("base64") } },
+          { type: "text", text: "Parse this bank statement image and extract all transactions." },
+        ],
+      }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Claude Vision API error: ${res.status}`);
+  const data = await res.json();
+  const raw = data.content?.filter((b: any) => b.type === "text").map((b: any) => b.text).join("") ?? "";
+  return safeParseClaudeJson(raw);
+}
+
 // ─── Statement Upload ────────────────────────────────────────────────────────
 
 async function processUpload(
   phone: string,
-  mediaId: string,
-  mime: string,
   msgId: string,
+  mediaId: string,
+  mimeType: string,
 ): Promise<void> {
   try {
     await markRead(msgId);
+
+    const safePhone = sanitizePhone(phone);
+    if (!safePhone) {
+      await sendText(phone, "❌ Invalid phone number format.");
+      return;
+    }
+
     const { data: settings } = await supabase
       .from("user_settings")
       .select("user_id, first_name, display_name")
-      .or(`mobile.eq.${phone},phone_number.eq.${phone}`)
+      .or(`mobile.eq.${safePhone},phone_number.eq.${safePhone}`)
       .single();
-    if (!settings) {
+
+    if (!settings?.user_id) {
       await sendText(
         phone,
-        "I need your account linked first.\n\nSign up on the Latela app.\n\nType *menu* for options.",
+        "❌ Your phone number isn't linked to a Latela account yet.\n\n" +
+        "Please link your number in the Latela app under Settings → WhatsApp, then try again.\n\n" +
+        "Type *menu* for options.",
       );
       return;
     }
+
+    const userId = settings.user_id;
     const userName = settings.display_name || settings.first_name || "there";
-    await sendText(phone, `Got your statement, ${userName}! Processing...`);
-    await sendText(
-      phone,
-      "Statement received! Full WhatsApp parsing is coming soon.\n\nUpload via the Latela app for instant processing.\n\nType *menu* for options.",
+
+    await sendText(phone, `⏳ Processing your statement, ${userName}... This may take a moment.`);
+
+    // Download and parse
+    const mediaUrl = await getMediaUrl(mediaId);
+    const mediaBuffer = await downloadMedia(mediaUrl);
+
+    let transactions: ParsedTransaction[];
+    if (mimeType === "application/pdf") {
+      const text = await extractTextFromPdf(mediaBuffer);
+      transactions = await parseTransactionsWithClaude(text);
+    } else if (mimeType.startsWith("image/")) {
+      transactions = await parseImageWithClaude(mediaBuffer, mimeType);
+    } else {
+      await sendText(
+        phone,
+        "❌ Unsupported file type. Please send a PDF or image of your bank statement.\n\nType *menu* for options.",
+      );
+      return;
+    }
+
+    if (!transactions || transactions.length === 0) {
+      await sendText(
+        phone,
+        "❌ I couldn't find any transactions in that file. Please make sure it's a valid bank statement.\n\nType *menu* for options.",
+      );
+      return;
+    }
+
+    // Get or create default account for user
+    let { data: account } = await supabase
+      .from("accounts")
+      .select("id")
+      .eq("user_id", userId)
+      .limit(1)
+      .single();
+
+    if (!account) {
+      const { data: newAccount } = await supabase
+        .from("accounts")
+        .insert({ user_id: userId, name: "Primary Account", type: "checking" })
+        .select("id")
+        .single();
+      account = newAccount;
+    }
+
+    // Deduplicate against existing transactions
+    const descriptions = [...new Set(transactions.map((t) => t.description))];
+    const { data: existingTxns } = await supabase
+      .from("transactions")
+      .select("transaction_date, description, amount")
+      .eq("user_id", userId)
+      .in("description", descriptions);
+
+    const existingKeys = new Set(
+      (existingTxns || []).map((t) => `${t.transaction_date}|${t.description}|${t.amount}`),
     );
+
+    const newTransactions = transactions
+      .filter((tx) => {
+        const amountCents = Math.round(tx.amount * 100);
+        return !existingKeys.has(`${tx.date}|${tx.description}|${amountCents}`);
+      })
+      .map((tx) => ({
+        user_id: userId,
+        account_id: account?.id,
+        transaction_date: tx.date,
+        description: tx.description,
+        amount: Math.round(tx.amount * 100),
+        balance: tx.balance_after != null ? Math.round(tx.balance_after * 100) : null,
+        category: tx.category,
+        source: "whatsapp_statement",
+        created_at: new Date().toISOString(),
+      }));
+
+    const skipped = transactions.length - newTransactions.length;
+
+    if (newTransactions.length === 0) {
+      await sendText(
+        phone,
+        `ℹ️ All ${transactions.length} transactions were already in your account (duplicates skipped).\n\nType *menu* for options.`,
+      );
+      return;
+    }
+
+    const { error: insertError } = await supabase.from("transactions").insert(newTransactions);
+    if (insertError) {
+      console.error("Transaction insert error:", insertError);
+      await sendText(
+        phone,
+        "❌ Sorry, I couldn't save your transactions. Please try again, or email support@latela.co.za if the problem persists.\n\nType *menu* for options.",
+      );
+      return;
+    }
+
+    // Build summary
+    const totalDebits = newTransactions.filter((t) => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    const totalCredits = newTransactions.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+    const dates = newTransactions.map((t) => new Date(t.transaction_date)).sort((a, b) => a.getTime() - b.getTime());
+    const fromDate = dates[0]?.toLocaleDateString("en-ZA", { day: "numeric", month: "short" });
+    const toDate = dates[dates.length - 1]?.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
+
+    const formatZAR = (cents: number) =>
+      (cents / 100).toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, " ");
+
+    const summaryMsg = [
+      `✅ *Statement Processed!*`,
+      ``,
+      `📊 Transactions imported: ${newTransactions.length}${skipped > 0 ? ` (${skipped} duplicates skipped)` : ""}`,
+      `💸 Total spending: R${formatZAR(totalDebits)}`,
+      `💰 Total income: R${formatZAR(totalCredits)}`,
+      `📅 Period: ${fromDate} to ${toDate}`,
+      ``,
+      `Type *menu* for options.`,
+    ].join("\n");
+
+    await sendText(phone, summaryMsg);
+
   } catch (err) {
-    console.error("❌ Upload error:", err);
+    console.error("❌ processUpload error:", err);
     try {
       await sendText(
         phone,
-        "Something went wrong processing your statement. Try again or use the app.\n\nType *menu* for options.",
+        "❌ Sorry, I couldn't process that file. Please try again, or email support@latela.co.za if the problem persists.\n\nType *menu* for options.",
       );
     } catch {}
   }
@@ -866,8 +1109,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── POST: Incoming Messages ──
   if (req.method === "POST") {
-    const rawBody =
-      typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+    // Read raw body from stream (bodyParser is disabled so we can do HMAC correctly)
+    const rawBody = await new Promise<string>((resolve, reject) => {
+      let data = "";
+      req.on("data", (chunk: Buffer) => { data += chunk.toString("utf8"); });
+      req.on("end", () => resolve(data));
+      req.on("error", reject);
+    });
+
     const sig = req.headers["x-hub-signature-256"] as string | undefined;
 
     if (!verifySignature(sig, rawBody)) {
@@ -879,7 +1128,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     let body: any;
     try {
-      body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+      body = JSON.parse(rawBody);
     } catch {
       return;
     }
@@ -917,7 +1166,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } else if (msg.type === "document") {
           const mime = msg.document.mime_type || "application/pdf";
           if (["application/pdf", "text/csv"].some((t) => mime.includes(t)))
-            await processUpload(phone, msg.document.id, mime, msg.id);
+            await processUpload(phone, msg.id, msg.document.id, mime);
           else
             await sendText(
               phone,
@@ -926,9 +1175,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } else if (msg.type === "image") {
           await processUpload(
             phone,
+            msg.id,
             msg.image.id,
             msg.image.mime_type || "image/jpeg",
-            msg.id,
           );
         } else {
           await sendText(
