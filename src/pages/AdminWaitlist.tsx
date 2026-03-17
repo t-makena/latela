@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Search, Download, Users, TrendingUp, Calendar, LogOut, ShieldOff } from "lucide-react";
+import { Search, Download, Users, TrendingUp, Calendar, LogOut, ShieldOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { downloadCSV } from "@/lib/exportUtils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import latelaLogo from "@/assets/latela-logo.png";
-
-const ADMIN_EMAIL = "info@latela.co.za";
 
 interface WaitlistEntry {
   id: string;
@@ -42,15 +41,14 @@ function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label
 
 export default function AdminWaitlist() {
   const { user, signOut } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const [entries, setEntries] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
-
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || adminLoading) return;
 
     const fetchWaitlist = async () => {
       setLoading(true);
@@ -69,7 +67,15 @@ export default function AdminWaitlist() {
     };
 
     fetchWaitlist();
-  }, [isAdmin]);
+  }, [isAdmin, adminLoading]);
+
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (
