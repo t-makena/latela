@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { useSubcategories } from '@/hooks/useSubcategories';
+import { useMerchantSearch } from '@/hooks/useMerchantSearch';
+import { Loader2 } from 'lucide-react';
 import { 
   normalizeMerchantName, 
   extractMerchantCore, 
   extractDisplayMerchantName,
-  isFuzzyMerchantMatch 
 } from '@/lib/merchantUtils';
 
 interface EditTransactionDialogProps {
@@ -42,13 +43,14 @@ export const EditTransactionDialog = ({
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [parentCategories, setParentCategories] = useState<ParentCategory[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const { subcategories, loading: subcategoriesLoading } = useSubcategories(selectedParentCategory);
+  const { suggestions, isSearching } = useMerchantSearch(merchantName);
 
   useEffect(() => {
     if (open) {
       setMerchantName(transaction.description || '');
-      // Suggest a display name based on the description
       setDisplayName(extractDisplayMerchantName(transaction.description || ''));
       fetchParentCategories();
     }
@@ -67,6 +69,14 @@ export const EditTransactionDialog = ({
     } catch (error) {
       console.error('Error fetching parent categories:', error);
     }
+  };
+
+  const handleSuggestionClick = (suggestion: { description: string; categoryId?: string; categoryName?: string }) => {
+    setMerchantName(suggestion.description);
+    if (suggestion.categoryId) {
+      setSelectedParentCategory(suggestion.categoryId);
+    }
+    setShowSuggestions(false);
   };
 
   const handleSave = async () => {
@@ -121,31 +131,47 @@ export const EditTransactionDialog = ({
       };
 
       if (existing) {
-        // Update existing mapping
         const { error } = await supabase
           .from('user_merchant_mappings')
           .update(mappingData)
           .eq('id', existing.id);
-
         if (error) throw error;
       } else {
-        // Create new mapping
         const { error } = await supabase
           .from('user_merchant_mappings')
           .insert(mappingData);
-
         if (error) throw error;
       }
 
-      // Retroactively update ALL existing transactions with fuzzy matching merchant names
-      const updatedCount = await updateMatchingTransactions(
-        user.id,
-        normalizedMerchantName,
-        merchantPattern,
-        selectedParentCategory,
-        subcategoryId || customSubcategoryId,
-        finalDisplayName
-      );
+      // Retroactively update matching transactions using server-side fuzzy matching
+      const { data: matchingTxns } = await supabase.rpc('search_transaction_descriptions', {
+        p_user_id: user.id,
+        p_search_term: normalizedMerchantName,
+        p_limit: 500,
+      });
+
+      const matchingDescriptions = (matchingTxns || [])
+        .filter((t: any) => Number(t.similarity_score) >= 0.5)
+        .map((t: any) => t.description);
+
+      let updatedCount = 0;
+      if (matchingDescriptions.length > 0) {
+        const { count } = await supabase
+          .from('transactions')
+          .update({
+            category_id: selectedParentCategory,
+            subcategory_id: subcategoryId || customSubcategoryId,
+            display_merchant_name: finalDisplayName,
+            user_verified: true,
+            auto_categorized: false,
+            categorization_confidence: 1.0,
+            is_categorized: true,
+          })
+          .eq('user_id', user.id)
+          .in('description', matchingDescriptions)
+          .select('id', { count: 'exact', head: true });
+        updatedCount = count || 0;
+      }
 
       toast.success(
         updatedCount > 1 
@@ -163,64 +189,6 @@ export const EditTransactionDialog = ({
     }
   };
 
-  /**
-   * Updates all existing transactions that fuzzy-match the merchant name
-   * with the new category settings and display name.
-   */
-  const updateMatchingTransactions = async (
-    userId: string,
-    normalizedMerchantName: string,
-    merchantPattern: string,
-    categoryId: string,
-    subcategoryId: string | null,
-    displayMerchantName: string
-  ): Promise<number> => {
-    try {
-      // Fetch all user's transactions
-      const { data: allTransactions, error: fetchError } = await supabase
-        .from('transactions')
-        .select('id, description')
-        .eq('user_id', userId);
-
-      if (fetchError) throw fetchError;
-      if (!allTransactions || allTransactions.length === 0) return 0;
-
-      // Find transactions with fuzzy-matching merchant names
-      const matchingTransactionIds: string[] = [];
-      for (const tx of allTransactions) {
-        const txDescription = tx.description || '';
-        
-        // Use fuzzy matching to find similar merchants
-        if (isFuzzyMerchantMatch(txDescription, normalizedMerchantName, 0.7)) {
-          matchingTransactionIds.push(tx.id);
-        }
-      }
-
-      if (matchingTransactionIds.length === 0) return 0;
-
-      // Update all matching transactions with category and display name
-      const { error: updateError } = await supabase
-        .from('transactions')
-        .update({
-          category_id: categoryId,
-          subcategory_id: subcategoryId,
-          display_merchant_name: displayMerchantName,
-          user_verified: true,
-          auto_categorized: false,
-          categorization_confidence: 1.0,
-          is_categorized: true
-        })
-        .in('id', matchingTransactionIds);
-
-      if (updateError) throw updateError;
-
-      return matchingTransactionIds.length;
-    } catch (error) {
-      console.error('Error updating matching transactions:', error);
-      return 0;
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -229,14 +197,49 @@ export const EditTransactionDialog = ({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Label htmlFor="merchant-name">Merchant Name</Label>
             <Input
               id="merchant-name"
               value={merchantName}
-              onChange={(e) => setMerchantName(e.target.value)}
+              onChange={(e) => {
+                setMerchantName(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder="Enter merchant name"
             />
+            {/* Suggestions dropdown */}
+            {showSuggestions && (suggestions.length > 0 || isSearching) && (
+              <div className="absolute z-50 w-full mt-1 bg-card border-2 border-border rounded-lg shadow-md max-h-60 overflow-auto">
+                {isSearching && (
+                  <div className="px-3 py-2 flex items-center gap-2 text-muted-foreground text-sm">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Searching…
+                  </div>
+                )}
+                {suggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    className="px-3 py-2 cursor-pointer hover:bg-muted transition-colors flex items-center justify-between"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSuggestionClick(s);
+                    }}
+                  >
+                    <div>
+                      <span className="text-sm font-medium">{s.description}</span>
+                      {s.categoryName && (
+                        <span className="text-xs text-muted-foreground ml-2">{s.categoryName}</span>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {Math.round(s.similarityScore * 100)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               Similar merchants will be matched automatically
             </p>
