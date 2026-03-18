@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Upload, FileText, AlertCircle, CheckCircle2, Loader2, Check } from "lucide-react";
 import {
   Dialog,
@@ -48,6 +48,7 @@ export const StatementUploadDialog = ({
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [processingStage, setProcessingStage] = useState<ProcessingStage>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
   const isUpdateMode = !!accountId;
   const PROCESSING_STAGES = getProcessingStages(isUpdateMode);
@@ -75,6 +76,9 @@ export const StatementUploadDialog = ({
       return;
     }
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setUploading(true);
     setProcessingStage('reading');
 
@@ -85,6 +89,7 @@ export const StatementUploadDialog = ({
       
       reader.onload = async () => {
         try {
+          if (abortController.signal.aborted) return;
           const base64Content = reader.result as string;
           const base64Data = base64Content.split(',')[1];
 
@@ -107,6 +112,7 @@ export const StatementUploadDialog = ({
             throw new Error(data.error || 'Failed to parse statement');
           }
 
+          if (abortController.signal.aborted) return;
           setProcessingStage('creating');
 
           const userId = (await supabase.auth.getUser()).data.user?.id;
@@ -407,6 +413,20 @@ export const StatementUploadDialog = ({
                   );
                 })}
               </div>
+
+              {/* Cancel button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  abortControllerRef.current?.abort();
+                  setUploading(false);
+                  setProcessingStage(null);
+                }}
+                className="mx-auto"
+              >
+                Cancel
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
