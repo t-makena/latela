@@ -25,6 +25,7 @@ serve(async (req) => {
 
     const KIMI_API_KEY = Deno.env.get("KIMI_API_KEY")?.trim();
     console.log("[KIMI-DEBUG] Key present:", !!KIMI_API_KEY, "Length:", KIMI_API_KEY?.length);
+    console.log("[KIMI-DEBUG] Auth header preview:", `Bearer ${KIMI_API_KEY?.slice(0, 10)}...`);
     if (!KIMI_API_KEY) {
       throw new Error("KIMI_API_KEY is not configured");
     }
