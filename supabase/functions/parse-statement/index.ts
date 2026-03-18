@@ -538,7 +538,7 @@ If you cannot parse the statement at all, return: { "currentBalance": null, "tra
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'moonshot-v1-128k',
+        model: 'moonshot-v1-32k',
         max_tokens: 8000,
         messages: [
           { role: 'system', content: systemPrompt },
