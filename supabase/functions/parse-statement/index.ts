@@ -426,13 +426,15 @@ Each element:
 Rules:
 - Dates are typically in "DD Mon YY" format (e.g., "05 Jan 26" → "2026-01-05")
 
-- description: CRITICAL — always include the FULL description. South African bank statements prefix transactions with a transaction type keyword followed by the actual merchant or beneficiary name. You MUST include both. Examples:
-    "Cheque Purchase SHOPRITE CHECKERS CPT" NOT just "Cheque Purchase"
-    "Internet Transfer JOHN SMITH" NOT just "Internet Transfer"
-    "Debit Order VODACOM" NOT just "Debit Order"
-    "Immediate Payment LANDLORD NAME" NOT just "Immediate Payment"
-    "ATM Withdrawal STANDARD BANK ATM 001" NOT just "ATM Withdrawal"
-  Words like "Cheque Purchase", "Internet Transfer", "Debit Order", "Immediate Payment", "ATM Withdrawal", "Monthly Service Fee" are transaction TYPE prefixes — always include the merchant/beneficiary/reference text that follows them in the description.
+- description: The merchant, beneficiary, or reference name ONLY — strip the transaction type prefix. South African bank statements prefix each transaction with a type keyword; remove it and return only what follows. Examples:
+    "Cheque Purchase SHOPRITE CHECKERS CPT" → "SHOPRITE CHECKERS CPT"
+    "Internet Transfer JOHN SMITH" → "JOHN SMITH"
+    "Debit Order VODACOM" → "VODACOM"
+    "Immediate Payment LANDLORD NAME" → "LANDLORD NAME"
+    "ATM Withdrawal STANDARD BANK ATM 001" → "STANDARD BANK ATM 001"
+    "IB Transfer From SALARY EMPLOYER" → "SALARY EMPLOYER"
+  Prefixes to strip: "Cheque Purchase", "Internet Transfer", "IB Transfer", "Debit Order", "Immediate Payment", "ATM Withdrawal", "Monthly Service Fee", "Annual Service Fee", "Card Purchase", "Point of Sale", "POS Purchase", and any similar transaction type label.
+  If there is no merchant/beneficiary text after the prefix (e.g. just "Monthly Service Fee"), keep the prefix as the description.
 
 - amount: ALWAYS a positive number representing only the transaction value — NEVER add the balance to the amount
 - balance: the running account balance AFTER this transaction — it CAN be negative (e.g., -150.00 means the account is overdrawn)
