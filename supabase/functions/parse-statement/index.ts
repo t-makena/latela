@@ -417,7 +417,7 @@ Return ONLY a valid JSON array — no markdown, no explanation.
 Each element:
 {
   "date": "YYYY-MM-DD",
-  "description": "full transaction description",
+  "description": "full transaction description including merchant or beneficiary name",
   "amount": 123.45,
   "balance": 1234.56,
   "type": "debit" or "credit"
@@ -425,6 +425,15 @@ Each element:
 
 Rules:
 - Dates are typically in "DD Mon YY" format (e.g., "05 Jan 26" → "2026-01-05")
+
+- description: CRITICAL — always include the FULL description. South African bank statements prefix transactions with a transaction type keyword followed by the actual merchant or beneficiary name. You MUST include both. Examples:
+    "Cheque Purchase SHOPRITE CHECKERS CPT" NOT just "Cheque Purchase"
+    "Internet Transfer JOHN SMITH" NOT just "Internet Transfer"
+    "Debit Order VODACOM" NOT just "Debit Order"
+    "Immediate Payment LANDLORD NAME" NOT just "Immediate Payment"
+    "ATM Withdrawal STANDARD BANK ATM 001" NOT just "ATM Withdrawal"
+  Words like "Cheque Purchase", "Internet Transfer", "Debit Order", "Immediate Payment", "ATM Withdrawal", "Monthly Service Fee" are transaction TYPE prefixes — always include the merchant/beneficiary/reference text that follows them in the description.
+
 - amount: ALWAYS a positive number representing only the transaction value — NEVER add the balance to the amount
 - balance: the running account balance AFTER this transaction — it CAN be negative (e.g., -150.00 means the account is overdrawn)
 - amount and balance are always two separate independent values from two separate columns; do NOT sum or combine them
