@@ -435,7 +435,7 @@ async function extractTextWithKimi(pdfContent: string): Promise<string> {
   formData.append('purpose', 'file-extract');
 
   // 1. Upload PDF to Kimi Files API
-  const uploadResponse = await fetch('https://api.moonshot.cn/v1/files', {
+  const uploadResponse = await fetch('https://api.moonshot.ai/v1/files', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}` },
     body: formData,
@@ -453,7 +453,7 @@ async function extractTextWithKimi(pdfContent: string): Promise<string> {
   try {
     // 2. Fetch the extracted text content
     const contentResponse = await fetch(
-      `https://api.moonshot.cn/v1/files/${fileId}/content`,
+      `https://api.moonshot.ai/v1/files/${fileId}/content`,
       { headers: { Authorization: `Bearer ${apiKey}` } },
     );
 
@@ -471,7 +471,7 @@ async function extractTextWithKimi(pdfContent: string): Promise<string> {
     return extractedText;
   } finally {
     // 3. Best-effort cleanup — delete the uploaded file
-    await fetch(`https://api.moonshot.cn/v1/files/${fileId}`, {
+    await fetch(`https://api.moonshot.ai/v1/files/${fileId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${apiKey}` },
     }).catch((e) => console.warn('[KIMI] File cleanup failed:', e));
@@ -531,7 +531,7 @@ If you cannot parse the statement at all, return: { "currentBalance": null, "tra
 
   let response: Response;
   try {
-    response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+    response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,

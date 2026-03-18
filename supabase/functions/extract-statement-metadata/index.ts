@@ -88,7 +88,7 @@ Return ONLY a valid JSON object with no code blocks or markdown.`;
       formData.append("file", blob, "statement.pdf");
       formData.append("purpose", "file-extract");
 
-      const uploadRes = await fetch("https://api.moonshot.cn/v1/files", {
+      const uploadRes = await fetch("https://api.moonshot.ai/v1/files", {
         method: "POST",
         headers: { Authorization: `Bearer ${KIMI_API_KEY}` },
         body: formData,
@@ -105,7 +105,7 @@ Return ONLY a valid JSON object with no code blocks or markdown.`;
 
       try {
         const contentRes = await fetch(
-          `https://api.moonshot.cn/v1/files/${fileId}/content`,
+          `https://api.moonshot.ai/v1/files/${fileId}/content`,
           { headers: { Authorization: `Bearer ${KIMI_API_KEY}` } },
         );
         if (!contentRes.ok) {
@@ -115,7 +115,7 @@ Return ONLY a valid JSON object with no code blocks or markdown.`;
         const contentData = await contentRes.json();
         statementText = contentData.content ?? "";
       } finally {
-        await fetch(`https://api.moonshot.cn/v1/files/${fileId}`, {
+        await fetch(`https://api.moonshot.ai/v1/files/${fileId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${KIMI_API_KEY}` },
         }).catch((e) => console.warn("[METADATA] File cleanup failed:", e));
@@ -127,7 +127,7 @@ Return ONLY a valid JSON object with no code blocks or markdown.`;
 
     console.log("[METADATA] Statement text length:", statementText.length);
 
-    const response = await fetch("https://api.moonshot.cn/v1/chat/completions", {
+    const response = await fetch("https://api.moonshot.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${KIMI_API_KEY}`,
