@@ -420,7 +420,8 @@ async function parsePDF(content: string, fileName: string) {
 async function extractTextWithKimi(pdfContent: string): Promise<string> {
   console.log('[KIMI] Starting Kimi Files API extraction...');
 
-  const apiKey = Deno.env.get('KIMI_API_KEY');
+  const apiKey = Deno.env.get('KIMI_API_KEY')?.trim();
+  console.log('[KIMI-DEBUG] Key present:', !!apiKey, 'Length:', apiKey?.length);
   if (!apiKey) {
     throw new Error('KIMI_API_KEY is not configured');
   }
@@ -493,7 +494,8 @@ interface KimiParseResult {
 async function parseTransactionsWithKimi(
   extractedText: string,
 ): Promise<KimiParseResult | null> {
-  const apiKey = Deno.env.get('KIMI_API_KEY');
+  const apiKey = Deno.env.get('KIMI_API_KEY')?.trim();
+  console.log('[KIMI-PARSE-DEBUG] Key present:', !!apiKey, 'Length:', apiKey?.length);
   if (!apiKey) return null;
 
   const systemPrompt = `You are a South African bank statement parser. Your job is to extract transactions from bank statement text and return them as structured JSON.
