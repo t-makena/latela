@@ -15,7 +15,7 @@ import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
-import { sanitizeUserInput, detectInjection } from "../lib/promptGuard";
+import { sanitizeUserInput, detectInjection } from "../lib/promptGuard.js";
 
 // Disable Vercel's automatic body parsing so we can verify the raw HMAC signature
 export const config = { api: { bodyParser: false } };
@@ -928,8 +928,9 @@ async function downloadMedia(url: string): Promise<Buffer> {
 }
 
 async function extractTextFromPdf(buffer: Buffer): Promise<string> {
-  const pdfParse = (await import("pdf-parse")).default;
-  return (await pdfParse(buffer)).text;
+  const pdfParse = await import("pdf-parse");
+  const parse = pdfParse.default ?? (pdfParse as unknown as typeof pdfParse.default);
+  return (await parse(buffer)).text;
 }
 
 function safeParseClaudeJson(raw: string): ParsedTransaction[] {
