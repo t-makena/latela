@@ -76,6 +76,9 @@ export const StatementUploadDialog = ({
       return;
     }
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setUploading(true);
     setProcessingStage('reading');
 
