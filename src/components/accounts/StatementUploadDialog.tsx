@@ -112,6 +112,7 @@ export const StatementUploadDialog = ({
             throw new Error(data.error || 'Failed to parse statement');
           }
 
+          if (abortController.signal.aborted) return;
           setProcessingStage('creating');
 
           const userId = (await supabase.auth.getUser()).data.user?.id;
