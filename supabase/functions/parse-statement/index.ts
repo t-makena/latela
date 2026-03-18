@@ -424,8 +424,24 @@ Return this exact structure:
 If you cannot parse it, return: { "bankName": null, "accountNumber": null, "accountType": null, "currentBalance": null, "transactions": [] }`;
 
   try {
-    // 2. Single chat completion referencing the uploaded file_id
-    console.log('[KIMI] Sending file to chat completions...');
+    // 2. Fetch extracted text from the uploaded file
+    console.log('[KIMI] Fetching extracted text from file...');
+    const rawText = await fetchKimiFileContent(fileId, apiKey);
+    console.log('[KIMI] Extracted text length:', rawText.length, 'chars');
+
+    // Truncate to 20k chars to keep chat completion fast (covers ~3 months of transactions)
+    const statementText = rawText.length > 20000 ? rawText.substring(0, 20000) : rawText;
+    if (rawText.length > 20000) {
+      console.log('[KIMI] Truncated to 20000 chars for chat completion');
+    }
+
+    if (statementText.length < 50) {
+      console.warn('[KIMI] Insufficient text extracted from PDF');
+      return { bankName: null, accountNumber: null, accountType: null, currentBalance: null, transactions: [], extractedText: rawText };
+    }
+
+    // 3. Chat completion with extracted text
+    console.log('[KIMI] Sending extracted text to chat completions...');
     const chatResponse = await fetch('https://api.moonshot.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -437,21 +453,14 @@ If you cannot parse it, return: { "bankName": null, "accountNumber": null, "acco
         max_tokens: 8000,
         messages: [
           { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: [
-              { type: 'file', file: { file_id: fileId } },
-              { type: 'text', text: 'Extract all account information and transactions from this bank statement.' },
-            ],
-          },
+          { role: 'user', content: `Extract all account information and transactions from this bank statement:\n\n${statementText}` },
         ],
       }),
     });
 
     if (!chatResponse.ok) {
-      console.warn('[KIMI] Chat API error', chatResponse.status, '— fetching text for regex fallback');
-      const extractedText = await fetchKimiFileContent(fileId, apiKey);
-      return { bankName: null, accountNumber: null, accountType: null, currentBalance: null, transactions: [], extractedText };
+      console.warn('[KIMI] Chat API error', chatResponse.status, '— falling back to regex');
+      return { bankName: null, accountNumber: null, accountType: null, currentBalance: null, transactions: [], extractedText: rawText };
     }
 
     const data = await chatResponse.json();
@@ -468,10 +477,11 @@ If you cannot parse it, return: { "bankName": null, "accountNumber": null, "acco
 
     const parsed = JSON.parse(jsonMatch[0]) as KimiStatementResult;
     console.log('[KIMI] Parsed', parsed.transactions?.length ?? 0, 'transactions, balance:', parsed.currentBalance);
+    // Always attach rawText so regex fallback has it if Kimi returns 0 transactions
+    parsed.extractedText = rawText;
     return parsed;
   } catch (err) {
     console.warn('[KIMI] Error during chat completion:', err);
-    // Try fetching text for regex fallback
     const extractedText = await fetchKimiFileContent(fileId, apiKey).catch(() => '');
     return { bankName: null, accountNumber: null, accountType: null, currentBalance: null, transactions: [], extractedText };
   } finally {
@@ -692,34 +702,41 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
           }
         }
       } else {
-        // Space-separated format: try to extract description and amounts
-        // Look for amounts at the end of the line
+        // Space-separated format: amounts may be on same line or on the next 1-3 lines
+        // Standard Bank PDF often puts amounts on a subsequent line after the description
+
+        // Build a combined search string: date line + up to 3 following non-date lines
+        let searchText = restOfRow;
+        for (let k = 1; k <= 3; k++) {
+          const nextLine = (lines[i + k] ?? '').trim();
+          // Stop if next line starts a new transaction date
+          if (nextLine.match(/^\d{1,2}\s+[A-Za-z]{3}\s+\d{2}/i)) break;
+          if (nextLine.length > 0) searchText += ' ' + nextLine;
+        }
+
         const amounts: { value: number; isNegative: boolean; index: number }[] = [];
         const amountRegex = /(-)?R?\s*([\d,]+\.\d{2})/g;
         let match;
-        
-        while ((match = amountRegex.exec(restOfRow)) !== null) {
+
+        while ((match = amountRegex.exec(searchText)) !== null) {
           amounts.push({
             value: parseAmount(match[2]),
             isNegative: match[1] === '-',
-            index: match.index
+            index: match.index,
           });
         }
-        
+
         if (amounts.length > 0) {
-          // Description is everything before the first amount
-          description = restOfRow.substring(0, amounts[0].index).trim();
-          
-          // Assign amounts based on position and sign
+          // Description is everything before the first amount (from the original date line only)
+          description = restOfRow.replace(/(-)?R?\s*[\d,]+\.\d{2}.*/g, '').trim() || restOfRow.trim();
+
           for (let j = 0; j < amounts.length; j++) {
             const amt = amounts[j];
             if (j === amounts.length - 1 && amounts.length > 1) {
-              // Last amount is likely balance
               balance = amt.value;
             } else if (amt.isNegative) {
               payment = amt.value;
             } else if (payment === 0) {
-              // Could be payment in Payments column (without explicit negative)
               payment = amt.value;
             } else {
               deposit = amt.value;
