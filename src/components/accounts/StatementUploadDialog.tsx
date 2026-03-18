@@ -407,6 +407,20 @@ export const StatementUploadDialog = ({
                   );
                 })}
               </div>
+
+              {/* Cancel button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  abortControllerRef.current?.abort();
+                  setUploading(false);
+                  setProcessingStage(null);
+                }}
+                className="mx-auto"
+              >
+                Cancel
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">

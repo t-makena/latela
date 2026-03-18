@@ -445,6 +445,36 @@ export type Database = {
           },
         ]
       }
+      export_intents: {
+        Row: {
+          consumed: boolean
+          created_at: string
+          expires_at: string
+          id: string
+          intent_type: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          consumed?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          intent_type?: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          consumed?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          intent_type?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           created_at: string | null
@@ -624,6 +654,39 @@ export type Database = {
           merchant_name?: string
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      oauth_nonces: {
+        Row: {
+          consumed: boolean
+          created_at: string
+          expires_at: string
+          id: string
+          nonce: string
+          payload: Json | null
+          purpose: string
+          user_id: string
+        }
+        Insert: {
+          consumed?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nonce: string
+          payload?: Json | null
+          purpose?: string
+          user_id: string
+        }
+        Update: {
+          consumed?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nonce?: string
+          payload?: Json | null
+          purpose?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1625,6 +1688,7 @@ export type Database = {
           priority_weight: number
         }[]
       }
+      cleanup_expired_nonces: { Args: never; Returns: undefined }
       delete_user_account: { Args: never; Returns: undefined }
       extract_merchant_core: { Args: { description: string }; Returns: string }
       fuzzy_match_merchant:
