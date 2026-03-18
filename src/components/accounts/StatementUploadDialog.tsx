@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Upload, FileText, AlertCircle, CheckCircle2, Loader2, Check } from "lucide-react";
 import {
   Dialog,
