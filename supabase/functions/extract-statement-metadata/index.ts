@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const MODEL = "claude-haiku-4-5-20251001";
+const KIMI_MODEL = "moonshot-v1-32k";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -23,12 +23,12 @@ serve(async (req) => {
       });
     }
 
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error("ANTHROPIC_API_KEY is not configured");
+    const KIMI_API_KEY = Deno.env.get("KIMI_API_KEY");
+    if (!KIMI_API_KEY) {
+      throw new Error("KIMI_API_KEY is not configured");
     }
 
-    console.log("[METADATA] Starting AI extraction with", MODEL);
+    console.log("[METADATA] Starting Kimi extraction with", KIMI_MODEL);
     console.log("[METADATA] Document type:", isPDF ? "PDF" : "Image");
     console.log("[METADATA] Base64 length:", documentBase64.length);
 
@@ -74,41 +74,69 @@ If a field cannot be determined, use null for that field.`;
 
 Return ONLY a valid JSON object with no code blocks or markdown.`;
 
-    // Build document content based on file type
-    const documentContent = isPDF
-      ? {
-          type: "document",
-          source: {
-            type: "base64",
-            media_type: "application/pdf",
-            data: documentBase64,
-          },
-        }
-      : {
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: "image/jpeg",
-            data: documentBase64,
-          },
-        };
+    // Extract raw text from the document using Kimi Files API, then send to chat
+    let statementText: string;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    if (isPDF) {
+      // Decode base64 → bytes → upload to Kimi Files API
+      const pdfDecoded = atob(documentBase64);
+      const pdfBytes = Uint8Array.from(pdfDecoded, (c) => c.charCodeAt(0));
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const formData = new FormData();
+      formData.append("file", blob, "statement.pdf");
+      formData.append("purpose", "file-extract");
+
+      const uploadRes = await fetch("https://api.moonshot.cn/v1/files", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${KIMI_API_KEY}` },
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const err = await uploadRes.text();
+        throw new Error(`Kimi upload failed: ${uploadRes.status} - ${err}`);
+      }
+
+      const fileData = await uploadRes.json();
+      const fileId = fileData.id as string;
+      console.log("[METADATA] Kimi file uploaded, id:", fileId);
+
+      try {
+        const contentRes = await fetch(
+          `https://api.moonshot.cn/v1/files/${fileId}/content`,
+          { headers: { Authorization: `Bearer ${KIMI_API_KEY}` } },
+        );
+        if (!contentRes.ok) {
+          const err = await contentRes.text();
+          throw new Error(`Kimi content fetch failed: ${contentRes.status} - ${err}`);
+        }
+        const contentData = await contentRes.json();
+        statementText = contentData.content ?? "";
+      } finally {
+        await fetch(`https://api.moonshot.cn/v1/files/${fileId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${KIMI_API_KEY}` },
+        }).catch((e) => console.warn("[METADATA] File cleanup failed:", e));
+      }
+    } else {
+      // For images, pass base64 as a data URI in the user message
+      statementText = `[Image data provided as base64 — extract metadata from it]\ndata:image/jpeg;base64,${documentBase64}`;
+    }
+
+    console.log("[METADATA] Statement text length:", statementText.length);
+
+    const response = await fetch("https://api.moonshot.cn/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${KIMI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: KIMI_MODEL,
         max_tokens: 500,
-        system: systemPrompt,
         messages: [
-          {
-            role: "user",
-            content: [documentContent, { type: "text", text: userPrompt }],
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `${userPrompt}\n\n---\n\n${statementText}` },
         ],
       }),
     });
@@ -116,30 +144,19 @@ Return ONLY a valid JSON object with no code blocks or markdown.`;
     if (response.status === 429) {
       console.error("[METADATA] Rate limit exceeded");
       return new Response(
-        JSON.stringify({
-          error: "Rate limit exceeded. Please try again later.",
-        }),
-        {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(
-        "[METADATA] Anthropic API error:",
-        response.status,
-        errorText,
-      );
-      throw new Error(
-        `AI extraction failed: ${response.status} - ${errorText}`,
-      );
+      console.error("[METADATA] Kimi API error:", response.status, errorText);
+      throw new Error(`AI extraction failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const textContent = data.content?.[0]?.text || "";
+    const textContent = data.choices?.[0]?.message?.content || "";
 
     console.log("[METADATA] Raw AI response:", textContent.substring(0, 500));
 
