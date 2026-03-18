@@ -34,6 +34,7 @@ interface BudgetBreakdownProps {
   availableBalance: number;
   budgetBalance: number;
   spending: number;
+  paydaySpending?: number;
   previousMonth: ComparisonPeriod | null;
   threeMonthsAgo?: ComparisonPeriod | null;
   sixMonthsAgo?: ComparisonPeriod | null;
@@ -47,10 +48,11 @@ interface BudgetBreakdownProps {
   customDateRange?: DateRange;
 }
 
-export const BudgetBreakdown = ({ 
-  availableBalance, 
-  budgetBalance, 
+export const BudgetBreakdown = ({
+  availableBalance,
+  budgetBalance,
   spending,
+  paydaySpending,
   previousMonth,
   threeMonthsAgo,
   sixMonthsAgo,
@@ -348,7 +350,6 @@ export const BudgetBreakdown = ({
               <TableHead className="text-right">{t('budget.oneMonthChange')}</TableHead>
               <TableHead className="text-right">{t('budget.threeMonthChange')}</TableHead>
               <TableHead className="text-right">{t('budget.sixMonthChange')}</TableHead>
-              <TableHead className="text-right">{t('budget.oneYearChange')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -358,7 +359,6 @@ export const BudgetBreakdown = ({
               <TableCell className="text-right font-semibold">{renderChange(availableChange)}</TableCell>
               <TableCell className="text-right font-semibold">{renderChange(available3MChange)}</TableCell>
               <TableCell className="text-right font-semibold">{renderChange(available6MChange)}</TableCell>
-              <TableCell className="text-right font-semibold">{renderChange(available1YChange)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">{t('finance.budgetBalance')}</TableCell>
@@ -366,15 +366,13 @@ export const BudgetBreakdown = ({
               <TableCell className="text-right font-semibold">{renderChange(budgetChange)}</TableCell>
               <TableCell className="text-right font-semibold">{renderChange(budget3MChange)}</TableCell>
               <TableCell className="text-right font-semibold">{renderChange(budget6MChange)}</TableCell>
-              <TableCell className="text-right font-semibold">{renderChange(budget1YChange)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">{t('finance.spending')}</TableCell>
-              <TableCell className="text-right font-medium">R{spending.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+              <TableCell className="text-right font-medium">R{(paydaySpending ?? spending).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
               <TableCell className="text-right font-semibold">{renderChange(spendingChange, true)}</TableCell>
               <TableCell className="text-right font-semibold">{renderChange(spending3MChange, true)}</TableCell>
               <TableCell className="text-right font-semibold">{renderChange(spending6MChange, true)}</TableCell>
-              <TableCell className="text-right font-semibold">{renderChange(spending1YChange, true)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>

@@ -425,8 +425,9 @@ Each element:
 
 Rules:
 - Dates are typically in "DD Mon YY" format (e.g., "05 Jan 26" → "2026-01-05")
-- amount: positive number representing the transaction value (NOT the balance)
-- balance: the running account balance AFTER this transaction
+- amount: ALWAYS a positive number representing only the transaction value — NEVER add the balance to the amount
+- balance: the running account balance AFTER this transaction — it CAN be negative (e.g., -150.00 means the account is overdrawn)
+- amount and balance are always two separate independent values from two separate columns; do NOT sum or combine them
 - type: "debit" if money left the account, "credit" if money was received
 - If uncertain about debit/credit, compare consecutive balances: balance went down = debit, went up = credit
 - Skip opening balance rows, closing balance rows, header/footer rows, and any row without a clear transaction amount`;

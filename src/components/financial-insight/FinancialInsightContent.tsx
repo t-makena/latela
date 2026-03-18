@@ -36,6 +36,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { categorizeTransaction } from "@/lib/transactionCategories";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIncomeSettings } from "@/hooks/useIncomeSettings";
 
 interface FinancialInsightContentProps {
   accountId?: string;
@@ -43,6 +44,7 @@ interface FinancialInsightContentProps {
 
 export const FinancialInsightContent = ({ accountId }: FinancialInsightContentProps) => {
   const { transactions: allTransactions, loading } = useTransactions({ currentMonthOnly: false, limit: 2000 });
+  const { payday, frequency, weeklyPayday, biweeklyPayday1, biweeklyPayday2 } = useIncomeSettings();
   const { accounts } = useAccounts();
   const { calculateTotalMonthly } = useBudgetItems();
   const currentDate = new Date();
@@ -211,6 +213,40 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       const d = new Date(t.transaction_date);
       return t.amount < 0 && d.getMonth() === currentMonthIdx && d.getFullYear() === currentYear;
     })
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  // Spending since last payday (respects monthly / bi-weekly / weekly settings)
+  const getLastPaydayDate = (): Date => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (frequency === 'weekly') {
+      const daysBack = (today.getDay() - weeklyPayday + 7) % 7;
+      const d = new Date(today);
+      d.setDate(today.getDate() - daysBack);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    } else if (frequency === 'bi-weekly') {
+      const m = today.getMonth(), y = today.getFullYear();
+      const candidates = [
+        new Date(y, m, biweeklyPayday1),
+        new Date(y, m, biweeklyPayday2),
+        new Date(y, m - 1, biweeklyPayday1),
+        new Date(y, m - 1, biweeklyPayday2),
+      ].filter(d => d <= today).sort((a, b) => b.getTime() - a.getTime());
+      const d = candidates[0] ?? new Date(y, 0, 1);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    } else {
+      // Monthly
+      const d = new Date(today.getFullYear(), today.getMonth(), payday);
+      if (d > today) d.setMonth(d.getMonth() - 1);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+  };
+  const lastPaydayDate = getLastPaydayDate();
+  const paydaySpending = transactions
+    .filter(t => t.amount < 0 && new Date(t.transaction_date) >= lastPaydayDate)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   // Historical comparison data from monthlySpending array — return null if out of range
@@ -459,10 +495,11 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
           </Button>
         </CardHeader>
         <CardContent>
-          <BudgetBreakdown 
+          <BudgetBreakdown
             availableBalance={availableBalance}
             budgetBalance={budgetBalance}
             spending={spending}
+            paydaySpending={paydaySpending}
             previousMonth={previousMonthData ? {
               availableBalance: previousMonthData.netBalance,
               budgetBalance: null,
@@ -477,11 +514,6 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
               availableBalance: sixMonthsAgoData.netBalance,
               budgetBalance: null,
               spending: sixMonthsAgoData.amount || null
-            } : null}
-            oneYearAgo={oneYearAgoData ? {
-              availableBalance: oneYearAgoData.netBalance,
-              budgetBalance: null,
-              spending: oneYearAgoData.amount || null
             } : null}
             showOnlyTable={true}
           />
