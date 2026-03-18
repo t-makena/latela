@@ -89,6 +89,7 @@ export const StatementUploadDialog = ({
       
       reader.onload = async () => {
         try {
+          if (abortController.signal.aborted) return;
           const base64Content = reader.result as string;
           const base64Data = base64Content.split(',')[1];
 
