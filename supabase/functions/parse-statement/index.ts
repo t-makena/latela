@@ -279,15 +279,16 @@ async function parsePDF(content: string, fileName: string) {
     }
     console.log('[BALANCE] Extracted balance:', currentBalance);
 
-    // 3. Extract transactions using regex
-    const transactions = extractTransactionsFromPDF(extractedText, bankName);
+    // 3. Extract transactions
+    const transactions = await extractTransactionsFromPDF(extractedText, bankName);
     console.log('[TRANSACTIONS] Extracted', transactions.length, 'transactions');
 
     if (transactions.length > 0) {
       console.log('[TRANSACTIONS] Sample:', JSON.stringify(transactions[0], null, 2));
     }
 
-    const finalBalance = transactions.find(t => t.balance > 0)?.balance ?? currentBalance;
+    // Use the last transaction's balance as the closing/available balance
+    const finalBalance = [...transactions].reverse().find(t => t.balance > 0)?.balance ?? currentBalance;
 
     return {
       accountInfo: {
@@ -371,7 +372,7 @@ async function extractTextWithKimi(pdfContent: string): Promise<string> {
 
 // ─── Regex Transaction Extraction ────────────────────────────────────────────
 
-function extractTransactionsFromPDF(content: string, bankName: string) {
+async function extractTransactionsFromPDF(content: string, bankName: string) {
   const transactions: Array<{
     date: string;
     description: string;
@@ -494,75 +495,10 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
     
     console.log('[TRANS-EXTRACT] Capitec: Matched', matchedLines, 'date lines, created', transactions.length, 'transactions');
   } else if (bankName === 'Standard Bank') {
-    // Standard Bank PDF extracted text is one long continuous string — transactions are NOT
-    // newline-separated. Scan the full text globally for DD Mon YY date markers, then extract
-    // the block between each date and the next to parse description + amounts.
-    console.log('[TRANS-EXTRACT] Using Standard Bank global-scan parsing logic');
-
-    // Flatten to a single string to handle cross-line concatenation
+    console.log('[TRANS-EXTRACT] Using Standard Bank Kimi-chat parsing logic');
     const fullText = content.replace(/\n/g, ' ');
-
-    // Match DD Mon YY dates that are NOT part of a 4-digit year (use negative lookahead (?!\d))
-    const dateFinder = /\b(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{2})(?!\d)/gi;
-    const dateMatches = [...fullText.matchAll(dateFinder)];
-    console.log('[TRANS-EXTRACT] Standard Bank: found', dateMatches.length, 'date markers');
-
-    for (let i = 0; i < dateMatches.length; i++) {
-      const dm = dateMatches[i];
-      const dateStr = dm[1].trim();
-      const blockStart = dm.index! + dm[0].length;
-      const blockEnd = i + 1 < dateMatches.length ? dateMatches[i + 1].index! : fullText.length;
-      const block = fullText.substring(blockStart, blockEnd).trim();
-
-      if (block.length < 3) continue;
-
-      // Find all decimal amounts in the block (e.g., -1,234.56 or 800.00)
-      const amountRegex = /(-?\d{1,3}(?:,\d{3})*\.\d{2})/g;
-      const amounts: { value: number; negative: boolean; raw: string }[] = [];
-      let am;
-      while ((am = amountRegex.exec(block)) !== null) {
-        const raw = am[1];
-        amounts.push({ value: parseAmount(raw.replace('-', '')), negative: raw.startsWith('-'), raw });
-      }
-
-      // Need at least 2 amounts: transaction amount + balance
-      if (amounts.length < 2) continue;
-
-      const balance = amounts[amounts.length - 1].value;
-      const txAmt = amounts[amounts.length - 2];
-
-      // Skip if transaction amount is zero (opening balance rows etc.)
-      if (txAmt.value === 0) continue;
-
-      // Description = everything before the first amount
-      const firstAmtIdx = block.indexOf(amounts[0].raw);
-      const description = block.substring(0, firstAmtIdx).trim().replace(/\s{2,}/g, ' ');
-      if (description.length < 2) continue;
-
-      // Determine debit/credit from sign, then keyword-override
-      let isDebit = txAmt.negative;
-      const descUpper = description.toUpperCase();
-      if (descUpper.includes('PURCHASE') || descUpper.includes('PAYMENT TO') ||
-          descUpper.includes('FEE') || descUpper.includes('WITHDRAWAL') ||
-          descUpper.includes('DEBIT') || descUpper.includes('DECLINED')) {
-        isDebit = true;
-      } else if (descUpper.includes('SALARY') || descUpper.includes('CREDIT') ||
-                 descUpper.includes('REFUND') || descUpper.includes('REVERSAL') ||
-                 descUpper.includes('DEPOSIT') || descUpper.includes('RECEIVED')) {
-        isDebit = false;
-      }
-
-      transactions.push({
-        date: normalizeDate(dateStr, bankName),
-        description,
-        amount: txAmt.value,
-        balance,
-        reference: description.substring(0, 50),
-        merchantName: extractMerchantName(description),
-        type: isDebit ? 'debit' : 'credit',
-      });
-    }
-
+    const kimiTxs = await extractTransactionsWithKimi(fullText, 'Standard Bank');
+    transactions.push(...kimiTxs);
     console.log('[TRANS-EXTRACT] Standard Bank: created', transactions.length, 'transactions');
   } else {
     console.log('[TRANS-EXTRACT] Using generic parsing logic');
@@ -654,6 +590,112 @@ function extractTransactionsFromPDF(content: string, bankName: string) {
   }
   
   return transactions;
+}
+
+// ─── Kimi: structured transaction extraction ──────────────────────────────────
+
+async function extractTransactionsWithKimi(text: string, bankName: string) {
+  const apiKey = Deno.env.get('KIMI_API_KEY')?.trim()!;
+  const CHUNK_SIZE = 20000;
+
+  // Split at date-marker boundaries so transactions are never cut in half
+  const chunks: string[] = [];
+  let pos = 0;
+  while (pos < text.length) {
+    if (pos + CHUNK_SIZE >= text.length) {
+      chunks.push(text.substring(pos));
+      break;
+    }
+    // Search for the last date marker within the last 1500 chars of the chunk window
+    const windowStart = pos + CHUNK_SIZE - 1500;
+    const windowEnd = pos + CHUNK_SIZE + 200;
+    const window = text.substring(windowStart, windowEnd);
+    const dateMatches = [...window.matchAll(/\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{2}(?!\d)/gi)];
+    let splitAt = pos + CHUNK_SIZE;
+    if (dateMatches.length > 0) {
+      splitAt = windowStart + dateMatches[dateMatches.length - 1].index!;
+    }
+    chunks.push(text.substring(pos, splitAt));
+    pos = splitAt;
+  }
+
+  console.log('[KIMI-TRANS]', bankName, ': processing', chunks.length, 'chunks in parallel');
+
+  const systemPrompt = `You extract transactions from South African bank statement text. The text comes from a PDF and may be one continuous string without line breaks.
+
+Return ONLY a valid JSON array — no markdown, no explanation.
+
+Each element:
+{
+  "date": "YYYY-MM-DD",
+  "description": "full transaction description",
+  "amount": 123.45,
+  "balance": 1234.56,
+  "type": "debit" or "credit"
+}
+
+Rules:
+- Dates are typically in "DD Mon YY" format (e.g., "05 Jan 26" → "2026-01-05")
+- amount: positive number representing the transaction value (NOT the balance)
+- balance: the running account balance AFTER this transaction
+- type: "debit" if money left the account, "credit" if money was received
+- If uncertain about debit/credit, compare consecutive balances: balance went down = debit, went up = credit
+- Skip opening balance rows, closing balance rows, header/footer rows, and any row without a clear transaction amount`;
+
+  const chunkResults = await Promise.all(chunks.map(async (chunk, i) => {
+    console.log('[KIMI-TRANS] Chunk', i + 1, '/', chunks.length, '—', chunk.length, 'chars');
+    try {
+      const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'moonshot-v1-32k',
+          max_tokens: 10000,
+          temperature: 0,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Extract all transactions from this ${bankName} statement text:\n\n${chunk}` },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        console.error('[KIMI-TRANS] Chunk', i + 1, 'failed:', response.status, err);
+        return [];
+      }
+
+      const data = await response.json();
+      const raw: string = data.choices?.[0]?.message?.content ?? '[]';
+      const clean = raw.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      const match = clean.match(/\[[\s\S]*\]/);
+      if (!match) {
+        console.error('[KIMI-TRANS] Chunk', i + 1, ': no JSON array in response');
+        return [];
+      }
+      const parsed = JSON.parse(match[0]) as Array<{
+        date: string; description: string; amount: number; balance: number; type: 'debit' | 'credit';
+      }>;
+      console.log('[KIMI-TRANS] Chunk', i + 1, ':', parsed.length, 'transactions');
+      return parsed;
+    } catch (err) {
+      console.error('[KIMI-TRANS] Chunk', i + 1, 'error:', err);
+      return [];
+    }
+  }));
+
+  return chunkResults.flat().map(tx => ({
+    date: tx.date,
+    description: tx.description ?? '',
+    amount: tx.amount,
+    balance: tx.balance,
+    reference: (tx.description ?? '').substring(0, 50),
+    merchantName: extractMerchantName(tx.description ?? ''),
+    type: tx.type,
+  }));
 }
 
 function detectBank(fileName: string, content: string): string {
