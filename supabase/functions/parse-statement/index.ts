@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -10,7 +9,7 @@ const corsHeaders = {
 const ALLOWED_FILE_TYPES = ['application/pdf', 'text/csv'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
