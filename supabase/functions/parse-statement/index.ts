@@ -359,7 +359,6 @@ async function extractTextWithKimi(pdfContent: string): Promise<string> {
     const contentData = await contentResponse.json();
     const extractedText: string = contentData.content ?? '';
     console.log('[KIMI] Extracted text length:', extractedText.length, 'chars');
-    console.log('[KIMI] First 2000 chars:', extractedText.substring(0, 2000));
     return extractedText;
   } finally {
     // 3. Cleanup
