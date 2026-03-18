@@ -244,68 +244,28 @@ function parseCSV(content: string, fileName: string) {
 }
 
 async function parsePDF(content: string, fileName: string) {
-  console.log('[PDF] Starting Kimi single-call extraction...');
+  console.log('[PDF] Starting PDF parsing...');
 
   try {
-    const kimiResult = await parseStatementWithKimi(content);
-
-    if (kimiResult && kimiResult.transactions.length > 0) {
-      console.log('[KIMI] Parsed', kimiResult.transactions.length, 'transactions');
-
-      const bankName = kimiResult.bankName ?? detectBank(fileName, '');
-      const accountNumber = kimiResult.accountNumber ?? '';
-      const accountType = kimiResult.accountType ?? 'cheque';
-      const currentBalance = kimiResult.currentBalance ?? 0;
-
-      const transactions = kimiResult.transactions.map((t) => ({
-        date: t.date,
-        description: t.description,
-        amount: Math.abs(t.amount),
-        balance: t.balance_after ?? 0,
-        reference: t.description.substring(0, 50),
-        merchantName: extractMerchantName(t.description),
-        type: (t.amount < 0 ? 'debit' : 'credit') as 'debit' | 'credit',
-      }));
-
-      const finalBalance = transactions.find(t => t.balance > 0)?.balance ?? currentBalance;
-
-      if (transactions.length > 0) {
-        console.log('[KIMI] Sample transaction:', JSON.stringify(transactions[0], null, 2));
-      }
-
-      return {
-        accountInfo: {
-          accountNumber,
-          bankName,
-          accountType,
-          accountName: `${bankName} ${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Account`,
-          currentBalance: finalBalance,
-          currency: 'ZAR',
-        },
-        transactions,
-        summary: {
-          totalTransactions: transactions.length,
-          dateRange: transactions.length > 0 ? {
-            from: transactions[transactions.length - 1].date,
-            to: transactions[0].date,
-          } : null,
-        },
-      };
-    }
-
-    // ── Fallback: regex on extracted text ─────────────────────────────────────
-    console.warn('[PDF] Kimi returned no transactions — falling back to regex');
-    const extractedText = kimiResult?.extractedText ?? '';
+    // 1. Use Kimi Files API to extract raw text from the PDF (fast ~5-8s)
+    const extractedText = await extractTextWithKimi(content);
+    console.log('[KIMI] Extracted text length:', extractedText.length, 'chars');
 
     if (extractedText.length < 50) {
       throw new Error('Unable to extract readable content from PDF.');
     }
 
+    // 2. Detect bank, account, balance from extracted text using regex
     const bankName = detectBank(fileName, extractedText);
-    const accountNumber = extractAccountNumber(extractedText, bankName);
-    const accountType = detectAccountType(extractedText, fileName);
-    let currentBalance = 0;
+    console.log('[BANK] Detected bank:', bankName);
 
+    const accountNumber = extractAccountNumber(extractedText, bankName);
+    console.log('[ACCOUNT] Extracted account number:', accountNumber);
+
+    const accountType = detectAccountType(extractedText, fileName);
+    console.log('[ACCOUNT-TYPE] Detected type:', accountType);
+
+    let currentBalance = 0;
     const balancePatterns = [
       /(?:Current|Closing|Available|Statement)\s+Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
       /Balance[:\s]+R?\s*([\d,\s]+\.?\d*)/gi,
@@ -317,9 +277,15 @@ async function parsePDF(content: string, fileName: string) {
         if (last[1]) { currentBalance = parseAmount(last[1]); break; }
       }
     }
+    console.log('[BALANCE] Extracted balance:', currentBalance);
 
+    // 3. Extract transactions using regex
     const transactions = extractTransactionsFromPDF(extractedText, bankName);
-    console.log('[REGEX] Extracted', transactions.length, 'transactions');
+    console.log('[TRANSACTIONS] Extracted', transactions.length, 'transactions');
+
+    if (transactions.length > 0) {
+      console.log('[TRANSACTIONS] Sample:', JSON.stringify(transactions[0], null, 2));
+    }
 
     const finalBalance = transactions.find(t => t.balance > 0)?.balance ?? currentBalance;
 
@@ -348,27 +314,9 @@ async function parsePDF(content: string, fileName: string) {
   }
 }
 
-// ─── Kimi: upload + single chat call ─────────────────────────────────────────
+// ─── Kimi: PDF → text extraction ─────────────────────────────────────────────
 
-interface KimiTransaction {
-  date: string;
-  description: string;
-  amount: number;       // Negative = debit, positive = credit (Rands)
-  balance_after: number | null;
-}
-
-interface KimiStatementResult {
-  bankName: string | null;
-  accountNumber: string | null;
-  accountType: string | null;
-  currentBalance: number | null;
-  transactions: KimiTransaction[];
-  extractedText?: string; // Populated only in fallback path
-}
-
-async function parseStatementWithKimi(
-  pdfContent: string,
-): Promise<KimiStatementResult | null> {
+async function extractTextWithKimi(pdfContent: string): Promise<string> {
   const apiKey = Deno.env.get('KIMI_API_KEY')?.trim();
   console.log('[KIMI-DEBUG] Key present:', !!apiKey, 'Length:', apiKey?.length);
   console.log('[KIMI-DEBUG] Auth header preview:', `Bearer ${apiKey?.slice(0, 10)}...`);
@@ -396,109 +344,29 @@ async function parseStatementWithKimi(
   const fileId = fileData.id as string;
   console.log('[KIMI] File uploaded, id:', fileId);
 
-  const systemPrompt = `You are a South African bank statement parser. Extract all data from this bank statement and return ONLY valid JSON with no markdown, no backticks, no explanation.
-
-RULES:
-1. Debits (money out) = NEGATIVE amounts. Credits (money in) = POSITIVE amounts.
-2. Dates in ISO format: YYYY-MM-DD.
-3. Extract EVERY transaction — do not skip any.
-4. balance_after is the running balance after each transaction (null if not shown).
-5. currentBalance is the final closing/available balance on the statement.
-
-Return this exact structure:
-{
-  "bankName": "Standard Bank",
-  "accountNumber": "1234567890",
-  "accountType": "cheque",
-  "currentBalance": 12345.67,
-  "transactions": [
-    {
-      "date": "2025-01-15",
-      "description": "PNP GREENACRES",
-      "amount": -523.45,
-      "balance_after": 12345.67
-    }
-  ]
-}
-
-If you cannot parse it, return: { "bankName": null, "accountNumber": null, "accountType": null, "currentBalance": null, "transactions": [] }`;
-
   try {
-    // 2. Fetch extracted text from the uploaded file
-    console.log('[KIMI] Fetching extracted text from file...');
-    const rawText = await fetchKimiFileContent(fileId, apiKey);
-    console.log('[KIMI] Extracted text length:', rawText.length, 'chars');
+    // 2. Fetch extracted text
+    const contentResponse = await fetch(
+      `https://api.moonshot.ai/v1/files/${fileId}/content`,
+      { headers: { Authorization: `Bearer ${apiKey}` } },
+    );
 
-    // Truncate to 20k chars to keep chat completion fast (covers ~3 months of transactions)
-    const statementText = rawText.length > 20000 ? rawText.substring(0, 20000) : rawText;
-    if (rawText.length > 20000) {
-      console.log('[KIMI] Truncated to 20000 chars for chat completion');
+    if (!contentResponse.ok) {
+      const err = await contentResponse.text();
+      throw new Error(`Kimi content fetch failed: ${contentResponse.status} - ${err}`);
     }
 
-    if (statementText.length < 50) {
-      console.warn('[KIMI] Insufficient text extracted from PDF');
-      return { bankName: null, accountNumber: null, accountType: null, currentBalance: null, transactions: [], extractedText: rawText };
-    }
-
-    // 3. Chat completion with extracted text
-    console.log('[KIMI] Sending extracted text to chat completions...');
-    const chatResponse = await fetch('https://api.moonshot.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'moonshot-v1-32k',
-        max_tokens: 8000,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Extract all account information and transactions from this bank statement:\n\n${statementText}` },
-        ],
-      }),
-    });
-
-    if (!chatResponse.ok) {
-      console.warn('[KIMI] Chat API error', chatResponse.status, '— falling back to regex');
-      return { bankName: null, accountNumber: null, accountType: null, currentBalance: null, transactions: [], extractedText: rawText };
-    }
-
-    const data = await chatResponse.json();
-    const raw: string = data.choices?.[0]?.message?.content ?? '';
-    console.log('[KIMI] Raw response (first 500):', raw.substring(0, 500));
-
-    const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.warn('[KIMI] No JSON in response — fetching text for regex fallback');
-      const extractedText = await fetchKimiFileContent(fileId, apiKey);
-      return { bankName: null, accountNumber: null, accountType: null, currentBalance: null, transactions: [], extractedText };
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]) as KimiStatementResult;
-    console.log('[KIMI] Parsed', parsed.transactions?.length ?? 0, 'transactions, balance:', parsed.currentBalance);
-    // Always attach rawText so regex fallback has it if Kimi returns 0 transactions
-    parsed.extractedText = rawText;
-    return parsed;
-  } catch (err) {
-    console.warn('[KIMI] Error during chat completion:', err);
-    const extractedText = await fetchKimiFileContent(fileId, apiKey).catch(() => '');
-    return { bankName: null, accountNumber: null, accountType: null, currentBalance: null, transactions: [], extractedText };
+    const contentData = await contentResponse.json();
+    const extractedText: string = contentData.content ?? '';
+    console.log('[KIMI] Extracted text length:', extractedText.length, 'chars');
+    return extractedText;
   } finally {
+    // 3. Cleanup
     await fetch(`https://api.moonshot.ai/v1/files/${fileId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${apiKey}` },
     }).catch((e) => console.warn('[KIMI] File cleanup failed:', e));
   }
-}
-
-async function fetchKimiFileContent(fileId: string, apiKey: string): Promise<string> {
-  const res = await fetch(`https://api.moonshot.ai/v1/files/${fileId}/content`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  });
-  if (!res.ok) return '';
-  const data = await res.json();
-  return data.content ?? '';
 }
 
 // ─── Regex Transaction Extraction ────────────────────────────────────────────
