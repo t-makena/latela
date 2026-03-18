@@ -48,6 +48,7 @@ export const StatementUploadDialog = ({
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [processingStage, setProcessingStage] = useState<ProcessingStage>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
   const isUpdateMode = !!accountId;
   const PROCESSING_STAGES = getProcessingStages(isUpdateMode);
