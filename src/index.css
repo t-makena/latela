@@ -88,8 +88,9 @@
 
     /* Brutalist card styling */
     --brutalist-shadow: 4px 4px 0px #000000;
-    --brutalist-border: 2px solid hsl(var(--foreground));
-    --brutalist-card-bg: hsl(var(--card));
+    --brutalist-border-width: 2px;
+    --brutalist-border-color: #000000;
+    --brutalist-card-bg: #ffffff;
 
     /* Typography Scale - Desktop/Laptop/Tablet (≥769px) */
     --text-heading-main: 27px;
@@ -167,7 +168,8 @@
 
     /* Brutalist card styling - dark mode */
     --brutalist-shadow: 4px 4px 0px 0px #ffffff, 4px 4px 0px 2px #000000;
-    --brutalist-border: none;
+    --brutalist-border-width: 0px;
+    --brutalist-border-color: transparent;
     --brutalist-card-bg: #000000;
 
     /* Dark mode semantic colors */

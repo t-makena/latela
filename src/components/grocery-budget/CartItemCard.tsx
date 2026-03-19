@@ -47,7 +47,7 @@ export const CartItemCard = ({
   const brandAndQuantity = [item.brand, quantityText].filter(Boolean).join(' · ');
 
   return (
-    <Card className={cn("p-4", isPurchased && "opacity-60")} style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}>
+    <Card className={cn("p-4", isPurchased && "opacity-60")} style={{ boxShadow: 'var(--brutalist-shadow)', borderWidth: 'var(--brutalist-border-width)', borderStyle: 'solid', borderColor: 'var(--brutalist-border-color)', background: 'var(--brutalist-card-bg)' }}>
       <div className="flex gap-3">
         {/* Checkbox for tick-off */}
         <div className="flex items-start pt-1">

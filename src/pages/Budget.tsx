@@ -303,7 +303,7 @@ const Budget = () => {
       {/* Tab Content in neo-brutalist card */}
       <div 
         className="rounded-3xl p-5 w-full flex-1"
-        style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
+        style={{ boxShadow: 'var(--brutalist-shadow)', borderWidth: 'var(--brutalist-border-width)', borderStyle: 'solid', borderColor: 'var(--brutalist-border-color)', background: 'var(--brutalist-card-bg)' }}
       >
         {groceryTab === 'search' ? (
           <SearchTab onAddToCart={handleAddToCart} />
@@ -333,7 +333,7 @@ const Budget = () => {
     <div
       onClick={() => setView('grocery')}
       className="rounded-2xl p-5 cursor-pointer hover:bg-accent/50 transition-colors"
-      style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
+      style={{ boxShadow: 'var(--brutalist-shadow)', borderWidth: 'var(--brutalist-border-width)', borderStyle: 'solid', borderColor: 'var(--brutalist-border-color)', background: 'var(--brutalist-card-bg)' }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

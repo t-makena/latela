@@ -21,7 +21,7 @@ export const ListSummary = ({ totals }: ListSummaryProps) => {
   return (
     <Card 
       className=""
-      style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
+      style={{ boxShadow: 'var(--brutalist-shadow)', borderWidth: 'var(--brutalist-border-width)', borderStyle: 'solid', borderColor: 'var(--brutalist-border-color)', background: 'var(--brutalist-card-bg)' }}
     >
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">

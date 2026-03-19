@@ -45,7 +45,7 @@ const Compare = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('compare.searchPlaceholder')}
               className="pl-10 h-12 text-base rounded-xl bg-background"
-              style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)' }}
+              style={{ boxShadow: 'var(--brutalist-shadow)', borderWidth: 'var(--brutalist-border-width)', borderStyle: 'solid', borderColor: 'var(--brutalist-border-color)' }}
             />
           </div>
         </div>
@@ -62,7 +62,7 @@ const Compare = () => {
         {isLoading && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl p-4" style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}>
+              <div key={i} className="rounded-xl p-4" style={{ boxShadow: 'var(--brutalist-shadow)', borderWidth: 'var(--brutalist-border-width)', borderStyle: 'solid', borderColor: 'var(--brutalist-border-color)', background: 'var(--brutalist-card-bg)' }}>
                 <Skeleton className="h-20 w-20 rounded-lg mb-3" />
                 <Skeleton className="h-6 w-3/4 mb-2" />
                 <Skeleton className="h-4 w-1/2 mb-4" />

@@ -31,7 +31,7 @@ export const GroceryItemCard = ({
         "p-4 transition-colors",
         hasSelection ? "bg-green-50 dark:bg-green-950" : "bg-amber-50 dark:bg-amber-950"
       )}
-      style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)' }}
+      style={{ boxShadow: 'var(--brutalist-shadow)', borderWidth: 'var(--brutalist-border-width)', borderStyle: 'solid', borderColor: 'var(--brutalist-border-color)' }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
