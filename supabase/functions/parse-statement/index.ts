@@ -447,7 +447,7 @@ async function parseTransactionsWithKimi(extractedText: string): Promise<KimiPar
   const apiKey = Deno.env.get('KIMI_API_KEY')?.trim();
   if (!apiKey) return null;
 
-  const CHUNK_SIZE = 20000;
+  const CHUNK_SIZE = 10000;
 
   // Split text into chunks on newline boundaries
   const chunks: string[] = [];
@@ -487,7 +487,7 @@ async function parseTransactionsWithKimi(extractedText: string): Promise<KimiPar
           },
           body: JSON.stringify({
             model: 'moonshot-v1-32k',
-            max_tokens: 8000,
+            max_tokens: 12000,
             messages: [
               { role: 'system', content: SYSTEM_PROMPT },
               { role: 'user', content: 'Parse these bank statement lines:\n\n' + chunks[i] },
