@@ -374,132 +374,165 @@ async function extractTextWithKimi(pdfContent: string): Promise<string> {
 
 async function extractTransactionsFromPDF(content: string, bankName: string) {
   console.log('[TRANS-EXTRACT] Extracting transactions for bank:', bankName);
-  // Use Kimi moonshot-v1-32k for all banks — handles every SA bank statement format
-  // including Standard Bank, Capitec, FNB, ABSA, Nedbank, TymeBank, Bank Zero, etc.
-  const transactions = await extractTransactionsWithKimi(content, bankName);
-  console.log('[TRANS-EXTRACT] Total transactions extracted:', transactions.length);
-  return transactions;
+
+  const kimiResult = await parseTransactionsWithKimi(content);
+
+  if (kimiResult) {
+    console.log('[TRANS-EXTRACT] Total transactions extracted:', kimiResult.transactions.length);
+    return kimiResult.transactions.map(tx => ({
+      date: tx.date,
+      description: tx.description ?? '',
+      amount: tx.amount,
+      balance: tx.balance,
+      reference: (tx.description ?? '').substring(0, 50),
+      merchantName: extractMerchantName(tx.description ?? ''),
+      type: tx.type,
+    }));
+  }
+
+  console.warn('[TRANS-EXTRACT] Kimi returned null — no transactions extracted');
+  return [];
 }
 
 // ─── Kimi: structured transaction extraction ──────────────────────────────────
 
-async function extractTransactionsWithKimi(text: string, bankName: string) {
-  const apiKey = Deno.env.get('KIMI_API_KEY')?.trim()!;
-  const CHUNK_SIZE = 20000;
+interface KimiTransaction {
+  date: string;
+  description: string;
+  amount: number;
+  balance: number;
+  type: 'debit' | 'credit';
+}
 
-  // Split at date-marker boundaries so transactions are never cut in half
-  const chunks: string[] = [];
-  let pos = 0;
-  while (pos < text.length) {
-    if (pos + CHUNK_SIZE >= text.length) {
-      chunks.push(text.substring(pos));
-      break;
-    }
-    const windowStart = pos + CHUNK_SIZE - 1500;
-    const windowEnd = pos + CHUNK_SIZE + 200;
-    const window = text.substring(windowStart, windowEnd);
-    const dateMatches = [...window.matchAll(/\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{2}(?!\d)/gi)];
-    let splitAt = pos + CHUNK_SIZE;
-    if (dateMatches.length > 0) {
-      splitAt = windowStart + dateMatches[dateMatches.length - 1].index!;
-    }
-    chunks.push(text.substring(pos, splitAt));
-    pos = splitAt;
-  }
+interface KimiParseResult {
+  transactions: KimiTransaction[];
+  currentBalance: number | null;
+}
 
-  console.log('[KIMI-TRANS]', bankName, ': processing', chunks.length, 'chunks sequentially');
+const SYSTEM_PROMPT = `You extract transactions from South African bank statement text. The text comes from a PDF and may be one continuous string without line breaks.
 
-  const systemPrompt = `You extract transactions from South African bank statement text. The text comes from a PDF and may be one continuous string without line breaks.
+Return ONLY a valid JSON object — no markdown, no explanation.
 
-Return ONLY a valid JSON array — no markdown, no explanation.
-
-Each element:
+Use this exact structure:
 {
-  "date": "YYYY-MM-DD",
-  "description": "full transaction description including merchant or beneficiary name",
-  "amount": 123.45,
-  "balance": 1234.56,
-  "type": "debit" or "credit"
+  "transactions": [
+    {
+      "date": "YYYY-MM-DD",
+      "description": "merchant or beneficiary name",
+      "amount": 123.45,
+      "balance": 1234.56,
+      "type": "debit"
+    }
+  ],
+  "currentBalance": 1234.56
 }
 
 Rules:
 - Dates are typically in "DD Mon YY" format (e.g., "05 Jan 26" → "2026-01-05")
-
-- description: The merchant, beneficiary, or reference name ONLY — strip the transaction type prefix. South African bank statements prefix each transaction with a type keyword; remove it and return only what follows. Examples:
+- description: The merchant, beneficiary, or reference name ONLY — strip the transaction type prefix. Examples:
     "Cheque Purchase SHOPRITE CHECKERS CPT" → "SHOPRITE CHECKERS CPT"
     "Internet Transfer JOHN SMITH" → "JOHN SMITH"
     "Debit Order VODACOM" → "VODACOM"
-    "Immediate Payment LANDLORD NAME" → "LANDLORD NAME"
-    "ATM Withdrawal STANDARD BANK ATM 001" → "STANDARD BANK ATM 001"
     "IB Transfer From SALARY EMPLOYER" → "SALARY EMPLOYER"
-  Prefixes to strip: "Cheque Purchase", "Internet Transfer", "IB Transfer", "Debit Order", "Immediate Payment", "ATM Withdrawal", "Monthly Service Fee", "Annual Service Fee", "Card Purchase", "Point of Sale", "POS Purchase", and any similar transaction type label.
-  If there is no merchant/beneficiary text after the prefix (e.g. just "Monthly Service Fee"), keep the prefix as the description.
-
-- amount: ALWAYS a positive number representing only the transaction value — NEVER add the balance to the amount
-- balance: the running account balance AFTER this transaction — it CAN be negative (e.g., -150.00 means the account is overdrawn)
-- amount and balance are always two separate independent values from two separate columns; do NOT sum or combine them
+  If no name follows the prefix (e.g. just "Monthly Service Fee"), keep the prefix as the description.
+- amount: positive number representing only the transaction value — NEVER add the balance to the amount
+- balance: running account balance AFTER this transaction — CAN be negative (overdrawn)
+- amount and balance are always two separate columns; do NOT sum or combine them
 - type: "debit" if money left the account, "credit" if money was received
-- If uncertain about debit/credit, compare consecutive balances: balance went down = debit, went up = credit
-- Skip opening balance rows, closing balance rows, header/footer rows, and any row without a clear transaction amount`;
+- If uncertain about type, compare consecutive balances: balance went down = debit, went up = credit
+- currentBalance: the closing/available balance shown on the statement (null if not found)
+- Skip opening balance rows, closing balance rows, header/footer rows, and rows without a clear transaction amount`;
 
-  const callChunk = async (chunk: string, idx: number) => {
-    const MAX_RETRIES = 4;
-    let delay = 4000;
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'moonshot-v1-32k',
-          max_tokens: 10000,
-          temperature: 0,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Extract all transactions from this ${bankName} statement text:\n\n${chunk}` },
-          ],
-        }),
-      });
+async function parseTransactionsWithKimi(extractedText: string): Promise<KimiParseResult | null> {
+  const apiKey = Deno.env.get('KIMI_API_KEY')?.trim();
+  if (!apiKey) return null;
 
-      if (response.status === 429) {
-        console.warn(`[KIMI-TRANS] Chunk ${idx} overloaded (attempt ${attempt}/${MAX_RETRIES}), waiting ${delay}ms`);
-        await new Promise(r => setTimeout(r, delay));
-        delay *= 2;
-        continue;
-      }
-      if (!response.ok) {
-        const err = await response.text();
-        console.error(`[KIMI-TRANS] Chunk ${idx} failed: ${response.status}`, err);
-        return [];
-      }
-      const data = await response.json();
-      const raw: string = data.choices?.[0]?.message?.content ?? '[]';
-      const clean = raw.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      const match = clean.match(/\[[\s\S]*\]/);
-      if (!match) { console.error(`[KIMI-TRANS] Chunk ${idx}: no JSON array`); return []; }
-      const parsed = JSON.parse(match[0]);
-      console.log(`[KIMI-TRANS] Chunk ${idx}: ${parsed.length} transactions`);
-      return parsed;
+  const CHUNK_SIZE = 20000;
+
+  // Split text into chunks on newline boundaries
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < extractedText.length) {
+    let end = Math.min(start + CHUNK_SIZE, extractedText.length);
+    if (end < extractedText.length) {
+      const newlineIdx = extractedText.lastIndexOf('\n', end);
+      if (newlineIdx > start) end = newlineIdx + 1;
     }
-    console.error(`[KIMI-TRANS] Chunk ${idx}: all retries exhausted`);
-    return [];
-  };
-
-  const allTxs: Array<{ date: string; description: string; amount: number; balance: number; type: 'debit' | 'credit' }> = [];
-  for (let i = 0; i < chunks.length; i++) {
-    console.log(`[KIMI-TRANS] Chunk ${i + 1} / ${chunks.length} — ${chunks[i].length} chars`);
-    const result = await callChunk(chunks[i], i + 1);
-    allTxs.push(...result);
+    chunks.push(extractedText.slice(start, end));
+    start = end;
   }
 
-  return allTxs.map((tx) => ({
-    date: tx.date,
-    description: tx.description ?? '',
-    amount: tx.amount,
-    balance: tx.balance,
-    reference: (tx.description ?? '').substring(0, 50),
-    merchantName: extractMerchantName(tx.description ?? ''),
-    type: tx.type,
-  }));
+  console.log('[KIMI-PARSE] Processing', chunks.length, 'chunks sequentially');
+
+  const allTransactions: KimiTransaction[] = [];
+  let currentBalance: number | null = null;
+
+  for (let i = 0; i < chunks.length; i++) {
+    console.log('[KIMI-PARSE] Chunk', i + 1, '/', chunks.length, '-', chunks[i].length, 'chars');
+
+    // 2-second delay between chunks to avoid rate limiting
+    if (i > 0) await new Promise(r => setTimeout(r, 2000));
+
+    const MAX_RETRIES = 4;
+    let delay = 4000;
+    let chunkResult: KimiTransaction[] = [];
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + apiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'moonshot-v1-8k',
+            max_tokens: 4000,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: 'Parse these bank statement lines:\n\n' + chunks[i] },
+            ],
+          }),
+        });
+
+        if (response.status === 429) {
+          console.warn('[KIMI-PARSE] Chunk', i + 1, 'rate limited (attempt ' + attempt + '/' + MAX_RETRIES + '), waiting', delay + 'ms');
+          await new Promise(r => setTimeout(r, delay));
+          delay *= 2;
+          continue; // retry — loops back to fetch
+        }
+
+        if (!response.ok) {
+          console.warn('[KIMI-PARSE] Chunk', i + 1, 'error:', response.status);
+          break;
+        }
+
+        const data = await response.json();
+        const raw = data.choices?.[0]?.message?.content ?? '';
+        const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          chunkResult = parsed.transactions || [];
+          if (parsed.currentBalance != null && currentBalance == null) {
+            currentBalance = parsed.currentBalance;
+          }
+        }
+        break; // success — exit retry loop
+      } catch (err) {
+        console.warn('[KIMI-PARSE] Chunk', i + 1, 'network error:', err);
+        break;
+      }
+    }
+
+    console.log('[KIMI-PARSE] Chunk', i + 1, 'returned', chunkResult.length, 'transactions');
+    allTransactions.push(...chunkResult);
+  }
+
+  console.log('[KIMI-PARSE] Total:', allTransactions.length, 'transactions, balance:', currentBalance);
+
+  if (allTransactions.length === 0) return null;
+  return { transactions: allTransactions, currentBalance };
 }
 
 function detectBank(fileName: string, content: string): string {
