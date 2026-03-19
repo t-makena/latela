@@ -45,7 +45,7 @@ interface FinancialInsightContentProps {
 export const FinancialInsightContent = ({ accountId }: FinancialInsightContentProps) => {
   const { transactions: allTransactions, loading } = useTransactions({ currentMonthOnly: false, limit: 2000 });
   const { payday, frequency, weeklyPayday, biweeklyPayday1, biweeklyPayday2 } = useIncomeSettings();
-  const { accounts } = useAccounts();
+  const { accounts, refetch: refetchAccounts } = useAccounts();
   const { calculateTotalMonthly } = useBudgetItems();
   const currentDate = new Date();
   const { upcomingEvents } = useCalendarEvents({
@@ -1033,7 +1033,7 @@ export const FinancialInsightContent = ({ accountId }: FinancialInsightContentPr
       <StatementUploadDialog 
         open={uploadDialogOpen} 
         onOpenChange={setUploadDialogOpen}
-        onSuccess={() => window.location.reload()}
+        onSuccess={refetchAccounts}
         accountId={accountId}
       />
     </div>

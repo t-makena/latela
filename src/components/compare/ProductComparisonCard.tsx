@@ -17,8 +17,8 @@ export const ProductComparisonCard = ({ product }: ProductComparisonCardProps) =
 
   return (
     <Card 
-      className="border-2 border-foreground bg-card overflow-hidden"
-      style={{ boxShadow: '4px 4px 0px #000000' }}
+      className="overflow-hidden"
+      style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
     >
       <CardHeader className="pb-3">
         <div className="flex gap-4">

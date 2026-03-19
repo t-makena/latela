@@ -1,53 +1,49 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AccountType } from '@/lib/data';
+import { useCallback } from 'react';
+
+const ACCOUNTS_QUERY_KEY = ['accounts'];
+
+async function fetchAccountsFromSupabase(): Promise<AccountType[]> {
+  const { data: accountsData, error: accountsError } = await supabase
+    .from('accounts')
+    .select('*');
+
+  if (accountsError) throw accountsError;
+
+  return (accountsData || []).map((account, index) => {
+    const last4Digits = account.account_number?.slice(-4) || '0000';
+    const bankName = account.bank_name || 'Account';
+    const formattedName = `${bankName} ${last4Digits}`;
+
+    return {
+      id: account.id,
+      name: formattedName,
+      type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
+      balance: (account.available_balance || 0) / 100,
+      currency: 'ZAR',
+      color: getAccountColor(index),
+    };
+  });
+}
 
 export const useAccounts = () => {
-  const [accounts, setAccounts] = useState<AccountType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchAccounts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data: accounts = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ACCOUNTS_QUERY_KEY,
+    queryFn: fetchAccountsFromSupabase,
+  });
 
-      const { data: accountsData, error: accountsError } = await supabase
-        .from('accounts')
-        .select('*');
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ACCOUNTS_QUERY_KEY });
+  }, [queryClient]);
 
-      if (accountsError) throw accountsError;
+  const error = queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
-      const transformedAccounts: AccountType[] = (accountsData || []).map((account, index) => {
-        const last4Digits = account.account_number?.slice(-4) || '0000';
-        const bankName = account.bank_name || 'Account';
-        const formattedName = `${bankName} ${last4Digits}`;
-
-        return {
-          id: account.id,
-          name: formattedName,
-          type: (account.account_type?.toLowerCase() as 'checking' | 'savings' | 'credit') || 'checking',
-          balance: (account.available_balance || 0) / 100,
-          currency: 'ZAR',
-          color: getAccountColor(index),
-        };
-      });
-
-      setAccounts(transformedAccounts);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Error fetching accounts:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAccounts();
-  }, [fetchAccounts]);
-
-  return { accounts, loading, error, refetch: fetchAccounts };
+  return { accounts, loading, error, refetch };
 };
 
 // Helper function to assign colors consistently

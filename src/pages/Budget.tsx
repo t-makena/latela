@@ -302,8 +302,8 @@ const Budget = () => {
 
       {/* Tab Content in neo-brutalist card */}
       <div 
-        className="bg-card rounded-3xl border border-foreground p-5 w-full flex-1"
-        style={{ boxShadow: '4px 4px 0px #000000' }}
+        className="rounded-3xl p-5 w-full flex-1"
+        style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
       >
         {groceryTab === 'search' ? (
           <SearchTab onAddToCart={handleAddToCart} />
@@ -332,8 +332,8 @@ const Budget = () => {
   const GroceryNavCard = () => (
     <div
       onClick={() => setView('grocery')}
-      className="bg-card rounded-2xl border border-foreground p-5 cursor-pointer hover:bg-accent/50 transition-colors"
-      style={{ boxShadow: '4px 4px 0px #000000' }}
+      className="rounded-2xl p-5 cursor-pointer hover:bg-accent/50 transition-colors"
+      style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

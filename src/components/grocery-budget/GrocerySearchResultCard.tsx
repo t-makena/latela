@@ -40,7 +40,7 @@ export const GrocerySearchResultCard = ({
   const brandAndQuantity = [product.brand, quantityText].filter(Boolean).join(' · ');
 
   return (
-    <Card className="p-4" style={{ boxShadow: '4px 4px 0px #000000' }}>
+    <Card className="p-4" style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}>
       <div className="flex gap-3">
         {/* Product Image */}
         <div className="w-20 h-20 bg-muted rounded-lg flex-shrink-0 overflow-hidden">

@@ -15,14 +15,14 @@ const AccountDetail = () => {
     if (isMobile) {
       return (
         <div className="min-h-screen py-6 space-y-5">
-          <Skeleton 
-            className="h-24 rounded-2xl border border-black" 
-            style={{ boxShadow: '4px 4px 0px #000000' }}
+          <Skeleton
+            className="h-24 rounded-2xl dark:border-0"
+            style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
           />
           <Skeleton className="h-6 w-32" />
-          <Skeleton 
-            className="h-[400px] rounded-3xl border-2 border-black" 
-            style={{ boxShadow: '4px 4px 0px #000000' }}
+          <Skeleton
+            className="h-[400px] rounded-3xl dark:border-0"
+            style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
           />
         </div>
       );

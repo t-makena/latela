@@ -22,7 +22,7 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', ac
   const { t } = useLanguage();
   
   const { transactions } = useTransactions({ currentMonthOnly: false, limit: 2000 });
-  const { accounts } = useAccounts();
+  const { accounts, refetch: refetchAccounts } = useAccounts();
   const { calculateTotalMonthly } = useBudgetItems();
   const currentDate = new Date();
   const { upcomingEvents } = useCalendarEvents({
@@ -227,7 +227,7 @@ export const MobileBudgetInsightCard = ({ titleKey = 'finance.budgetInsight', ac
       <StatementUploadDialog 
         open={uploadDialogOpen} 
         onOpenChange={setUploadDialogOpen}
-        onSuccess={() => window.location.reload()}
+        onSuccess={refetchAccounts}
         accountId={accountId}
       />
     </div>

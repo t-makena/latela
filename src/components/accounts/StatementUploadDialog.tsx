@@ -25,7 +25,7 @@ const getProcessingStages = (isUpdateMode: boolean) => [
   { key: 'parsing', label: 'Parsing statement' },
   { key: 'creating', label: isUpdateMode ? 'Updating account' : 'Setting up account' },
   { key: 'importing', label: 'Importing transactions' },
-  { key: 'categorizing', label: 'Categorizing with AI' },
+  { key: 'categorizing', label: 'Categorising' },
 ] as const;
 
 const getStageMessage = (stage: ProcessingStage, isUpdateMode: boolean): string => {
@@ -34,7 +34,7 @@ const getStageMessage = (stage: ProcessingStage, isUpdateMode: boolean): string 
     case 'parsing': return 'Parsing your statement...';
     case 'creating': return isUpdateMode ? 'Updating your account...' : 'Creating your account...';
     case 'importing': return 'Importing transactions...';
-    case 'categorizing': return 'Categorizing with AI...';
+    case 'categorizing': return 'Categorising...';
     default: return 'Processing...';
   }
 };

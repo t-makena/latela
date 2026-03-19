@@ -80,8 +80,8 @@ export const ImageUploader = ({ onImageCapture, isLoading }: ImageUploaderProps)
   if (preview) {
     return (
       <Card 
-        className="border-2 border-foreground p-4 relative"
-        style={{ boxShadow: '4px 4px 0px #000000' }}
+        className="p-4 relative"
+        style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
       >
         <button
           onClick={clearPreview}
@@ -110,10 +110,10 @@ export const ImageUploader = ({ onImageCapture, isLoading }: ImageUploaderProps)
   return (
     <Card 
       className={cn(
-        "border-2 border-dashed border-foreground p-8 text-center transition-colors",
+        "p-8 text-center transition-colors",
         isDragging && "bg-accent"
       )}
-      style={{ boxShadow: '4px 4px 0px #000000' }}
+      style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

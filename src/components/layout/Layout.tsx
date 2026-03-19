@@ -1,6 +1,7 @@
 import { Navbar } from "./Navbar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BackgroundProvider } from "./BackgroundProvider";
+import { PageTransition } from "./PageTransition";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,7 +22,9 @@ export const Layout = ({ children }: LayoutProps) => {
           </div>
         )}
         <main className={`flex-1 overflow-y-auto ${isMobile ? 'px-4 pt-20' : ''}`}>
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
         {isMobile && <Navbar />}
       </div>

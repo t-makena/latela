@@ -28,10 +28,10 @@ export const GroceryItemCard = ({
   return (
     <Card 
       className={cn(
-        "border-2 border-foreground p-4 transition-colors",
-        hasSelection ? "bg-green-50" : "bg-amber-50"
+        "p-4 transition-colors",
+        hasSelection ? "bg-green-50 dark:bg-green-950" : "bg-amber-50 dark:bg-amber-950"
       )}
-      style={{ boxShadow: '4px 4px 0px #000000' }}
+      style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)' }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">

@@ -20,8 +20,8 @@ export const ListSummary = ({ totals }: ListSummaryProps) => {
 
   return (
     <Card 
-      className="border-2 border-foreground bg-card"
-      style={{ boxShadow: '4px 4px 0px #000000' }}
+      className=""
+      style={{ boxShadow: 'var(--brutalist-shadow)', border: 'var(--brutalist-border)', background: 'var(--brutalist-card-bg)' }}
     >
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
