@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  BudgetCategory, 
-  SUBCATEGORY_NAME_TO_BUDGET_CATEGORY, 
+import {
+  BudgetCategory,
+  SUBCATEGORY_NAME_TO_BUDGET_CATEGORY,
   CategoryLimits,
-  calculateCategoryLimits as calcLimits 
+  calculateCategoryLimits as calcLimits
 } from '@/lib/categoryMapping';
 import type { Transaction } from '@/hooks/useTransactions';
 
@@ -35,109 +36,99 @@ export interface CategoryAllocation {
 
 export type CategoryAllocations = Record<BudgetCategory, CategoryAllocation>;
 
+const BUDGET_METHOD_QUERY_KEY = ['user-settings', 'budget-method'];
+
+const DEFAULT_SETTINGS: BudgetMethodSettings = {
+  budget_method: 'percentage_based',
+  needs_percentage: 50,
+  wants_percentage: 30,
+  savings_percentage: 20,
+};
+
+async function fetchBudgetMethodSettings(): Promise<BudgetMethodSettings> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return DEFAULT_SETTINGS;
+
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('budget_method, needs_percentage, wants_percentage, savings_percentage')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (data) {
+    return {
+      budget_method: (data.budget_method as BudgetMethod) || 'percentage_based',
+      needs_percentage: data.needs_percentage ?? 50,
+      wants_percentage: data.wants_percentage ?? 30,
+      savings_percentage: data.savings_percentage ?? 20,
+    };
+  }
+
+  return DEFAULT_SETTINGS;
+}
+
 export const useBudgetMethod = () => {
-  const [settings, setSettings] = useState<BudgetMethodSettings>({
-    budget_method: 'percentage_based',
-    needs_percentage: 50,
-    wants_percentage: 30,
-    savings_percentage: 20,
+  const queryClient = useQueryClient();
+
+  const { data: settings = DEFAULT_SETTINGS, isLoading: loading, error: queryError } = useQuery({
+    queryKey: BUDGET_METHOD_QUERY_KEY,
+    queryFn: fetchBudgetMethodSettings,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchSettings = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+  const error = queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('budget_method, needs_percentage, wants_percentage, savings_percentage')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setSettings({
-          budget_method: (data.budget_method as BudgetMethod) || 'percentage_based',
-          needs_percentage: data.needs_percentage ?? 50,
-          wants_percentage: data.wants_percentage ?? 30,
-          savings_percentage: data.savings_percentage ?? 20,
-        });
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Error fetching budget method settings:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: BUDGET_METHOD_QUERY_KEY });
+  }, [queryClient]);
 
   const updateBudgetMethod = async (method: BudgetMethod) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
 
-      const { error } = await supabase
-        .from('user_settings')
-        .update({ budget_method: method })
-        .eq('user_id', user.id);
+    const { error } = await supabase
+      .from('user_settings')
+      .update({ budget_method: method })
+      .eq('user_id', user.id);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      setSettings(prev => ({ ...prev, budget_method: method }));
-      return true;
-    } catch (err) {
-      console.error('Error updating budget method:', err);
-      throw err;
-    }
+    queryClient.setQueryData(BUDGET_METHOD_QUERY_KEY, (old: BudgetMethodSettings) => ({
+      ...old,
+      budget_method: method,
+    }));
   };
 
   const updatePercentages = async (needs: number, wants: number, savings: number) => {
-    // Validate that percentages sum to 100
     if (needs + wants + savings !== 100) {
       throw new Error('Percentages must sum to 100');
     }
 
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
 
-      const { error } = await supabase
-        .from('user_settings')
-        .update({
-          needs_percentage: needs,
-          wants_percentage: wants,
-          savings_percentage: savings,
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      setSettings(prev => ({
-        ...prev,
+    const { error } = await supabase
+      .from('user_settings')
+      .update({
         needs_percentage: needs,
         wants_percentage: wants,
         savings_percentage: savings,
-      }));
-      return true;
-    } catch (err) {
-      console.error('Error updating percentages:', err);
-      throw err;
-    }
+      })
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    queryClient.setQueryData(BUDGET_METHOD_QUERY_KEY, (old: BudgetMethodSettings) => ({
+      ...old,
+      needs_percentage: needs,
+      wants_percentage: wants,
+      savings_percentage: savings,
+    }));
   };
 
-  // Calculate the limit for each category based on available balance
   const calculateCategoryLimits = useCallback((availableBalance: number): CategoryLimits => {
     return calcLimits(
       availableBalance,
@@ -147,14 +138,12 @@ export const useBudgetMethod = () => {
     );
   }, [settings.needs_percentage, settings.wants_percentage, settings.savings_percentage]);
 
-  // Calculate current allocations for each category based on actual transaction spending
   const calculateCategoryAllocations = useCallback((
     availableBalance: number,
     transactions: Transaction[]
   ): CategoryAllocations => {
     const limits = calculateCategoryLimits(availableBalance);
-    
-    // Initialize allocations
+
     const allocations: CategoryAllocations = {
       needs: { limit: limits.needs, allocated: 0, remaining: limits.needs, percentage: settings.needs_percentage },
       wants: { limit: limits.wants, allocated: 0, remaining: limits.wants, percentage: settings.wants_percentage },
@@ -162,14 +151,13 @@ export const useBudgetMethod = () => {
       income: { limit: 0, allocated: 0, remaining: 0, percentage: 0 },
     };
 
-    // Sum actual spending by category from transactions
     transactions.forEach(tx => {
       if (tx.amount < 0 && tx.parent_category_name) {
         const budgetCategory = SUBCATEGORY_NAME_TO_BUDGET_CATEGORY[tx.parent_category_name];
         if (budgetCategory && budgetCategory !== 'income') {
           const absAmount = Math.abs(tx.amount);
           allocations[budgetCategory].allocated += absAmount;
-          allocations[budgetCategory].remaining = 
+          allocations[budgetCategory].remaining =
             allocations[budgetCategory].limit - allocations[budgetCategory].allocated;
         }
       }
@@ -178,7 +166,6 @@ export const useBudgetMethod = () => {
     return allocations;
   }, [calculateCategoryLimits, settings]);
 
-  // Check if adding an amount would exceed the category limit
   const wouldExceedLimit = useCallback((
     budgetCategory: BudgetCategory,
     amount: number,
@@ -187,12 +174,12 @@ export const useBudgetMethod = () => {
     if (budgetCategory === 'income') {
       return { exceeds: false, excessAmount: 0 };
     }
-    
+
     const allocation = allocations[budgetCategory];
     const newTotal = allocation.allocated + amount;
     const exceeds = newTotal > allocation.limit;
     const excessAmount = exceeds ? newTotal - allocation.limit : 0;
-    
+
     return { exceeds, excessAmount };
   }, []);
 
@@ -208,6 +195,6 @@ export const useBudgetMethod = () => {
     calculateCategoryLimits,
     calculateCategoryAllocations,
     wouldExceedLimit,
-    refetch: fetchSettings,
+    refetch: invalidate,
   };
 };

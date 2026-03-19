@@ -35,6 +35,8 @@ export const useAccounts = () => {
   const { data: accounts = [], isLoading: loading, error: queryError } = useQuery({
     queryKey: ACCOUNTS_QUERY_KEY,
     queryFn: fetchAccountsFromSupabase,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const refetch = useCallback(() => {
