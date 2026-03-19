@@ -385,7 +385,7 @@ async function extractTransactionsFromPDF(content: string, bankName: string) {
 
 async function extractTransactionsWithKimi(text: string, bankName: string) {
   const apiKey = Deno.env.get('KIMI_API_KEY')?.trim()!;
-  console.log('[KIMI-TRANS]', bankName, ': sending full text (', text.length, 'chars) to moonshot-v1-128k');
+  console.log('[KIMI-TRANS]', bankName, ': sending full text (', text.length, 'chars) to moonshot-v1-32k');
 
   const systemPrompt = `You extract transactions from South African bank statement text. The text comes from a PDF and may be one continuous string without line breaks.
 
@@ -424,7 +424,7 @@ Rules:
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'moonshot-v1-128k',
+      model: 'moonshot-v1-32k',
       max_tokens: 16000,
       temperature: 0,
       messages: [
