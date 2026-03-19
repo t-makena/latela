@@ -21,8 +21,8 @@ interface BudgetMethodCardProps {
   wantsPercentage: number;
   savingsPercentage: number;
   loading: boolean;
-  onUpdateBudgetMethod: (method: BudgetMethod) => Promise<boolean>;
-  onUpdatePercentages: (needs: number, wants: number, savings: number) => Promise<boolean>;
+  onUpdateBudgetMethod: (method: BudgetMethod) => Promise<void>;
+  onUpdatePercentages: (needs: number, wants: number, savings: number) => Promise<void>;
 }
 
 export const BudgetMethodCard = ({
