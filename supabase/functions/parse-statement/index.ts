@@ -411,7 +411,7 @@ interface KimiParseResult {
 
 const SYSTEM_PROMPT = `You extract transactions from South African bank statement text. The text comes from a PDF and may be one continuous string without line breaks.
 
-Return ONLY a valid JSON object — no markdown, no explanation.
+Return ONLY a valid JSON object — no markdown, no explanation, no whitespace (minified).
 
 Use this exact structure:
 {
@@ -447,7 +447,7 @@ async function parseTransactionsWithKimi(extractedText: string): Promise<KimiPar
   const apiKey = Deno.env.get('KIMI_API_KEY')?.trim();
   if (!apiKey) return null;
 
-  const CHUNK_SIZE = 10000;
+  const CHUNK_SIZE = 20000;
 
   // Split text into chunks on newline boundaries
   const chunks: string[] = [];
