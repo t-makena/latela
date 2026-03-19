@@ -2,7 +2,6 @@ project_id = "sqbcxopovghwgdqplejr"
 
 [functions.parse-statement]
 verify_jwt = true
-timeout = 150
 
 [functions.categorize-transactions]
 verify_jwt = true
