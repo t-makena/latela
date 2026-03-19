@@ -167,6 +167,7 @@
     --ring: 212.7 26.8% 83.9%;
 
     /* Brutalist card styling - dark mode */
+    /* Shadow card: white bg + 2px black border; Main card: black, no outline */
     --brutalist-shadow: 4px 4px 0px 0px #ffffff, 4px 4px 0px 2px #000000;
     --brutalist-border-width: 0px;
     --brutalist-border-color: transparent;
