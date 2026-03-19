@@ -439,12 +439,12 @@ a {
   transition: box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Dark mode: White outlines on sidebar and shadow */
+/* Dark mode: Sidebar shadow = white bg + black border, no outline */
 .dark .sidebar-nav {
+  border-color: transparent !important;
   box-shadow: 
-    0 0 0 1px hsl(0 0% 100%),
-    -4px 4px 0px 0px hsl(0 0% 0%),
-    -4px 4px 0px 2px hsl(0 0% 100%);
+    -4px 4px 0px 0px hsl(0 0% 100%),
+    -4px 4px 0px 2px hsl(0 0% 0%);
 }
 
 /* Hover effect for financial metric items */
