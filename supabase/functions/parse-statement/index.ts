@@ -486,8 +486,8 @@ async function parseTransactionsWithKimi(extractedText: string): Promise<KimiPar
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'moonshot-v1-8k',
-            max_tokens: 4000,
+            model: 'moonshot-v1-32k',
+            max_tokens: 8000,
             messages: [
               { role: 'system', content: SYSTEM_PROMPT },
               { role: 'user', content: 'Parse these bank statement lines:\n\n' + chunks[i] },
