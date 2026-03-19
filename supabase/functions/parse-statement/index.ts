@@ -443,50 +443,68 @@ Rules:
 - If uncertain about debit/credit, compare consecutive balances: balance went down = debit, went up = credit
 - Skip opening balance rows, closing balance rows, header/footer rows, and any row without a clear transaction amount`;
 
-  const chunkResults = await Promise.all(chunks.map(async (chunk, i) => {
-    console.log('[KIMI-TRANS] Chunk', i + 1, '/', chunks.length, '—', chunk.length, 'chars');
-    try {
-      const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'moonshot-v1-32k',
-          max_tokens: 10000,
-          temperature: 0,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Extract all transactions from this ${bankName} statement text:\n\n${chunk}` },
-          ],
-        }),
-      });
+  const callKimiWithRetry = async (chunk: string, chunkIndex: number): Promise<Array<{
+    date: string; description: string; amount: number; balance: number; type: 'debit' | 'credit';
+  }>> => {
+    const MAX_RETRIES = 4;
+    let delay = 3000;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'moonshot-v1-32k',
+            max_tokens: 10000,
+            temperature: 0,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: `Extract all transactions from this ${bankName} statement text:\n\n${chunk}` },
+            ],
+          }),
+        });
 
-      if (!response.ok) {
-        const err = await response.text();
-        console.error('[KIMI-TRANS] Chunk', i + 1, 'failed:', response.status, err);
-        return [];
-      }
+        if (response.status === 429) {
+          console.warn(`[KIMI-TRANS] Chunk ${chunkIndex} rate-limited (attempt ${attempt}/${MAX_RETRIES}), retrying in ${delay}ms`);
+          await new Promise(r => setTimeout(r, delay));
+          delay *= 2;
+          continue;
+        }
 
-      const data = await response.json();
-      const raw: string = data.choices?.[0]?.message?.content ?? '[]';
-      const clean = raw.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      const match = clean.match(/\[[\s\S]*\]/);
-      if (!match) {
-        console.error('[KIMI-TRANS] Chunk', i + 1, ': no JSON array in response');
-        return [];
+        if (!response.ok) {
+          const err = await response.text();
+          console.error(`[KIMI-TRANS] Chunk ${chunkIndex} failed: ${response.status}`, err);
+          return [];
+        }
+
+        const data = await response.json();
+        const raw: string = data.choices?.[0]?.message?.content ?? '[]';
+        const clean = raw.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
+        const match = clean.match(/\[[\s\S]*\]/);
+        if (!match) {
+          console.error(`[KIMI-TRANS] Chunk ${chunkIndex}: no JSON array in response`);
+          return [];
+        }
+        const parsed = JSON.parse(match[0]);
+        console.log(`[KIMI-TRANS] Chunk ${chunkIndex}: ${parsed.length} transactions`);
+        return parsed;
+      } catch (err) {
+        console.error(`[KIMI-TRANS] Chunk ${chunkIndex} error (attempt ${attempt}):`, err);
+        if (attempt === MAX_RETRIES) return [];
+        await new Promise(r => setTimeout(r, delay));
+        delay *= 2;
       }
-      const parsed = JSON.parse(match[0]) as Array<{
-        date: string; description: string; amount: number; balance: number; type: 'debit' | 'credit';
-      }>;
-      console.log('[KIMI-TRANS] Chunk', i + 1, ':', parsed.length, 'transactions');
-      return parsed;
-    } catch (err) {
-      console.error('[KIMI-TRANS] Chunk', i + 1, 'error:', err);
-      return [];
     }
-  }));
+    return [];
+  };
+
+  // Process sequentially to avoid hitting Kimi's concurrency rate limit
+  const chunkResults: Array<Array<{ date: string; description: string; amount: number; balance: number; type: 'debit' | 'credit' }>> = [];
+  for (let i = 0; i < chunks.length; i++) {
+    console.log(`[KIMI-TRANS] Chunk ${i + 1} / ${chunks.length} — ${chunks[i].length} chars`);
+    const result = await callKimiWithRetry(chunks[i], i + 1);
+    chunkResults.push(result);
+  }
 
   return chunkResults.flat().map(tx => ({
     date: tx.date,
