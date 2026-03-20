@@ -8,6 +8,7 @@
     "test:single": "tsx test.ts single",
     "test:multiple": "tsx test.ts multiple",
     "test:url": "tsx test.ts url",
+    "scrape": "tsx test-full-store.ts",
     "build": "tsc",
     "dev": "tsx --watch test.ts"
   },
