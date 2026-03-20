@@ -14,29 +14,46 @@ async function main() {
   }
 
   const args = process.argv.slice(2);
-  const store = args[0] || 'woolworths';
+  const allStores = ['woolworths', 'pnp', 'checkers', 'makro'];
+
+  // Read store(s) from CLI args first, then SCRAPE_STORES env var
+  const storeInput = args[0] || process.env.SCRAPE_STORES || 'all';
+  const stores = storeInput.toLowerCase() === 'all'
+    ? allStores
+    : storeInput.split(',').map(s => s.trim()).filter(Boolean);
+
   const maxCategories = args[1] ? parseInt(args[1]) : 10;
   const maxPagesPerCategory = args[2] ? parseInt(args[2]) : 3;
 
   console.log('Configuration:');
-  console.log(`  Store:                  ${store}`);
+  console.log(`  Stores:                 ${stores.join(', ')}`);
   console.log(`  Max categories:         ${maxCategories}`);
   console.log(`  Max pages per category: ${maxPagesPerCategory}`);
   console.log('');
 
-  try {
-    const result = await scrapeFullStore(store, {
-      maxCategories,
-      maxPagesPerCategory,
-      outputFile: `${store.toLowerCase()}-full-scrape.json`,
-      saveProgress: true
-    });
+  let totalProducts = 0;
+  const failed: string[] = [];
 
-    console.log('✓ Full store scrape completed!');
-    console.log(`  Total products: ${result.totalProducts}`);
-    
-  } catch (error) {
-    console.error('✗ Scrape failed:', error);
+  for (const store of stores) {
+    try {
+      const result = await scrapeFullStore(store, {
+        maxCategories,
+        maxPagesPerCategory,
+        outputFile: `${store.toLowerCase()}-full-scrape.json`,
+        saveProgress: true
+      });
+
+      console.log(`✓ ${store} scrape completed! Products: ${result.totalProducts}`);
+      totalProducts += result.totalProducts;
+    } catch (error) {
+      console.error(`✗ ${store} scrape failed:`, error);
+      failed.push(store);
+    }
+  }
+
+  console.log(`\nAll done. Total products: ${totalProducts}`);
+  if (failed.length > 0) {
+    console.error(`Failed stores: ${failed.join(', ')}`);
     process.exit(1);
   }
 }
