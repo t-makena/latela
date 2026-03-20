@@ -14,7 +14,7 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 1, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {children}
     </motion.div>
