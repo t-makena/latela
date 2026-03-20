@@ -13,6 +13,7 @@ import {
   MakroURLDiscovery
 } from './discovery/urlDiscovery';
 import * as fs from 'fs/promises';
+import { uploadToSupabase } from './supabaseUploader';
 
 export interface FullScrapeOptions {
   maxPagesPerCategory?: number;
@@ -206,6 +207,11 @@ export class FullStoreScraper {
 
     // Final save
     await this.saveResults(result);
+
+    // Upload to Supabase
+    if (result.products.length > 0) {
+      await uploadToSupabase(result.products, store);
+    }
 
     // Print summary
     this.printSummary(result);
