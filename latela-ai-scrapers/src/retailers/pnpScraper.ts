@@ -72,28 +72,14 @@ Return ONLY the JSON array, nothing else. If no products are visible in the grid
     await this.scrollToLoadAllProducts(page);
     
     // Scroll to show the product grid (skip promotional banners at top)
-    await page.evaluate(() => {
-      const gridSelectors = [
-        '.product-grid', 
-        '.plp-product-list', 
-        '[class*="ProductGrid"]', 
-        '.search-results',
-        '[class*="productList"]',
-        '[class*="product-list"]'
-      ];
-      
-      for (const selector of gridSelectors) {
-        const grid = document.querySelector(selector);
-        if (grid) {
-          grid.scrollIntoView({ behavior: 'instant', block: 'start' });
-          window.scrollBy(0, -100); // Small offset for context
-          return;
-        }
+    await page.evaluate(`(() => {
+      var selectors = ['.product-grid', '.plp-product-list', '[class*="ProductGrid"]', '.search-results', '[class*="productList"]', '[class*="product-list"]'];
+      for (var i = 0; i < selectors.length; i++) {
+        var grid = document.querySelector(selectors[i]);
+        if (grid) { grid.scrollIntoView({ behavior: 'instant', block: 'start' }); window.scrollBy(0, -100); return; }
       }
-      
-      // Fallback: scroll past typical header/banner area
       window.scrollTo(0, 250);
-    });
+    })()`);
     
     await new Promise(resolve => setTimeout(resolve, 500));
     

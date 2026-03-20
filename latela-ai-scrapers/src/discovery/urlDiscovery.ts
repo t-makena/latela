@@ -47,31 +47,15 @@ export abstract class URLDiscovery {
       }
 
       // Check if page has products
-      const hasProducts = await page.evaluate(() => {
-        const productIndicators = [
-          '[class*="product"]',
-          '[class*="Product"]',
-          '[data-testid*="product"]',
-          '.item-grid',
-          '.search-results'
-        ];
-        
-        for (const selector of productIndicators) {
-          const elements = document.querySelectorAll(selector);
-          if (elements.length > 0) return true;
+      const hasProducts = await page.evaluate(`(() => {
+        var indicators = ['[class*="product"]', '[class*="Product"]', '[data-testid*="product"]', '.item-grid', '.search-results'];
+        for (var i = 0; i < indicators.length; i++) {
+          if (document.querySelectorAll(indicators[i]).length > 0) return true;
         }
-        
-        // Check for "no results" messages
-        const pageText = document.body.innerText.toLowerCase();
-        if (pageText.includes('no results') || 
-            pageText.includes('no products') ||
-            pageText.includes('page can\'t be found') ||
-            pageText.includes('page not found')) {
-          return false;
-        }
-        
+        var pageText = document.body.innerText.toLowerCase();
+        if (pageText.includes('no results') || pageText.includes('no products') || pageText.includes("page can't be found") || pageText.includes('page not found')) return false;
         return true;
-      });
+      })()`);
 
       if (!hasProducts) {
         console.log(`  ✗ No products found: ${url}`);
@@ -91,26 +75,17 @@ export abstract class URLDiscovery {
    */
   async getProductCount(page: Page): Promise<number | undefined> {
     try {
-      const count = await page.evaluate(() => {
-        // Look for "X results" or "X products" text
-        const patterns = [
-          /(\d+)\s*results/i,
-          /(\d+)\s*products/i,
-          /(\d+)\s*items/i,
-          /showing\s*\d+\s*-\s*\d+\s*of\s*(\d+)/i
-        ];
-        
-        const text = document.body.innerText;
-        for (const pattern of patterns) {
-          const match = text.match(pattern);
-          if (match) {
-            return parseInt(match[1]);
-          }
+      const count = await page.evaluate(`(() => {
+        var patterns = [/(\\d+)\\s*results/i, /(\\d+)\\s*products/i, /(\\d+)\\s*items/i, /showing\\s*\\d+\\s*-\\s*\\d+\\s*of\\s*(\\d+)/i];
+        var text = document.body.innerText;
+        for (var i = 0; i < patterns.length; i++) {
+          var match = text.match(patterns[i]);
+          if (match) return parseInt(match[1]);
         }
         return undefined;
-      });
+      })()`);
       
-      return count;
+      return count as number | undefined;
     } catch {
       return undefined;
     }
@@ -142,11 +117,10 @@ export class WoolworthsURLDiscovery extends URLDiscovery {
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Extract category links from the navigation/sidebar
-      const discoveredUrls = await page.evaluate((baseUrl) => {
-        const categories: { name: string; url: string }[] = [];
-        
-        // Look for category links in navigation and sidebar
-        const linkSelectors = [
+      const discoveredUrls = await page.evaluate(`(() => {
+        var baseUrl = "${this.baseUrl}";
+        var categories = [];
+        var linkSelectors = [
           'nav a[href*="/cat/Food/"]',
           '[class*="nav"] a[href*="/cat/Food/"]',
           '[class*="category"] a[href*="/cat/Food/"]',
@@ -154,29 +128,22 @@ export class WoolworthsURLDiscovery extends URLDiscovery {
           '[class*="menu"] a[href*="/cat/Food/"]',
           'a[href*="/cat/Food/"][href*="/_/N-"]'
         ];
-
-        const seenUrls = new Set<string>();
-
-        for (const selector of linkSelectors) {
-          const links = document.querySelectorAll(selector);
-          links.forEach((link) => {
-            const href = (link as HTMLAnchorElement).href;
-            const text = link.textContent?.trim();
-            
-            if (href && text && !seenUrls.has(href)) {
-              // Filter out non-category links
-              if (href.includes('/cat/Food/') && 
-                  !href.includes('javascript:') &&
-                  href.startsWith(baseUrl)) {
-                seenUrls.add(href);
+        var seenUrls = {};
+        for (var s = 0; s < linkSelectors.length; s++) {
+          var links = document.querySelectorAll(linkSelectors[s]);
+          for (var i = 0; i < links.length; i++) {
+            var href = links[i].href;
+            var text = links[i].textContent ? links[i].textContent.trim() : "";
+            if (href && text && !seenUrls[href]) {
+              if (href.includes('/cat/Food/') && !href.includes('javascript:') && href.startsWith(baseUrl)) {
+                seenUrls[href] = true;
                 categories.push({ name: text, url: href });
               }
             }
-          });
+          }
         }
-
         return categories;
-      }, this.baseUrl);
+      })()`) as { name: string; url: string }[];
 
       console.log(`  Found ${discoveredUrls.length} potential category URLs`);
 
@@ -204,25 +171,23 @@ export class WoolworthsURLDiscovery extends URLDiscovery {
           timeout: 60000
         });
 
-        const fallbackUrls = await page.evaluate((baseUrl) => {
-          const categories: { name: string; url: string }[] = [];
-          const links = document.querySelectorAll('a[href*="/cat/Food/"]');
-          const seenUrls = new Set<string>();
-
-          links.forEach((link) => {
-            const href = (link as HTMLAnchorElement).href;
-            const text = link.textContent?.trim();
-            
-            if (href && text && text.length > 2 && text.length < 50 && !seenUrls.has(href)) {
+        const fallbackUrls = await page.evaluate(`(() => {
+          var baseUrl = "${this.baseUrl}";
+          var categories = [];
+          var links = document.querySelectorAll('a[href*="/cat/Food/"]');
+          var seenUrls = {};
+          for (var i = 0; i < links.length; i++) {
+            var href = links[i].href;
+            var text = links[i].textContent ? links[i].textContent.trim() : "";
+            if (href && text && text.length > 2 && text.length < 50 && !seenUrls[href]) {
               if (href.includes('/_/N-') && href.startsWith(baseUrl)) {
-                seenUrls.add(href);
+                seenUrls[href] = true;
                 categories.push({ name: text, url: href });
               }
             }
-          });
-
+          }
           return categories;
-        }, this.baseUrl);
+        })()`) as { name: string; url: string }[];
 
         for (const cat of fallbackUrls.slice(0, 20)) { // Limit to first 20
           const isValid = await this.validateCategoryURL(page, cat.url);
@@ -279,39 +244,26 @@ export class PnPURLDiscovery extends URLDiscovery {
         // Menu might already be visible
       }
 
-      const discoveredUrls = await page.evaluate((baseUrl) => {
-        const categories: { name: string; url: string }[] = [];
-        const seenUrls = new Set<string>();
-
-        // Look for category links
-        const linkSelectors = [
-          'a[href*="/c/"]',
-          'a[href*="/category/"]',
-          'nav a',
-          '[class*="nav"] a',
-          '[class*="menu"] a',
-          '[class*="category"] a'
-        ];
-
-        for (const selector of linkSelectors) {
-          const links = document.querySelectorAll(selector);
-          links.forEach((link) => {
-            const href = (link as HTMLAnchorElement).href;
-            const text = link.textContent?.trim();
-            
-            if (href && text && text.length > 2 && text.length < 50 && !seenUrls.has(href)) {
-              if ((href.includes('/c/') || href.includes('/category/') || href.includes('/search')) && 
-                  href.startsWith(baseUrl) &&
-                  !href.includes('javascript:')) {
-                seenUrls.add(href);
+      const discoveredUrls = await page.evaluate(`(() => {
+        var baseUrl = "${this.baseUrl}";
+        var categories = [];
+        var seenUrls = {};
+        var linkSelectors = ['a[href*="/c/"]', 'a[href*="/category/"]', 'nav a', '[class*="nav"] a', '[class*="menu"] a', '[class*="category"] a'];
+        for (var s = 0; s < linkSelectors.length; s++) {
+          var links = document.querySelectorAll(linkSelectors[s]);
+          for (var i = 0; i < links.length; i++) {
+            var href = links[i].href;
+            var text = links[i].textContent ? links[i].textContent.trim() : "";
+            if (href && text && text.length > 2 && text.length < 50 && !seenUrls[href]) {
+              if ((href.includes('/c/') || href.includes('/category/') || href.includes('/search')) && href.startsWith(baseUrl) && !href.includes('javascript:')) {
+                seenUrls[href] = true;
                 categories.push({ name: text, url: href });
               }
             }
-          });
+          }
         }
-
         return categories;
-      }, this.baseUrl);
+      })()`) as { name: string; url: string }[];
 
       console.log(`  Found ${discoveredUrls.length} potential category URLs`);
 
@@ -362,36 +314,26 @@ export class CheckersURLDiscovery extends URLDiscovery {
 
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      const discoveredUrls = await page.evaluate((baseUrl) => {
-        const categories: { name: string; url: string }[] = [];
-        const seenUrls = new Set<string>();
-
-        const linkSelectors = [
-          'a[href*="/c-"]',
-          'a[href*="/category"]',
-          'nav a',
-          '[class*="nav"] a',
-          '[class*="menu"] a',
-          '[class*="category"] a'
-        ];
-
-        for (const selector of linkSelectors) {
-          const links = document.querySelectorAll(selector);
-          links.forEach((link) => {
-            const href = (link as HTMLAnchorElement).href;
-            const text = link.textContent?.trim();
-            
-            if (href && text && text.length > 2 && text.length < 50 && !seenUrls.has(href)) {
+      const discoveredUrls = await page.evaluate(`(() => {
+        var baseUrl = "${this.baseUrl}";
+        var categories = [];
+        var seenUrls = {};
+        var linkSelectors = ['a[href*="/c-"]', 'a[href*="/category"]', 'nav a', '[class*="nav"] a', '[class*="menu"] a', '[class*="category"] a'];
+        for (var s = 0; s < linkSelectors.length; s++) {
+          var links = document.querySelectorAll(linkSelectors[s]);
+          for (var i = 0; i < links.length; i++) {
+            var href = links[i].href;
+            var text = links[i].textContent ? links[i].textContent.trim() : "";
+            if (href && text && text.length > 2 && text.length < 50 && !seenUrls[href]) {
               if (href.startsWith(baseUrl) && !href.includes('javascript:')) {
-                seenUrls.add(href);
+                seenUrls[href] = true;
                 categories.push({ name: text, url: href });
               }
             }
-          });
+          }
         }
-
         return categories;
-      }, this.baseUrl);
+      })()`) as { name: string; url: string }[];
 
       console.log(`  Found ${discoveredUrls.length} potential category URLs`);
 
@@ -441,36 +383,26 @@ export class MakroURLDiscovery extends URLDiscovery {
 
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      const discoveredUrls = await page.evaluate((baseUrl) => {
-        const categories: { name: string; url: string }[] = [];
-        const seenUrls = new Set<string>();
-
-        const linkSelectors = [
-          'a[href*="/c/"]',
-          'a[href*="/category"]',
-          'nav a',
-          '[class*="nav"] a',
-          '[class*="menu"] a',
-          '[class*="category"] a'
-        ];
-
-        for (const selector of linkSelectors) {
-          const links = document.querySelectorAll(selector);
-          links.forEach((link) => {
-            const href = (link as HTMLAnchorElement).href;
-            const text = link.textContent?.trim();
-            
-            if (href && text && text.length > 2 && text.length < 50 && !seenUrls.has(href)) {
+      const discoveredUrls = await page.evaluate(`(() => {
+        var baseUrl = "${this.baseUrl}";
+        var categories = [];
+        var seenUrls = {};
+        var linkSelectors = ['a[href*="/c/"]', 'a[href*="/category"]', 'nav a', '[class*="nav"] a', '[class*="menu"] a', '[class*="category"] a'];
+        for (var s = 0; s < linkSelectors.length; s++) {
+          var links = document.querySelectorAll(linkSelectors[s]);
+          for (var i = 0; i < links.length; i++) {
+            var href = links[i].href;
+            var text = links[i].textContent ? links[i].textContent.trim() : "";
+            if (href && text && text.length > 2 && text.length < 50 && !seenUrls[href]) {
               if (href.startsWith(baseUrl) && !href.includes('javascript:')) {
-                seenUrls.add(href);
+                seenUrls[href] = true;
                 categories.push({ name: text, url: href });
               }
             }
-          });
+          }
         }
-
         return categories;
-      }, this.baseUrl);
+      })()`) as { name: string; url: string }[];
 
       console.log(`  Found ${discoveredUrls.length} potential category URLs`);
 

@@ -385,24 +385,20 @@ export abstract class BaseScraper {
   protected async scrollToLoadAllProducts(page: Page): Promise<void> {
     console.log("Scrolling to load all products...");
 
-    await page.evaluate(async () => {
-      const delay = (ms: number) =>
-        new Promise((resolve) => setTimeout(resolve, ms));
-
+    await page.evaluate(`(async () => {
       const totalHeight = document.body.scrollHeight;
       const viewportHeight = window.innerHeight;
       let currentPosition = 0;
 
       while (currentPosition < totalHeight) {
         window.scrollTo(0, currentPosition);
-        await delay(300);
+        await new Promise(r => setTimeout(r, 300));
         currentPosition += viewportHeight * 0.8;
       }
 
-      // Scroll back to top
       window.scrollTo(0, 0);
-      await delay(500);
-    });
+      await new Promise(r => setTimeout(r, 500));
+    })()`);
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
@@ -412,41 +408,28 @@ export abstract class BaseScraper {
    */
   protected async getTotalPages(page: Page): Promise<number> {
     try {
-      const totalPages = await page.evaluate(() => {
-        // Look for "Page X of Y" text
-        const pageText = document.body.innerText.match(
-          /Page\s*\d+\s*of\s*(\d+)/i,
-        );
+      const totalPages = await page.evaluate(`(() => {
+        var pageText = document.body.innerText.match(/Page\\s*\\d+\\s*of\\s*(\\d+)/i);
         if (pageText) return parseInt(pageText[1]);
 
-        // Look for "Showing X-Y of Z" text
-        const showingText = document.body.innerText.match(
-          /of\s*(\d+)\s*(?:results|products|items)/i,
-        );
-        if (showingText) {
-          const totalProducts = parseInt(showingText[1]);
-          // Estimate pages (assuming ~24 products per page)
-          return Math.ceil(totalProducts / 24);
-        }
+        var showingText = document.body.innerText.match(/of\\s*(\\d+)\\s*(?:results|products|items)/i);
+        if (showingText) return Math.ceil(parseInt(showingText[1]) / 24);
 
-        // Look for pagination buttons
-        const paginationButtons = document.querySelectorAll(
-          '.pagination a, .pagination button, [class*="pagination"] a, [class*="Pagination"] button, nav[aria-label*="pagination"] a, [class*="pager"] a',
+        var paginationButtons = document.querySelectorAll(
+          '.pagination a, .pagination button, [class*="pagination"] a, [class*="Pagination"] button, nav[aria-label*="pagination"] a, [class*="pager"] a'
         );
 
-        let maxPage = 1;
-        paginationButtons.forEach((btn) => {
-          const text = btn.textContent?.trim();
-          const num = parseInt(text || "0");
-          if (!isNaN(num) && num > maxPage) {
-            maxPage = num;
-          }
+        var maxPage = 1;
+        paginationButtons.forEach(function(btn) {
+          var text = btn.textContent ? btn.textContent.trim() : "";
+          var num = parseInt(text || "0");
+          if (!isNaN(num) && num > maxPage) maxPage = num;
         });
 
         return maxPage;
-      });
+      })()`);
 
-      return Math.min(totalPages, this.paginationConfig.maxPages);
+      return Math.min(totalPages as number, this.paginationConfig.maxPages);
     } catch {
       return 1;
     }
@@ -462,19 +445,21 @@ export abstract class BaseScraper {
   ): Promise<boolean> {
     try {
       // Try clicking pagination button first
-      const clicked = await page.evaluate((targetPage) => {
-        const buttons = document.querySelectorAll(
-          '.pagination a, .pagination button, [class*="pagination"] a, [class*="Pagination"] button, nav[aria-label*="pagination"] a, [class*="pager"] a',
+      const clicked = await page.evaluate(`(() => {
+        var targetPage = ${pageNum};
+        var buttons = document.querySelectorAll(
+          '.pagination a, .pagination button, [class*="pagination"] a, [class*="Pagination"] button, nav[aria-label*="pagination"] a, [class*="pager"] a'
         );
 
-        for (const btn of buttons) {
-          if (btn.textContent?.trim() === String(targetPage)) {
-            (btn as HTMLElement).click();
+        for (var i = 0; i < buttons.length; i++) {
+          var text = buttons[i].textContent ? buttons[i].textContent.trim() : "";
+          if (text === String(targetPage)) {
+            buttons[i].click();
             return true;
           }
         }
         return false;
-      }, pageNum);
+      })()`);
 
       if (clicked) {
         await page
@@ -516,9 +501,7 @@ export abstract class BaseScraper {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Scroll to trigger lazy loading
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight / 2);
-    });
+    await page.evaluate(`window.scrollTo(0, document.body.scrollHeight / 2)`);
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }

@@ -69,27 +69,14 @@ Return ONLY the JSON array, nothing else. If no products are visible, return: []
   private async takeProductGridScreenshot(page: Page, filename: string): Promise<string> {
     await this.scrollToLoadAllProducts(page);
     
-    await page.evaluate(() => {
-      const gridSelectors = [
-        '.product-grid', 
-        '.product--grid', 
-        '[class*="ProductGrid"]', 
-        '.search-results',
-        '.product-listing',
-        '.product-tile-list'
-      ];
-      
-      for (const selector of gridSelectors) {
-        const grid = document.querySelector(selector);
-        if (grid) {
-          grid.scrollIntoView({ behavior: 'instant', block: 'start' });
-          window.scrollBy(0, -100);
-          return;
-        }
+    await page.evaluate(`(() => {
+      var selectors = ['.product-grid', '.product--grid', '[class*="ProductGrid"]', '.search-results', '.product-listing', '.product-tile-list'];
+      for (var i = 0; i < selectors.length; i++) {
+        var grid = document.querySelector(selectors[i]);
+        if (grid) { grid.scrollIntoView({ behavior: 'instant', block: 'start' }); window.scrollBy(0, -100); return; }
       }
-      
       window.scrollTo(0, 250);
-    });
+    })()`);
     
     await new Promise(resolve => setTimeout(resolve, 500));
     
