@@ -1880,8 +1880,6 @@ export type Database = {
           similarity_score: number
         }[]
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       update_goal_current_allocation: {
         Args: { goal_id: string; new_allocation: number }
         Returns: {
